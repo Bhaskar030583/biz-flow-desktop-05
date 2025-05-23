@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,9 +23,9 @@ const StockList = ({ refreshTrigger, dateRange }: StockListProps) => {
   const [stockEntries, setStockEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [shopFilter, setShopFilter] = useState("");
-  const [productFilter, setProductFilter] = useState("");
-  const [paymentModeFilter, setPaymentModeFilter] = useState("");
+  const [shopFilter, setShopFilter] = useState("_all");
+  const [productFilter, setProductFilter] = useState("_all");
+  const [paymentModeFilter, setPaymentModeFilter] = useState("_all");
   const [shops, setShops] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [sortField, setSortField] = useState<string>("stock_date");
@@ -124,8 +123,8 @@ const StockList = ({ refreshTrigger, dateRange }: StockListProps) => {
   };
   
   // Apply filters and sorting
-  const filteredEntries = filterStockEntries(stockEntries, searchTerm, shopFilter, productFilter).filter(entry => {
-    if (paymentModeFilter === "") return true;
+  const filteredEntries = filterStockEntries(stockEntries, searchTerm, shopFilter === "_all" ? "" : shopFilter, productFilter === "_all" ? "" : productFilter).filter(entry => {
+    if (paymentModeFilter === "" || paymentModeFilter === "_all") return true;
     if (paymentModeFilter === "cash") return entry.cash_received > 0;
     if (paymentModeFilter === "online") return entry.online_received > 0;
     return true;
@@ -188,13 +187,13 @@ const StockList = ({ refreshTrigger, dateRange }: StockListProps) => {
           <StockFilters 
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
-            shopFilter={shopFilter}
+            shopFilter={shopFilter || "_all"}
             setShopFilter={setShopFilter}
-            productFilter={productFilter}
+            productFilter={productFilter || "_all"}
             setProductFilter={setProductFilter}
             shops={shops}
             products={products}
-            paymentModeFilter={paymentModeFilter}
+            paymentModeFilter={paymentModeFilter || "_all"}
             setPaymentModeFilter={setPaymentModeFilter}
           />
         </CardHeader>
@@ -210,7 +209,7 @@ const StockList = ({ refreshTrigger, dateRange }: StockListProps) => {
           
           <div className="mt-4 text-sm text-muted-foreground text-center">
             Showing {sortedFilteredEntries.length} of {stockEntries.length} entries
-            {(searchTerm || shopFilter || productFilter || paymentModeFilter || dateRange?.from) && " (filtered)"}
+            {(searchTerm || shopFilter !== "" && shopFilter !== "_all" || productFilter !== "" && productFilter !== "_all" || (paymentModeFilter && paymentModeFilter !== "" && paymentModeFilter !== "_all") || dateRange?.from) && " (filtered)"}
           </div>
         </CardContent>
       </Card>

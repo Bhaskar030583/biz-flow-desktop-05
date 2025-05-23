@@ -44,9 +44,10 @@ export const updateUserRole = async (userId: string, role: string): Promise<void
 };
 
 export const updateUserStatus = async (userId: string, is_active: boolean): Promise<void> => {
+  // We use app_metadata instead of user_metadata for status because it's admin-controlled
   const { error } = await supabase.auth.admin.updateUserById(
     userId,
-    { user_metadata: { is_active } }
+    { app_metadata: { is_active } }
   );
 
   if (error) throw error;

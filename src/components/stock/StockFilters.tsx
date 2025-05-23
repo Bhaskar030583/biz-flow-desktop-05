@@ -85,7 +85,7 @@ const StockFilters = ({
               <SelectValue placeholder="All Shops" />
             </SelectTrigger>
             <SelectContent className="bg-white">
-              <SelectItem value="">All Shops</SelectItem>
+              <SelectItem value="_all">All Shops</SelectItem>
               {shops.map((shop) => (
                 <SelectItem key={shop.id} value={shop.id}>
                   {shop.name}
@@ -99,7 +99,7 @@ const StockFilters = ({
               <SelectValue placeholder="All Products" />
             </SelectTrigger>
             <SelectContent className="bg-white">
-              <SelectItem value="">All Products</SelectItem>
+              <SelectItem value="_all">All Products</SelectItem>
               {products.map((product) => (
                 <SelectItem key={product.id} value={product.id}>
                   {product.name}
@@ -114,7 +114,7 @@ const StockFilters = ({
                 <SelectValue placeholder="Payment Mode" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                <SelectItem value="">All Payments</SelectItem>
+                <SelectItem value="_all">All Payments</SelectItem>
                 <SelectItem value="cash">Cash</SelectItem>
                 <SelectItem value="online">Online</SelectItem>
               </SelectContent>
