@@ -27,6 +27,7 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
   const [products, setProducts] = useState<any[]>([]);
   const [sortField, setSortField] = useState<string>("stock_date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [localRefreshTrigger, setLocalRefreshTrigger] = useState(0);
 
   useEffect(() => {
     const fetchStockEntries = async () => {
@@ -81,7 +82,7 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
     };
 
     fetchStockEntries();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, localRefreshTrigger]);
   
   // Handle sorting change
   const handleSortChange = (field: string) => {
@@ -93,6 +94,11 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
       setSortField(field);
       setSortDirection("desc");
     }
+  };
+
+  // Handle entry update
+  const handleEntryUpdated = () => {
+    setLocalRefreshTrigger(prev => prev + 1);
   };
   
   // Apply filters and sorting
@@ -166,6 +172,7 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
             sortDirection={sortDirection}
             handleSortChange={handleSortChange}
             calculateProfit={calculateStockProfit}
+            onEntryUpdated={handleEntryUpdated}
           />
           
           <div className="mt-4 text-sm text-muted-foreground text-center">

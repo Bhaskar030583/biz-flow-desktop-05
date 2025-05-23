@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { format } from "date-fns";
 import { 
   Table, 
@@ -10,7 +10,20 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { IndianRupee, Clock, User, ChevronDown } from "lucide-react";
+import { IndianRupee, Clock, User, ChevronDown, Edit, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StockEntry {
   id: string;
@@ -30,6 +43,7 @@ interface StockTableProps {
   sortDirection: "asc" | "desc";
   handleSortChange: (field: string) => void;
   calculateProfit: (entry: StockEntry) => number;
+  onEntryUpdated?: () => void;
 }
 
 const StockTable = ({ 
@@ -37,8 +51,111 @@ const StockTable = ({
   sortField, 
   sortDirection, 
   handleSortChange,
-  calculateProfit
+  calculateProfit,
+  onEntryUpdated
 }: StockTableProps) => {
+  const { user } = useAuth();
+  const [editingEntry, setEditingEntry] = useState<StockEntry | null>(null);
+  const [editedValues, setEditedValues] = useState({ closing_stock: 0, actual_stock: 0 });
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Check if current user is admin
+  React.useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+          
+        if (error) throw error;
+        
+        setIsAdmin(data.role === 'admin');
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+      }
+    };
+    
+    checkAdminStatus();
+  }, [user]);
+
+  const handleEditClick = (entry: StockEntry) => {
+    setEditingEntry(entry);
+    setEditedValues({
+      closing_stock: entry.closing_stock,
+      actual_stock: entry.actual_stock
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingEntry) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      const { error } = await supabase
+        .from('stocks')
+        .update({
+          closing_stock: editedValues.closing_stock,
+          actual_stock: editedValues.actual_stock
+        })
+        .eq('id', editingEntry.id);
+      
+      if (error) throw error;
+      
+      toast.success('Stock entry updated successfully');
+      setEditingEntry(null);
+      
+      // Refresh the data
+      if (onEntryUpdated) onEntryUpdated();
+      
+    } catch (error: any) {
+      console.error('Error updating stock:', error);
+      toast.error(error.message || 'Failed to update stock entry');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
+  const handleDeleteClick = (id: string) => {
+    setEntryToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+  
+  const handleConfirmDelete = async () => {
+    if (!entryToDelete) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      const { error } = await supabase
+        .from('stocks')
+        .delete()
+        .eq('id', entryToDelete);
+        
+      if (error) throw error;
+      
+      toast.success('Stock entry deleted successfully');
+      setDeleteConfirmOpen(false);
+      setEntryToDelete(null);
+      
+      // Refresh the data
+      if (onEntryUpdated) onEntryUpdated();
+      
+    } catch (error: any) {
+      console.error('Error deleting stock:', error);
+      toast.error(error.message || 'Failed to delete stock entry');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="overflow-x-auto">
       {/* Desktop view */}
@@ -84,6 +201,7 @@ const StockTable = ({
                   )}
                 </div>
               </TableHead>
+              <TableHead className="text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -135,6 +253,28 @@ const StockTable = ({
                     <div className="flex items-center justify-end">
                       <IndianRupee className="h-3.5 w-3.5 mr-1" />
                       {profit.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8 px-2 text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50"
+                        onClick={() => handleEditClick(entry)}
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                      </Button>
+                      {isAdmin && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 px-2 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50"
+                          onClick={() => handleDeleteClick(entry.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -204,11 +344,101 @@ const StockTable = ({
                     )}
                   </div>
                 )}
+                
+                <div className="flex items-center justify-end space-x-2 pt-2 mt-2 border-t border-gray-100 dark:border-gray-700">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-8 px-3 text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50"
+                    onClick={() => handleEditClick(entry)}
+                  >
+                    <Edit className="h-3.5 w-3.5 mr-1" /> Edit
+                  </Button>
+                  {isAdmin && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 px-3 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50"
+                      onClick={() => handleDeleteClick(entry.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           );
         })}
       </div>
+
+      {/* Edit dialog */}
+      <Dialog open={editingEntry !== null} onOpenChange={(open) => !open && setEditingEntry(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Stock Entry</DialogTitle>
+          </DialogHeader>
+          {editingEntry && (
+            <div className="space-y-4 py-4">
+              <div className="grid gap-2">
+                <div className="font-medium">Product: {editingEntry.products?.name}</div>
+                <div className="text-sm text-muted-foreground">Shop: {editingEntry.shops?.name}</div>
+                <div className="text-sm text-muted-foreground">Date: {format(new Date(editingEntry.stock_date), "dd/MM/yyyy")}</div>
+              </div>
+              
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Opening Stock</label>
+                  <Input value={editingEntry.opening_stock} disabled={true} />
+                </div>
+                
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Closing Stock</label>
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    value={editedValues.closing_stock} 
+                    onChange={(e) => setEditedValues({...editedValues, closing_stock: Number(e.target.value)})} 
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Actual Stock</label>
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    value={editedValues.actual_stock} 
+                    onChange={(e) => setEditedValues({...editedValues, actual_stock: Number(e.target.value)})} 
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingEntry(null)}>Cancel</Button>
+            <Button onClick={handleSaveEdit} disabled={isProcessing}>
+              {isProcessing ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete confirmation dialog */}
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this stock entry? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleConfirmDelete} disabled={isProcessing}>
+              {isProcessing ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
