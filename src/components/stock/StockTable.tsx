@@ -31,6 +31,7 @@ interface StockEntry {
   opening_stock: number;
   closing_stock: number;
   actual_stock: number;
+  stock_added?: number;
   shift?: string;
   operator_name?: string;
   shops?: { id: string; name: string };
@@ -56,7 +57,12 @@ const StockTable = ({
 }: StockTableProps) => {
   const { user } = useAuth();
   const [editingEntry, setEditingEntry] = useState<StockEntry | null>(null);
-  const [editedValues, setEditedValues] = useState({ closing_stock: 0, actual_stock: 0 });
+  const [editedValues, setEditedValues] = useState({ 
+    opening_stock: 0,
+    closing_stock: 0, 
+    actual_stock: 0,
+    stock_added: 0 
+  });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -88,8 +94,10 @@ const StockTable = ({
   const handleEditClick = (entry: StockEntry) => {
     setEditingEntry(entry);
     setEditedValues({
+      opening_stock: entry.opening_stock,
       closing_stock: entry.closing_stock,
-      actual_stock: entry.actual_stock
+      actual_stock: entry.actual_stock,
+      stock_added: entry.stock_added || 0
     });
   };
 
@@ -99,12 +107,21 @@ const StockTable = ({
     setIsProcessing(true);
     
     try {
+      // Create an update object that only includes what we're allowed to update
+      const updateData: any = {
+        closing_stock: editedValues.closing_stock,
+        actual_stock: editedValues.actual_stock,
+        stock_added: editedValues.stock_added
+      };
+      
+      // Only admins can update opening_stock
+      if (isAdmin) {
+        updateData.opening_stock = editedValues.opening_stock;
+      }
+      
       const { error } = await supabase
         .from('stocks')
-        .update({
-          closing_stock: editedValues.closing_stock,
-          actual_stock: editedValues.actual_stock
-        })
+        .update(updateData)
         .eq('id', editingEntry.id);
       
       if (error) throw error;
@@ -174,6 +191,7 @@ const StockTable = ({
               <TableHead>Shop</TableHead>
               <TableHead>Product</TableHead>
               <TableHead className="text-right">Opening Stock</TableHead>
+              <TableHead className="text-right">Stock Added</TableHead>
               <TableHead className="text-right">Closing Stock</TableHead>
               <TableHead className="text-right">Actual Stock</TableHead>
               <TableHead>Shift / Operator</TableHead>
@@ -222,6 +240,7 @@ const StockTable = ({
                   <TableCell>{entry.shops?.name}</TableCell>
                   <TableCell>{entry.products?.name}</TableCell>
                   <TableCell className="text-right">{entry.opening_stock}</TableCell>
+                  <TableCell className="text-right">{entry.stock_added || 0}</TableCell>
                   <TableCell className="text-right">{entry.closing_stock}</TableCell>
                   <TableCell className="text-right">{entry.actual_stock}</TableCell>
                   <TableCell>
@@ -310,7 +329,7 @@ const StockTable = ({
               <div className="space-y-2">
                 <div className="responsive-table-cell" data-label="Stock">
                   <span className="text-sm">
-                    Opening: {entry.opening_stock} → Closing: {entry.closing_stock}
+                    Opening: {entry.opening_stock} {entry.stock_added ? `(+${entry.stock_added} added)` : ''} → Closing: {entry.closing_stock}
                   </span>
                 </div>
                 
@@ -386,9 +405,33 @@ const StockTable = ({
               </div>
               
               <div className="grid gap-4">
+                {isAdmin && (
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium">Opening Stock</label>
+                    <Input 
+                      type="number" 
+                      min="0" 
+                      value={editedValues.opening_stock} 
+                      onChange={(e) => setEditedValues({...editedValues, opening_stock: Number(e.target.value)})}
+                    />
+                  </div>
+                )}
+                
+                {!isAdmin && (
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium">Opening Stock</label>
+                    <Input value={editingEntry.opening_stock} disabled={true} />
+                  </div>
+                )}
+                
                 <div className="grid gap-2">
-                  <label className="text-sm font-medium">Opening Stock</label>
-                  <Input value={editingEntry.opening_stock} disabled={true} />
+                  <label className="text-sm font-medium">Stock Added</label>
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    value={editedValues.stock_added} 
+                    onChange={(e) => setEditedValues({...editedValues, stock_added: Number(e.target.value)})} 
+                  />
                 </div>
                 
                 <div className="grid gap-2">

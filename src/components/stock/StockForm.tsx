@@ -39,6 +39,7 @@ const stockSchema = z.object({
   opening_stock: z.coerce.number().int().min(0, "Must be a positive number"),
   closing_stock: z.coerce.number().int().min(0, "Must be a positive number"),
   actual_stock: z.coerce.number().int().min(0, "Must be a positive number"),
+  stock_added: z.coerce.number().int().min(0, "Must be a positive number"),
   cash_received: z.coerce.number().min(0, "Must be a positive number"),
   online_received: z.coerce.number().min(0, "Must be a positive number"),
   shift: z.string().optional(),
@@ -68,6 +69,7 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
       opening_stock: 0,
       closing_stock: 0,
       actual_stock: 0,
+      stock_added: 0,
       cash_received: 0,
       online_received: 0,
       shift: "",
@@ -196,6 +198,7 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
         opening_stock: values.opening_stock,
         closing_stock: values.closing_stock,
         actual_stock: values.actual_stock,
+        stock_added: values.stock_added,
         shift: values.shift || null,
         operator_name: values.operator_name || null,
         cash_received: values.cash_received,
@@ -360,6 +363,28 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Opening Stock</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(Number(e.target.value));
+                          e.target.value = formatNumberInput(e) || e.target.value;
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="stock_added"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stock Added</FormLabel>
                     <FormControl>
                       <Input
                         type="number"

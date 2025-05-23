@@ -10,6 +10,7 @@ export interface StockEntry {
   opening_stock: number;
   closing_stock: number;
   actual_stock: number;
+  stock_added?: number;
   shift?: string;
   operator_name?: string;
   shops?: { id: string; name: string };
@@ -59,6 +60,7 @@ export const useStockQueries = ({
           opening_stock, 
           closing_stock, 
           actual_stock,
+          stock_added,
           shift,
           operator_name,
           shops (id, name),

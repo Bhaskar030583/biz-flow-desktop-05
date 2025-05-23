@@ -201,6 +201,7 @@ export type Database = {
           product_id: string
           shift: string | null
           shop_id: string
+          stock_added: number | null
           stock_date: string
           user_id: string
         }
@@ -216,6 +217,7 @@ export type Database = {
           product_id: string
           shift?: string | null
           shop_id: string
+          stock_added?: number | null
           stock_date: string
           user_id: string
         }
@@ -231,6 +233,7 @@ export type Database = {
           product_id?: string
           shift?: string | null
           shop_id?: string
+          stock_added?: number | null
           stock_date?: string
           user_id?: string
         }
