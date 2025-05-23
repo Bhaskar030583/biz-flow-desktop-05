@@ -36,18 +36,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('role')
+        .select('*')
         .eq('id', userId)
         .single();
       
       if (error) {
-        console.error('Error fetching user role:', error);
+        console.error('Error fetching user profile:', error);
         return;
       }
       
-      if (data?.role) {
-        setUserRole(data.role as UserRole);
-      }
+      // Since the role column might not exist yet in the profiles table,
+      // we need to safely handle this scenario
+      // Default to "user" role if not found
+      const userRole = data?.role as UserRole || "user";
+      setUserRole(userRole);
+      
+      console.log("User role set to:", userRole);
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
     }
