@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -21,25 +22,34 @@ interface Product {
 }
 
 interface DashboardFiltersProps {
-  onFilterChange: (filters: {
-    startDate: Date | null;
-    endDate: Date | null;
-    shopIds: string[];
-    category: string | null;
-    productId: string | null;
-  }) => void;
+  startDate: Date | null;
+  endDate: Date | null;
+  setStartDate: (date: Date | null) => void;
+  setEndDate: (date: Date | null) => void;
+  selectedShops: string[];
+  setSelectedShops: (shops: string[]) => void;
+  selectedCategory: string | null;
+  setSelectedCategory: (category: string | null) => void;
+  selectedProduct: string | null;
+  setSelectedProduct: (product: string | null) => void;
 }
 
-export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+export function DashboardFilters({
+  startDate,
+  endDate,
+  setStartDate,
+  setEndDate,
+  selectedShops,
+  setSelectedShops,
+  selectedCategory,
+  setSelectedCategory,
+  selectedProduct,
+  setSelectedProduct
+}: DashboardFiltersProps) {
   const [shops, setShops] = useState<Shop[]>([]);
-  const [selectedShopIds, setSelectedShopIds] = useState<string[]>([]);
   const [showShopDropdown, setShowShopDropdown] = useState<boolean>(false);
   const [categories, setCategories] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Fetch shops
@@ -72,7 +82,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
           .select("id, name, category");
         
         // Filter by shop if selected shops
-        if (selectedShopIds.length > 0) {
+        if (selectedShops.length > 0) {
           // This would require a join with sales to filter products by shop
           // For simplicity, we're not doing this filter here
         }
@@ -96,36 +106,25 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
     }
 
     fetchProducts();
-  }, [selectedShopIds]);
+  }, [selectedShops]);
 
   // Filter products by category
   const filteredProducts = selectedCategory
     ? products.filter(product => product.category === selectedCategory)
     : products;
 
-  // Apply all filters
-  useEffect(() => {
-    onFilterChange({
-      startDate,
-      endDate,
-      shopIds: selectedShopIds,
-      category: selectedCategory,
-      productId: selectedProduct
-    });
-  }, [startDate, endDate, selectedShopIds, selectedCategory, selectedProduct, onFilterChange]);
-
   // Reset filters
   const resetFilters = () => {
     setStartDate(null);
     setEndDate(null);
-    setSelectedShopIds([]);
+    setSelectedShops([]);
     setSelectedCategory(null);
     setSelectedProduct(null);
   };
 
   // Toggle shop selection
   const toggleShop = (shopId: string) => {
-    setSelectedShopIds(prevSelected => {
+    setSelectedShops(prevSelected => {
       if (prevSelected.includes(shopId)) {
         return prevSelected.filter(id => id !== shopId);
       } else {
@@ -136,24 +135,24 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
 
   // Toggle all shops
   const toggleAllShops = () => {
-    if (selectedShopIds.length === shops.length) {
-      setSelectedShopIds([]);
+    if (selectedShops.length === shops.length) {
+      setSelectedShops([]);
     } else {
-      setSelectedShopIds(shops.map(shop => shop.id));
+      setSelectedShops(shops.map(shop => shop.id));
     }
   };
 
   // Get shop display text
   const getShopDisplayText = () => {
-    if (selectedShopIds.length === 0) {
+    if (selectedShops.length === 0) {
       return "Select Shop(s)";
-    } else if (selectedShopIds.length === shops.length) {
+    } else if (selectedShops.length === shops.length) {
       return "All Shops";
-    } else if (selectedShopIds.length === 1) {
-      const shop = shops.find(s => s.id === selectedShopIds[0]);
+    } else if (selectedShops.length === 1) {
+      const shop = shops.find(s => s.id === selectedShops[0]);
       return shop ? shop.name : "1 Shop";
     } else {
-      return `${selectedShopIds.length} Shops`;
+      return `${selectedShops.length} Shops`;
     }
   };
 
@@ -217,7 +216,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
             >
               <div className="flex items-center">
                 <Store className="w-4 h-4 mr-2" />
-                <span className={cn(selectedShopIds.length === 0 && "text-muted-foreground")}>
+                <span className={cn(selectedShops.length === 0 && "text-muted-foreground")}>
                   {getShopDisplayText()}
                 </span>
               </div>
@@ -230,7 +229,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
                 onClick={toggleAllShops}
               >
                 <Checkbox 
-                  checked={shops.length > 0 && selectedShopIds.length === shops.length}
+                  checked={shops.length > 0 && selectedShops.length === shops.length}
                   className="border-indigo-500 data-[state=checked]:bg-indigo-500 data-[state=checked]:text-white"
                 />
                 <label className="text-sm cursor-pointer flex-1">All Shops</label>
@@ -244,7 +243,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
                   onClick={() => toggleShop(shop.id)}
                 >
                   <Checkbox 
-                    checked={selectedShopIds.includes(shop.id)}
+                    checked={selectedShops.includes(shop.id)}
                     className="border-indigo-500 data-[state=checked]:bg-indigo-500 data-[state=checked]:text-white"
                   />
                   <label className="text-sm cursor-pointer flex-1">{shop.name}</label>
@@ -270,7 +269,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
         <Select
           value={selectedCategory || undefined}
           onValueChange={(value) => {
-            setSelectedCategory(value || null);
+            setSelectedCategory(value === "all" ? null : value);
             setSelectedProduct(null); // Reset product when category changes
           }}
         >
@@ -291,7 +290,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
       <div>
         <Select
           value={selectedProduct || undefined}
-          onValueChange={(value) => setSelectedProduct(value || null)}
+          onValueChange={(value) => setSelectedProduct(value === "all" ? null : value)}
         >
           <SelectTrigger className={cn(!selectedProduct && "text-muted-foreground")}>
             <Package className="w-4 h-4 mr-2" />

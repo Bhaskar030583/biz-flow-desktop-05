@@ -25,8 +25,8 @@ export const fetchUserById = async (id: string) => {
 };
 
 export const updateUserById = async (id: string, userData: any) => {
-  // Remove email property as it's not part of the profiles table
-  // Use destructuring with rest operator to exclude email without modifying userData
+  // Remove any properties not part of the profiles table
+  // We are only modifying profile data, not auth data like email
   const { email, ...profileData } = userData;
   
   const { data, error } = await supabase

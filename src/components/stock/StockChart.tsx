@@ -15,7 +15,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { format, parseISO, subDays } from "date-fns";
+import { format } from "date-fns";
 
 interface StockEntry {
   id: string;
@@ -42,7 +42,7 @@ interface GroupedData {
 }
 
 interface ChartProps {
-  entries?: StockEntry[];
+  entries?: StockEntry[] | null;
   isLoading?: boolean;
   startDate?: Date | null;
   endDate?: Date | null;
@@ -57,7 +57,7 @@ const StockChart: React.FC<ChartProps> = ({ entries = [], isLoading = false }) =
     const dateMap = new Map<string, GroupedData>();
     
     // Make sure entries is defined and is an array before using forEach
-    if (!entries || !Array.isArray(entries)) {
+    if (!entries || !Array.isArray(entries) || entries.length === 0) {
       return [];
     }
     
@@ -93,7 +93,7 @@ const StockChart: React.FC<ChartProps> = ({ entries = [], isLoading = false }) =
   }, [entries]);
 
   // If we have no data or loading, show empty state
-  if ((chartData.length === 0 && !isLoading) || entries.length === 0) {
+  if ((chartData.length === 0 && !isLoading) || !entries || entries.length === 0) {
     return null;
   }
 
