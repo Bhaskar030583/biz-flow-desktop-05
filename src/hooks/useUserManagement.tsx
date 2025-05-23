@@ -63,9 +63,9 @@ export const useUserManagement = () => {
       }
       
       // Get user emails using the auth_users_view using a direct RPC call to avoid typing issues
-      // Fix for TypeScript error: Explicitly specify the return type as AuthUserView[]
+      // Fix for TypeScript error: Explicitly specify both return type and error type parameters
       const { data: authUsers, error: authError } = await supabase
-        .rpc('get_auth_users_view') as { data: AuthUserView[] | null, error: any };
+        .rpc<AuthUserView[], any>('get_auth_users_view');
       
       if (authError) {
         console.error("Could not fetch auth users:", authError);
