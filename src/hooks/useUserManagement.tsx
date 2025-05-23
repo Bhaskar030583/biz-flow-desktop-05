@@ -24,6 +24,8 @@ export const useUserManagement = () => {
   // Special function to update the specified user to admin role
   const updateUserRoleToAdmin = async (userId: string) => {
     try {
+      console.log("Setting admin role for protected user:", userId);
+      
       const { error } = await supabase
         .from("profiles")
         .update({ role: "admin" })
@@ -31,13 +33,15 @@ export const useUserManagement = () => {
       
       if (error) {
         console.error("Error setting admin role:", error);
-        return;
+        return false;
       }
       
-      toast.success("User gumpubhaskar3000@gmail.com has been granted admin access");
+      toast.success("Admin access granted to gumpubhaskar3000@gmail.com");
+      return true;
       
     } catch (error) {
       console.error("Error in updating role to admin:", error);
+      return false;
     }
   };
 
@@ -59,15 +63,26 @@ export const useUserManagement = () => {
         throw profilesError;
       }
       
+      // Find the admin user to ensure they have admin role
+      let adminUserFound = false;
+      
       // Combine data
       const combinedData = usersData.users.map(user => {
-        const profile = profilesData?.find(p => p.id === user.id);
+        // Check if this is the protected admin email
+        const isProtectedAdmin = user.email === "gumpubhaskar3000@gmail.com";
         
-        // Special case for specified email
-        if (user.email === "gumpubhaskar3000@gmail.com") {
-          // Update the role to admin directly in the database
-          updateUserRoleToAdmin(user.id);
-          // Return with admin role for immediate UI update
+        if (isProtectedAdmin) {
+          adminUserFound = true;
+          
+          // Find their profile
+          const profile = profilesData?.find(p => p.id === user.id);
+          
+          // If they don't have admin role in their profile, update it
+          if (!profile || profile.role !== "admin") {
+            updateUserRoleToAdmin(user.id);
+          }
+          
+          // Always return with admin role for immediate UI update
           return {
             id: user.id,
             email: user.email || "",
@@ -77,6 +92,9 @@ export const useUserManagement = () => {
           };
         }
         
+        // For regular users
+        const profile = profilesData?.find(p => p.id === user.id);
+        
         return {
           id: user.id,
           email: user.email || "",
@@ -85,6 +103,8 @@ export const useUserManagement = () => {
           full_name: profile?.full_name || user.user_metadata?.full_name || null,
         };
       });
+      
+      // If we didn't find the admin user but they might be added later, no action needed
       
       setUsers(combinedData);
     } catch (error) {
@@ -100,6 +120,12 @@ export const useUserManagement = () => {
     
     if (!email || !password || !fullName) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    // Special handling for protected admin email
+    if (email === "gumpubhaskar3000@gmail.com") {
+      toast.error("This email address is reserved for system administrator");
       return;
     }
 
@@ -145,6 +171,14 @@ export const useUserManagement = () => {
 
   const updateUserRole = async (userId: string, newRole: UserRole) => {
     try {
+      // Check if this is the protected admin
+      const user = users.find(u => u.id === userId);
+      
+      if (user?.email === "gumpubhaskar3000@gmail.com" && newRole !== "admin") {
+        toast.error("Cannot change role for system administrator");
+        return;
+      }
+      
       // Update the role in profiles table
       const { error } = await supabase
         .from("profiles")

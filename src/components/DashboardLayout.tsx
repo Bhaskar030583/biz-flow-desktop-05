@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { Link, useLocation } from "react-router-dom";
@@ -19,8 +18,19 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { signOut, user, userRole } = useAuth();
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   const isActive = (path: string) => location.pathname === path;
+  
+  // Check if user is the protected admin
+  useEffect(() => {
+    if (user?.email === "gumpubhaskar3000@gmail.com" || userRole === "admin") {
+      console.log("Admin user detected in layout");
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user, userRole]);
   
   // Get user initials for avatar
   const getUserInitials = () => {
@@ -34,17 +44,21 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   const navigationItems = [
     { path: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="mr-2 h-5 w-5" /> },
-    { path: "/shops", label: "Shops", icon: <Store className="mr-2 h-5 w-5" />, roles: ["admin"] },
-    { path: "/products", label: "Products", icon: <Package className="mr-2 h-5 w-5" />, roles: ["admin"] },
+    { path: "/shops", label: "Shops", icon: <Store className="mr-2 h-5 w-5" />, roles: ["admin", "lead"] },
+    { path: "/products", label: "Products", icon: <Package className="mr-2 h-5 w-5" />, roles: ["admin", "lead"] },
     { path: "/stocks", label: "Stocks", icon: <Layers className="mr-2 h-5 w-5" /> },
-    { path: "/credits", label: "Credits", icon: <CreditCard className="mr-2 h-5 w-5" />, roles: ["admin"] },
+    { path: "/credits", label: "Credits", icon: <CreditCard className="mr-2 h-5 w-5" />, roles: ["admin", "lead"] },
     { path: "/users", label: "Users", icon: <Users className="mr-2 h-5 w-5" />, roles: ["admin"] },
   ];
 
-  // Filter navigation items based on user role
-  const filteredNavItems = navigationItems.filter(item => 
-    !item.roles || item.roles.includes(userRole)
-  );
+  // Filter navigation items based on user role or special admin
+  const filteredNavItems = navigationItems.filter(item => {
+    // If the user is the protected admin or has admin role, show all items
+    if (isAdmin) return true;
+    
+    // Otherwise, filter by roles
+    return !item.roles || item.roles.includes(userRole);
+  });
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-indigo-50/30">
@@ -82,6 +96,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                             >
                               {item.icon}
                               {item.label}
+                              {isAdmin && item.roles && <span className="ml-auto text-xs px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded-full">Admin</span>}
                             </Button>
                           </Link>
                         </li>
@@ -90,7 +105,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   </nav>
                   <div className="p-4 border-t border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 truncate max-w-[180px]">{user?.email}</span>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-600 truncate max-w-[180px]">{user?.email}</span>
+                        {isAdmin && <span className="text-xs font-medium text-red-600">Admin Access</span>}
+                      </div>
                       <Button variant="outline" size="sm" onClick={signOut} className="text-red-500 hover:text-red-700 hover:bg-red-50 border-red-200">
                         <LogOut className="h-4 w-4 mr-1" />
                         Exit
@@ -106,7 +124,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-white/90 hidden md:inline-block">{user?.email}</span>
+            <div className="text-xs md:text-sm text-white/90">
+              <span className="hidden md:inline-block">{user?.email}</span>
+              {isAdmin && <span className="ml-2 px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs">Admin</span>}
+            </div>
             <div className="flex items-center space-x-2">
               <Avatar className="h-8 w-8 bg-white text-indigo-700 border-2 border-white">
                 <AvatarFallback>{getUserInitials()}</AvatarFallback>
@@ -151,10 +172,18 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   >
                     {item.icon}
                     {item.label}
+                    {isAdmin && item.roles && <span className="ml-auto text-xs px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded-full">Admin</span>}
                   </Button>
                 </Link>
               ))}
             </div>
+            
+            {isAdmin && (
+              <div className="mt-4 p-3 bg-amber-50 rounded-md border border-amber-200">
+                <p className="text-sm font-medium text-amber-800">Admin Access</p>
+                <p className="text-xs text-amber-600">You have full access to all sections</p>
+              </div>
+            )}
           </div>
         </nav>
         <main className="flex-grow bg-gradient-to-br from-indigo-50/30 via-white to-purple-50/20">

@@ -1,7 +1,9 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 // Define the role type
 export type UserRole = "admin" | "user" | "sales" | "lead";
@@ -31,8 +33,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const fetchUserRole = async (userId: string) => {
+  const fetchUserRole = async (userId: string, userEmail?: string | null) => {
     try {
+      // Special case for the protected admin email
+      if (userEmail === "gumpubhaskar3000@gmail.com") {
+        console.log("Setting admin role for protected user");
+        setUserRole("admin");
+        
+        // Also update the role in database to ensure consistency
+        const { error } = await supabase
+          .from('profiles')
+          .update({ role: "admin" })
+          .eq('id', userId);
+          
+        if (error) {
+          console.error('Error updating admin role in database:', error);
+        }
+        
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('role')
@@ -69,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (currentSession?.user) {
           // Use setTimeout to prevent potential deadlock with Supabase auth
           setTimeout(() => {
-            fetchUserRole(currentSession.user.id);
+            fetchUserRole(currentSession.user.id, currentSession.user.email);
           }, 0);
         } else {
           setUserRole("user"); // Reset to default role when logged out
@@ -85,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(currentSession?.user ?? null);
       
       if (currentSession?.user) {
-        fetchUserRole(currentSession.user.id);
+        fetchUserRole(currentSession.user.id, currentSession.user.email);
       }
       
       setLoading(false);
@@ -102,7 +122,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     if (!error && data?.session) {
       if (data.session.user) {
-        fetchUserRole(data.session.user.id);
+        // Handle special case for admin user
+        if (email === "gumpubhaskar3000@gmail.com") {
+          setUserRole("admin");
+          toast.success("Admin login successful");
+        } else {
+          fetchUserRole(data.session.user.id, email);
+        }
       }
       navigate("/dashboard");
     }

@@ -1,7 +1,6 @@
 
 import React from "react";
 import { UserRole } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   Table,
@@ -11,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, UserX } from "lucide-react";
+import { Loader2, UserX, Shield } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -59,6 +58,19 @@ export const UserTable: React.FC<UserTableProps> = ({ users, isLoading, updateUs
     }
   };
 
+  // Check if a user is the protected admin
+  const isProtectedAdmin = (email: string) => email === "gumpubhaskar3000@gmail.com";
+
+  const handleRemoveClick = (email: string) => {
+    if (isProtectedAdmin(email)) {
+      toast.error("Cannot remove system administrator");
+      return;
+    }
+    toast("This feature is not yet implemented", {
+      description: "User removal functionality will be added in future updates."
+    });
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -80,11 +92,25 @@ export const UserTable: React.FC<UserTableProps> = ({ users, isLoading, updateUs
             </TableRow>
           ) : (
             users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{user.full_name || "N/A"}</TableCell>
-                <TableCell>{user.email}</TableCell>
+              <TableRow key={user.id} className={isProtectedAdmin(user.email) ? "bg-amber-50/30" : ""}>
                 <TableCell>
-                  {user.email === "gumpubhaskar3000@gmail.com" ? (
+                  <div className="flex items-center gap-2">
+                    {user.full_name || "N/A"}
+                    {isProtectedAdmin(user.email) && 
+                      <Shield size={14} className="text-red-500" />
+                    }
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span>{user.email}</span>
+                    {isProtectedAdmin(user.email) && 
+                      <span className="text-xs text-red-500 font-medium">System Administrator</span>
+                    }
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {isProtectedAdmin(user.email) ? (
                     <Badge className="bg-red-100 text-red-800 border-red-200">
                       Admin (Protected)
                     </Badge>
@@ -94,7 +120,7 @@ export const UserTable: React.FC<UserTableProps> = ({ users, isLoading, updateUs
                       onValueChange={(value: string) => 
                         updateUserRole(user.id, value as UserRole)
                       }
-                      disabled={user.email === "gumpubhaskar3000@gmail.com"} 
+                      disabled={isProtectedAdmin(user.email)} 
                     >
                       <SelectTrigger className="w-32">
                         <SelectValue />
@@ -139,7 +165,8 @@ export const UserTable: React.FC<UserTableProps> = ({ users, isLoading, updateUs
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    disabled={user.email === "gumpubhaskar3000@gmail.com"} 
+                    disabled={isProtectedAdmin(user.email)}
+                    onClick={() => handleRemoveClick(user.email)}
                   >
                     <UserX size={16} className="mr-1 text-red-500" />
                     Remove
