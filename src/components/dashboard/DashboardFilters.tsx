@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -307,11 +306,11 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
         </Select>
       </div>
 
-      {/* Reset Filters Button - Additional to the grid */}
+      {/* Reset Filters Button - Updated for better visibility in dark mode */}
       <Button 
         variant="outline" 
         onClick={resetFilters}
-        className="mt-2 lg:mt-0 col-span-1 md:col-span-2 lg:col-span-5 bg-white hover:bg-gray-50"
+        className="mt-2 lg:mt-0 col-span-1 md:col-span-2 lg:col-span-5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600"
       >
         Reset Filters
       </Button>
