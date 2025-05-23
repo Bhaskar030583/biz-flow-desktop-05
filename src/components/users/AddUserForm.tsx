@@ -5,30 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Loader2, UserPlus, ShieldCheck } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
 
 interface AddUserFormProps {
   handleAddUser: (e: React.FormEvent) => Promise<void>;
@@ -104,10 +88,7 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({
             onValueChange={(value) => setRole(value as UserRole)}
             className="grid grid-cols-2 gap-4 pt-2"
           >
-            <div 
-              className={`p-4 border rounded-md cursor-pointer transition-all ${role === 'admin' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'hover:border-indigo-200'}`}
-              onClick={() => setRole('admin')}
-            >
+            <div className={`p-4 border rounded-md transition-all ${role === 'admin' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'hover:border-indigo-200'}`}>
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="admin" id="admin" />
                 <Label htmlFor="admin" className="font-medium cursor-pointer">Administrator</Label>
@@ -115,10 +96,7 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({
               <p className="text-sm text-muted-foreground mt-1 ml-6">Full control over all aspects of the system</p>
             </div>
             
-            <div 
-              className={`p-4 border rounded-md cursor-pointer transition-all ${role === 'lead' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'hover:border-indigo-200'}`}
-              onClick={() => setRole('lead')}
-            >
+            <div className={`p-4 border rounded-md transition-all ${role === 'lead' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'hover:border-indigo-200'}`}>
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="lead" id="lead" />
                 <Label htmlFor="lead" className="font-medium cursor-pointer">Lead</Label>
@@ -126,10 +104,7 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({
               <p className="text-sm text-muted-foreground mt-1 ml-6">Can manage shops, products and credits</p>
             </div>
             
-            <div 
-              className={`p-4 border rounded-md cursor-pointer transition-all ${role === 'sales' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'hover:border-indigo-200'}`}
-              onClick={() => setRole('sales')}
-            >
+            <div className={`p-4 border rounded-md transition-all ${role === 'sales' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'hover:border-indigo-200'}`}>
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="sales" id="sales" />
                 <Label htmlFor="sales" className="font-medium cursor-pointer">Sales</Label>
@@ -137,10 +112,7 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({
               <p className="text-sm text-muted-foreground mt-1 ml-6">Can manage stocks and view sales data</p>
             </div>
             
-            <div 
-              className={`p-4 border rounded-md cursor-pointer transition-all ${role === 'user' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'hover:border-indigo-200'}`}
-              onClick={() => setRole('user')}
-            >
+            <div className={`p-4 border rounded-md transition-all ${role === 'user' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'hover:border-indigo-200'}`}>
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="user" id="user" />
                 <Label htmlFor="user" className="font-medium cursor-pointer">User</Label>
