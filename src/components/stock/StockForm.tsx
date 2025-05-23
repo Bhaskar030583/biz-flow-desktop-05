@@ -22,11 +22,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Table, Upload } from "lucide-react";
+import { CalendarIcon, Table, Upload, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 
 const stockSchema = z.object({
@@ -52,6 +58,8 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
   const [shops, setShops] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedShop, setSelectedShop] = useState<any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   const form = useForm<StockFormValues>({
     resolver: zodResolver(stockSchema),
@@ -63,11 +71,16 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
     },
   });
 
+  // Get selected values
+  const watchShopId = form.watch("shop_id");
+  const watchProductId = form.watch("product_id");
+  const watchStockDate = form.watch("stock_date");
+
   useEffect(() => {
     const fetchShopsAndProducts = async () => {
       try {
         const [shopsResponse, productsResponse] = await Promise.all([
-          supabase.from("shops").select("id, name").order("name"),
+          supabase.from("shops").select("id, name, address, phone").order("name"),
           supabase.from("products").select("id, name").order("name"),
         ]);
 
@@ -85,6 +98,57 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
     fetchShopsAndProducts();
   }, []);
 
+  // Update selected shop details when shop_id changes
+  useEffect(() => {
+    if (watchShopId) {
+      const shop = shops.find(shop => shop.id === watchShopId);
+      setSelectedShop(shop);
+    }
+  }, [watchShopId, shops]);
+
+  // Update selected product details when product_id changes
+  useEffect(() => {
+    if (watchProductId) {
+      const product = products.find(product => product.id === watchProductId);
+      setSelectedProduct(product);
+    }
+  }, [watchProductId, products]);
+
+  // Fetch previous day's actual stock and update opening stock
+  useEffect(() => {
+    const fetchPreviousStock = async () => {
+      if (!watchShopId || !watchProductId || !watchStockDate) return;
+
+      // Calculate previous day
+      const previousDay = new Date(watchStockDate);
+      previousDay.setDate(previousDay.getDate() - 1);
+      
+      try {
+        const { data, error } = await supabase
+          .from("stocks")
+          .select("actual_stock")
+          .eq("shop_id", watchShopId)
+          .eq("product_id", watchProductId)
+          .eq("stock_date", format(previousDay, "yyyy-MM-dd"))
+          .single();
+
+        if (error && error.code !== "PGRST116") { // PGRST116 = no rows returned
+          console.error("Error fetching previous stock:", error);
+          return;
+        }
+
+        // If previous day's data exists, update opening stock
+        if (data) {
+          form.setValue("opening_stock", data.actual_stock);
+        }
+      } catch (error: any) {
+        console.error("Error fetching previous stock:", error.message);
+      }
+    };
+
+    fetchPreviousStock();
+  }, [watchShopId, watchProductId, watchStockDate, form]);
+
   const onSubmit = async (values: StockFormValues) => {
     if (!user) {
       toast.error("You must be logged in to add stock entries");
@@ -94,9 +158,17 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
     try {
       setLoading(true);
 
+      // Format the date as a string for Supabase
+      const formattedDate = format(values.stock_date, "yyyy-MM-dd");
+
       const { error } = await supabase.from("stocks").insert({
-        ...values,
         user_id: user.id,
+        shop_id: values.shop_id,
+        product_id: values.product_id,
+        stock_date: formattedDate,
+        opening_stock: values.opening_stock,
+        closing_stock: values.closing_stock,
+        actual_stock: values.actual_stock,
       });
 
       if (error) throw error;
@@ -128,7 +200,9 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                   <FormItem>
                     <FormLabel>Shop</FormLabel>
                     <Select 
-                      onValueChange={field.onChange} 
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                      }} 
                       defaultValue={field.value}
                     >
                       <FormControl>
@@ -177,6 +251,16 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                 )}
               />
 
+              {selectedShop && (
+                <div className="col-span-2 bg-muted/50 p-3 rounded-md">
+                  <h4 className="font-medium mb-2">Shop Details:</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                    <div><span className="font-medium">Address:</span> {selectedShop.address || 'N/A'}</div>
+                    <div><span className="font-medium">Phone:</span> {selectedShop.phone || 'N/A'}</div>
+                  </div>
+                </div>
+              )}
+
               <FormField
                 control={form.control}
                 name="stock_date"
@@ -205,7 +289,9 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                         <Calendar
                           mode="single"
                           selected={field.value}
-                          onSelect={field.onChange}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                          }}
                           disabled={(date) =>
                             date > new Date() || date < new Date("1900-01-01")
                           }
