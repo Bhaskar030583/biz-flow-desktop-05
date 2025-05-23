@@ -1,116 +1,138 @@
-
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/ui/date-picker";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-interface CollectionFormProps {
-  onSuccess: () => void;
-  onCancel: () => void;
-}
+export const CollectionForm = ({ onSuccess, initialData }) => {
+  const { user } = useAuth();
+  const [date, setDate] = useState<Date | null>(initialData?.credit_date ? new Date(initialData.credit_date) : new Date());
+  const [amount, setAmount] = useState(initialData?.amount || '');
+  const [paymentType, setPaymentType] = useState(initialData?.credit_type || 'cash');
+  const [description, setDescription] = useState(initialData?.description || '');
+  const [shops, setShops] = useState([]);
+  const [selectedShop, setSelectedShop] = useState(initialData?.shop_id || '');
 
-const CollectionForm = ({ onSuccess, onCancel }: CollectionFormProps) => {
-  const [loading, setLoading] = useState(false);
-  const [date, setDate] = useState<Date>(new Date());
-  const [cashAmount, setCashAmount] = useState<number>(0);
-  const [cardAmount, setCardAmount] = useState<number>(0);
-  const [onlineAmount, setOnlineAmount] = useState<number>(0);
-  const [discountAmount, setDiscountAmount] = useState<number>(0);
-  const [shop, setShop] = useState<string>("");
-  const [shops, setShops] = useState<any[]>([]);
+  useEffect(() => {
+    const fetchShops = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from('shops')
+        .select('id, name')
+        .eq('user_id', user.id);
 
-  // Fetch shops when component mounts
-  React.useEffect(() => {
-    async function fetchShops() {
-      try {
-        const { data, error } = await supabase
-          .from("shops")
-          .select("id, name")
-          .order("name");
-
-        if (error) throw error;
+      if (error) {
+        console.error('Error fetching shops:', error);
+      } else {
         setShops(data || []);
-        // Set default shop if available
-        if (data && data.length > 0) {
-          setShop(data[0].id);
-        }
-      } catch (error: any) {
-        console.error("Error fetching shops:", error);
-        toast.error("Failed to load shops");
       }
-    }
+    };
 
     fetchShops();
-  }, []);
+  }, [user]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!shop) {
-      toast.error("Please select a shop");
-      return;
-    }
-
     try {
-      setLoading(true);
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error("You must be logged in to add collection data");
-        return;
-      }
-      
-      const formattedDate = date.toISOString().split('T')[0];
-      
-      // Insert new collection entry
-      const { error } = await supabase
-        .from("collections")
-        .insert({
+      const { data, error } = await supabase
+        .from('credits')  // Use 'credits' instead of 'collections'
+        .upsert({
+          id: initialData?.id || undefined,
           user_id: user.id,
-          shop_id: shop,
-          collection_date: formattedDate,
-          cash_amount: cashAmount || 0,
-          card_amount: cardAmount || 0,
-          online_amount: onlineAmount || 0,
-          discount_amount: discountAmount || 0,
-          total_amount: (Number(cashAmount) || 0) + (Number(cardAmount) || 0) + (Number(onlineAmount) || 0)
+          shop_id: selectedShop,
+          credit_date: date ? format(date, 'yyyy-MM-dd') : null,  // Use credit_date instead of collection_date
+          amount: parseFloat(amount),
+          credit_type: paymentType,
+          description: description
         });
-      
+
       if (error) throw error;
       
-      toast.success("Collection data added successfully");
       onSuccess();
-    } catch (error: any) {
-      console.error("Error adding collection:", error);
-      toast.error(error.message || "Failed to add collection data");
-    } finally {
-      setLoading(false);
+      setAmount('');
+      setDescription('');
+      setDate(new Date());
+      setSelectedShop('');
+      setPaymentType('cash');
+      alert('Collection saved successfully!');
+    } catch (error) {
+      console.error('Error saving collection:', error);
+      alert('Failed to save collection.');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="space-y-2">
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-4">
+      
+      <div className="grid gap-4 py-4">
+        <div>
           <Label htmlFor="date">Date</Label>
-          <DatePicker
-            date={date}
-            onDateChange={setDate}
-            disabled={loading}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={format(date || new Date(), "PPP")}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {format(date || new Date(), "PPP")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                disabled={(date) =>
+                  date > new Date()
+                }
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div>
+          <Label htmlFor="amount">Amount</Label>
+          <Input
+            type="number"
+            id="amount"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            required
           />
         </div>
-        
-        <div className="space-y-2">
+
+        <div>
+          <Label htmlFor="paymentType">Payment Type</Label>
+          <Select value={paymentType} onValueChange={setPaymentType}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select payment type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="cash">Cash</SelectItem>
+              <SelectItem value="card">Card</SelectItem>
+              <SelectItem value="online">Online</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
           <Label htmlFor="shop">Shop</Label>
-          <Select value={shop} onValueChange={setShop} disabled={loading}>
-            <SelectTrigger id="shop">
-              <SelectValue placeholder="Select a shop" />
+          <Select value={selectedShop} onValueChange={setSelectedShop}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select shop" />
             </SelectTrigger>
             <SelectContent>
               {shops.map((shop) => (
@@ -121,83 +143,19 @@ const CollectionForm = ({ onSuccess, onCancel }: CollectionFormProps) => {
             </SelectContent>
           </Select>
         </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="cashAmount">Cash Amount</Label>
-          <Input
-            id="cashAmount"
-            type="number"
-            min="0"
-            step="0.01"
-            value={cashAmount}
-            onChange={(e) => setCashAmount(Number(e.target.value))}
-            disabled={loading}
-            placeholder="0.00"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="cardAmount">Card Amount</Label>
-          <Input
-            id="cardAmount"
-            type="number"
-            min="0"
-            step="0.01"
-            value={cardAmount}
-            onChange={(e) => setCardAmount(Number(e.target.value))}
-            disabled={loading}
-            placeholder="0.00"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="onlineAmount">Online Amount</Label>
-          <Input
-            id="onlineAmount"
-            type="number"
-            min="0"
-            step="0.01"
-            value={onlineAmount}
-            onChange={(e) => setOnlineAmount(Number(e.target.value))}
-            disabled={loading}
-            placeholder="0.00"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="discountAmount">Discount Amount</Label>
-          <Input
-            id="discountAmount"
-            type="number"
-            min="0"
-            step="0.01"
-            value={discountAmount}
-            onChange={(e) => setDiscountAmount(Number(e.target.value))}
-            disabled={loading}
-            placeholder="0.00"
-          />
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="totalAmount">Total Amount</Label>
+        <div>
+          <Label htmlFor="description">Description</Label>
           <Input
-            id="totalAmount"
-            type="number"
-            value={(Number(cashAmount) || 0) + (Number(cardAmount) || 0) + (Number(onlineAmount) || 0)}
-            disabled={true}
-            className="bg-gray-50"
+            type="text"
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
           />
         </div>
       </div>
-      
-      <div className="flex justify-end space-x-2">
-        <Button variant="outline" onClick={onCancel} disabled={loading}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={loading}>
-          {loading ? "Saving..." : "Save Collection"}
-        </Button>
-      </div>
+
+      <Button type="submit">Save Collection</Button>
     </form>
   );
 };

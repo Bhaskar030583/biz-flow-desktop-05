@@ -1,223 +1,248 @@
-
-import React, { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
-import { Search, Edit, Trash } from "lucide-react";
-import { format } from "date-fns";
+import React, { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/table"
+import { format } from 'date-fns';
+import { CalendarIcon, Copy, Edit, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import CollectionForm from "./CollectionForm";
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import CollectionForm from './CollectionForm';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
-interface CollectionListProps {
-  refreshTrigger: number;
-}
-
-const CollectionList = ({ refreshTrigger }: CollectionListProps) => {
+const CollectionList = () => {
+  const { user } = useAuth();
   const [collections, setCollections] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [selectedCollection, setSelectedCollection] = useState<any>(null);
-  
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [collectionToDelete, setCollectionToDelete] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [shopFilter, setShopFilter] = useState('');
+  const [shops, setShops] = useState<any[]>([]);
+  const navigate = useNavigate();
+
   useEffect(() => {
+    if (!user) return;
     fetchCollections();
-  }, [refreshTrigger]);
-  
+    fetchShops();
+  }, [user]);
+
   const fetchCollections = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       
-      const { data, error } = await supabase
-        .from("collections")
+      // Change from "collections" to "credits"
+      let query = supabase
+        .from('credits')  // Use 'credits' not 'collections'
         .select(`
           id,
-          collection_date,
-          cash_amount,
-          card_amount,
-          online_amount,
-          discount_amount,
-          total_amount,
-          shops (id, name)
+          credit_date,  // Use credit_date instead of collection_date
+          amount,
+          credit_type,  // Use credit_type instead of payment_type
+          shop_id,
+          shops (name)
         `)
-        .order("collection_date", { ascending: false });
+        .eq('user_id', user.id)
+        .order('credit_date', { ascending: false });
+      
+      if (searchTerm) {
+        query = query.ilike('description', `%${searchTerm}%`);
+      }
+
+      if (shopFilter) {
+        query = query.eq('shop_id', shopFilter);
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
-      
       setCollections(data || []);
-    } catch (error: any) {
-      console.error("Error fetching collections:", error);
-      toast.error("Failed to load collections data");
+    } catch (error) {
+      console.error('Error fetching collections:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-  
-  const handleEdit = (collection: any) => {
-    setSelectedCollection(collection);
-    setShowEditDialog(true);
-  };
-  
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this collection record?")) {
-      try {
-        const { error } = await supabase
-          .from("collections")
-          .delete()
-          .eq("id", id);
-        
-        if (error) throw error;
-        
-        toast.success("Collection record deleted successfully");
-        fetchCollections();
-      } catch (error: any) {
-        console.error("Error deleting collection:", error);
-        toast.error("Failed to delete collection record");
-      }
+
+  const fetchShops = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('shops')
+        .select('id, name')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setShops(data || []);
+    } catch (error) {
+      console.error('Error fetching shops:', error);
     }
   };
-  
-  const filteredCollections = collections.filter((collection) => {
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    
-    return (
-      collection.shops.name.toLowerCase().includes(lowerCaseSearchTerm) ||
-      collection.collection_date.toLowerCase().includes(lowerCaseSearchTerm)
-    );
-  });
-  
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Collections</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center p-6">
-            Loading collection data...
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  if (collections.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Collections</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center p-6">
-            <div className="rounded-full bg-muted flex items-center justify-center w-12 h-12 mb-4">
-              <Search className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-medium mb-2">No Collections Found</h3>
-            <p className="text-muted-foreground text-center mb-6">
-              No collection records have been added yet. Add your first collection record to get started.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-  
+
+  const handleDelete = async (id) => {
+    try {
+      // Change from "collections" to "credits"
+      const { error } = await supabase
+        .from('credits')  // Use 'credits' not 'collections'
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      fetchCollections();
+      toast.success('Collection deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting collection:', error);
+      toast.error('Failed to delete collection.');
+    } finally {
+      setIsDeleteModalOpen(false);
+      setCollectionToDelete(null);
+    }
+  };
+
+  const openDeleteModal = (id: string) => {
+    setCollectionToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setCollectionToDelete(null);
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard!');
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    fetchCollections();
+  };
+
+  const handleShopFilterChange = (value: string) => {
+    setShopFilter(value);
+    fetchCollections();
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <input
-            type="search"
-            placeholder="Search collections..."
-            className="w-full rounded-md border border-input bg-background pl-8 pr-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+    <div>
+      <div className="flex flex-col space-y-2">
+        <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+          <div className="relative w-full">
+            <Label htmlFor="search">Search</Label>
+            <Input
+              id="search"
+              placeholder="Search collections..."
+              className="pl-9 w-full"
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
+          </div>
+
+          <div className="flex flex-1 gap-2">
+            <div className="grid w-full max-w-sm items-center gap-1.5">
+              <Label htmlFor="shop">Shop</Label>
+              <Select value={shopFilter} onValueChange={handleShopFilterChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Shops" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="">All Shops</SelectItem>
+                  {shops.map((shop) => (
+                    <SelectItem key={shop.id} value={shop.id}>
+                      {shop.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
       </div>
-      
-      <Card>
-        <CardContent className="pt-6 px-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Shop</TableHead>
-                  <TableHead className="text-right">Cash Amount</TableHead>
-                  <TableHead className="text-right">Card Amount</TableHead>
-                  <TableHead className="text-right">Online Amount</TableHead>
-                  <TableHead className="text-right">Discount Amount</TableHead>
-                  <TableHead className="text-right">Total Amount</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCollections.map((collection) => (
-                  <TableRow key={collection.id}>
-                    <TableCell>
-                      {format(new Date(collection.collection_date), "MMM dd, yyyy")}
-                    </TableCell>
-                    <TableCell>{collection.shops?.name}</TableCell>
-                    <TableCell className="text-right">₹{collection.cash_amount.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">₹{collection.card_amount.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">₹{collection.online_amount.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">₹{collection.discount_amount.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">₹{collection.total_amount.toFixed(2)}</TableCell>
-                    <TableCell className="flex justify-end space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(collection)}
-                      >
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(collection.id)}
-                      >
-                        <Trash className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Edit Collection</DialogTitle>
-          </DialogHeader>
-          {selectedCollection && (
-            <CollectionForm
-              onSuccess={() => {
-                setShowEditDialog(false);
-                fetchCollections();
-              }}
-              onCancel={() => setShowEditDialog(false)}
-            />
+
+      <Table>
+        <TableCaption>A list of your recent collections.</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[100px]">Date</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Payment Mode</TableHead>
+            <TableHead>Shop</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center">Loading collections...</TableCell>
+            </TableRow>
+          ) : collections.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center">No collections found.</TableCell>
+            </TableRow>
+          ) : (
+            collections.map((collection) => (
+              <TableRow key={collection.id}>
+                <TableCell>{format(new Date(collection.credit_date), 'PPP')}</TableCell>
+                <TableCell>${collection.amount}</TableCell>
+                <TableCell>{collection.credit_type}</TableCell>
+                <TableCell>{collection.shops?.name}</TableCell>
+                <TableCell className="text-right font-medium">
+                  <div className="flex justify-end gap-2">
+                    <Button size="icon" variant="outline" onClick={() => copyToClipboard(JSON.stringify(collection))}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="outline" onClick={() => navigate(`/collection/${collection.id}`)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="destructive" onClick={() => openDeleteModal(collection.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
           )}
+        </TableBody>
+      </Table>
+
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Are you sure absolutely sure?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete the collection from our servers.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={closeDeleteModal}>Cancel</Button>
+            <Button type="button" variant="destructive" onClick={() => handleDelete(collectionToDelete)}>Delete</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

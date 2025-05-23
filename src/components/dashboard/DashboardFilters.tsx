@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -166,16 +165,20 @@ export function DashboardFilters({
           <div>
             <label className="block text-sm font-medium mb-1">Shop</label>
             <Select
-              value={selectedShops.length === 1 ? selectedShops[0] : ""}
+              value={selectedShops.length === 1 ? selectedShops[0] : "all_shops"}
               onValueChange={(value) => {
-                setSelectedShops(value ? [value] : []);
+                if (value === "all_shops") {
+                  setSelectedShops([]);
+                } else {
+                  setSelectedShops([value]);
+                }
               }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All Shops" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Shops</SelectItem>
+                <SelectItem value="all_shops">All Shops</SelectItem>
                 {shops.map((shop) => (
                   <SelectItem key={shop.id} value={shop.id}>
                     {shop.name}
@@ -189,17 +192,17 @@ export function DashboardFilters({
           <div>
             <label className="block text-sm font-medium mb-1">Category</label>
             <Select
-              value={selectedCategory || ""}
-              onValueChange={(value) => setSelectedCategory(value || null)}
+              value={selectedCategory || "all_categories"}
+              onValueChange={(value) => setSelectedCategory(value === "all_categories" ? null : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all_categories">All Categories</SelectItem>
                 {categories.map((category, index) => (
-                  <SelectItem key={index} value={category.name}>
-                    {category.name}
+                  <SelectItem key={index} value={category.name || "unnamed_category"}>
+                    {category.name || "Unnamed Category"}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -210,14 +213,14 @@ export function DashboardFilters({
           <div>
             <label className="block text-sm font-medium mb-1">Product</label>
             <Select
-              value={selectedProduct || ""}
-              onValueChange={(value) => setSelectedProduct(value || null)}
+              value={selectedProduct || "all_products"}
+              onValueChange={(value) => setSelectedProduct(value === "all_products" ? null : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All Products" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Products</SelectItem>
+                <SelectItem value="all_products">All Products</SelectItem>
                 {filteredProducts.map((product) => (
                   <SelectItem key={product.id} value={product.id}>
                     {product.name}

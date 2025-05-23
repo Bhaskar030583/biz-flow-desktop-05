@@ -1,123 +1,51 @@
-
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { UserRole } from "@/context/AuthContext";
-import { toast } from "sonner";
-import { fetchUsers } from "@/services/userServices";
-import { useUserRoleManagement } from "@/hooks/useUserRoleManagement";
-import { useUserFormState } from "@/hooks/useUserFormState";
-import { type UserData } from "@/types/user";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User, UserRole } from '@/types/user';
 
 export const useUserManagement = () => {
-  const [users, setUsers] = useState<UserData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  const { 
-    email,
-    setEmail,
-    password,
-    setPassword,
-    fullName,
-    setFullName,
-    role,
-    setRole,
-    isSubmitting,
-    setIsSubmitting
-  } = useUserFormState();
-  
-  const { updateUserRole, updateUserRoleToAdmin } = useUserRoleManagement(users, setUsers);
-
-  const fetchUsersData = async () => {
-    setIsLoading(true);
+  const fetchUsers = async () => {
     try {
-      const userData = await fetchUsers();
-      // Convert User type to UserData type if needed
-      const convertedUsers: UserData[] = userData.map(user => ({
-        id: user.id,
-        email: user.email,
-        role: user.role as UserRole,
-        created_at: user.created_at,
-        full_name: user.full_name || null
-      }));
-      setUsers(convertedUsers);
+      setLoading(true);
+      
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('*');
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Make sure we're mapping the data correctly based on the available properties
+      const formattedUsers = profiles?.map((profile) => ({
+        id: profile.id,
+        fullName: profile.full_name,
+        // If email is needed but not in profiles, you might need to join with auth.users
+        // or adjust your data model to include email in profiles
+        // For now, set email to a placeholder or use another property
+        email: 'user@example.com', // Placeholder - replace with actual email source
+        avatarUrl: profile.avatar_url,
+        role: profile.role || UserRole.User,
+        createdAt: profile.created_at
+      })) || [];
+      
+      setUsers(formattedUsers);
     } catch (error) {
-      console.error("Error fetching users:", error);
-      toast.error("Failed to fetch users");
+      console.error('Error fetching users:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-
-  const handleAddUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password || !fullName) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    // Special handling for protected admin email
-    if (email === "gumpubhaskar3000@gmail.com") {
-      toast.error("This email address is reserved for system administrator");
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    try {
-      // Use regular signup instead of admin API
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { 
-            full_name: fullName,
-            role: role 
-          }
-        }
-      });
-      
-      if (error) throw error;
-      
-      toast.success("User created successfully. Check email for confirmation link.");
-      
-      // Reset form
-      setEmail("");
-      setPassword("");
-      setFullName("");
-      setRole("user");
-      
-      // Refresh user list
-      setTimeout(() => {
-        fetchUsers();
-      }, 1000);
-      
-    } catch (error: any) {
-      console.error("Error creating user:", error);
-      toast.error(error.message || "Failed to create user");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
+  
   useEffect(() => {
-    fetchUsersData();
+    fetchUsers();
   }, []);
-
+  
   return {
     users,
-    isLoading,
-    email,
-    setEmail,
-    password,
-    setPassword,
-    fullName,
-    setFullName,
-    role,
-    setRole,
-    isSubmitting,
-    fetchUsers: fetchUsersData,
-    handleAddUser,
-    updateUserRole
+    loading,
+    fetchUsers,
   };
 };
