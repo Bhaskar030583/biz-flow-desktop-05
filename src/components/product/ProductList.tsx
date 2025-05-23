@@ -13,7 +13,7 @@ interface Product {
   name: string;
   category: string;
   price: number;
-  cost_price: number;
+  cost_price: number | null;
   created_at: string;
 }
 
@@ -36,7 +36,13 @@ export function ProductList() {
         
         if (error) throw error;
         
-        setProducts(data || []);
+        // Make sure to handle products with missing cost_price
+        const productsWithDefaults = (data || []).map(product => ({
+          ...product,
+          cost_price: product.cost_price !== undefined ? product.cost_price : null
+        })) as Product[];
+        
+        setProducts(productsWithDefaults);
         
         // Extract unique categories
         const uniqueCategories = Array.from(
@@ -146,7 +152,7 @@ export function ProductList() {
                   <TableCell>
                     <div className="flex items-center">
                       <IndianRupee className="h-3 w-3 mr-1" />
-                      {product.cost_price !== undefined ? product.cost_price.toFixed(2) : "N/A"}
+                      {product.cost_price !== null ? product.cost_price.toFixed(2) : "N/A"}
                     </div>
                   </TableCell>
                   <TableCell>

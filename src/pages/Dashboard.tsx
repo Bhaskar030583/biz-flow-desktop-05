@@ -24,7 +24,14 @@ const Dashboard = () => {
   });
 
   const handleFilterChange = (newFilters: DashboardFilters) => {
-    setFilters(newFilters);
+    // Convert "all" values to null
+    const processedFilters = {
+      ...newFilters,
+      shopId: newFilters.shopId === "all" ? null : newFilters.shopId,
+      category: newFilters.category === "all" ? null : newFilters.category,
+      productId: newFilters.productId === "all" ? null : newFilters.productId
+    };
+    setFilters(processedFilters);
   };
 
   return (

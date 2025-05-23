@@ -175,7 +175,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
       {/* Shop Select */}
       <div>
         <Select
-          value={selectedShop || ""}
+          value={selectedShop || undefined}
           onValueChange={(value) => setSelectedShop(value || null)}
         >
           <SelectTrigger className={cn(!selectedShop && "text-muted-foreground")}>
@@ -183,7 +183,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
             <SelectValue placeholder="Select Shop" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Shops</SelectItem>
+            <SelectItem value="all">All Shops</SelectItem>
             {shops.map((shop) => (
               <SelectItem key={shop.id} value={shop.id}>{shop.name}</SelectItem>
             ))}
@@ -194,7 +194,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
       {/* Category Select */}
       <div>
         <Select
-          value={selectedCategory || ""}
+          value={selectedCategory || undefined}
           onValueChange={(value) => {
             setSelectedCategory(value || null);
             setSelectedProduct(null); // Reset product when category changes
@@ -205,7 +205,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
             <SelectValue placeholder="Select Category" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Categories</SelectItem>
+            <SelectItem value="all">All Categories</SelectItem>
             {categories.map((category) => (
               <SelectItem key={category} value={category}>{category}</SelectItem>
             ))}
@@ -216,7 +216,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
       {/* Product Select */}
       <div>
         <Select
-          value={selectedProduct || ""}
+          value={selectedProduct || undefined}
           onValueChange={(value) => setSelectedProduct(value || null)}
         >
           <SelectTrigger className={cn(!selectedProduct && "text-muted-foreground")}>
@@ -224,7 +224,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
             <SelectValue placeholder="Select Product" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Products</SelectItem>
+            <SelectItem value="all">All Products</SelectItem>
             {filteredProducts.map((product) => (
               <SelectItem key={product.id} value={product.id}>{product.name}</SelectItem>
             ))}

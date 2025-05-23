@@ -37,7 +37,7 @@ export function SalesChart({ startDate, endDate, shopId, categoryId, productId }
             sale_date,
             quantity,
             price,
-            products(name, cost_price, price, category)
+            products(id, name, cost_price, price, category)
           `)
           .order("sale_date");
         
@@ -81,6 +81,7 @@ export function SalesChart({ startDate, endDate, shopId, categoryId, productId }
           }
           
           const totalSale = Number(sale.price) * sale.quantity;
+          // Default cost price to 0 if not available
           const costPrice = Number(sale.products.cost_price || 0) * sale.quantity;
           const profit = totalSale - costPrice;
           
