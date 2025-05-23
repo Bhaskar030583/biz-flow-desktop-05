@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { Link, useLocation } from "react-router-dom";
-import { Store, Package, Layers, Plus } from "lucide-react";
+import { Store, Package, Layers, CreditCard } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -72,6 +72,17 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   >
                     <Layers className="mr-2 h-4 w-4" />
                     Stocks
+                  </Button>
+                </Link>
+              </li>
+              <li>
+                <Link to="/credits">
+                  <Button 
+                    variant={isActive("/credits") ? "default" : "ghost"} 
+                    className="w-full justify-start"
+                  >
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Credits
                   </Button>
                 </Link>
               </li>

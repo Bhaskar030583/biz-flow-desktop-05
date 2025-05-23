@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Shops from "./pages/Shops";
 import Products from "./pages/Products";
 import Stocks from "./pages/Stocks";
+import Credits from "./pages/Credits";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,11 @@ const App = () => (
             <Route path="/stocks" element={
               <PrivateRoute>
                 <Stocks />
+              </PrivateRoute>
+            } />
+            <Route path="/credits" element={
+              <PrivateRoute>
+                <Credits />
               </PrivateRoute>
             } />
             <Route path="*" element={<NotFound />} />
