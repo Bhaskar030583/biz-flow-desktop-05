@@ -33,10 +33,29 @@ const Stocks = () => {
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [activeTab, setActiveTab] = useState("list");
+  const [stockCount, setStockCount] = useState(0);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subDays(new Date(), 7),
     to: new Date(),
   });
+
+  useEffect(() => {
+    // Count stock entries when component loads or refreshTrigger changes
+    const countStockEntries = async () => {
+      try {
+        const { count, error } = await supabase
+          .from("stocks")
+          .select("*", { count: 'exact', head: true });
+        
+        if (error) throw error;
+        setStockCount(count || 0);
+      } catch (error) {
+        console.error("Error counting stock entries:", error);
+      }
+    };
+    
+    countStockEntries();
+  }, [refreshTrigger]);
 
   const handleStockAdded = () => {
     setShowForm(false);
@@ -84,6 +103,12 @@ const Stocks = () => {
 
   const handleExport = async () => {
     try {
+      // Check if there are any stocks to export
+      if (stockCount === 0) {
+        toast.error("No stock entries to export. Please add stock entries first.");
+        return;
+      }
+      
       setExporting(true);
       setExportProgress(10);
       
@@ -254,7 +279,8 @@ const Stocks = () => {
                 variant="outline"
                 className="bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 flex-1 sm:flex-none"
                 onClick={handleExport}
-                disabled={exporting}
+                disabled={exporting || stockCount === 0}
+                title={stockCount === 0 ? "No stock entries to export" : "Export to Excel"}
               >
                 <FileDown className="mr-2 h-4 w-4" /> 
                 {exporting ? "Exporting..." : "Export"}

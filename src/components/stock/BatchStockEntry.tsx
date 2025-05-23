@@ -34,7 +34,8 @@ import {
   FileText, 
   Search, 
   Filter,
-  Loader2 
+  Loader2,
+  AlertCircle 
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -50,6 +51,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Define the form schema
 const batchStockSchema = z.object({
@@ -87,6 +89,8 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
+  const [validationError, setValidationError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Define form with default values
   const form = useForm<BatchStockFormValues>({
@@ -102,6 +106,7 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
   // Watch for shop_id changes
   const watchShopId = form.watch("shop_id");
   const watchStockDate = form.watch("stock_date");
+  const watchProducts = form.watch("products");
 
   // Load shops and products
   useEffect(() => {
@@ -218,30 +223,93 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
     fetchPreviousStockData();
   }, [selectedShop, watchStockDate, form]);
 
+  // Validate all products have values
+  const validateAllProductsHaveValues = () => {
+    const products = form.getValues().products;
+    const incompleteProducts = products.filter(
+      product => product.closing_stock === 0 && product.actual_stock === 0
+    );
+    
+    if (incompleteProducts.length > 0) {
+      setValidationError(`${incompleteProducts.length} products are missing values. Please enter closing stock or actual stock for all products.`);
+      return false;
+    }
+    
+    setValidationError("");
+    return true;
+  };
+
   const onSubmit = async (values: BatchStockFormValues) => {
     if (!user) {
       toast.error("You must be logged in to add stock entries");
       return;
     }
 
+    // Validate that all products have values
+    if (!validateAllProductsHaveValues()) {
+      toast.error("Please enter values for all products before saving");
+      return;
+    }
+
     try {
       setLoading(true);
+      setIsSubmitting(true);
       
       // Format date for insertion
       const formattedDate = format(values.stock_date, "yyyy-MM-dd");
       
-      // Prepare stock entries
-      const stockEntries = values.products.map(product => ({
-        user_id: user.id,
-        shop_id: values.shop_id,
-        product_id: product.product_id,
-        stock_date: formattedDate,
-        opening_stock: product.opening_stock,
-        closing_stock: product.closing_stock,
-        actual_stock: product.actual_stock,
-        shift: values.shift,
-        operator_name: values.operator_name,
-      }));
+      // Check for existing entries for this date and shop
+      const { data: existingEntries, error: checkError } = await supabase
+        .from("stocks")
+        .select("product_id")
+        .eq("shop_id", values.shop_id)
+        .eq("stock_date", formattedDate);
+        
+      if (checkError) throw checkError;
+      
+      // If there are existing entries, ask for confirmation
+      if (existingEntries && existingEntries.length > 0) {
+        const existingProductIds = existingEntries.map(entry => entry.product_id);
+        const conflictingProducts = values.products.filter(
+          product => existingProductIds.includes(product.product_id)
+        );
+        
+        if (conflictingProducts.length > 0) {
+          const confirmOverwrite = window.confirm(
+            `${conflictingProducts.length} products already have stock entries for this date. Do you want to overwrite them?`
+          );
+          
+          if (!confirmOverwrite) {
+            setLoading(false);
+            setIsSubmitting(false);
+            return;
+          }
+          
+          // Delete existing entries first
+          const { error: deleteError } = await supabase
+            .from("stocks")
+            .delete()
+            .eq("shop_id", values.shop_id)
+            .eq("stock_date", formattedDate);
+            
+          if (deleteError) throw deleteError;
+        }
+      }
+      
+      // Prepare stock entries - only include products with values
+      const stockEntries = values.products
+        .filter(product => product.closing_stock > 0 || product.actual_stock > 0)
+        .map(product => ({
+          user_id: user.id,
+          shop_id: values.shop_id,
+          product_id: product.product_id,
+          stock_date: formattedDate,
+          opening_stock: product.opening_stock,
+          closing_stock: product.closing_stock,
+          actual_stock: product.actual_stock,
+          shift: values.shift,
+          operator_name: values.operator_name,
+        }));
 
       // Insert stock entries in batches to avoid size limits
       const batchSize = 50;
@@ -260,6 +328,7 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
       toast.error(error.message || "Failed to add stock entries");
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -298,6 +367,14 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
       <CardContent className="pt-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {validationError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Validation Error</AlertTitle>
+                <AlertDescription>{validationError}</AlertDescription>
+              </Alert>
+            )}
+          
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <FormField
                 control={form.control}
@@ -645,10 +722,10 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
               </Button>
               <Button 
                 type="submit" 
-                disabled={loading}
+                disabled={loading || isSubmitting}
                 className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
               >
-                {loading ? (
+                {loading || isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Saving...
