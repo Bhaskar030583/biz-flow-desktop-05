@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { UserRole } from "@/context/AuthContext";
@@ -62,10 +61,9 @@ export const useUserManagement = () => {
         throw profilesError;
       }
       
-      // Get user emails using the auth_users_view - with type assertion to handle the custom view
+      // Get user emails using the auth_users_view using a direct RPC call to avoid typing issues
       const { data: authUsers, error: authError } = await supabase
-        .from("auth_users_view")
-        .select("*") as { data: AuthUserView[] | null, error: any };
+        .rpc('get_auth_users_view') as { data: AuthUserView[] | null, error: any };
       
       if (authError) {
         console.error("Could not fetch auth users:", authError);
