@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('role')
         .eq('id', userId)
         .single();
       
@@ -45,14 +45,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
-      // Since the role column might not exist yet in the profiles table,
-      // we need to safely handle this scenario
-      
-      // Check if data has a role property, otherwise fallback to user metadata or default
-      const role = user?.user_metadata?.role || "user";
-      setUserRole(role as UserRole);
-      
-      console.log("User role set to:", role);
+      // Now that we have the role column, we can safely access it
+      if (data && data.role) {
+        setUserRole(data.role as UserRole);
+        console.log("User role set to:", data.role);
+      } else {
+        // Fallback to user metadata or default role
+        const fallbackRole = user?.user_metadata?.role || "user";
+        setUserRole(fallbackRole as UserRole);
+        console.log("User role set to fallback:", fallbackRole);
+      }
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
     }
