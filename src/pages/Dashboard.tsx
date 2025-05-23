@@ -107,8 +107,8 @@ const Dashboard = () => {
     <DashboardLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Dashboard Overview</h1>
-          <div className="text-sm text-gray-500">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Dashboard Overview</h1>
+          <div className="text-sm text-gray-500 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
             {new Date().toLocaleDateString('en-US', { 
               weekday: 'long', 
               year: 'numeric', 
@@ -119,25 +119,25 @@ const Dashboard = () => {
         </div>
         
         {/* Filters */}
-        <div className="bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-100">
-          <h2 className="text-lg font-medium mb-3">Data Filters</h2>
+        <div className="bg-white p-4 rounded-lg shadow-sm mb-6 border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/30">
+          <h2 className="text-lg font-medium mb-3 text-indigo-700">Data Filters</h2>
           <DashboardFilters onFilterChange={handleFilterChange} />
         </div>
         
         {/* Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="border-none shadow-sm hover:shadow transition-shadow">
+          <Card className="border-none shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-blue-50 to-white border-l-4 border-l-blue-500">
             <CardHeader className="pb-2 space-y-0 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+                <CardTitle className="text-sm font-medium text-blue-700">Total Sales</CardTitle>
                 <CardDescription>Revenue overview</CardDescription>
               </div>
-              <div className="bg-primary/10 p-2 rounded-full">
-                <TrendingUp className="h-5 w-5 text-primary" />
+              <div className="bg-blue-100 p-2 rounded-full text-blue-600">
+                <TrendingUp className="h-5 w-5" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center text-2xl font-bold">
+              <div className="flex items-center text-2xl font-bold text-blue-900">
                 <IndianRupee className="h-5 w-5 mr-1" />
                 <span>0.00</span>
               </div>
@@ -150,18 +150,18 @@ const Dashboard = () => {
             </CardContent>
           </Card>
           
-          <Card className="border-none shadow-sm hover:shadow transition-shadow">
+          <Card className="border-none shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-amber-50 to-white border-l-4 border-l-amber-500">
             <CardHeader className="pb-2 space-y-0 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-sm font-medium">Profit/Loss</CardTitle>
+                <CardTitle className="text-sm font-medium text-amber-700">Profit/Loss</CardTitle>
                 <CardDescription>Financial summary</CardDescription>
               </div>
-              <div className="bg-muted p-2 rounded-full">
-                <TrendingDown className="h-5 w-5 text-muted-foreground" />
+              <div className="bg-amber-100 p-2 rounded-full text-amber-600">
+                <TrendingDown className="h-5 w-5" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center text-2xl font-bold">
+              <div className="flex items-center text-2xl font-bold text-amber-900">
                 <IndianRupee className="h-5 w-5 mr-1" />
                 <span>0.00</span>
               </div>
@@ -174,14 +174,14 @@ const Dashboard = () => {
             </CardContent>
           </Card>
           
-          <Card className="border-none shadow-sm hover:shadow transition-shadow">
+          <Card className="border-none shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-emerald-50 to-white border-l-4 border-l-emerald-500">
             <CardHeader className="pb-2 space-y-0 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-sm font-medium">Credits</CardTitle>
+                <CardTitle className="text-sm font-medium text-emerald-700">Credits</CardTitle>
                 <CardDescription>Given & Received</CardDescription>
               </div>
-              <div className={`p-2 rounded-full ${isPositiveBalance ? 'bg-green-100' : 'bg-red-100'}`}>
-                <CreditIcon className={`h-5 w-5 ${isPositiveBalance ? 'text-green-600' : 'text-red-600'}`} />
+              <div className={`p-2 rounded-full ${isPositiveBalance ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
+                <CreditIcon className="h-5 w-5" />
               </div>
             </CardHeader>
             <CardContent>
@@ -195,16 +195,16 @@ const Dashboard = () => {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Received:</span>
-                  <div className="flex items-center text-green-500">
+                  <div className="flex items-center text-emerald-500">
                     <IndianRupee className="h-4 w-4 mr-1" />
                     <span>{creditReceived.toFixed(2)}</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between pt-1 border-t">
+                <div className="flex items-center justify-between pt-1 border-t border-dashed">
                   <span className="text-sm font-medium">Balance:</span>
                   <div className="flex items-center text-lg font-bold">
                     <IndianRupee className="h-4 w-4 mr-1" />
-                    <span className={isPositiveBalance ? "text-green-500" : "text-red-500"}>
+                    <span className={isPositiveBalance ? "text-emerald-500" : "text-red-500"}>
                       {creditBalance.toFixed(2)}
                     </span>
                   </div>
@@ -221,12 +221,12 @@ const Dashboard = () => {
         </div>
         
         {/* Charts */}
-        <Card className="border-none shadow-sm mb-8">
-          <CardHeader>
-            <CardTitle>Sales Performance</CardTitle>
+        <Card className="border-none shadow-sm mb-8 bg-gradient-to-br from-white to-purple-50/30 border border-purple-100">
+          <CardHeader className="bg-gradient-to-r from-purple-50 to-transparent border-b border-purple-100">
+            <CardTitle className="text-purple-800">Sales Performance</CardTitle>
             <CardDescription>View your sales trends over time</CardDescription>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-4">
             <SalesChart 
               startDate={filters.startDate} 
               endDate={filters.endDate}
@@ -239,20 +239,20 @@ const Dashboard = () => {
         
         {/* Welcome Card - Show only if no filters are applied */}
         {!filters.startDate && !filters.endDate && !filters.shopId && !filters.category && !filters.productId && (
-          <Card className="border-none shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <Card className="border-none shadow-sm bg-gradient-to-r from-cyan-50 to-blue-50 border border-blue-100">
+            <CardHeader className="border-b border-blue-100">
+              <CardTitle className="flex items-center gap-2 text-blue-800">
                 <AlertCircle className="h-5 w-5 text-blue-500" />
                 Welcome to Your Business Metrics Dashboard
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <p className="mb-4">To get started with tracking your business metrics, you'll need to:</p>
-              <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
+              <div className="bg-white p-4 rounded-md border border-blue-100 shadow-sm">
                 <ol className="list-decimal pl-5 space-y-2">
-                  <li className="text-sm">Add your first shop through the Shops section</li>
-                  <li className="text-sm">Create product categories and products</li>
-                  <li className="text-sm">Enter stock and sales data</li>
+                  <li className="text-sm text-blue-800">Add your first shop through the Shops section</li>
+                  <li className="text-sm text-blue-800">Create product categories and products</li>
+                  <li className="text-sm text-blue-800">Enter stock and sales data</li>
                 </ol>
               </div>
               <p className="mt-4 text-sm text-muted-foreground">

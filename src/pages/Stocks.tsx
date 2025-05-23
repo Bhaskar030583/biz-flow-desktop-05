@@ -25,10 +25,10 @@ const Stocks = () => {
     <DashboardLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-indigo-800">Stock Management</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-700 to-purple-600 bg-clip-text text-transparent">Stock Management</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Options
               </Button>
@@ -36,7 +36,7 @@ const Stocks = () => {
             <DropdownMenuContent align="end" className="bg-white border border-indigo-100 shadow-lg">
               <DropdownMenuItem 
                 onClick={() => setShowForm(!showForm)}
-                className="hover:bg-indigo-50 hover:text-indigo-700 cursor-pointer"
+                className="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer"
               >
                 {showForm ? "Cancel Entry" : "Add Stock Entry"}
               </DropdownMenuItem>
@@ -48,11 +48,11 @@ const Stocks = () => {
         </div>
 
         {showForm && (
-          <div className="mb-8 bg-white p-6 rounded-lg shadow-md border border-indigo-100">
+          <div className="mb-8 bg-white p-6 rounded-lg shadow-md border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/30">
             <StockForm onSuccess={handleStockAdded} onCancel={() => setShowForm(false)} />
           </div>
         )}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200">
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 bg-gradient-to-br from-white to-purple-50/20">
           <StockList refreshTrigger={refreshTrigger} />
         </div>
       </div>
