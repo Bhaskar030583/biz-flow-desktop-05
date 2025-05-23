@@ -1,25 +1,24 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useEffect, useState } from "react";
+import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, Store, Package, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Checkbox } from "@/components/ui/checkbox";
-
-interface Shop {
-  id: string;
-  name: string;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-}
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card";
 
 interface DashboardFiltersProps {
   startDate: Date | null;
@@ -46,273 +45,189 @@ export function DashboardFilters({
   selectedProduct,
   setSelectedProduct
 }: DashboardFiltersProps) {
-  const [shops, setShops] = useState<Shop[]>([]);
-  const [showShopDropdown, setShowShopDropdown] = useState<boolean>(false);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const [shops, setShops] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch shops
+  // Fetch shops, categories, and products on component mount
   useEffect(() => {
-    async function fetchShops() {
+    if (!user) return;
+    
+    const fetchFilterData = async () => {
+      setIsLoading(true);
       try {
-        const { data, error } = await supabase
+        // Fetch shops
+        const { data: shopsData } = await supabase
           .from("shops")
           .select("id, name")
+          .eq("user_id", user.id)
           .order("name");
         
-        if (error) throw error;
-        setShops(data || []);
-      } catch (error: any) {
-        console.error("Error fetching shops:", error.message);
-      }
-    }
-
-    fetchShops();
-  }, []);
-
-  // Fetch products and categories
-  useEffect(() => {
-    async function fetchProducts() {
-      try {
-        setLoading(true);
+        setShops(shopsData || []);
         
-        let query = supabase
+        // Fetch categories
+        const { data: productsData } = await supabase
           .from("products")
-          .select("id, name, category");
+          .select("id, name, category")
+          .eq("user_id", user.id)
+          .order("name");
         
-        // Filter by shop if selected shops
-        if (selectedShops.length > 0) {
-          // This would require a join with sales to filter products by shop
-          // For simplicity, we're not doing this filter here
-        }
-        
-        const { data, error } = await query.order("name");
-        
-        if (error) throw error;
-        
-        setProducts(data || []);
-        
-        // Extract unique categories
         const uniqueCategories = Array.from(
-          new Set((data || []).map(product => product.category))
-        );
+          new Set((productsData || []).map(product => product.category))
+        ).map(category => ({
+          name: category
+        }));
+        
         setCategories(uniqueCategories);
-      } catch (error: any) {
-        console.error("Error fetching products:", error.message);
+        setProducts(productsData || []);
+      } catch (error) {
+        console.error("Error fetching filter data:", error);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
+    };
+    
+    fetchFilterData();
+  }, [user]);
+
+  const handleShopChange = (shopId: string) => {
+    // If already selected, remove it, otherwise add it
+    if (selectedShops.includes(shopId)) {
+      setSelectedShops(selectedShops.filter(id => id !== shopId));
+    } else {
+      setSelectedShops([...selectedShops, shopId]);
     }
-
-    fetchProducts();
-  }, [selectedShops]);
-
-  // Filter products by category
+  };
+  
+  // Filter products based on selected category
   const filteredProducts = selectedCategory
     ? products.filter(product => product.category === selectedCategory)
     : products;
 
-  // Reset filters
-  const resetFilters = () => {
-    setStartDate(null);
-    setEndDate(null);
-    setSelectedShops([]);
-    setSelectedCategory(null);
-    setSelectedProduct(null);
-  };
-
-  // Toggle shop selection
-  const toggleShop = (shopId: string) => {
-    setSelectedShops(prevSelected => {
-      if (prevSelected.includes(shopId)) {
-        return prevSelected.filter(id => id !== shopId);
-      } else {
-        return [...prevSelected, shopId];
-      }
-    });
-  };
-
-  // Toggle all shops
-  const toggleAllShops = () => {
-    if (selectedShops.length === shops.length) {
-      setSelectedShops([]);
-    } else {
-      setSelectedShops(shops.map(shop => shop.id));
-    }
-  };
-
-  // Get shop display text
-  const getShopDisplayText = () => {
-    if (selectedShops.length === 0) {
-      return "Select Shop(s)";
-    } else if (selectedShops.length === shops.length) {
-      return "All Shops";
-    } else if (selectedShops.length === 1) {
-      const shop = shops.find(s => s.id === selectedShops[0]);
-      return shop ? shop.name : "1 Shop";
-    } else {
-      return `${selectedShops.length} Shops`;
-    }
-  };
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-      {/* Start Date */}
-      <div>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full justify-start text-left font-normal"
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {startDate ? format(startDate, "PPP") : "Start Date"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
-            <Calendar
-              mode="single"
-              selected={startDate}
-              onSelect={setStartDate}
-              initialFocus
-              className="p-3 pointer-events-auto"
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      {/* End Date */}
-      <div>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full justify-start text-left font-normal"
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {endDate ? format(endDate, "PPP") : "End Date"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
-            <Calendar
-              mode="single"
-              selected={endDate}
-              onSelect={setEndDate}
-              initialFocus
-              className="p-3 pointer-events-auto"
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      {/* Shop Multi-Select */}
-      <div>
-        <Popover open={showShopDropdown} onOpenChange={setShowShopDropdown}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full justify-between text-left font-normal"
-            >
-              <div className="flex items-center">
-                <Store className="w-4 h-4 mr-2" />
-                <span className={cn(selectedShops.length === 0 && "text-muted-foreground")}>
-                  {getShopDisplayText()}
-                </span>
-              </div>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56 p-0" align="start">
-            <div className="p-2 border-b border-gray-100">
-              <div 
-                className="flex items-center space-x-2 px-2 py-1.5 rounded-md hover:bg-gray-100 cursor-pointer"
-                onClick={toggleAllShops}
-              >
-                <Checkbox 
-                  checked={shops.length > 0 && selectedShops.length === shops.length}
-                  className="border-indigo-500 data-[state=checked]:bg-indigo-500 data-[state=checked]:text-white"
-                />
-                <label className="text-sm cursor-pointer flex-1">All Shops</label>
-              </div>
-            </div>
-            <div className="py-2 max-h-60 overflow-auto">
-              {shops.map((shop) => (
-                <div 
-                  key={shop.id}
-                  className="flex items-center space-x-2 px-2 py-1.5 rounded-md hover:bg-gray-100 cursor-pointer"
-                  onClick={() => toggleShop(shop.id)}
-                >
-                  <Checkbox 
-                    checked={selectedShops.includes(shop.id)}
-                    className="border-indigo-500 data-[state=checked]:bg-indigo-500 data-[state=checked]:text-white"
+    <Card>
+      <CardContent className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Date Range Selection */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Date Range</label>
+            <div className="flex space-x-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "justify-start text-left font-normal w-full",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "PP") : "Start date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={startDate || undefined}
+                    onSelect={setStartDate}
+                    initialFocus
                   />
-                  <label className="text-sm cursor-pointer flex-1">{shop.name}</label>
-                </div>
-              ))}
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "justify-start text-left font-normal w-full",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "PP") : "End date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={endDate || undefined}
+                    onSelect={setEndDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
-            <div className="border-t border-gray-100 p-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full"
-                onClick={() => setShowShopDropdown(false)}
-              >
-                Apply
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
+          </div>
 
-      {/* Category Select */}
-      <div>
-        <Select
-          value={selectedCategory || undefined}
-          onValueChange={(value) => {
-            setSelectedCategory(value === "all" ? null : value);
-            setSelectedProduct(null); // Reset product when category changes
-          }}
-        >
-          <SelectTrigger className={cn(!selectedCategory && "text-muted-foreground")}>
-            <Package className="w-4 h-4 mr-2" />
-            <SelectValue placeholder="Select Category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {categories.map((category) => (
-              <SelectItem key={category} value={category}>{category}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+          {/* Shop Selection */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Shop</label>
+            <Select
+              value={selectedShops.length === 1 ? selectedShops[0] : ""}
+              onValueChange={(value) => {
+                setSelectedShops(value ? [value] : []);
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All Shops" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Shops</SelectItem>
+                {shops.map((shop) => (
+                  <SelectItem key={shop.id} value={shop.id}>
+                    {shop.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      {/* Product Select */}
-      <div>
-        <Select
-          value={selectedProduct || undefined}
-          onValueChange={(value) => setSelectedProduct(value === "all" ? null : value)}
-        >
-          <SelectTrigger className={cn(!selectedProduct && "text-muted-foreground")}>
-            <Package className="w-4 h-4 mr-2" />
-            <SelectValue placeholder="Select Product" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Products</SelectItem>
-            {filteredProducts.map((product) => (
-              <SelectItem key={product.id} value={product.id}>{product.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+          {/* Category Selection */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Category</label>
+            <Select
+              value={selectedCategory || ""}
+              onValueChange={(value) => setSelectedCategory(value || null)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Categories</SelectItem>
+                {categories.map((category, index) => (
+                  <SelectItem key={index} value={category.name}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      {/* Reset Filters Button - Updated for better visibility in dark mode */}
-      <Button 
-        variant="outline" 
-        onClick={resetFilters}
-        className="mt-2 lg:mt-0 col-span-1 md:col-span-2 lg:col-span-5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600"
-      >
-        Reset Filters
-      </Button>
-    </div>
+          {/* Product Selection */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Product</label>
+            <Select
+              value={selectedProduct || ""}
+              onValueChange={(value) => setSelectedProduct(value || null)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All Products" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Products</SelectItem>
+                {filteredProducts.map((product) => (
+                  <SelectItem key={product.id} value={product.id}>
+                    {product.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

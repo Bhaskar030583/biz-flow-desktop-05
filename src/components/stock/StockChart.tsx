@@ -62,6 +62,8 @@ const StockChart: React.FC<ChartProps> = ({ entries = [], isLoading = false }) =
     }
     
     entries.forEach(entry => {
+      if (!entry) return; // Skip undefined entries
+      
       const date = entry.stock_date;
       const unitsSold = entry.opening_stock - entry.closing_stock;
       const sales = unitsSold * Number(entry.products?.price || 0);
