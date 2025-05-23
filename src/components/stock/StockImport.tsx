@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { read, utils } from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { FileUp } from "lucide-react";
+import { FileUp, Download } from "lucide-react";
+import { generateStockTemplate } from "@/utils/templateUtils";
 
 interface StockImportProps {
   onComplete: () => void;
@@ -44,6 +45,16 @@ const StockImport = ({ onComplete }: StockImportProps) => {
       console.error("Error reading file:", error);
       setError("Could not read the file. Please ensure it's a valid Excel file.");
       setPreview([]);
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    try {
+      generateStockTemplate();
+      toast.success("Template downloaded successfully");
+    } catch (error) {
+      console.error("Error generating template:", error);
+      toast.error("Failed to download template");
     }
   };
 
@@ -168,6 +179,22 @@ const StockImport = ({ onComplete }: StockImportProps) => {
 
   return (
     <div className="p-4 space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h3 className="font-medium text-sm">Import from Excel</h3>
+          <p className="text-xs text-muted-foreground">Upload your Excel file with stock data</p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handleDownloadTemplate}
+          className="flex items-center gap-1"
+        >
+          <Download className="h-4 w-4" />
+          Download Template
+        </Button>
+      </div>
+
       <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
         <label className="flex flex-col items-center justify-center cursor-pointer">
           <FileUp className="h-10 w-10 text-indigo-500 mb-2" />

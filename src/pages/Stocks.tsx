@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import StockForm from "@/components/stock/StockForm";
 import StockList from "@/components/stock/StockList";
 import BatchStockEntry from "@/components/stock/BatchStockEntry";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileDown, FileUp, Layers, Calendar, ChevronDown } from "lucide-react";
+import { PlusCircle, FileDown, FileUp, Layers, Calendar, ChevronDown, Download } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +23,7 @@ import { format, subDays, startOfDay, endOfDay, startOfToday, endOfToday, startO
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DateRange } from "react-day-picker";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { generateStockTemplate } from "@/utils/templateUtils";
 
 const Stocks = () => {
   const [showForm, setShowForm] = useState(false);
@@ -201,6 +201,16 @@ const Stocks = () => {
     }
   };
 
+  const handleDownloadTemplate = () => {
+    try {
+      generateStockTemplate();
+      toast.success("Template downloaded successfully");
+    } catch (error) {
+      console.error("Error generating template:", error);
+      toast.error("Failed to download template");
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="container mx-auto px-4 py-8">
@@ -275,6 +285,16 @@ const Stocks = () => {
             </DropdownMenu>
             
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 flex-1 sm:flex-none"
+                onClick={handleDownloadTemplate}
+                title="Download import template"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Template
+              </Button>
+              
               <Button
                 variant="outline"
                 className="bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 flex-1 sm:flex-none"
