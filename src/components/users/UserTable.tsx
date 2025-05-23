@@ -74,6 +74,7 @@ export const UserTable: React.FC<UserTableProps> = ({ users, isLoading, updateUs
                     onValueChange={(value: string) => 
                       updateUserRole(user.id, value as UserRole)
                     }
+                    disabled={user.email === "gumpubhaskar3000@gmail.com"} // Prevent changing role for this specific user
                   >
                     <SelectTrigger className="w-32">
                       <SelectValue />
@@ -90,7 +91,11 @@ export const UserTable: React.FC<UserTableProps> = ({ users, isLoading, updateUs
                   {new Date(user.created_at).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="sm">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    disabled={user.email === "gumpubhaskar3000@gmail.com"} // Prevent removing this specific user
+                  >
                     <UserX size={16} className="mr-1 text-red-500" />
                     Remove
                   </Button>
