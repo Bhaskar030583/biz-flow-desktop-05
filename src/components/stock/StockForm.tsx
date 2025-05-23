@@ -28,7 +28,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const stockSchema = z.object({
   shop_id: z.string().uuid("Please select a shop"),
@@ -60,6 +61,7 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [validationError, setValidationError] = useState("");
   const [isDuplicate, setIsDuplicate] = useState(false);
+  const [duplicateId, setDuplicateId] = useState<string | null>(null);
 
   const form = useForm<StockFormValues>({
     resolver: zodResolver(stockSchema),
@@ -120,8 +122,11 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
   // Check for duplicate entries when shop, product, or date changes
   useEffect(() => {
     const checkDuplicateEntry = async () => {
+      // Reset duplicate state when any key field changes
+      setIsDuplicate(false);
+      setDuplicateId(null);
+      
       if (!watchShopId || !watchProductId || !watchStockDate) {
-        setIsDuplicate(false);
         return;
       }
 
@@ -141,13 +146,23 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
           return;
         }
 
-        setIsDuplicate(!!data);
+        if (data) {
+          setIsDuplicate(true);
+          setDuplicateId(data.id);
+          toast.error("A stock entry already exists for this shop, product, and date", {
+            duration: 5000,
+          });
+        }
       } catch (error) {
         console.error("Error checking for duplicate:", error);
       }
     };
 
-    checkDuplicateEntry();
+    const timer = setTimeout(() => {
+      checkDuplicateEntry();
+    }, 300); // Add a small delay to avoid too many requests during form filling
+
+    return () => clearTimeout(timer);
   }, [watchShopId, watchProductId, watchStockDate]);
 
   // Fetch previous day's actual stock and update opening stock
@@ -208,9 +223,9 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
       return;
     }
 
-    // Check for duplicates
+    // Final check for duplicates
     if (isDuplicate) {
-      toast.error("A stock entry already exists for this shop, product, and date");
+      toast.error("Cannot submit: A stock entry already exists for this shop, product, and date");
       return;
     }
 
@@ -219,6 +234,25 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
 
       // Format the date as a string for Supabase
       const formattedDate = format(values.stock_date, "yyyy-MM-dd");
+
+      // One more safety check for duplicates right before insert
+      const { data: existingData, error: checkError } = await supabase
+        .from("stocks")
+        .select("id")
+        .eq("shop_id", values.shop_id)
+        .eq("product_id", values.product_id)
+        .eq("stock_date", formattedDate)
+        .single();
+        
+      if (checkError && checkError.code !== "PGRST116") {
+        throw checkError;
+      }
+      
+      if (existingData) {
+        setIsDuplicate(true);
+        setDuplicateId(existingData.id);
+        throw new Error("A duplicate stock entry already exists");
+      }
 
       const { error } = await supabase.from("stocks").insert({
         user_id: user.id,
@@ -269,15 +303,19 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {validationError && (
               <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
                 <AlertDescription>{validationError}</AlertDescription>
               </Alert>
             )}
             
             {isDuplicate && (
               <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Duplicate Entry Detected</AlertTitle>
                 <AlertDescription>
-                  Warning: A stock entry already exists for this shop, product, and date.
-                  Submitting will create a duplicate entry.
+                  A stock entry already exists for this shop, product, and date.
+                  Please choose a different combination or update the existing entry instead.
                 </AlertDescription>
               </Alert>
             )}
