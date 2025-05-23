@@ -19,14 +19,17 @@ export const fetchUsersService = async (): Promise<UserData[]> => {
   }
   
   // Explicitly type the response from the RPC call
-  // Fix for the TypeScript error - use proper type casting
-  const { data: authUsers, error: authError } = await supabase
-    .rpc('get_auth_users_view') as { data: AuthUserView[] | null, error: any };
+  // Fix for the TypeScript error - use proper type assertion
+  const { data: authUsersData, error: authError } = await supabase
+    .rpc('get_auth_users_view');
   
   if (authError) {
     console.error("Could not fetch auth users:", authError);
     throw authError;
   }
+  
+  // Type assertion for authUsersData
+  const authUsers = authUsersData as AuthUserView[] | null;
   
   // Combine data - safely check if authUsers exists
   const combinedData = profilesData.map(profile => {

@@ -267,8 +267,8 @@ const StockChart: React.FC<ChartProps> = ({ entries, isLoading = false }) => {
                 <ReferenceLine y={0} stroke="#666" strokeWidth={1} />
                 <Bar 
                   dataKey="totalProfit" 
-                  name={v => v >= 0 ? "profit" : "loss"}
-                  fill={v => v >= 0 ? "var(--color-profit)" : "var(--color-loss)"}
+                  name={({ totalProfit }: { totalProfit: number }) => totalProfit >= 0 ? "profit" : "loss"}
+                  fill={({ totalProfit }: { totalProfit: number }) => totalProfit >= 0 ? "var(--color-profit)" : "var(--color-loss)"}
                   radius={[4, 4, 0, 0]} 
                   barSize={20} 
                 />
