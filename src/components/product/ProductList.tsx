@@ -6,7 +6,7 @@ import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Category } from "lucide-react";
+import { Trash2, Package } from "lucide-react";
 
 interface Product {
   id: string;
@@ -119,7 +119,7 @@ export function ProductList() {
               size="sm"
               onClick={() => setSelectedCategory(category)}
             >
-              <Category className="mr-1 h-4 w-4" />
+              <Package className="mr-1 h-4 w-4" />
               {category}
             </Button>
           ))}

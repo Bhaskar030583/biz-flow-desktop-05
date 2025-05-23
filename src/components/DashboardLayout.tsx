@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { Link, useLocation } from "react-router-dom";
-import { Store, Category, Plus } from "lucide-react";
+import { Store, Package, Plus } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -59,7 +59,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     variant={isActive("/products") ? "default" : "ghost"} 
                     className="w-full justify-start"
                   >
-                    <Category className="mr-2 h-4 w-4" />
+                    <Package className="mr-2 h-4 w-4" />
                     Products
                   </Button>
                 </Link>
