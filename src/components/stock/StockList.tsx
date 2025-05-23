@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Search } from "lucide-react";
 
-// Import our new components
+// Import our components
 import StockSummaryCards from "./StockSummaryCards";
 import StockFilters from "./StockFilters";
 import StockTable from "./StockTable";
+import StockSummaryCardsSkeleton from "./StockSummaryCardsSkeleton";
+import StockTableSkeleton from "./StockTableSkeleton";
 import { calculateStockProfit, calculateStockSummary, sortStockEntries, filterStockEntries } from "./stockUtils";
 
 interface StockListProps {
@@ -71,7 +73,10 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
         console.error("Error fetching stock data:", error.message);
         toast.error("Failed to load stock data");
       } finally {
-        setLoading(false);
+        // Add a small delay to show the skeleton for better UX
+        setTimeout(() => {
+          setLoading(false);
+        }, 300);
       }
     };
 
@@ -99,23 +104,23 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Stock Entries</CardTitle>
-        </CardHeader>
-        <CardContent className="flex justify-center items-center min-h-[200px]">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-600"></div>
-            <p className="text-muted-foreground">Loading stock data...</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-6 animate-fade-in">
+        <StockSummaryCardsSkeleton />
+        <Card>
+          <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 pb-4">
+            <CardTitle>Stock Entries</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <StockTableSkeleton />
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   if (stockEntries.length === 0) {
     return (
-      <Card>
+      <Card className="animate-fade-in">
         <CardHeader>
           <CardTitle>Stock Entries</CardTitle>
         </CardHeader>
@@ -135,11 +140,11 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Summary Cards */}
       <StockSummaryCards summary={summary} />
       
-      <Card>
+      <Card className="transition-all duration-200 hover:shadow-md">
         <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 pb-4">
           <CardTitle>Stock Entries</CardTitle>
           
