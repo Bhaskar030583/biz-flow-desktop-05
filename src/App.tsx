@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -27,15 +28,41 @@ function App() {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth/*" element={<Auth />} />
-              <Route element={<PrivateRoute />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/shops" element={<Shops />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/stocks" element={<Stocks />} />
-                <Route path="/credits" element={<Credits />} />
-                <Route path="/expenses" element={<Expenses />} />
-                <Route path="/users" element={<Users />} />
-              </Route>
+              <Route path="/dashboard" element={
+                <PrivateRoute>
+                  <Dashboard />
+                </PrivateRoute>
+              } />
+              <Route path="/shops" element={
+                <PrivateRoute>
+                  <Shops />
+                </PrivateRoute>
+              } />
+              <Route path="/products" element={
+                <PrivateRoute>
+                  <Products />
+                </PrivateRoute>
+              } />
+              <Route path="/stocks" element={
+                <PrivateRoute>
+                  <Stocks />
+                </PrivateRoute>
+              } />
+              <Route path="/credits" element={
+                <PrivateRoute>
+                  <Credits />
+                </PrivateRoute>
+              } />
+              <Route path="/expenses" element={
+                <PrivateRoute>
+                  <Expenses />
+                </PrivateRoute>
+              } />
+              <Route path="/users" element={
+                <PrivateRoute>
+                  <Users />
+                </PrivateRoute>
+              } />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Router>

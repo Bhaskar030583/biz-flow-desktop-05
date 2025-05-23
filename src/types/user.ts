@@ -1,6 +1,5 @@
 
-// Export UserRole as a type to fix the TS1205 error with isolatedModules
-export type { UserRole } from "@/context/AuthContext";
+import { UserRole } from "@/context/AuthContext";
 
 export type User = {
   id: string;

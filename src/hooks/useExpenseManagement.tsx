@@ -65,32 +65,56 @@ export const useExpenseManagement = () => {
     enabled: !!user
   });
 
-  // Fetch expenses
+  // Fetch expenses - using a simpler query to avoid type issues
   const { data: expenses = [], refetch: refetchExpenses, isLoading: isLoadingExpenses } = useQuery({
     queryKey: ['expenses'],
     queryFn: async () => {
       if (!user) return [];
       
-      const { data, error } = await supabase
+      // First get expenses
+      const { data: expensesData, error: expensesError } = await supabase
         .from('expenses')
-        .select(`
-          *,
-          shops:shop_id (name)
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('expense_date', { ascending: false });
       
-      if (error) {
-        console.error('Error fetching expenses:', error);
+      if (expensesError) {
+        console.error('Error fetching expenses:', expensesError);
         toast.error('Failed to load expenses');
         return [];
       }
+
+      // If no expenses, return empty array
+      if (!expensesData || expensesData.length === 0) {
+        return [];
+      }
       
-      // Transform data to include shop_name
-      return data.map((expense: any) => ({
+      // Get shop names for all shop_ids
+      const shopIds = [...new Set(expensesData.map(expense => expense.shop_id))];
+      const { data: shopsData, error: shopsError } = await supabase
+        .from('shops')
+        .select('id, name')
+        .in('id', shopIds);
+      
+      if (shopsError) {
+        console.error('Error fetching shop names:', shopsError);
+        // Return expenses without shop names
+        return expensesData;
+      }
+      
+      // Create a map of shop_id to shop_name
+      const shopMap = (shopsData || []).reduce((map, shop) => {
+        map[shop.id] = shop.name;
+        return map;
+      }, {} as Record<string, string>);
+      
+      // Add shop_name to each expense
+      const expensesWithShops = expensesData.map(expense => ({
         ...expense,
-        shop_name: expense.shops?.name
+        shop_name: shopMap[expense.shop_id] || 'Unknown Shop'
       }));
+      
+      return expensesWithShops;
     },
     enabled: !!user
   });
@@ -108,7 +132,7 @@ export const useExpenseManagement = () => {
       // Format date to YYYY-MM-DD
       const formattedDate = expenseDate.toISOString().split('T')[0];
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('expenses')
         .insert({
           user_id: user.id,
@@ -118,8 +142,7 @@ export const useExpenseManagement = () => {
           description,
           expense_date: formattedDate,
           payment_method: paymentMethod,
-        })
-        .select();
+        });
 
       if (error) throw error;
       
