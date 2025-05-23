@@ -84,10 +84,10 @@ const Dashboard = () => {
         
         // Calculate totals
         const totalGiven = givenResult.data?.reduce((sum, item) => 
-          sum + parseFloat(item.amount), 0) || 0;
+          sum + parseFloat(String(item.amount)), 0) || 0;
         
         const totalReceived = receivedResult.data?.reduce((sum, item) => 
-          sum + parseFloat(item.amount), 0) || 0;
+          sum + parseFloat(String(item.amount)), 0) || 0;
         
         setCreditGiven(totalGiven);
         setCreditReceived(totalReceived);
@@ -223,3 +223,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
