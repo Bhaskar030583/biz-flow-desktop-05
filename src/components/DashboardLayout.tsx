@@ -55,8 +55,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <div className="flex flex-col h-full">
                   <div className="bg-gradient-to-r from-indigo-700 to-purple-700 p-4 border-b border-indigo-800 flex items-center justify-between text-white">
                     <div className="flex items-center space-x-2">
-                      <img src="/lovable-uploads/13b8d922-e2b4-4692-a8dd-472a7be60eef.png" alt="Business Logo" className="h-8 w-8" />
-                      <h2 className="text-lg font-semibold">Business Metrics</h2>
+                      <img src="/lovable-uploads/18f41054-18d4-459a-8a20-72e484f71afd.png" alt="ABC CAFE Logo" className="h-8 w-8" />
+                      <h2 className="text-lg font-semibold">ABC CAFE</h2>
                     </div>
                     <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className="rounded-full hover:bg-indigo-800">
                       <X className="h-5 w-5" />
@@ -95,8 +95,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               </SheetContent>
             </Sheet>
             <div className="flex items-center">
-              <img src="/lovable-uploads/13b8d922-e2b4-4692-a8dd-472a7be60eef.png" alt="Business Logo" className="h-8 w-8 mr-2" />
-              <h1 className="text-xl font-bold text-white">Business Metrics</h1>
+              <img src="/lovable-uploads/18f41054-18d4-459a-8a20-72e484f71afd.png" alt="ABC CAFE Logo" className="h-8 w-8 mr-2" />
+              <h1 className="text-xl font-bold text-white">ABC CAFE</h1>
             </div>
           </div>
           <div className="flex items-center space-x-4">
@@ -117,8 +117,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <nav className="w-64 border-r border-indigo-100 bg-gradient-to-b from-indigo-50/50 to-white hidden md:block shadow-sm">
           <div className="p-4 space-y-6">
             <div className="flex items-center space-x-2 px-3 py-2">
-              <img src="/lovable-uploads/13b8d922-e2b4-4692-a8dd-472a7be60eef.png" alt="Business Logo" className="h-8 w-8" />
-              <h2 className="text-lg font-semibold text-indigo-900">Business Metrics</h2>
+              <img src="/lovable-uploads/18f41054-18d4-459a-8a20-72e484f71afd.png" alt="ABC CAFE Logo" className="h-8 w-8" />
+              <h2 className="text-lg font-semibold text-indigo-900">ABC CAFE</h2>
             </div>
             <div className="space-y-1">
               <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wider pl-3 mb-2">Main</p>
