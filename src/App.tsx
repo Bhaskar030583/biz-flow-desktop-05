@@ -13,6 +13,7 @@ import Shops from "./pages/Shops";
 import Products from "./pages/Products";
 import Stocks from "./pages/Stocks";
 import Credits from "./pages/Credits";
+import Users from "./pages/Users";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,11 @@ const App = () => (
             <Route path="/credits" element={
               <PrivateRoute allowedRoles={["admin"]}>
                 <Credits />
+              </PrivateRoute>
+            } />
+            <Route path="/users" element={
+              <PrivateRoute allowedRoles={["admin"]}>
+                <Users />
               </PrivateRoute>
             } />
             <Route path="*" element={<NotFound />} />

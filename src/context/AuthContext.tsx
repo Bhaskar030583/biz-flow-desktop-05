@@ -1,11 +1,10 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 // Define the role type
-export type UserRole = "admin" | "user";
+export type UserRole = "admin" | "user" | "sales" | "lead";
 
 interface AuthContextType {
   session: Session | null;

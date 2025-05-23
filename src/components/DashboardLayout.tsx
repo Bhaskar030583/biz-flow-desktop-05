@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { Link, useLocation } from "react-router-dom";
-import { Store, Package, Layers, CreditCard, Menu, X, LayoutDashboard, LogOut } from "lucide-react";
+import { Store, Package, Layers, CreditCard, Menu, X, LayoutDashboard, LogOut, Users } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -16,7 +16,7 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const { signOut, user } = useAuth();
+  const { signOut, user, userRole } = useAuth();
   const location = useLocation();
   const [open, setOpen] = useState(false);
   
@@ -34,11 +34,17 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   const navigationItems = [
     { path: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="mr-2 h-5 w-5" /> },
-    { path: "/shops", label: "Shops", icon: <Store className="mr-2 h-5 w-5" /> },
-    { path: "/products", label: "Products", icon: <Package className="mr-2 h-5 w-5" /> },
+    { path: "/shops", label: "Shops", icon: <Store className="mr-2 h-5 w-5" />, roles: ["admin"] },
+    { path: "/products", label: "Products", icon: <Package className="mr-2 h-5 w-5" />, roles: ["admin"] },
     { path: "/stocks", label: "Stocks", icon: <Layers className="mr-2 h-5 w-5" /> },
-    { path: "/credits", label: "Credits", icon: <CreditCard className="mr-2 h-5 w-5" /> },
+    { path: "/credits", label: "Credits", icon: <CreditCard className="mr-2 h-5 w-5" />, roles: ["admin"] },
+    { path: "/users", label: "Users", icon: <Users className="mr-2 h-5 w-5" />, roles: ["admin"] },
   ];
+
+  // Filter navigation items based on user role
+  const filteredNavItems = navigationItems.filter(item => 
+    !item.roles || item.roles.includes(userRole)
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-indigo-50/30">
@@ -64,7 +70,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   </div>
                   <nav className="flex-grow bg-gradient-to-b from-white to-indigo-50/50">
                     <ul className="p-4 space-y-2">
-                      {navigationItems.map((item) => (
+                      {filteredNavItems.map((item) => (
                         <li key={item.path}>
                           <Link 
                             to={item.path} 
@@ -122,7 +128,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
             <div className="space-y-1">
               <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wider pl-3 mb-2">Main</p>
-              {navigationItems.slice(0, 1).map((item) => (
+              {filteredNavItems.slice(0, 1).map((item) => (
                 <Link key={item.path} to={item.path}>
                   <Button 
                     variant={isActive(item.path) ? "default" : "ghost"} 
@@ -137,7 +143,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             
             <div className="space-y-1">
               <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wider pl-3 mb-2">Management</p>
-              {navigationItems.slice(1).map((item) => (
+              {filteredNavItems.slice(1).map((item) => (
                 <Link key={item.path} to={item.path}>
                   <Button 
                     variant={isActive(item.path) ? "default" : "ghost"} 
