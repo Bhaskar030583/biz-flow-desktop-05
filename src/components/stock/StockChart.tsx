@@ -1,4 +1,3 @@
-
 import React, { useMemo } from "react";
 import {
   LineChart,
@@ -61,13 +60,23 @@ const StockChart: React.FC<ChartProps> = ({ entries = [], isLoading = false }) =
       return [];
     }
     
-    entries.forEach(entry => {
-      if (!entry) return; // Skip undefined entries
+    // Process each entry
+    for (const entry of entries) {
+      if (!entry) continue; // Skip undefined entries
       
       const date = entry.stock_date;
+      
+      // Skip entries without valid data
+      if (!date || typeof entry.opening_stock !== 'number' || typeof entry.closing_stock !== 'number') {
+        continue;
+      }
+      
       const unitsSold = entry.opening_stock - entry.closing_stock;
-      const sales = unitsSold * Number(entry.products?.price || 0);
-      const cost = unitsSold * Number(entry.products?.cost_price || 0);
+      const productPrice = entry.products?.price || 0;
+      const productCost = entry.products?.cost_price || 0;
+      
+      const sales = unitsSold * Number(productPrice);
+      const cost = unitsSold * Number(productCost);
       const profit = sales - cost;
       
       if (dateMap.has(date)) {
@@ -87,7 +96,7 @@ const StockChart: React.FC<ChartProps> = ({ entries = [], isLoading = false }) =
           formattedDate: format(new Date(date), 'dd MMM')
         });
       }
-    });
+    }
     
     // Convert map to array and sort by date
     return Array.from(dateMap.values())
