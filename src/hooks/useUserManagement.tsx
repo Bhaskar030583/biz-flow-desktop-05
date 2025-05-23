@@ -63,8 +63,9 @@ export const useUserManagement = () => {
       }
       
       // Get user emails using the auth_users_view using a direct RPC call to avoid typing issues
+      // Fix for TypeScript error: Explicitly specify the return type as AuthUserView[]
       const { data: authUsers, error: authError } = await supabase
-        .rpc('get_auth_users_view') as { data: AuthUserView[], error: any };
+        .rpc('get_auth_users_view') as { data: AuthUserView[] | null, error: any };
       
       if (authError) {
         console.error("Could not fetch auth users:", authError);
@@ -73,9 +74,10 @@ export const useUserManagement = () => {
       
       // Combine data - safely check if authUsers exists
       const combinedData = profilesData.map(profile => {
-        const authUser = authUsers && Array.isArray(authUsers) 
-          ? authUsers.find(user => user.id === profile.id) 
-          : { email: "unknown@example.com" };
+        // Fix for TypeScript error: Use proper null check and type narrowing
+        const authUserArray = Array.isArray(authUsers) ? authUsers : [];
+        const authUser = authUserArray.find(user => user.id === profile.id) || 
+          { email: "unknown@example.com" };
         
         // Check if this is the protected admin email
         const isProtectedAdmin = authUser.email === "gumpubhaskar3000@gmail.com";
