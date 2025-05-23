@@ -26,7 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Table, Upload, ChevronDown } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -40,8 +40,6 @@ const stockSchema = z.object({
   closing_stock: z.coerce.number().int().min(0, "Must be a positive number"),
   actual_stock: z.coerce.number().int().min(0, "Must be a positive number"),
   stock_added: z.coerce.number().int().min(0, "Must be a positive number"),
-  cash_received: z.coerce.number().min(0, "Must be a positive number"),
-  online_received: z.coerce.number().min(0, "Must be a positive number"),
   shift: z.string().optional(),
   operator_name: z.string().optional(),
 });
@@ -70,8 +68,6 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
       closing_stock: 0,
       actual_stock: 0,
       stock_added: 0,
-      cash_received: 0,
-      online_received: 0,
       shift: "",
       operator_name: "",
     },
@@ -177,12 +173,6 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
     if (!validateAllFieldsFilled(values)) {
       return;
     }
-    
-    // Check if payment information is provided
-    if (values.cash_received === 0 && values.online_received === 0) {
-      setValidationError("Please enter the amount received (cash and/or online)");
-      return;
-    }
 
     try {
       setLoading(true);
@@ -201,8 +191,6 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
         stock_added: values.stock_added,
         shift: values.shift || null,
         operator_name: values.operator_name || null,
-        cash_received: values.cash_received,
-        online_received: values.online_received,
       });
 
       if (error) throw error;
@@ -472,53 +460,6 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                   </FormItem>
                 )}
               />
-              
-              <div className="col-span-2">
-                <h4 className="font-medium mb-3 text-md">Payment Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="cash_received"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cash Received</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="0"
-                            {...field}
-                            onChange={(e) => {
-                              field.onChange(Number(e.target.value));
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="online_received"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Online Received</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="0"
-                            {...field}
-                            onChange={(e) => {
-                              field.onChange(Number(e.target.value));
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
             </div>
 
             <div className="flex justify-end gap-4">

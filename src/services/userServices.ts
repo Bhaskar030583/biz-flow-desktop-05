@@ -1,50 +1,64 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { UserRole } from "@/context/AuthContext";
-import { type UserData } from "@/types/user";
+import type { User } from "@/types/user";
 
-interface AuthUserView {
-  id: string;
-  email: string;
-}
+// Fetch users from auth.users view
+export const fetchUsers = async (): Promise<User[]> => {
+  try {
+    // Fetch profiles with user role information
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-export const fetchUsersService = async (): Promise<UserData[]> => {
-  // Instead of using admin API, fetch users from the profiles table
-  const { data: profilesData, error: profilesError } = await supabase
-    .from("profiles")
-    .select("id, role, full_name, created_at");
-  
-  if (profilesError) {
-    throw profilesError;
+    if (profilesError) throw profilesError;
+
+    // Fetch auth users data (needs to be an admin)
+    const { data: authUsers, error: authError } = await supabase
+      .rpc('get_auth_users_view', {})
+      .select('*');
+
+    if (authError) {
+      console.error("Error fetching auth users:", authError);
+      return profiles.map(profile => ({
+        id: profile.id,
+        email: 'Unavailable', // Email is unavailable if not an admin
+        full_name: profile.full_name || 'Unknown',
+        avatar_url: profile.avatar_url,
+        role: profile.role || 'user',
+        created_at: profile.created_at
+      }));
+    }
+
+    // Combine the data from both queries
+    return profiles.map(profile => {
+      const authUser = authUsers?.find(user => user.id === profile.id);
+      return {
+        id: profile.id,
+        email: authUser?.email || 'Unavailable',
+        full_name: profile.full_name || 'Unknown',
+        avatar_url: profile.avatar_url,
+        role: profile.role || 'user',
+        created_at: profile.created_at
+      };
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw error;
   }
-  
-  // Use the rpc function to get auth users data - fix for TypeScript error
-  const { data: authUsersData, error: authError } = await supabase
-    .rpc('get_auth_users_view', {}) as { data: AuthUserView[] | null, error: any };
-  
-  if (authError) {
-    console.error("Could not fetch auth users:", authError);
-    throw authError;
+};
+
+// Update user role
+export const updateUserRole = async (userId: string, role: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ role })
+      .eq('id', userId);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error("Error updating user role:", error);
+    throw error;
   }
-  
-  // Combine data - safely check if authUsers exists
-  const combinedData = profilesData.map(profile => {
-    // Fix for TypeScript error: Use proper null check and type narrowing
-    const authUserArray = Array.isArray(authUsersData) ? authUsersData : [];
-    const authUser = authUserArray.find(user => user.id === profile.id) || 
-      { email: "unknown@example.com" };
-    
-    // Check if this is the protected admin email
-    const isProtectedAdmin = authUser.email === "gumpubhaskar3000@gmail.com";
-    
-    return {
-      id: profile.id,
-      email: authUser.email as string,  // Type assertion to fix the error
-      role: (profile.role as UserRole) || "user",
-      created_at: profile.created_at || "",
-      full_name: profile.full_name || "",
-    };
-  });
-  
-  return combinedData;
 };
