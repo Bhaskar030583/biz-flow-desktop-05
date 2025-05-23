@@ -22,13 +22,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, IndianRupee, Save } from "lucide-react";
+import { 
+  CalendarIcon, 
+  IndianRupee, 
+  Save, 
+  FileText, 
+  Search, 
+  Filter,
+  Loader2 
+} from "lucide-react";
 import { toast } from "sonner";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 
 // Define the form schema
 const batchStockSchema = z.object({
@@ -42,6 +63,7 @@ const batchStockSchema = z.object({
     z.object({
       product_id: z.string(),
       product_name: z.string(),
+      category: z.string(),
       opening_stock: z.number(),
       closing_stock: z.coerce.number().int().min(0, "Must be a positive number"),
       actual_stock: z.coerce.number().int().min(0, "Must be a positive number"),
@@ -62,6 +84,9 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedShop, setSelectedShop] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [categories, setCategories] = useState<string[]>([]);
 
   // Define form with default values
   const form = useForm<BatchStockFormValues>({
@@ -103,6 +128,16 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
         }));
         
         setProducts(formattedProducts);
+
+        // Extract unique categories
+        const uniqueCategories = Array.from(
+          new Set((productsResponse.data || []).map(product => product.category))
+        );
+        setCategories(uniqueCategories as string[]);
+        
+        if (uniqueCategories.length > 0) {
+          setActiveCategory(uniqueCategories[0] as string);
+        }
       } catch (error: any) {
         console.error("Error fetching shops and products:", error.message);
         toast.error("Failed to load shops and products");
@@ -228,9 +263,16 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
     }
   };
 
+  // Filter products by search term and category
+  const filteredProducts = form.watch("products").filter(product => {
+    const matchesSearch = product.product_name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = activeCategory ? product.category === activeCategory : true;
+    return matchesSearch && matchesCategory;
+  });
+
   // Group products by category for better organization
-  const groupedProducts = form.watch("products").reduce((groups: Record<string, any[]>, product) => {
-    const category = products.find(p => p.product_id === product.product_id)?.category || "Uncategorized";
+  const groupedProducts = filteredProducts.reduce((groups: Record<string, any[]>, product) => {
+    const category = product.category || "Uncategorized";
     if (!groups[category]) {
       groups[category] = [];
     }
@@ -238,12 +280,22 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
     return groups;
   }, {});
 
+  // Calculate total products and products with data
+  const totalProducts = form.watch("products").length;
+  const productsWithData = form.watch("products").filter(p => p.closing_stock > 0 || p.actual_stock > 0).length;
+  
+  // Calculate progress percentage
+  const progressPercentage = totalProducts > 0 ? (productsWithData / totalProducts) * 100 : 0;
+
   return (
-    <Card className="max-w-6xl mx-auto">
-      <CardHeader>
-        <CardTitle>Batch Stock Entry</CardTitle>
+    <Card className="max-w-6xl mx-auto shadow-lg border-indigo-100">
+      <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
+        <CardTitle className="text-2xl font-bold text-indigo-800">Batch Stock Entry</CardTitle>
+        <CardDescription className="text-indigo-600">
+          Enter closing stock for multiple products at once
+        </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -252,13 +304,13 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
                 name="shop_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Shop</FormLabel>
+                    <FormLabel className="text-indigo-700">Shop</FormLabel>
                     <Select 
                       onValueChange={field.onChange}
                       value={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="border-indigo-200 focus:ring-indigo-300">
                           <SelectValue placeholder="Select a shop" />
                         </SelectTrigger>
                       </FormControl>
@@ -280,13 +332,13 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
                 name="stock_date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Stock Date</FormLabel>
+                    <FormLabel className="text-indigo-700">Stock Date</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
                             variant="outline"
-                            className={`w-full pl-3 text-left font-normal ${
+                            className={`w-full pl-3 text-left font-normal border-indigo-200 focus:ring-indigo-300 ${
                               !field.value ? "text-muted-foreground" : ""
                             }`}
                           >
@@ -308,6 +360,7 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
                             date > new Date() || date < new Date("1900-01-01")
                           }
                           initialFocus
+                          className="bg-white rounded-md"
                         />
                       </PopoverContent>
                     </Popover>
@@ -321,13 +374,13 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
                 name="shift"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Shift</FormLabel>
+                    <FormLabel className="text-indigo-700">Shift</FormLabel>
                     <Select 
                       onValueChange={field.onChange}
                       value={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="border-indigo-200 focus:ring-indigo-300">
                           <SelectValue placeholder="Select shift" />
                         </SelectTrigger>
                       </FormControl>
@@ -348,11 +401,12 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
                 name="operator_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Operator Name</FormLabel>
+                    <FormLabel className="text-indigo-700">Operator Name</FormLabel>
                     <FormControl>
                       <Input 
                         placeholder="Enter operator name" 
                         {...field} 
+                        className="border-indigo-200 focus:ring-indigo-300"
                       />
                     </FormControl>
                     <FormMessage />
@@ -361,42 +415,109 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
               />
             </div>
 
-            <div className="bg-muted/20 p-4 rounded-md">
-              <h3 className="font-medium mb-4">Stock Entries</h3>
-              
-              {loading ? (
-                <div className="text-center py-4">Loading products and previous stock data...</div>
-              ) : (
-                <div className="space-y-8">
-                  {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
-                    <div key={category} className="space-y-4">
-                      <h4 className="font-medium text-primary">{category}</h4>
-                      <div className="overflow-x-auto">
-                        <table className="w-full border-collapse">
-                          <thead>
-                            <tr className="border-b">
-                              <th className="text-left py-2 px-3">Product</th>
-                              <th className="text-right py-2 px-3">Opening Stock</th>
-                              <th className="text-right py-2 px-3">Closing Stock</th>
-                              <th className="text-right py-2 px-3">Actual Stock</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {categoryProducts.map((product, index) => {
+            {loading ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+                <span className="ml-2 text-indigo-700">Loading products and previous stock data...</span>
+              </div>
+            ) : (
+              <div className="space-y-6 bg-gradient-to-r from-white to-indigo-50/20 rounded-lg border border-indigo-100 p-5">
+                <div className="flex flex-col md:flex-row justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-400" />
+                      <Input 
+                        placeholder="Search products..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-9 border-indigo-200 focus:ring-indigo-300"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-indigo-500" />
+                    <span className="text-sm font-medium text-indigo-700">Filter by Category:</span>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge 
+                        variant={!activeCategory ? "default" : "outline"}
+                        className={`cursor-pointer hover:bg-indigo-100 ${!activeCategory ? 'bg-indigo-600' : 'border-indigo-200 text-indigo-700'}`}
+                        onClick={() => setActiveCategory(null)}
+                      >
+                        All
+                      </Badge>
+                      {categories.map(category => (
+                        <Badge 
+                          key={category} 
+                          variant={activeCategory === category ? "default" : "outline"}
+                          className={`cursor-pointer hover:bg-indigo-100 ${activeCategory === category ? 'bg-indigo-600' : 'border-indigo-200 text-indigo-700'}`}
+                          onClick={() => setActiveCategory(category)}
+                        >
+                          {category}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-sm text-indigo-700">
+                  <span>
+                    {productsWithData} of {totalProducts} products completed ({Math.round(progressPercentage)}%)
+                  </span>
+                  <span>
+                    {Object.keys(filteredProducts.length > 0 ? groupedProducts : {}).length} categories shown
+                  </span>
+                </div>
+
+                <div className="relative pt-1">
+                  <div className="overflow-hidden h-2 text-xs flex rounded bg-indigo-200">
+                    <div 
+                      style={{ width: `${progressPercentage}%` }}
+                      className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-indigo-500 to-purple-500"
+                    ></div>
+                  </div>
+                </div>
+
+                <Tabs defaultValue="table" className="w-full">
+                  <TabsList className="mb-4 bg-indigo-100/50">
+                    <TabsTrigger value="table" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
+                      Table View
+                    </TabsTrigger>
+                    <TabsTrigger value="accordion" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
+                      Category View
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="table" className="border-none p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="bg-indigo-50">
+                            <th className="text-left py-2 px-3 text-indigo-800 font-medium">Product</th>
+                            <th className="text-left py-2 px-3 text-indigo-800 font-medium">Category</th>
+                            <th className="text-right py-2 px-3 text-indigo-800 font-medium">Opening Stock</th>
+                            <th className="text-right py-2 px-3 text-indigo-800 font-medium">Closing Stock</th>
+                            <th className="text-right py-2 px-3 text-indigo-800 font-medium">Actual Stock</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredProducts.length > 0 ? (
+                            filteredProducts.map((product, index) => {
                               const productIndex = form.getValues().products.findIndex(
                                 p => p.product_id === product.product_id
                               );
                               
                               return (
-                                <tr key={product.product_id} className="border-b border-muted">
-                                  <td className="py-2 px-3">{product.product_name}</td>
-                                  <td className="py-2 px-3 text-right">
+                                <tr key={product.product_id} className="border-b border-indigo-100 hover:bg-indigo-50/30">
+                                  <td className="py-3 px-3 text-indigo-800">{product.product_name}</td>
+                                  <td className="py-3 px-3 text-indigo-600">{product.category}</td>
+                                  <td className="py-3 px-3 text-right font-medium text-indigo-800">
                                     {product.opening_stock}
                                   </td>
-                                  <td className="py-2 px-3">
+                                  <td className="py-3 px-3">
                                     <Input
                                       type="number"
-                                      className="w-24 ml-auto text-right"
+                                      className="w-24 ml-auto text-right border-indigo-200 focus:ring-indigo-300"
                                       value={product.closing_stock}
                                       onChange={(e) => {
                                         const newProducts = [...form.getValues().products];
@@ -405,10 +526,10 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
                                       }}
                                     />
                                   </td>
-                                  <td className="py-2 px-3">
+                                  <td className="py-3 px-3">
                                     <Input
                                       type="number"
-                                      className="w-24 ml-auto text-right"
+                                      className="w-24 ml-auto text-right border-indigo-200 focus:ring-indigo-300"
                                       value={product.actual_stock}
                                       onChange={(e) => {
                                         const newProducts = [...form.getValues().products];
@@ -419,23 +540,125 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
                                   </td>
                                 </tr>
                               );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
+                            })
+                          ) : (
+                            <tr>
+                              <td colSpan={5} className="py-6 text-center text-indigo-600">
+                                <FileText className="h-12 w-12 mx-auto mb-2 text-indigo-300" />
+                                <p>No products match your filter. Try adjusting your search or filters.</p>
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="accordion" className="border-none p-0">
+                    {Object.keys(groupedProducts).length > 0 ? (
+                      <Accordion type="multiple" defaultValue={[Object.keys(groupedProducts)[0]]} className="space-y-4">
+                        {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
+                          <AccordionItem 
+                            key={category} 
+                            value={category}
+                            className="border border-indigo-100 rounded-md overflow-hidden"
+                          >
+                            <AccordionTrigger className="px-4 py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-medium">
+                              {category} <span className="ml-2 text-indigo-500 text-xs font-normal">({categoryProducts.length} items)</span>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="overflow-x-auto">
+                                <table className="w-full border-collapse">
+                                  <thead>
+                                    <tr className="border-b border-indigo-100">
+                                      <th className="text-left py-2 px-3 text-indigo-700 font-medium">Product</th>
+                                      <th className="text-right py-2 px-3 text-indigo-700 font-medium">Opening Stock</th>
+                                      <th className="text-right py-2 px-3 text-indigo-700 font-medium">Closing Stock</th>
+                                      <th className="text-right py-2 px-3 text-indigo-700 font-medium">Actual Stock</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {categoryProducts.map((product) => {
+                                      const productIndex = form.getValues().products.findIndex(
+                                        p => p.product_id === product.product_id
+                                      );
+                                      
+                                      return (
+                                        <tr key={product.product_id} className="border-b border-indigo-50 hover:bg-indigo-50/30">
+                                          <td className="py-2 px-3 text-indigo-800">{product.product_name}</td>
+                                          <td className="py-2 px-3 text-right font-medium text-indigo-800">
+                                            {product.opening_stock}
+                                          </td>
+                                          <td className="py-2 px-3">
+                                            <Input
+                                              type="number"
+                                              className="w-24 ml-auto text-right border-indigo-200 focus:ring-indigo-300"
+                                              value={product.closing_stock}
+                                              onChange={(e) => {
+                                                const newProducts = [...form.getValues().products];
+                                                newProducts[productIndex].closing_stock = parseInt(e.target.value) || 0;
+                                                form.setValue("products", newProducts);
+                                              }}
+                                            />
+                                          </td>
+                                          <td className="py-2 px-3">
+                                            <Input
+                                              type="number"
+                                              className="w-24 ml-auto text-right border-indigo-200 focus:ring-indigo-300"
+                                              value={product.actual_stock}
+                                              onChange={(e) => {
+                                                const newProducts = [...form.getValues().products];
+                                                newProducts[productIndex].actual_stock = parseInt(e.target.value) || 0;
+                                                form.setValue("products", newProducts);
+                                              }}
+                                            />
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                      </Accordion>
+                    ) : (
+                      <div className="py-10 text-center text-indigo-600 bg-indigo-50/30 rounded-md border border-indigo-100">
+                        <FileText className="h-12 w-12 mx-auto mb-2 text-indigo-300" />
+                        <p>No products match your filter. Try adjusting your search or filters.</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </div>
+            )}
 
             <div className="flex justify-end gap-4">
-              <Button type="button" variant="outline" onClick={onCancel}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onCancel}
+                className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading} className="gap-2">
-                <Save className="h-4 w-4" />
-                {loading ? "Saving..." : "Save All Stock Entries"}
+              <Button 
+                type="submit" 
+                disabled={loading}
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Stock Entries
+                  </>
+                )}
               </Button>
             </div>
           </form>

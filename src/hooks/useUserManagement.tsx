@@ -64,7 +64,7 @@ export const useUserManagement = () => {
       
       // Get user emails using the auth_users_view using a direct RPC call to avoid typing issues
       const { data: authUsers, error: authError } = await supabase
-        .rpc<AuthUserView[], any>('get_auth_users_view');
+        .rpc('get_auth_users_view') as { data: AuthUserView[], error: any };
       
       if (authError) {
         console.error("Could not fetch auth users:", authError);
