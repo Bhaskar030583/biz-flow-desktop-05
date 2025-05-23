@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { UserRole } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { fetchUsersService } from "@/services/userServices";
+import { fetchUsers } from "@/services/userServices";
 import { useUserRoleManagement } from "@/hooks/useUserRoleManagement";
 import { useUserFormState } from "@/hooks/useUserFormState";
 import { type UserData } from "@/types/user";
@@ -27,11 +27,19 @@ export const useUserManagement = () => {
   
   const { updateUserRole, updateUserRoleToAdmin } = useUserRoleManagement(users, setUsers);
 
-  const fetchUsers = async () => {
+  const fetchUsersData = async () => {
     setIsLoading(true);
     try {
-      const combinedData = await fetchUsersService();
-      setUsers(combinedData);
+      const userData = await fetchUsers();
+      // Convert User type to UserData type if needed
+      const convertedUsers: UserData[] = userData.map(user => ({
+        id: user.id,
+        email: user.email,
+        role: user.role as UserRole,
+        created_at: user.created_at,
+        full_name: user.full_name || null
+      }));
+      setUsers(convertedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to fetch users");
@@ -93,7 +101,7 @@ export const useUserManagement = () => {
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchUsersData();
   }, []);
 
   return {
@@ -108,7 +116,7 @@ export const useUserManagement = () => {
     role,
     setRole,
     isSubmitting,
-    fetchUsers,
+    fetchUsers: fetchUsersData,
     handleAddUser,
     updateUserRole
   };

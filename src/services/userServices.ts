@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // Define the User type
-type User = {
+export type User = {
   id: string;
   email: string;
   full_name: string;
@@ -56,6 +56,9 @@ export const fetchUsers = async (): Promise<User[]> => {
     throw error;
   }
 };
+
+// Alias for backward compatibility
+export const fetchUsersService = fetchUsers;
 
 // Update user role
 export const updateUserRole = async (userId: string, role: string): Promise<void> => {
