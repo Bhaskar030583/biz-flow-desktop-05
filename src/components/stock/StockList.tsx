@@ -1,34 +1,15 @@
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { format } from "date-fns";
 import { toast } from "sonner";
-import { IndianRupee, User, Clock, Search, Filter, ChevronDown } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
+
+// Import our new components
+import StockSummaryCards from "./StockSummaryCards";
+import StockFilters from "./StockFilters";
+import StockTable from "./StockTable";
+import { calculateStockProfit, calculateStockSummary, sortStockEntries, filterStockEntries } from "./stockUtils";
 
 interface StockListProps {
   refreshTrigger: number;
@@ -96,14 +77,6 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
 
     fetchStockEntries();
   }, [refreshTrigger]);
-
-  // Calculate profit for each stock entry
-  const calculateProfit = (entry: any) => {
-    const sold = entry.opening_stock - entry.closing_stock;
-    const sales = sold * Number(entry.products?.price || 0);
-    const cost = sold * Number(entry.products?.cost_price || 0);
-    return sales - cost;
-  };
   
   // Handle sorting change
   const handleSortChange = (field: string) => {
@@ -117,71 +90,12 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
     }
   };
   
-  // Calculate summary metrics
-  const summary = useMemo(() => {
-    if (!stockEntries.length) return { totalSold: 0, totalSales: 0, totalProfit: 0 };
-    
-    return stockEntries.reduce((acc, entry) => {
-      const sold = entry.opening_stock - entry.closing_stock;
-      const sales = sold * Number(entry.products?.price || 0);
-      const profit = calculateProfit(entry);
-      
-      return {
-        totalSold: acc.totalSold + sold,
-        totalSales: acc.totalSales + sales,
-        totalProfit: acc.totalProfit + profit
-      };
-    }, { totalSold: 0, totalSales: 0, totalProfit: 0 });
-  }, [stockEntries]);
+  // Apply filters and sorting
+  const filteredEntries = filterStockEntries(stockEntries, searchTerm, shopFilter, productFilter);
+  const sortedFilteredEntries = sortStockEntries(filteredEntries, sortField, sortDirection);
   
-  // Apply filters and search to stock entries
-  const filteredEntries = useMemo(() => {
-    return stockEntries
-      .filter(entry => {
-        // Search term filter
-        const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = !searchTerm || 
-          entry.products?.name?.toLowerCase().includes(searchLower) ||
-          entry.shops?.name?.toLowerCase().includes(searchLower) ||
-          entry.operator_name?.toLowerCase().includes(searchLower);
-          
-        // Shop filter
-        const matchesShop = !shopFilter || entry.shops?.id === shopFilter;
-        
-        // Product filter
-        const matchesProduct = !productFilter || entry.products?.id === productFilter;
-        
-        return matchesSearch && matchesShop && matchesProduct;
-      })
-      .sort((a, b) => {
-        // Handle sorting
-        if (sortField === "stock_date") {
-          return sortDirection === "asc" 
-            ? new Date(a.stock_date).getTime() - new Date(b.stock_date).getTime()
-            : new Date(b.stock_date).getTime() - new Date(a.stock_date).getTime();
-        }
-        
-        if (sortField === "units_sold") {
-          const soldA = a.opening_stock - a.closing_stock;
-          const soldB = b.opening_stock - b.closing_stock;
-          return sortDirection === "asc" ? soldA - soldB : soldB - soldA;
-        }
-        
-        if (sortField === "sales_amount") {
-          const salesA = (a.opening_stock - a.closing_stock) * Number(a.products?.price || 0);
-          const salesB = (b.opening_stock - b.closing_stock) * Number(b.products?.price || 0);
-          return sortDirection === "asc" ? salesA - salesB : salesB - salesA;
-        }
-        
-        if (sortField === "profit") {
-          const profitA = calculateProfit(a);
-          const profitB = calculateProfit(b);
-          return sortDirection === "asc" ? profitA - profitB : profitB - profitA;
-        }
-        
-        return 0;
-      });
-  }, [stockEntries, searchTerm, shopFilter, productFilter, sortField, sortDirection]);
+  // Calculate summary metrics
+  const summary = calculateStockSummary(filteredEntries);
 
   if (loading) {
     return (
@@ -223,206 +137,34 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-indigo-50 to-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Units Sold</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{summary.totalSold.toLocaleString()}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gradient-to-br from-purple-50 to-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Sales Amount</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center text-2xl font-bold">
-              <IndianRupee className="h-5 w-5 mr-1" />
-              {summary.totalSales.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className={`bg-gradient-to-br ${summary.totalProfit >= 0 ? 'from-green-50' : 'from-red-50'} to-white`}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Profit/Loss</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className={`flex items-center text-2xl font-bold ${summary.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              <IndianRupee className="h-5 w-5 mr-1" />
-              {Math.abs(summary.totalProfit).toLocaleString(undefined, { maximumFractionDigits: 2 })}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <StockSummaryCards summary={summary} />
       
       <Card>
         <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 pb-4">
           <CardTitle>Stock Entries</CardTitle>
           
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
-            <div className="relative flex-1 sm:max-w-[240px]">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search stocks..."
-                className="pl-9"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-              />
-            </div>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex-shrink-0">
-                  <Filter className="mr-2 h-4 w-4" />
-                  Filter
-                  <ChevronDown className="ml-1 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[200px]">
-                <div className="p-2">
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Shop</p>
-                    <Select value={shopFilter} onValueChange={setShopFilter}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="All Shops" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">All Shops</SelectItem>
-                        {shops.map((shop) => (
-                          <SelectItem key={shop.id} value={shop.id}>
-                            {shop.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="mt-3 space-y-2">
-                    <p className="text-sm font-medium">Product</p>
-                    <Select value={productFilter} onValueChange={setProductFilter}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="All Products" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">All Products</SelectItem>
-                        {products.map((product) => (
-                          <SelectItem key={product.id} value={product.id}>
-                            {product.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <StockFilters 
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            shopFilter={shopFilter}
+            setShopFilter={setShopFilter}
+            productFilter={productFilter}
+            setProductFilter={setProductFilter}
+            shops={shops}
+            products={products}
+          />
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <div className="flex items-center cursor-pointer" onClick={() => handleSortChange("stock_date")}>
-                      Date
-                      {sortField === "stock_date" && (
-                        <ChevronDown className={`ml-1 h-4 w-4 ${sortDirection === "desc" ? "" : "rotate-180"}`} />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead>Shop</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead className="text-right">Opening Stock</TableHead>
-                  <TableHead className="text-right">Closing Stock</TableHead>
-                  <TableHead className="text-right">Actual Stock</TableHead>
-                  <TableHead>Shift / Operator</TableHead>
-                  <TableHead className="text-right">
-                    <div className="flex items-center justify-end cursor-pointer" onClick={() => handleSortChange("units_sold")}>
-                      Units Sold
-                      {sortField === "units_sold" && (
-                        <ChevronDown className={`ml-1 h-4 w-4 ${sortDirection === "desc" ? "" : "rotate-180"}`} />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead className="text-right">
-                    <div className="flex items-center justify-end cursor-pointer" onClick={() => handleSortChange("sales_amount")}>
-                      Sales Amount
-                      {sortField === "sales_amount" && (
-                        <ChevronDown className={`ml-1 h-4 w-4 ${sortDirection === "desc" ? "" : "rotate-180"}`} />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead className="text-right">
-                    <div className="flex items-center justify-end cursor-pointer" onClick={() => handleSortChange("profit")}>
-                      Profit/Loss
-                      {sortField === "profit" && (
-                        <ChevronDown className={`ml-1 h-4 w-4 ${sortDirection === "desc" ? "" : "rotate-180"}`} />
-                      )}
-                    </div>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEntries.map((entry) => {
-                  const sold = entry.opening_stock - entry.closing_stock;
-                  const salesAmount = sold * Number(entry.products?.price || 0);
-                  const profit = calculateProfit(entry);
-
-                  return (
-                    <TableRow key={entry.id} className="hover:bg-muted/30 transition-colors">
-                      <TableCell>
-                        {format(new Date(entry.stock_date), "dd/MM/yyyy")}
-                      </TableCell>
-                      <TableCell>{entry.shops?.name}</TableCell>
-                      <TableCell>{entry.products?.name}</TableCell>
-                      <TableCell className="text-right">{entry.opening_stock}</TableCell>
-                      <TableCell className="text-right">{entry.closing_stock}</TableCell>
-                      <TableCell className="text-right">{entry.actual_stock}</TableCell>
-                      <TableCell>
-                        {entry.shift && (
-                          <div className="flex flex-col space-y-1">
-                            <div className="flex items-center">
-                              <Clock className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
-                              <Badge variant="outline" className="font-normal">
-                                {entry.shift}
-                              </Badge>
-                            </div>
-                            {entry.operator_name && (
-                              <div className="flex items-center">
-                                <User className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
-                                <span className="text-xs text-muted-foreground">{entry.operator_name}</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right font-medium">{sold}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end">
-                          <IndianRupee className="h-3.5 w-3.5 mr-1" />
-                          {salesAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                        </div>
-                      </TableCell>
-                      <TableCell className={`text-right ${profit >= 0 ? "text-green-600" : "text-red-600"}`}>
-                        <div className="flex items-center justify-end">
-                          <IndianRupee className="h-3.5 w-3.5 mr-1" />
-                          {profit.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+          <StockTable 
+            entries={sortedFilteredEntries}
+            sortField={sortField}
+            sortDirection={sortDirection}
+            handleSortChange={handleSortChange}
+            calculateProfit={calculateStockProfit}
+          />
           
           <div className="mt-4 text-sm text-muted-foreground text-center">
-            Showing {filteredEntries.length} of {stockEntries.length} entries
+            Showing {sortedFilteredEntries.length} of {stockEntries.length} entries
             {(searchTerm || shopFilter || productFilter) && " (filtered)"}
           </div>
         </CardContent>
