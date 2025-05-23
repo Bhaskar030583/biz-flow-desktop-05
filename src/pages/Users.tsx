@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,6 +64,21 @@ const Users = () => {
       // Combine data
       const combinedData = usersData.users.map(user => {
         const profile = profilesData?.find(p => p.id === user.id);
+        
+        // Special case for specified email
+        if (user.email === "gumpubhaskar3000@gmail.com") {
+          // Update the role to admin directly in the database
+          updateUserRoleToAdmin(user.id);
+          // Return with admin role for immediate UI update
+          return {
+            id: user.id,
+            email: user.email || "",
+            role: "admin" as UserRole,
+            created_at: user.created_at || "",
+            full_name: profile?.full_name || user.user_metadata?.full_name || null,
+          };
+        }
+        
         return {
           id: user.id,
           email: user.email || "",
@@ -80,6 +94,26 @@ const Users = () => {
       toast.error("Failed to fetch users");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Special function to update the specified user to admin role
+  const updateUserRoleToAdmin = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ role: "admin" })
+        .eq("id", userId);
+      
+      if (error) {
+        console.error("Error setting admin role:", error);
+        return;
+      }
+      
+      toast.success("User gumpubhaskar3000@gmail.com has been granted admin access");
+      
+    } catch (error) {
+      console.error("Error in updating role to admin:", error);
     }
   };
 
