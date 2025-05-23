@@ -24,14 +24,12 @@ const CollectionSummary = ({ startDate, endDate, shopIds }: CollectionSummaryPro
       setLoading(true);
       
       let query = supabase.from("credits").select(`
-        cash_amount: amount,
-        card_amount: amount,
-        online_amount: amount,
-        discount_amount: amount,
-        total_amount: amount,
-        collection_date: credit_date,
+        credit_type,
+        amount,
+        credit_date,
         shop_id
-      `).eq('credit_type', 'collection');
+      `)
+      .in('credit_type', ['cash', 'card', 'online']);
       
       // Apply filters
       if (startDate) {
@@ -56,18 +54,14 @@ const CollectionSummary = ({ startDate, endDate, shopIds }: CollectionSummaryPro
       let cashTotal = 0;
       let cardTotal = 0;
       let onlineTotal = 0;
-      let discountTotal = 0;
       
       data?.forEach(item => {
-        // For collection data, we're using the credits table with specific fields
-        if (item.cash_amount && item.credit_type === 'cash') {
+        if (item.credit_type === 'cash') {
           cashTotal += Number(item.amount) || 0;
-        } else if (item.card_amount && item.credit_type === 'card') {
+        } else if (item.credit_type === 'card') {
           cardTotal += Number(item.amount) || 0;
-        } else if (item.online_amount && item.credit_type === 'online') {
+        } else if (item.credit_type === 'online') {
           onlineTotal += Number(item.amount) || 0;
-        } else if (item.discount_amount && item.credit_type === 'discount') {
-          discountTotal += Number(item.amount) || 0;
         }
       });
       

@@ -25,9 +25,12 @@ export const fetchUserById = async (id: string) => {
 };
 
 export const updateUserById = async (id: string, userData: any) => {
+  // Remove the email property as it's not part of the profiles table
+  const { email, ...profileData } = userData;
+  
   const { data, error } = await supabase
     .from("profiles")
-    .update(userData)
+    .update(profileData)
     .eq("id", id)
     .select();
 

@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SalesChart } from "@/components/dashboard/SalesChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import DashboardFilters from "@/components/dashboard/DashboardFilters";
-import { StockChart } from "@/components/stock/StockChart";
+import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
+import StockChart from "@/components/stock/StockChart";
 import { supabase } from "@/integrations/supabase/client";
 import CollectionSummary from "@/components/dashboard/CollectionSummary";
 
@@ -27,23 +26,22 @@ const Dashboard = () => {
     async function fetchSummaryData() {
       try {
         // Fetch collection data for payment methods
-        let collectionQuery = supabase.from("collections").select(`
-          cash_amount,
-          card_amount,
-          online_amount,
-          discount_amount,
-          collection_date
-        `);
+        let collectionQuery = supabase.from("credits").select(`
+          credit_type,
+          amount,
+          credit_date
+        `)
+        .in('credit_type', ['cash', 'card', 'online']);
         
         // Apply date filters to collections
         if (startDate) {
           const formattedStartDate = startDate.toISOString().split('T')[0];
-          collectionQuery = collectionQuery.gte("collection_date", formattedStartDate);
+          collectionQuery = collectionQuery.gte("credit_date", formattedStartDate);
         }
         
         if (endDate) {
           const formattedEndDate = endDate.toISOString().split('T')[0];
-          collectionQuery = collectionQuery.lte("collection_date", formattedEndDate);
+          collectionQuery = collectionQuery.lte("credit_date", formattedEndDate);
         }
         
         // Apply shop filter to collections
@@ -60,10 +58,14 @@ const Dashboard = () => {
         let cardAmount = 0;
         let onlineAmount = 0;
         
-        collectionData?.forEach((collection) => {
-          cashAmount += Number(collection.cash_amount) || 0;
-          cardAmount += Number(collection.card_amount) || 0;
-          onlineAmount += Number(collection.online_amount) || 0;
+        collectionData?.forEach((item) => {
+          if (item.credit_type === 'cash') {
+            cashAmount += Number(item.amount) || 0;
+          } else if (item.credit_type === 'card') {
+            cardAmount += Number(item.amount) || 0;
+          } else if (item.credit_type === 'online') {
+            onlineAmount += Number(item.amount) || 0;
+          }
         });
         
         // Fetch sales data
@@ -218,7 +220,7 @@ const Dashboard = () => {
                 </div>
                 <div className="p-2 bg-primary/10 rounded-full">
                   <svg className="w-5 h-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
               </div>
