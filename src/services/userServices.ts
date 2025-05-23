@@ -18,9 +18,9 @@ export const fetchUsersService = async (): Promise<UserData[]> => {
     throw profilesError;
   }
   
-  // Use the rpc function to get auth users data
+  // Use the rpc function to get auth users data - fix for TypeScript error
   const { data: authUsersData, error: authError } = await supabase
-    .rpc('get_auth_users_view');
+    .rpc('get_auth_users_view', {}) as { data: AuthUserView[] | null, error: any };
   
   if (authError) {
     console.error("Could not fetch auth users:", authError);
