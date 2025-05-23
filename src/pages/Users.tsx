@@ -14,7 +14,7 @@ const Users = () => {
   const { userRole } = useAuth();
   const {
     users,
-    isLoading,
+    loading,
     email,
     setEmail,
     password,
@@ -65,7 +65,7 @@ const Users = () => {
               <CardContent>
                 <UserTable 
                   users={users} 
-                  isLoading={isLoading} 
+                  isLoading={loading} 
                   updateUserRole={updateUserRole} 
                 />
               </CardContent>

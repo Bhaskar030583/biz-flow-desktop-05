@@ -1,18 +1,18 @@
 
-import { useState } from "react";
-import { UserRole } from "@/context/AuthContext";
+import { useState } from 'react';
+import { UserRole } from '@/types/user';
 
 export const useUserFormState = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<UserRole>("user");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [role, setRole] = useState<UserRole>('user');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   return {
     email,
     setEmail,
-    password,
+    password, 
     setPassword,
     fullName,
     setFullName,

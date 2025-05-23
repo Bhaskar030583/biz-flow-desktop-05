@@ -1,10 +1,24 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/types/user';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
+import { useUserRoleManagement } from './useUserRoleManagement';
+import { useUserFormState } from './useUserFormState';
 
 export const useUserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Get the form state management
+  const { 
+    email, setEmail,
+    password, setPassword,
+    fullName, setFullName,
+    role, setRole,
+    isSubmitting, setIsSubmitting
+  } = useUserFormState();
   
   const fetchUsers = async () => {
     try {
@@ -18,17 +32,14 @@ export const useUserManagement = () => {
         throw error;
       }
       
-      // Make sure we're mapping the data correctly based on the available properties
-      const formattedUsers = profiles?.map((profile) => ({
+      // Map the profiles to User type
+      const formattedUsers: User[] = profiles?.map((profile) => ({
         id: profile.id,
-        fullName: profile.full_name,
-        // If email is needed but not in profiles, you might need to join with auth.users
-        // or adjust your data model to include email in profiles
-        // For now, set email to a placeholder or use another property
-        email: 'user@example.com', // Placeholder - replace with actual email source
-        avatarUrl: profile.avatar_url,
-        role: profile.role || UserRole.User,
-        createdAt: profile.created_at
+        full_name: profile.full_name,
+        email: 'user@example.com', // Placeholder - this would need to be fetched from auth.users
+        avatar_url: profile.avatar_url,
+        role: profile.role || 'user',
+        created_at: profile.created_at
       })) || [];
       
       setUsers(formattedUsers);
@@ -36,6 +47,48 @@ export const useUserManagement = () => {
       console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  // Setup user role management
+  const { updateUserRole } = useUserRoleManagement(users as any[], setUsers as any);
+
+  // Handle adding new user
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      // Call signup from auth context
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            role: role,
+          },
+        },
+      });
+      
+      if (error) throw error;
+      
+      toast.success(`User added successfully`);
+      
+      // Reset form
+      setEmail('');
+      setPassword('');
+      setFullName('');
+      setRole('user' as UserRole);
+      
+      // Refresh users list
+      fetchUsers();
+      
+    } catch (error: any) {
+      toast.error(`Error adding user: ${error.message}`);
+      console.error('Error adding user:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -47,5 +100,16 @@ export const useUserManagement = () => {
     users,
     loading,
     fetchUsers,
+    email,
+    setEmail,
+    password,
+    setPassword, 
+    fullName,
+    setFullName,
+    role,
+    setRole,
+    isSubmitting,
+    handleAddUser,
+    updateUserRole
   };
 };

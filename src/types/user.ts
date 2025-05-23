@@ -1,5 +1,5 @@
 
-import { UserRole } from "@/context/AuthContext";
+export { UserRole } from "@/context/AuthContext";
 
 export type User = {
   id: string;
