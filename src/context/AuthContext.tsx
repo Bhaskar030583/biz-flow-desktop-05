@@ -47,11 +47,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Since the role column might not exist yet in the profiles table,
       // we need to safely handle this scenario
-      // Default to "user" role if not found
-      const userRole = data?.role as UserRole || "user";
-      setUserRole(userRole);
       
-      console.log("User role set to:", userRole);
+      // Check if data has a role property, otherwise fallback to user metadata or default
+      const role = user?.user_metadata?.role || "user";
+      setUserRole(role as UserRole);
+      
+      console.log("User role set to:", role);
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
     }
