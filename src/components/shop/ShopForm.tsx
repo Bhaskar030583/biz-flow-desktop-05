@@ -26,6 +26,7 @@ interface ShopFormProps {
 export function ShopForm({ onSuccess }: ShopFormProps) {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const form = useForm<ShopFormValues>({
     resolver: zodResolver(shopSchema),
@@ -37,20 +38,37 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
   });
 
   async function onSubmit(data: ShopFormValues) {
-    if (!user) return;
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "You must be logged in to create a shop",
+      });
+      return;
+    }
     
     setIsLoading(true);
+    setErrorMessage("");
+    
     try {
-      const { error } = await supabase
+      console.log("Creating shop with data:", { ...data, user_id: user.id });
+      
+      const { data: insertedData, error } = await supabase
         .from("shops")
         .insert({
           name: data.name,
           address: data.address || null,
           phone: data.phone || null,
           user_id: user.id,
-        });
+        })
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
+      
+      console.log("Shop created successfully:", insertedData);
       
       toast({
         title: "Shop created",
@@ -60,6 +78,8 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
       form.reset();
       if (onSuccess) onSuccess();
     } catch (error: any) {
+      console.error("Error creating shop:", error);
+      setErrorMessage(error.message || "Something went wrong");
       toast({
         variant: "destructive",
         title: "Failed to create shop",
@@ -78,6 +98,12 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {errorMessage && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-md text-sm mb-4">
+                {errorMessage}
+              </div>
+            )}
+            
             <FormField
               control={form.control}
               name="name"

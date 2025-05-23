@@ -6,7 +6,26 @@ import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Package, IndianRupee } from "lucide-react";
+import { Trash2, Package, IndianRupee, Edit } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 interface Product {
   id: string;
@@ -23,6 +42,25 @@ export function ProductList() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const productSchema = z.object({
+    name: z.string().min(2, "Name is required"),
+    category: z.string().min(1, "Category is required"),
+    price: z.coerce.number().min(0, "Price must be a positive number"),
+    cost_price: z.coerce.number().min(0, "Cost price must be a positive number").optional(),
+  });
+
+  const form = useForm<z.infer<typeof productSchema>>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      name: "",
+      category: "",
+      price: 0,
+      cost_price: 0,
+    },
+  });
 
   useEffect(() => {
     if (!user) return;
@@ -87,6 +125,57 @@ export function ProductList() {
     }
   }
   
+  function handleEdit(product: Product) {
+    setEditingProduct(product);
+    form.reset({
+      name: product.name,
+      category: product.category,
+      price: product.price,
+      cost_price: product.cost_price || undefined,
+    });
+  }
+  
+  async function handleSaveEdit() {
+    try {
+      setIsProcessing(true);
+      const values = form.getValues();
+      
+      const { error } = await supabase
+        .from("products")
+        .update({
+          name: values.name,
+          category: values.category,
+          price: values.price,
+          cost_price: values.cost_price || null,
+        })
+        .eq("id", editingProduct?.id as string);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setProducts(products.map(product => 
+        product.id === editingProduct?.id 
+          ? { ...product, ...values } 
+          : product
+      ));
+      
+      setEditingProduct(null);
+      toast({
+        title: "Product updated",
+        description: "The product has been updated successfully",
+      });
+      
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to update product",
+        description: error.message || "Something went wrong",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+  
   const filteredProducts = selectedCategory
     ? products.filter(product => product.category === selectedCategory)
     : products;
@@ -141,7 +230,7 @@ export function ProductList() {
                 <TableHead>Category</TableHead>
                 <TableHead>Cost Price</TableHead>
                 <TableHead>Selling Price</TableHead>
-                <TableHead className="text-right">Action</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -162,14 +251,26 @@ export function ProductList() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(product.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
+                    <div className="flex items-center justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(product)}
+                        className="h-8 px-2 text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50"
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(product.id)}
+                        className="h-8 px-2 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -177,6 +278,84 @@ export function ProductList() {
           </Table>
         </div>
       </CardContent>
+      
+      {/* Edit Product Dialog */}
+      <Dialog open={!!editingProduct} onOpenChange={(open) => !open && setEditingProduct(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Product</DialogTitle>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(); }} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Product Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="cost_price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cost Price</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Selling Price</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditingProduct(null)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isProcessing}>
+                  {isProcessing ? "Saving..." : "Save Changes"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import StockForm from "@/components/stock/StockForm";
@@ -10,6 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import StockImport from "@/components/stock/StockImport";
@@ -18,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { utils, writeFile } from "xlsx";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format, subDays } from "date-fns";
+import { format, subDays, startOfDay, endOfDay, startOfToday, startOfYesterday, endOfYesterday } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DateRange } from "react-day-picker";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -48,6 +50,37 @@ const Stocks = () => {
     setRefreshTrigger(prev => prev + 1);
     toast.success("Stock data imported successfully");
   };
+  
+  const handleDatePresetChange = (preset: string) => {
+    switch (preset) {
+      case "today":
+        setDateRange({
+          from: startOfToday(),
+          to: new Date()
+        });
+        break;
+      case "yesterday":
+        setDateRange({
+          from: startOfYesterday(),
+          to: endOfYesterday()
+        });
+        break;
+      case "last7days":
+        setDateRange({
+          from: subDays(new Date(), 7),
+          to: new Date()
+        });
+        break;
+      case "last30days":
+        setDateRange({
+          from: subDays(new Date(), 30),
+          to: new Date()
+        });
+        break;
+      default:
+        break;
+    }
+  };
 
   const handleExport = async () => {
     try {
@@ -65,6 +98,8 @@ const Stocks = () => {
           actual_stock,
           shift,
           operator_name,
+          cash_received,
+          online_received,
           shops (id, name),
           products (id, name, price, cost_price)
         `)
@@ -89,6 +124,9 @@ const Stocks = () => {
         "Actual Stock": entry.actual_stock,
         "Shift": entry.shift || "N/A",
         "Operator": entry.operator_name || "N/A",
+        "Cash Received": entry.cash_received || 0,
+        "Online Received": entry.online_received || 0,
+        "Total Received": (entry.cash_received || 0) + (entry.online_received || 0),
         "Units Sold": entry.opening_stock - entry.closing_stock,
         "Sales Amount": (entry.opening_stock - entry.closing_stock) * Number(entry.products?.price || 0),
         "Profit/Loss": ((entry.opening_stock - entry.closing_stock) * Number(entry.products?.price || 0)) - 
@@ -136,8 +174,8 @@ const Stocks = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-3">
-            <Popover>
-              <PopoverTrigger asChild>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
                   className="bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 justify-start w-full sm:w-auto"
@@ -155,26 +193,54 @@ const Stocks = () => {
                   ) : (
                     <span>Date range</span>
                   )}
+                  <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 z-50" align="end">
-                <div className="p-3">
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Select date range</h4>
-                    <div className="border rounded-md p-2">
-                      <CalendarComponent
-                        initialFocus
-                        mode="range"
-                        defaultMonth={dateRange?.from}
-                        selected={dateRange}
-                        onSelect={setDateRange}
-                        numberOfMonths={2}
-                      />
-                    </div>
-                  </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => handleDatePresetChange("today")}>
+                  Today
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDatePresetChange("yesterday")}>
+                  Yesterday
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDatePresetChange("last7days")}>
+                  Last 7 days
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDatePresetChange("last30days")}>
+                  Last 30 days
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left"
+                      >
+                        Custom Range
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <div className="p-3">
+                        <div className="space-y-2">
+                          <h4 className="font-medium">Select date range</h4>
+                          <div className="border rounded-md p-2">
+                            <CalendarComponent
+                              initialFocus
+                              mode="range"
+                              defaultMonth={dateRange?.from}
+                              selected={dateRange}
+                              onSelect={setDateRange}
+                              numberOfMonths={2}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
-              </PopoverContent>
-            </Popover>
+              </DropdownMenuContent>
+            </DropdownMenu>
             
             <div className="flex gap-2">
               <Button
