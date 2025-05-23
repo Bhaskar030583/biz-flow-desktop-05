@@ -12,6 +12,11 @@ interface UserData {
   full_name: string | null;
 }
 
+interface AuthUserView {
+  id: string;
+  email: string;
+}
+
 export const useUserManagement = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -57,17 +62,17 @@ export const useUserManagement = () => {
         throw profilesError;
       }
       
-      // Get user emails (this could be enhanced with a join if needed)
+      // Get user emails using the auth_users_view - with type assertion to handle the custom view
       const { data: authUsers, error: authError } = await supabase
         .from("auth_users_view")
-        .select("id, email")
-        .throwOnError();
+        .select("*") as { data: AuthUserView[] | null, error: any };
       
       if (authError) {
         console.error("Could not fetch auth users:", authError);
+        throw authError;
       }
       
-      // Combine data
+      // Combine data - safely check if authUsers exists
       const combinedData = profilesData.map(profile => {
         const authUser = authUsers?.find(user => user.id === profile.id) || { email: "unknown@example.com" };
         
