@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -32,6 +34,8 @@ const Auth = () => {
   const { signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [verificationSent, setVerificationSent] = useState(false);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -53,19 +57,24 @@ const Auth = () => {
 
   async function onLoginSubmit(data: LoginFormValues) {
     setIsLoading(true);
+    setAuthError(null);
+    
     try {
       const { error } = await signIn(data.email, data.password);
-      if (error) throw error;
-      toast({
-        title: "Login successful",
-        description: "Welcome back to your dashboard",
-      });
+      if (error) {
+        if (error.message.includes("Email not confirmed")) {
+          setAuthError("Please verify your email before logging in. Check your inbox for a verification link.");
+        } else {
+          setAuthError(error.message);
+        }
+      } else {
+        toast({
+          title: "Login successful",
+          description: "Welcome back to your dashboard",
+        });
+      }
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: error.message || "Failed to login. Please try again.",
-      });
+      setAuthError(error.message || "Failed to login. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -73,19 +82,21 @@ const Auth = () => {
 
   async function onSignupSubmit(data: SignupFormValues) {
     setIsLoading(true);
+    setAuthError(null);
+    
     try {
       const { error } = await signUp(data.email, data.password, data.fullName);
-      if (error) throw error;
-      toast({
-        title: "Account created",
-        description: "Your account has been created successfully",
-      });
+      if (error) {
+        setAuthError(error.message);
+      } else {
+        setVerificationSent(true);
+        toast({
+          title: "Account created",
+          description: "Please check your email for a verification link.",
+        });
+      }
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Signup failed",
-        description: error.message || "Failed to create account. Please try again.",
-      });
+      setAuthError(error.message || "Failed to create account. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -102,6 +113,25 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {authError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  {authError}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {verificationSent && (
+              <Alert className="mb-4">
+                <AlertTitle>Verification Email Sent</AlertTitle>
+                <AlertDescription>
+                  Please check your email to verify your account before logging in.
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "login" | "signup")}>
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="login">Login</TabsTrigger>
