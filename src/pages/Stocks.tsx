@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { utils, writeFile } from "xlsx";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format, subDays, startOfDay, endOfDay, startOfToday, startOfYesterday, endOfYesterday } from "date-fns";
+import { format, subDays, startOfDay, endOfDay, startOfToday, endOfToday, startOfYesterday, endOfYesterday } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DateRange } from "react-day-picker";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -38,6 +38,7 @@ const Stocks = () => {
     from: subDays(new Date(), 7),
     to: new Date(),
   });
+  const [dateLabel, setDateLabel] = useState("Last 7 days");
 
   useEffect(() => {
     // Count stock entries when component loads or refreshTrigger changes
@@ -75,26 +76,30 @@ const Stocks = () => {
       case "today":
         setDateRange({
           from: startOfToday(),
-          to: new Date()
+          to: endOfToday()
         });
+        setDateLabel("Today");
         break;
       case "yesterday":
         setDateRange({
           from: startOfYesterday(),
           to: endOfYesterday()
         });
+        setDateLabel("Yesterday");
         break;
       case "last7days":
         setDateRange({
           from: subDays(new Date(), 7),
           to: new Date()
         });
+        setDateLabel("Last 7 days");
         break;
       case "last30days":
         setDateRange({
           from: subDays(new Date(), 30),
           to: new Date()
         });
+        setDateLabel("Last 30 days");
         break;
       default:
         break;
@@ -213,32 +218,21 @@ const Stocks = () => {
                   className="bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 justify-start w-full sm:w-auto"
                 >
                   <Calendar className="mr-2 h-4 w-4" />
-                  {dateRange?.from ? (
-                    dateRange.to ? (
-                      <>
-                        {format(dateRange.from, "LLL dd, y")} -{" "}
-                        {format(dateRange.to, "LLL dd, y")}
-                      </>
-                    ) : (
-                      format(dateRange.from, "LLL dd, y")
-                    )
-                  ) : (
-                    <span>Date range</span>
-                  )}
+                  {dateLabel}
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => handleDatePresetChange("today")}>
+              <DropdownMenuContent align="end" className="w-56 bg-white">
+                <DropdownMenuItem onClick={() => handleDatePresetChange("today")} className="cursor-pointer">
                   Today
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDatePresetChange("yesterday")}>
+                <DropdownMenuItem onClick={() => handleDatePresetChange("yesterday")} className="cursor-pointer">
                   Yesterday
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDatePresetChange("last7days")}>
+                <DropdownMenuItem onClick={() => handleDatePresetChange("last7days")} className="cursor-pointer">
                   Last 7 days
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDatePresetChange("last30days")}>
+                <DropdownMenuItem onClick={() => handleDatePresetChange("last30days")} className="cursor-pointer">
                   Last 30 days
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -252,7 +246,7 @@ const Stocks = () => {
                         Custom Range
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0 bg-white" align="start">
                       <div className="p-3">
                         <div className="space-y-2">
                           <h4 className="font-medium">Select date range</h4>
@@ -262,8 +256,14 @@ const Stocks = () => {
                               mode="range"
                               defaultMonth={dateRange?.from}
                               selected={dateRange}
-                              onSelect={setDateRange}
+                              onSelect={(range) => {
+                                setDateRange(range);
+                                if (range?.from && range?.to) {
+                                  setDateLabel(`${format(range.from, "MMM d")} - ${format(range.to, "MMM d")}`);
+                                }
+                              }}
                               numberOfMonths={2}
+                              className="pointer-events-auto"
                             />
                           </div>
                         </div>

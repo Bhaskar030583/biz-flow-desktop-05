@@ -20,6 +20,8 @@ interface StockFiltersProps {
   setProductFilter: (value: string) => void;
   shops: { id: string; name: string }[];
   products: { id: string; name: string }[];
+  paymentModeFilter?: string;
+  setPaymentModeFilter?: (value: string) => void;
 }
 
 const StockFilters = ({
@@ -31,6 +33,8 @@ const StockFilters = ({
   setProductFilter,
   shops,
   products,
+  paymentModeFilter,
+  setPaymentModeFilter,
 }: StockFiltersProps) => {
   const [inputValue, setInputValue] = useState(searchTerm);
   const debouncedSearchTerm = useDebounce(inputValue);
@@ -48,7 +52,11 @@ const StockFilters = ({
     setInputValue("");
   };
 
-  const hasFilters = searchTerm !== "" || shopFilter !== "" || productFilter !== "";
+  const hasFilters = 
+    searchTerm !== "" || 
+    shopFilter !== "" || 
+    productFilter !== "" ||
+    (paymentModeFilter && paymentModeFilter !== "");
 
   return (
     <div className="flex flex-col space-y-2">
@@ -76,8 +84,8 @@ const StockFilters = ({
             <SelectTrigger className="w-full min-w-[120px]">
               <SelectValue placeholder="All Shops" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Shops</SelectItem>
+            <SelectContent className="bg-white">
+              <SelectItem value="">All Shops</SelectItem>
               {shops.map((shop) => (
                 <SelectItem key={shop.id} value={shop.id}>
                   {shop.name}
@@ -90,8 +98,8 @@ const StockFilters = ({
             <SelectTrigger className="w-full min-w-[120px]">
               <SelectValue placeholder="All Products" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Products</SelectItem>
+            <SelectContent className="bg-white">
+              <SelectItem value="">All Products</SelectItem>
               {products.map((product) => (
                 <SelectItem key={product.id} value={product.id}>
                   {product.name}
@@ -99,6 +107,19 @@ const StockFilters = ({
               ))}
             </SelectContent>
           </Select>
+
+          {setPaymentModeFilter && (
+            <Select value={paymentModeFilter} onValueChange={setPaymentModeFilter}>
+              <SelectTrigger className="w-full min-w-[130px]">
+                <SelectValue placeholder="Payment Mode" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="">All Payments</SelectItem>
+                <SelectItem value="cash">Cash</SelectItem>
+                <SelectItem value="online">Online</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
       </div>
 
@@ -109,6 +130,9 @@ const StockFilters = ({
               setInputValue("");
               setShopFilter("");
               setProductFilter("");
+              if (setPaymentModeFilter) {
+                setPaymentModeFilter("");
+              }
             }}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
           >

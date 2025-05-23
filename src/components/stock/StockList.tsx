@@ -26,6 +26,7 @@ const StockList = ({ refreshTrigger, dateRange }: StockListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [shopFilter, setShopFilter] = useState("");
   const [productFilter, setProductFilter] = useState("");
+  const [paymentModeFilter, setPaymentModeFilter] = useState("");
   const [shops, setShops] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [sortField, setSortField] = useState<string>("stock_date");
@@ -48,6 +49,8 @@ const StockList = ({ refreshTrigger, dateRange }: StockListProps) => {
             actual_stock,
             shift,
             operator_name,
+            cash_received,
+            online_received,
             shops (id, name),
             products (id, name, price, cost_price)
           `)
@@ -121,7 +124,13 @@ const StockList = ({ refreshTrigger, dateRange }: StockListProps) => {
   };
   
   // Apply filters and sorting
-  const filteredEntries = filterStockEntries(stockEntries, searchTerm, shopFilter, productFilter);
+  const filteredEntries = filterStockEntries(stockEntries, searchTerm, shopFilter, productFilter).filter(entry => {
+    if (paymentModeFilter === "") return true;
+    if (paymentModeFilter === "cash") return entry.cash_received > 0;
+    if (paymentModeFilter === "online") return entry.online_received > 0;
+    return true;
+  });
+  
   const sortedFilteredEntries = sortStockEntries(filteredEntries, sortField, sortDirection);
   
   // Calculate summary metrics
@@ -185,6 +194,8 @@ const StockList = ({ refreshTrigger, dateRange }: StockListProps) => {
             setProductFilter={setProductFilter}
             shops={shops}
             products={products}
+            paymentModeFilter={paymentModeFilter}
+            setPaymentModeFilter={setPaymentModeFilter}
           />
         </CardHeader>
         <CardContent>
@@ -199,7 +210,7 @@ const StockList = ({ refreshTrigger, dateRange }: StockListProps) => {
           
           <div className="mt-4 text-sm text-muted-foreground text-center">
             Showing {sortedFilteredEntries.length} of {stockEntries.length} entries
-            {(searchTerm || shopFilter || productFilter || dateRange?.from) && " (filtered)"}
+            {(searchTerm || shopFilter || productFilter || paymentModeFilter || dateRange?.from) && " (filtered)"}
           </div>
         </CardContent>
       </Card>

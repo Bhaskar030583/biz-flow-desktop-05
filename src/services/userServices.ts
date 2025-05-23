@@ -1,6 +1,15 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { User, UserWithProfile } from "@/types/user";
+
+export interface UserWithProfile {
+  id: string;
+  email: string;
+  role: string;
+  is_active: boolean;
+  created_at: string;
+  full_name: string | null;
+  avatar_url: string | null;
+}
 
 export const fetchUsers = async (): Promise<UserWithProfile[]> => {
   const { data, error } = await supabase.rpc('get_auth_users_view');
