@@ -48,63 +48,44 @@ export const useUserManagement = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers();
-      
-      if (usersError) {
-        throw usersError;
-      }
-      
-      // Fetch profile data to get roles
+      // Instead of using admin API, fetch users from the profiles table
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, role, full_name");
+        .select("id, role, full_name, created_at");
       
       if (profilesError) {
         throw profilesError;
       }
       
-      // Find the admin user to ensure they have admin role
-      let adminUserFound = false;
+      // Get user emails (this could be enhanced with a join if needed)
+      const { data: authUsers, error: authError } = await supabase
+        .from("auth_users_view")
+        .select("id, email")
+        .throwOnError();
+      
+      if (authError) {
+        console.error("Could not fetch auth users:", authError);
+      }
       
       // Combine data
-      const combinedData = usersData.users.map(user => {
-        // Check if this is the protected admin email
-        const isProtectedAdmin = user.email === "gumpubhaskar3000@gmail.com";
+      const combinedData = profilesData.map(profile => {
+        const authUser = authUsers?.find(user => user.id === profile.id) || { email: "unknown@example.com" };
         
-        if (isProtectedAdmin) {
-          adminUserFound = true;
-          
-          // Find their profile
-          const profile = profilesData?.find(p => p.id === user.id);
-          
-          // If they don't have admin role in their profile, update it
-          if (!profile || profile.role !== "admin") {
-            updateUserRoleToAdmin(user.id);
-          }
-          
-          // Always return with admin role for immediate UI update
-          return {
-            id: user.id,
-            email: user.email || "",
-            role: "admin" as UserRole,
-            created_at: user.created_at || "",
-            full_name: profile?.full_name || user.user_metadata?.full_name || null,
-          };
+        // Check if this is the protected admin email
+        const isProtectedAdmin = authUser.email === "gumpubhaskar3000@gmail.com";
+        
+        if (isProtectedAdmin && profile.role !== "admin") {
+          updateUserRoleToAdmin(profile.id);
         }
         
-        // For regular users
-        const profile = profilesData?.find(p => p.id === user.id);
-        
         return {
-          id: user.id,
-          email: user.email || "",
-          role: (profile?.role as UserRole) || "user",
-          created_at: user.created_at || "",
-          full_name: profile?.full_name || user.user_metadata?.full_name || null,
+          id: profile.id,
+          email: authUser.email,
+          role: (profile.role as UserRole) || "user",
+          created_at: profile.created_at || "",
+          full_name: profile.full_name,
         };
       });
-      
-      // If we didn't find the admin user but they might be added later, no action needed
       
       setUsers(combinedData);
     } catch (error) {
@@ -132,25 +113,21 @@ export const useUserManagement = () => {
     setIsSubmitting(true);
     
     try {
-      // Create user with supabase admin API
-      const { data, error } = await supabase.auth.admin.createUser({
+      // Use regular signup instead of admin API
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        email_confirm: true,
-        user_metadata: { full_name: fullName, role },
+        options: {
+          data: { 
+            full_name: fullName,
+            role: role 
+          }
+        }
       });
       
       if (error) throw error;
       
-      // Ensure profile has the correct role
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ role, full_name: fullName })
-        .eq("id", data.user.id);
-      
-      if (profileError) throw profileError;
-      
-      toast.success("User created successfully");
+      toast.success("User created successfully. Check email for confirmation link.");
       
       // Reset form
       setEmail("");
@@ -159,7 +136,9 @@ export const useUserManagement = () => {
       setRole("user");
       
       // Refresh user list
-      fetchUsers();
+      setTimeout(() => {
+        fetchUsers();
+      }, 1000);
       
     } catch (error: any) {
       console.error("Error creating user:", error);
