@@ -99,51 +99,53 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({
             User Role
           </Label>
           
-          <div className="grid grid-cols-2 gap-4 pt-2">
-            <div 
-              className={`p-4 border rounded-md cursor-pointer transition-all ${role === 'admin' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'hover:border-indigo-200'}`}
-              onClick={() => setRole('admin')}
-            >
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="admin" id="admin" checked={role === 'admin'} />
-                <Label htmlFor="admin" className="font-medium cursor-pointer">Administrator</Label>
+          <RadioGroup value={role} onValueChange={(value) => setRole(value as UserRole)}>
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <div 
+                className={`p-4 border rounded-md cursor-pointer transition-all ${role === 'admin' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'hover:border-indigo-200'}`}
+                onClick={() => setRole('admin')}
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="admin" id="admin" />
+                  <Label htmlFor="admin" className="font-medium cursor-pointer">Administrator</Label>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1 ml-6">Full control over all aspects of the system</p>
               </div>
-              <p className="text-sm text-muted-foreground mt-1 ml-6">Full control over all aspects of the system</p>
-            </div>
-            
-            <div 
-              className={`p-4 border rounded-md cursor-pointer transition-all ${role === 'lead' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'hover:border-indigo-200'}`}
-              onClick={() => setRole('lead')}
-            >
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="lead" id="lead" checked={role === 'lead'} />
-                <Label htmlFor="lead" className="font-medium cursor-pointer">Lead</Label>
+              
+              <div 
+                className={`p-4 border rounded-md cursor-pointer transition-all ${role === 'lead' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'hover:border-indigo-200'}`}
+                onClick={() => setRole('lead')}
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="lead" id="lead" />
+                  <Label htmlFor="lead" className="font-medium cursor-pointer">Lead</Label>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1 ml-6">Can manage shops, products and credits</p>
               </div>
-              <p className="text-sm text-muted-foreground mt-1 ml-6">Can manage shops, products and credits</p>
-            </div>
-            
-            <div 
-              className={`p-4 border rounded-md cursor-pointer transition-all ${role === 'sales' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'hover:border-indigo-200'}`}
-              onClick={() => setRole('sales')}
-            >
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="sales" id="sales" checked={role === 'sales'} />
-                <Label htmlFor="sales" className="font-medium cursor-pointer">Sales</Label>
+              
+              <div 
+                className={`p-4 border rounded-md cursor-pointer transition-all ${role === 'sales' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'hover:border-indigo-200'}`}
+                onClick={() => setRole('sales')}
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="sales" id="sales" />
+                  <Label htmlFor="sales" className="font-medium cursor-pointer">Sales</Label>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1 ml-6">Can manage stocks and view sales data</p>
               </div>
-              <p className="text-sm text-muted-foreground mt-1 ml-6">Can manage stocks and view sales data</p>
-            </div>
-            
-            <div 
-              className={`p-4 border rounded-md cursor-pointer transition-all ${role === 'user' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'hover:border-indigo-200'}`}
-              onClick={() => setRole('user')}
-            >
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="user" id="user" checked={role === 'user'} />
-                <Label htmlFor="user" className="font-medium cursor-pointer">User</Label>
+              
+              <div 
+                className={`p-4 border rounded-md cursor-pointer transition-all ${role === 'user' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'hover:border-indigo-200'}`}
+                onClick={() => setRole('user')}
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="user" id="user" />
+                  <Label htmlFor="user" className="font-medium cursor-pointer">User</Label>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1 ml-6">Limited access to view dashboard only</p>
               </div>
-              <p className="text-sm text-muted-foreground mt-1 ml-6">Limited access to view dashboard only</p>
             </div>
-          </div>
+          </RadioGroup>
         </div>
       </div>
       
