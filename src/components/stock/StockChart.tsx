@@ -15,7 +15,6 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { format, parseISO, subDays } from "date-fns";
 
 interface StockEntry {
@@ -124,141 +123,89 @@ const StockChart: React.FC<ChartProps> = ({ entries, isLoading = false }) => {
           </TabsList>
           
           <TabsContent value="sales" className="space-y-4">
-            <ChartContainer 
-              className="aspect-[4/3] sm:aspect-[16/9] h-[300px] sm:h-[400px]"
-            >
-              <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis 
-                  dataKey="formattedDate" 
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis 
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => `₹${value.toLocaleString()}`}
-                />
-                <Tooltip 
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <ChartTooltipContent 
-                          active={active} 
-                          payload={payload} 
-                          formatter={(value, name) => {
-                            return (
-                              <span className="font-mono text-sm">
-                                ₹{Number(value).toLocaleString()}
-                              </span>
-                            );
-                          }}
-                        />
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="totalSales" 
-                  name="Sales"
-                  stroke={chartConfig.sales.color} 
-                  strokeWidth={2} 
-                  dot={{ r: 4, strokeWidth: 2 }}
-                  activeDot={{ r: 6, strokeWidth: 2 }}
-                />
-              </LineChart>
-            </ChartContainer>
+            <div className="aspect-[4/3] sm:aspect-[16/9] h-[300px] sm:h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis 
+                    dataKey="formattedDate" 
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value) => `₹${value.toLocaleString()}`}
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Sales']}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="totalSales" 
+                    name="Sales"
+                    stroke={chartConfig.sales.color} 
+                    strokeWidth={2} 
+                    dot={{ r: 4, strokeWidth: 2 }}
+                    activeDot={{ r: 6, strokeWidth: 2 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </TabsContent>
           
           <TabsContent value="units" className="space-y-4">
-            <ChartContainer 
-              className="aspect-[4/3] sm:aspect-[16/9] h-[300px] sm:h-[400px]"
-            >
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis 
-                  dataKey="formattedDate" 
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis 
-                  tick={{ fontSize: 12 }}
-                />
-                <Tooltip 
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <ChartTooltipContent 
-                          active={active} 
-                          payload={payload} 
-                          formatter={(value, name) => {
-                            return (
-                              <span className="font-mono text-sm">
-                                {Number(value).toLocaleString()} units
-                              </span>
-                            );
-                          }}
-                        />
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Bar 
-                  dataKey="totalSold" 
-                  name="Units" 
-                  fill={chartConfig.units.color} 
-                  radius={[4, 4, 0, 0]} 
-                  barSize={20} 
-                />
-              </BarChart>
-            </ChartContainer>
+            <div className="aspect-[4/3] sm:aspect-[16/9] h-[300px] sm:h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis 
+                    dataKey="formattedDate" 
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12 }}
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => [`${value.toLocaleString()} units`, 'Units']}
+                  />
+                  <Bar 
+                    dataKey="totalSold" 
+                    name="Units" 
+                    fill={chartConfig.units.color} 
+                    radius={[4, 4, 0, 0]} 
+                    barSize={20} 
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </TabsContent>
           
           <TabsContent value="profit" className="space-y-4">
-            <ChartContainer 
-              className="aspect-[4/3] sm:aspect-[16/9] h-[300px] sm:h-[400px]"
-            >
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis 
-                  dataKey="formattedDate" 
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis 
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => `₹${value.toLocaleString()}`}
-                />
-                <Tooltip 
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const value = payload[0]?.value as number;
-                      return (
-                        <ChartTooltipContent 
-                          active={active} 
-                          payload={payload} 
-                          formatter={(value, name) => {
-                            return (
-                              <span className="font-mono text-sm">
-                                ₹{Number(value).toLocaleString()}
-                              </span>
-                            );
-                          }}
-                        />
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <ReferenceLine y={0} stroke="#666" strokeWidth={1} />
-                <Bar 
-                  dataKey="totalProfit"
-                  name="Profit/Loss"
-                  fill={(data) => data.totalProfit >= 0 ? chartConfig.profit.color : chartConfig.loss.color}
-                  radius={[4, 4, 0, 0]} 
-                  barSize={20} 
-                />
-              </BarChart>
-            </ChartContainer>
+            <div className="aspect-[4/3] sm:aspect-[16/9] h-[300px] sm:h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis 
+                    dataKey="formattedDate" 
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value) => `₹${value.toLocaleString()}`}
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Profit/Loss']}
+                  />
+                  <ReferenceLine y={0} stroke="#666" strokeWidth={1} />
+                  <Bar 
+                    dataKey="totalProfit"
+                    name="Profit/Loss"
+                    fill={(data) => data.totalProfit >= 0 ? chartConfig.profit.color : chartConfig.loss.color}
+                    radius={[4, 4, 0, 0]} 
+                    barSize={20} 
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </TabsContent>
         </Tabs>
       </CardContent>

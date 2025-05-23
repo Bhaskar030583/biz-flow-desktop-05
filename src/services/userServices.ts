@@ -20,10 +20,7 @@ export const fetchUsersService = async (): Promise<UserData[]> => {
   
   // Use the rpc function to get auth users data
   const { data: authUsersData, error: authError } = await supabase
-    .rpc('get_auth_users_view') as unknown as { 
-      data: AuthUserView[] | null; 
-      error: any 
-    };
+    .rpc('get_auth_users_view');
   
   if (authError) {
     console.error("Could not fetch auth users:", authError);

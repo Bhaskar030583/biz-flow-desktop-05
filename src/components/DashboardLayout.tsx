@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -77,8 +76,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <div className="flex flex-col h-full">
                   <div className="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-900 dark:to-purple-900 p-4 border-b border-indigo-800 dark:border-indigo-950 flex items-center justify-between text-white">
                     <div className="flex items-center space-x-2">
-                      <img src="/lovable-uploads/18f41054-18d4-459a-8a20-72e484f71afd.png" alt="ABC CAFE Logo" className="h-8 w-8" />
-                      <h2 className="text-lg font-semibold">ABC CAFE</h2>
+                      {/* No logo or name here */}
                     </div>
                     <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className="rounded-full hover:bg-indigo-800 dark:hover:bg-indigo-950">
                       <X className="h-5 w-5" />
@@ -146,10 +144,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <div className="flex-grow flex">
         <nav className="w-64 border-r border-indigo-100 dark:border-indigo-800 bg-gradient-to-b from-indigo-50/50 to-white dark:from-gray-900 dark:to-gray-900 hidden md:block shadow-sm transition-colors duration-300">
           <div className="p-4 space-y-6">
-            <div className="flex items-center space-x-2 px-3 py-2">
-              <img src="/lovable-uploads/18f41054-18d4-459a-8a20-72e484f71afd.png" alt="ABC CAFE Logo" className="h-8 w-8" />
-              <h2 className="text-lg font-semibold text-indigo-900 dark:text-indigo-300">ABC CAFE</h2>
-            </div>
             <div className="space-y-1">
               <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider pl-3 mb-2">Main</p>
               {filteredNavItems.slice(0, 1).map((item) => (
