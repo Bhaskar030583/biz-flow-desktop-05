@@ -24,7 +24,7 @@ export const fetchUsers = async (): Promise<User[]> => {
 
     // Fetch auth users data (needs to be an admin)
     const { data: authUsers, error: authError } = await supabase
-      .rpc('get_auth_users_view', {})
+      .rpc('get_auth_users_view')
       .select('*');
 
     if (authError) {

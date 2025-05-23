@@ -515,7 +515,7 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
               <Button type="button" variant="outline" onClick={onCancel}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading || isDuplicate}>
                 {loading ? "Saving..." : "Save Stock Entry"}
               </Button>
             </div>
