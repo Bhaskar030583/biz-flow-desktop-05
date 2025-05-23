@@ -81,7 +81,7 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
           <CardTitle>Stock Entries</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>No stock entries found. Please add some stock data.</p>
+          <p>No stock entries found. Please add some stock data or import from Excel.</p>
         </CardContent>
       </Card>
     );
@@ -89,8 +89,11 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Stock Entries</CardTitle>
+        <span className="text-sm text-muted-foreground">
+          {stockEntries.length} entries
+        </span>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
