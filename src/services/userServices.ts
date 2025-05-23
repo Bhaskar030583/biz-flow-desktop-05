@@ -37,17 +37,12 @@ export const fetchUsersService = async (): Promise<UserData[]> => {
     // Check if this is the protected admin email
     const isProtectedAdmin = authUser.email === "gumpubhaskar3000@gmail.com";
     
-    if (isProtectedAdmin && profile.role !== "admin") {
-      // This will be handled in the component
-      console.log("Found protected admin user that needs role update:", profile.id);
-    }
-    
     return {
       id: profile.id,
       email: authUser.email,
       role: (profile.role as UserRole) || "user",
       created_at: profile.created_at || "",
-      full_name: profile.full_name,
+      full_name: profile.full_name || "",
     };
   });
   

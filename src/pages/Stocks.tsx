@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import StockForm from "@/components/stock/StockForm";
 import StockList from "@/components/stock/StockList";
@@ -22,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, subDays } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DateRange } from "react-day-picker";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 const Stocks = () => {
   const [showForm, setShowForm] = useState(false);
@@ -157,14 +157,19 @@ const Stocks = () => {
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                {/* Date range picker content */}
+              <PopoverContent className="w-auto p-0 z-50" align="end">
                 <div className="p-3">
                   <div className="space-y-2">
                     <h4 className="font-medium">Select date range</h4>
                     <div className="border rounded-md p-2">
-                      {/* Your date range selection UI here */}
-                      <p className="text-sm text-muted-foreground">Date picker will be implemented here</p>
+                      <CalendarComponent
+                        initialFocus
+                        mode="range"
+                        defaultMonth={dateRange?.from}
+                        selected={dateRange}
+                        onSelect={setDateRange}
+                        numberOfMonths={2}
+                      />
                     </div>
                   </div>
                 </div>
@@ -244,7 +249,7 @@ const Stocks = () => {
           </TabsList>
           
           <TabsContent value="list" className="space-y-6">
-            <StockList refreshTrigger={refreshTrigger} />
+            <StockList refreshTrigger={refreshTrigger} dateRange={dateRange} />
           </TabsContent>
           
           {showForm && (
