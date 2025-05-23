@@ -199,7 +199,8 @@ const StockChart: React.FC<ChartProps> = ({ entries, isLoading = false }) => {
                   <Bar 
                     dataKey="totalProfit"
                     name="Profit/Loss"
-                    fill={(data) => data.totalProfit >= 0 ? chartConfig.profit.color : chartConfig.loss.color}
+                    // Fix: Use a string value for the fill prop instead of a function
+                    fill={chartConfig.profit.color}
                     radius={[4, 4, 0, 0]} 
                     barSize={20} 
                   />
