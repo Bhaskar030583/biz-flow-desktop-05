@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { SalesChart } from "@/components/dashboard/SalesChart";
-import { IndianRupee } from "lucide-react";
+import { IndianRupee, TrendingUp, TrendingDown, AlertCircle, CreditCard as CreditIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 
@@ -100,26 +100,48 @@ const Dashboard = () => {
     fetchCreditData();
   }, [filters, user]);
 
+  const creditBalance = creditReceived - creditGiven;
+  const isPositiveBalance = creditBalance >= 0;
+
   return (
     <DashboardLayout>
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Dashboard Overview</h1>
+          <div className="text-sm text-gray-500">
+            {new Date().toLocaleDateString('en-US', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </div>
+        </div>
         
         {/* Filters */}
-        <DashboardFilters onFilterChange={handleFilterChange} />
+        <div className="bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-100">
+          <h2 className="text-lg font-medium mb-3">Data Filters</h2>
+          <DashboardFilters onFilterChange={handleFilterChange} />
+        </div>
         
         {/* Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+          <Card className="border-none shadow-sm hover:shadow transition-shadow">
+            <CardHeader className="pb-2 space-y-0 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+                <CardDescription>Revenue overview</CardDescription>
+              </div>
+              <div className="bg-primary/10 p-2 rounded-full">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-2xl font-bold">
                 <IndianRupee className="h-5 w-5 mr-1" />
                 <span>0.00</span>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground mt-1">
                 {filters.startDate || filters.endDate ? 
                   `For selected date range` : 
                   `No sales data yet`
@@ -127,16 +149,23 @@ const Dashboard = () => {
               </p>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Profit/Loss</CardTitle>
+          
+          <Card className="border-none shadow-sm hover:shadow transition-shadow">
+            <CardHeader className="pb-2 space-y-0 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-sm font-medium">Profit/Loss</CardTitle>
+                <CardDescription>Financial summary</CardDescription>
+              </div>
+              <div className="bg-muted p-2 rounded-full">
+                <TrendingDown className="h-5 w-5 text-muted-foreground" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-2xl font-bold">
                 <IndianRupee className="h-5 w-5 mr-1" />
                 <span>0.00</span>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground mt-1">
                 {filters.startDate || filters.endDate ? 
                   `For selected date range` : 
                   `No data available`
@@ -144,9 +173,16 @@ const Dashboard = () => {
               </p>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Credits</CardTitle>
+          
+          <Card className="border-none shadow-sm hover:shadow transition-shadow">
+            <CardHeader className="pb-2 space-y-0 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-sm font-medium">Credits</CardTitle>
+                <CardDescription>Given & Received</CardDescription>
+              </div>
+              <div className={`p-2 rounded-full ${isPositiveBalance ? 'bg-green-100' : 'bg-red-100'}`}>
+                <CreditIcon className={`h-5 w-5 ${isPositiveBalance ? 'text-green-600' : 'text-red-600'}`} />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-2">
@@ -168,8 +204,8 @@ const Dashboard = () => {
                   <span className="text-sm font-medium">Balance:</span>
                   <div className="flex items-center text-lg font-bold">
                     <IndianRupee className="h-4 w-4 mr-1" />
-                    <span className={creditReceived - creditGiven >= 0 ? "text-green-500" : "text-red-500"}>
-                      {(creditReceived - creditGiven).toFixed(2)}
+                    <span className={isPositiveBalance ? "text-green-500" : "text-red-500"}>
+                      {creditBalance.toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -185,37 +221,46 @@ const Dashboard = () => {
         </div>
         
         {/* Charts */}
-        <div className="mb-8">
-          <SalesChart 
-            startDate={filters.startDate} 
-            endDate={filters.endDate}
-            shopId={filters.shopId}
-            categoryId={filters.category}
-            productId={filters.productId}
-          />
-        </div>
+        <Card className="border-none shadow-sm mb-8">
+          <CardHeader>
+            <CardTitle>Sales Performance</CardTitle>
+            <CardDescription>View your sales trends over time</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <SalesChart 
+              startDate={filters.startDate} 
+              endDate={filters.endDate}
+              shopId={filters.shopId}
+              categoryId={filters.category}
+              productId={filters.productId}
+            />
+          </CardContent>
+        </Card>
         
         {/* Welcome Card - Show only if no filters are applied */}
         {!filters.startDate && !filters.endDate && !filters.shopId && !filters.category && !filters.productId && (
-          <div className="mt-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Welcome to Your Business Metrics Dashboard</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>To get started, you'll need to:</p>
-                <ol className="list-decimal pl-5 mt-2 space-y-1">
-                  <li>Add your first shop</li>
-                  <li>Create some products</li>
-                  <li>Enter sales data</li>
+          <Card className="border-none shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-blue-500" />
+                Welcome to Your Business Metrics Dashboard
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4">To get started with tracking your business metrics, you'll need to:</p>
+              <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
+                <ol className="list-decimal pl-5 space-y-2">
+                  <li className="text-sm">Add your first shop through the Shops section</li>
+                  <li className="text-sm">Create product categories and products</li>
+                  <li className="text-sm">Enter stock and sales data</li>
                 </ol>
-                <p className="mt-4">
-                  Once you have data in the system, you'll be able to see detailed metrics, charts, and reports here.
-                  Use the filters above to narrow down your data view.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+              <p className="mt-4 text-sm text-muted-foreground">
+                Once you have data in the system, you'll be able to see detailed metrics, charts, and reports here.
+                Use the filters above to narrow down your data view.
+              </p>
+            </CardContent>
+          </Card>
         )}
       </div>
     </DashboardLayout>
@@ -223,4 +268,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
