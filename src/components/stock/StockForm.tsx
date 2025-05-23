@@ -184,6 +184,19 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
     }
   };
 
+  // Format number inputs to display with proper formatting
+  const formatNumberInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '') return;
+    
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue)) {
+      // Format to show as a number with commas
+      return numValue.toLocaleString();
+    }
+    return value;
+  };
+
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
@@ -315,6 +328,10 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                         type="number"
                         placeholder="0"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(Number(e.target.value));
+                          e.target.value = formatNumberInput(e) || e.target.value;
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -333,6 +350,10 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                         type="number"
                         placeholder="0"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(Number(e.target.value));
+                          e.target.value = formatNumberInput(e) || e.target.value;
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -351,6 +372,10 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                         type="number"
                         placeholder="0"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(Number(e.target.value));
+                          e.target.value = formatNumberInput(e) || e.target.value;
+                        }}
                       />
                     </FormControl>
                     <FormMessage />

@@ -58,7 +58,7 @@ const CreditForm: React.FC<CreditFormProps> = ({ onSuccess, onCancel, creditToEd
     defaultValues: {
       credit_date: creditToEdit ? format(new Date(creditToEdit.credit_date), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
       credit_type: creditToEdit?.credit_type || "received",
-      amount: creditToEdit ? String(creditToEdit.amount) : "",
+      amount: creditToEdit ? Number(creditToEdit.amount).toFixed(2) : "",
       description: creditToEdit?.description || "",
       shop_id: creditToEdit?.shop_id || "",
     },
@@ -91,7 +91,7 @@ const CreditForm: React.FC<CreditFormProps> = ({ onSuccess, onCancel, creditToEd
       form.reset({
         credit_date: format(new Date(creditToEdit.credit_date), "yyyy-MM-dd"),
         credit_type: creditToEdit.credit_type,
-        amount: String(creditToEdit.amount),
+        amount: Number(creditToEdit.amount).toFixed(2),
         description: creditToEdit.description || "",
         shop_id: creditToEdit.shop_id,
       });
@@ -141,6 +141,23 @@ const CreditForm: React.FC<CreditFormProps> = ({ onSuccess, onCancel, creditToEd
     } catch (err) {
       console.error("Error submitting form:", err);
       toast.error("An unexpected error occurred");
+    }
+  };
+
+  // Format amount input to always show 2 decimal places
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '') {
+      form.setValue('amount', '');
+      return;
+    }
+    
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      // Only format when user stops typing
+      if (value.indexOf('.') === -1 || value.split('.')[1].length >= 2) {
+        form.setValue('amount', numValue.toFixed(2));
+      }
     }
   };
 
@@ -224,7 +241,17 @@ const CreditForm: React.FC<CreditFormProps> = ({ onSuccess, onCancel, creditToEd
               <FormItem>
                 <FormLabel>Amount</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" min="0" placeholder="0.00" {...field} />
+                  <Input 
+                    type="number" 
+                    step="0.01" 
+                    min="0" 
+                    placeholder="0.00" 
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      handleAmountChange(e);
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
