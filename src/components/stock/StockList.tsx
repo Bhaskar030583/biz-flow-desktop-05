@@ -12,7 +12,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { IndianRupee } from "lucide-react";
+import { IndianRupee, User, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface StockListProps {
   refreshTrigger: number;
@@ -34,6 +35,8 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
             opening_stock, 
             closing_stock, 
             actual_stock,
+            shift,
+            operator_name,
             shops (id, name),
             products (id, name, price, cost_price)
           `)
@@ -106,6 +109,7 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
                 <TableHead className="text-right">Opening Stock</TableHead>
                 <TableHead className="text-right">Closing Stock</TableHead>
                 <TableHead className="text-right">Actual Stock</TableHead>
+                <TableHead>Shift / Operator</TableHead>
                 <TableHead className="text-right">Units Sold</TableHead>
                 <TableHead className="text-right">Sales Amount</TableHead>
                 <TableHead className="text-right">Profit/Loss</TableHead>
@@ -127,6 +131,24 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
                     <TableCell className="text-right">{entry.opening_stock}</TableCell>
                     <TableCell className="text-right">{entry.closing_stock}</TableCell>
                     <TableCell className="text-right">{entry.actual_stock}</TableCell>
+                    <TableCell>
+                      {entry.shift && (
+                        <div className="flex flex-col space-y-1">
+                          <div className="flex items-center">
+                            <Clock className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+                            <Badge variant="outline" className="font-normal">
+                              {entry.shift}
+                            </Badge>
+                          </div>
+                          {entry.operator_name && (
+                            <div className="flex items-center">
+                              <User className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">{entry.operator_name}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right">{sold}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end">

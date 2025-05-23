@@ -3,8 +3,9 @@ import React, { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import StockForm from "@/components/stock/StockForm";
 import StockList from "@/components/stock/StockList";
+import BatchStockEntry from "@/components/stock/BatchStockEntry";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileDown, FileUp } from "lucide-react";
+import { PlusCircle, FileDown, FileUp, Layers } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,12 +20,14 @@ import { utils, writeFile } from "xlsx";
 
 const Stocks = () => {
   const [showForm, setShowForm] = useState(false);
+  const [showBatchEntry, setShowBatchEntry] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [exporting, setExporting] = useState(false);
 
   const handleStockAdded = () => {
     setShowForm(false);
+    setShowBatchEntry(false);
     setRefreshTrigger(prev => prev + 1);
   };
 
@@ -47,6 +50,8 @@ const Stocks = () => {
           opening_stock, 
           closing_stock, 
           actual_stock,
+          shift,
+          operator_name,
           shops (id, name),
           products (id, name, price, cost_price)
         `)
@@ -67,6 +72,8 @@ const Stocks = () => {
         "Opening Stock": entry.opening_stock,
         "Closing Stock": entry.closing_stock,
         "Actual Stock": entry.actual_stock,
+        "Shift": entry.shift || "N/A",
+        "Operator": entry.operator_name || "N/A",
         "Units Sold": entry.opening_stock - entry.closing_stock,
         "Sales Amount": (entry.opening_stock - entry.closing_stock) * Number(entry.products?.price || 0),
         "Profit/Loss": ((entry.opening_stock - entry.closing_stock) * Number(entry.products?.price || 0)) - 
@@ -116,10 +123,23 @@ const Stocks = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-white border border-indigo-100 shadow-lg">
                 <DropdownMenuItem 
-                  onClick={() => setShowForm(!showForm)}
+                  onClick={() => {
+                    setShowBatchEntry(false);
+                    setShowForm(!showForm);
+                  }}
                   className="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer"
                 >
-                  {showForm ? "Cancel Entry" : "Add Stock Entry"}
+                  {showForm ? "Cancel Entry" : "Add Single Stock Entry"}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => {
+                    setShowForm(false);
+                    setShowBatchEntry(!showBatchEntry);
+                  }}
+                  className="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer"
+                >
+                  <Layers className="mr-2 h-4 w-4" />
+                  {showBatchEntry ? "Cancel Batch Entry" : "Batch Stock Entry"}
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => setShowImport(true)}
@@ -138,6 +158,13 @@ const Stocks = () => {
             <StockForm onSuccess={handleStockAdded} onCancel={() => setShowForm(false)} />
           </div>
         )}
+
+        {showBatchEntry && (
+          <div className="mb-8 bg-white p-6 rounded-lg shadow-md border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/30">
+            <BatchStockEntry onSuccess={handleStockAdded} onCancel={() => setShowBatchEntry(false)} />
+          </div>
+        )}
+
         <div className="bg-white rounded-lg shadow-md border border-gray-200 bg-gradient-to-br from-white to-purple-50/20">
           <StockList refreshTrigger={refreshTrigger} />
         </div>
