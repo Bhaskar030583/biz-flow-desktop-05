@@ -9,6 +9,8 @@ import PrivateRoute from "@/components/PrivateRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import Shops from "./pages/Shops";
+import Products from "./pages/Products";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,16 @@ const App = () => (
             <Route path="/dashboard" element={
               <PrivateRoute>
                 <Dashboard />
+              </PrivateRoute>
+            } />
+            <Route path="/shops" element={
+              <PrivateRoute>
+                <Shops />
+              </PrivateRoute>
+            } />
+            <Route path="/products" element={
+              <PrivateRoute>
+                <Products />
               </PrivateRoute>
             } />
             <Route path="*" element={<NotFound />} />

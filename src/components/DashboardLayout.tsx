@@ -2,6 +2,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import { Link, useLocation } from "react-router-dom";
+import { Store, Category, Plus } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -9,6 +11,9 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { signOut, user } = useAuth();
+  const location = useLocation();
+  
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -23,9 +28,49 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
         </div>
       </header>
-      <main className="flex-grow bg-gray-50">
-        {children}
-      </main>
+      <div className="flex-grow flex">
+        <nav className="w-64 border-r border-gray-200 bg-white">
+          <div className="p-4">
+            <ul className="space-y-2">
+              <li>
+                <Link to="/dashboard">
+                  <Button 
+                    variant={isActive("/dashboard") ? "default" : "ghost"}
+                    className="w-full justify-start"
+                  >
+                    Dashboard
+                  </Button>
+                </Link>
+              </li>
+              <li>
+                <Link to="/shops">
+                  <Button 
+                    variant={isActive("/shops") ? "default" : "ghost"} 
+                    className="w-full justify-start"
+                  >
+                    <Store className="mr-2 h-4 w-4" />
+                    Shops
+                  </Button>
+                </Link>
+              </li>
+              <li>
+                <Link to="/products">
+                  <Button 
+                    variant={isActive("/products") ? "default" : "ghost"} 
+                    className="w-full justify-start"
+                  >
+                    <Category className="mr-2 h-4 w-4" />
+                    Products
+                  </Button>
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </nav>
+        <main className="flex-grow bg-gray-50">
+          {children}
+        </main>
+      </div>
     </div>
   );
 };
