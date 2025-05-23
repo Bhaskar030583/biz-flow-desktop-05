@@ -50,9 +50,7 @@ const StockTabsContainer: React.FC<StockTabsContainerProps> = ({
           <div className="bg-white p-6 rounded-lg shadow-md border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/30">
             <StockForm 
               onSuccess={handleStockAdded} 
-              // Pass empty object as initialData to satisfy the type requirements
-              initialData={{}}
-              // Remove onCancel prop as it's not in the component definition
+              // Fix: Remove initialData prop as it doesn't exist in StockFormProps
             />
           </div>
         </TabsContent>
@@ -62,17 +60,14 @@ const StockTabsContainer: React.FC<StockTabsContainerProps> = ({
         <TabsContent value="batch" className="space-y-6">
           <div className="bg-white p-6 rounded-lg shadow-md border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/30">
             <BatchStockEntry 
-              onSuccess={handleStockAdded} 
-              onCancel={() => {
-                setActiveTab("list");
-              }} 
+              onSuccess={handleStockAdded}
+              // Fix: Pass required props according to BatchStockEntry component definition
             />
           </div>
         </TabsContent>
       )}
       
       <TabsContent value="collection" className="space-y-6">
-        {/* Pass any required props that CollectionList expects */}
         <CollectionList />
       </TabsContent>
       
