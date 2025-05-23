@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
@@ -35,6 +35,9 @@ export interface Expense {
 
 export const useExpenseManagement = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  
+  // Form state
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<ExpenseCategory>('other');
@@ -65,61 +68,69 @@ export const useExpenseManagement = () => {
     enabled: !!user
   });
 
-  // Fetch expenses - using a simpler query to avoid type issues
-  const { data: expenses = [], refetch: refetchExpenses, isLoading: isLoadingExpenses } = useQuery({
+  // For now, let's handle expenses as if we're waiting for the migration to complete
+  const { data: expenses = [], isLoading: isLoadingExpenses } = useQuery({
     queryKey: ['expenses'],
     queryFn: async () => {
       if (!user) return [];
       
-      // First get expenses
-      const { data: expensesData, error: expensesError } = await supabase
-        .from('expenses')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('expense_date', { ascending: false });
+      // This is placeholder logic until we have the expenses table
+      // After the migration is complete, we'll implement proper fetching
+      console.log("Attempting to fetch expenses, but table may not exist yet");
       
-      if (expensesError) {
-        console.error('Error fetching expenses:', expensesError);
-        toast.error('Failed to load expenses');
-        return [];
-      }
-
-      // If no expenses, return empty array
-      if (!expensesData || expensesData.length === 0) {
-        return [];
-      }
-      
-      // Get shop names for all shop_ids
-      const shopIds = [...new Set(expensesData.map(expense => expense.shop_id))];
-      const { data: shopsData, error: shopsError } = await supabase
-        .from('shops')
-        .select('id, name')
-        .in('id', shopIds);
-      
-      if (shopsError) {
-        console.error('Error fetching shop names:', shopsError);
-        // Return expenses without shop names
-        return expensesData;
-      }
-      
-      // Create a map of shop_id to shop_name
-      const shopMap = (shopsData || []).reduce((map, shop) => {
-        map[shop.id] = shop.name;
-        return map;
-      }, {} as Record<string, string>);
-      
-      // Add shop_name to each expense
-      const expensesWithShops = expensesData.map(expense => ({
-        ...expense,
-        shop_name: shopMap[expense.shop_id] || 'Unknown Shop'
-      }));
-      
-      return expensesWithShops;
+      // Return empty array for now
+      return [] as Expense[];
     },
     enabled: !!user
   });
 
-  // Add expense function
+  // Mutation for adding expenses (placeholder until we have the table)
+  const addExpenseMutation = useMutation({
+    mutationFn: async (expenseData: Omit<Expense, 'id' | 'created_at' | 'shop_name'>) => {
+      // This is a placeholder. After migration, we'll implement actual API call
+      console.log("Would add expense:", expenseData);
+      toast.error("Expenses table doesn't exist yet. Please run the required database migration first.");
+      throw new Error("Expenses table doesn't exist yet");
+    },
+    onSuccess: () => {
+      // Reset form and refetch data
+      setDescription('');
+      setAmount('');
+      setCategory('other');
+      setShopId('');
+      setExpenseDate(new Date());
+      setPaymentMethod('cash');
+      
+      // Refresh expenses list
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      
+      toast.success('Expense added successfully');
+    },
+    onError: (error: any) => {
+      console.error('Error adding expense:', error);
+      toast.error(`Failed to add expense: ${error.message}`);
+    }
+  });
+
+  // Delete expense function (placeholder until we have the table)
+  const deleteExpenseMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // This is a placeholder. After migration, we'll implement actual API call
+      console.log("Would delete expense:", id);
+      toast.error("Expenses table doesn't exist yet. Please run the required database migration first.");
+      throw new Error("Expenses table doesn't exist yet");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      toast.success('Expense deleted successfully');
+    },
+    onError: (error: any) => {
+      console.error('Error deleting expense:', error);
+      toast.error(`Failed to delete expense: ${error.message}`);
+    }
+  });
+
+  // Handle add expense
   const handleAddExpense = async () => {
     if (!user || !amount || !shopId || !category || !description) {
       toast.error('Please fill in all required fields');
@@ -132,60 +143,26 @@ export const useExpenseManagement = () => {
       // Format date to YYYY-MM-DD
       const formattedDate = expenseDate.toISOString().split('T')[0];
       
-      const { error } = await supabase
-        .from('expenses')
-        .insert({
-          user_id: user.id,
-          shop_id: shopId,
-          amount: parseFloat(amount),
-          category,
-          description,
-          expense_date: formattedDate,
-          payment_method: paymentMethod,
-        });
-
-      if (error) throw error;
-      
-      // Reset form
-      setDescription('');
-      setAmount('');
-      setCategory('other');
-      setShopId('');
-      setExpenseDate(new Date());
-      setPaymentMethod('cash');
-      
-      // Refresh expenses list
-      refetchExpenses();
-      
-      toast.success('Expense added successfully');
-    } catch (error: any) {
-      console.error('Error adding expense:', error);
-      toast.error('Failed to add expense: ' + error.message);
+      await addExpenseMutation.mutateAsync({
+        user_id: user.id,
+        shop_id: shopId,
+        amount: parseFloat(amount),
+        category,
+        description,
+        expense_date: formattedDate,
+        payment_method: paymentMethod,
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Delete expense function
+  // Handle delete expense
   const handleDeleteExpense = async (id: string) => {
     if (!user || !id) return;
 
     if (confirm('Are you sure you want to delete this expense?')) {
-      try {
-        const { error } = await supabase
-          .from('expenses')
-          .delete()
-          .eq('id', id)
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-        
-        refetchExpenses();
-        toast.success('Expense deleted successfully');
-      } catch (error: any) {
-        console.error('Error deleting expense:', error);
-        toast.error('Failed to delete expense: ' + error.message);
-      }
+      await deleteExpenseMutation.mutateAsync(id);
     }
   };
 

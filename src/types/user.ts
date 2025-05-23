@@ -6,7 +6,7 @@ export type User = {
   email: string;
   full_name: string;
   avatar_url: string;
-  role: string;
+  role: UserRole;
   created_at: string;
 };
 
@@ -18,3 +18,6 @@ export type UserData = {
   created_at: string;
   full_name: string | null;
 };
+
+// Re-export UserRole from AuthContext to make it available everywhere
+export { UserRole } from "@/context/AuthContext";

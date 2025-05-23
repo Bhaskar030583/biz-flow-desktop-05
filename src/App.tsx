@@ -17,14 +17,24 @@ import PrivateRoute from "./components/PrivateRoute";
 import { AuthProvider } from "./context/AuthContext";
 import Expenses from "./pages/Expenses";
 
-const queryClient = new QueryClient();
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10,   // 10 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <QueryClientProvider client={queryClient}>
-          <Router>
+      <Router>
+        <AuthProvider>
+          <QueryClientProvider client={queryClient}>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth/*" element={<Auth />} />
@@ -65,10 +75,10 @@ function App() {
               } />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </Router>
-          <Toaster position="top-right" />
-        </QueryClientProvider>
-      </AuthProvider>
+            <Toaster position="top-right" />
+          </QueryClientProvider>
+        </AuthProvider>
+      </Router>
     </ThemeProvider>
   );
 }
