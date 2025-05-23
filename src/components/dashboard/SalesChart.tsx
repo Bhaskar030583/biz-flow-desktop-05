@@ -21,6 +21,21 @@ interface SalesChartProps {
   productId: string | null;
 }
 
+interface ProductData {
+  id: string;
+  name: string;
+  cost_price: number | null;
+  price: number;
+  category: string;
+}
+
+interface SaleData {
+  sale_date: string;
+  quantity: number;
+  price: number;
+  products: ProductData;
+}
+
 export function SalesChart({ startDate, endDate, shopId, categoryId, productId }: SalesChartProps) {
   const [salesData, setSalesData] = useState<SalesDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +77,7 @@ export function SalesChart({ startDate, endDate, shopId, categoryId, productId }
         // Process data
         const processedData: Record<string, SalesDataPoint> = {};
         
-        data?.forEach(sale => {
+        data?.forEach((sale: SaleData) => {
           if (!sale.products) return;
           
           // Apply category filter
