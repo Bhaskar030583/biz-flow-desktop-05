@@ -10,13 +10,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { IndianRupee } from "lucide-react";
 
 const productSchema = z.object({
   name: z.string().min(2, { message: "Product name must be at least 2 characters" }),
   category: z.string().min(2, { message: "Category name must be at least 2 characters" }),
+  costPrice: z.string().refine(
+    (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
+    { message: "Cost price must be a positive number" }
+  ),
   price: z.string().refine(
     (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
-    { message: "Price must be a positive number" }
+    { message: "Selling price must be a positive number" }
   ),
 });
 
@@ -35,6 +40,7 @@ export function ProductForm({ onSuccess }: ProductFormProps) {
     defaultValues: {
       name: "",
       category: "",
+      costPrice: "",
       price: "",
     },
   });
@@ -49,6 +55,7 @@ export function ProductForm({ onSuccess }: ProductFormProps) {
         .insert({
           name: data.name,
           category: data.category,
+          cost_price: parseFloat(data.costPrice),
           price: parseFloat(data.price),
           user_id: user.id,
         });
@@ -111,18 +118,50 @@ export function ProductForm({ onSuccess }: ProductFormProps) {
             
             <FormField
               control={form.control}
+              name="costPrice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cost Price (₹)</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <IndianRupee className="h-4 w-4 text-gray-500" />
+                      </div>
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        min="0" 
+                        placeholder="0.00" 
+                        className="pl-10"
+                        {...field} 
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
               name="price"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Price</FormLabel>
+                  <FormLabel>Selling Price (₹)</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number" 
-                      step="0.01" 
-                      min="0" 
-                      placeholder="0.00" 
-                      {...field} 
-                    />
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <IndianRupee className="h-4 w-4 text-gray-500" />
+                      </div>
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        min="0" 
+                        placeholder="0.00" 
+                        className="pl-10"
+                        {...field} 
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

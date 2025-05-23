@@ -6,13 +6,14 @@ import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Package } from "lucide-react";
+import { Trash2, Package, IndianRupee } from "lucide-react";
 
 interface Product {
   id: string;
   name: string;
   category: string;
   price: number;
+  cost_price: number;
   created_at: string;
 }
 
@@ -132,7 +133,8 @@ export function ProductList() {
               <TableRow>
                 <TableHead>Product Name</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
+                <TableHead>Cost Price</TableHead>
+                <TableHead>Selling Price</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -141,7 +143,18 @@ export function ProductList() {
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.category}</TableCell>
-                  <TableCell>${product.price.toFixed(2)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <IndianRupee className="h-3 w-3 mr-1" />
+                      {product.cost_price !== undefined ? product.cost_price.toFixed(2) : "N/A"}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <IndianRupee className="h-3 w-3 mr-1" />
+                      {product.price.toFixed(2)}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="outline"
