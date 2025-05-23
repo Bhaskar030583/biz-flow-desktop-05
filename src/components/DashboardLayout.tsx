@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -109,7 +110,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                         <span className="text-sm text-gray-600 dark:text-gray-300 truncate max-w-[180px]">{user?.email}</span>
                         {isAdmin && <span className="text-xs font-medium text-red-600 dark:text-red-400">Admin Access</span>}
                       </div>
-                      <Button variant="outline" size="sm" onClick={signOut} className="text-red-500 hover:text-red-700 hover:bg-red-50 border-red-200 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950 dark:border-red-800">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={signOut} 
+                        className="bg-red-600 text-white hover:bg-red-700 hover:text-white border-red-700 dark:bg-red-700 dark:text-white dark:hover:bg-red-800 dark:border-red-800"
+                      >
                         <LogOut className="h-4 w-4 mr-1" />
                         Exit
                       </Button>
@@ -133,7 +139,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <Avatar className="h-8 w-8 bg-white text-indigo-700 border-2 border-white dark:bg-gray-800 dark:text-indigo-300 dark:border-gray-700">
                 <AvatarFallback>{getUserInitials()}</AvatarFallback>
               </Avatar>
-              <Button variant="outline" size="sm" onClick={signOut} className="hidden md:flex text-white border-white/30 hover:bg-indigo-800 hover:text-white hover:border-white/10 dark:hover:bg-indigo-950">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={signOut} 
+                className="hidden md:flex bg-red-600 text-white hover:bg-red-700 hover:text-white border-red-700 dark:bg-red-700 dark:text-white dark:hover:bg-red-800 dark:border-red-800"
+              >
                 <LogOut className="h-4 w-4 mr-1" />
                 Sign out
               </Button>

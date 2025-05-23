@@ -7,6 +7,7 @@ interface SummaryData {
   totalSold: number;
   totalSales: number;
   totalProfit: number;
+  totalProductLoss: number;
 }
 
 interface StockSummaryCardsProps {
@@ -15,7 +16,7 @@ interface StockSummaryCardsProps {
 
 const StockSummaryCards = ({ summary }: StockSummaryCardsProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <Card className="bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-950/50 dark:to-gray-900 transition-all duration-300 hover:shadow-md transform hover:-translate-y-1">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">Total Units Sold</CardTitle>
@@ -46,6 +47,19 @@ const StockSummaryCards = ({ summary }: StockSummaryCardsProps) => {
             <IndianRupee className="h-5 w-5 mr-1" />
             {Math.abs(summary.totalProfit).toLocaleString(undefined, { maximumFractionDigits: 2 })}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-gradient-to-br from-amber-50 to-white dark:from-amber-950/30 dark:to-gray-900 transition-all duration-300 hover:shadow-md transform hover:-translate-y-1">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground">Product Loss Amount</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center text-2xl font-bold text-amber-600 dark:text-amber-400 animate-fade-in">
+            <IndianRupee className="h-5 w-5 mr-1" />
+            {summary.totalProductLoss.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">Due to missing inventory</p>
         </CardContent>
       </Card>
     </div>
