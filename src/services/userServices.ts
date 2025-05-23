@@ -1,6 +1,15 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import type { User } from "@/types/user";
+
+// Define the User type
+type User = {
+  id: string;
+  email: string;
+  full_name: string;
+  avatar_url: string;
+  role: string;
+  created_at: string;
+};
 
 // Fetch users from auth.users view
 export const fetchUsers = async (): Promise<User[]> => {

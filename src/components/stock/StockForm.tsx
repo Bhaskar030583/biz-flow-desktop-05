@@ -59,6 +59,7 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
   const [selectedShop, setSelectedShop] = useState<any>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [validationError, setValidationError] = useState("");
+  const [isDuplicate, setIsDuplicate] = useState(false);
 
   const form = useForm<StockFormValues>({
     resolver: zodResolver(stockSchema),
@@ -115,6 +116,39 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
       setSelectedProduct(product);
     }
   }, [watchProductId, products]);
+
+  // Check for duplicate entries when shop, product, or date changes
+  useEffect(() => {
+    const checkDuplicateEntry = async () => {
+      if (!watchShopId || !watchProductId || !watchStockDate) {
+        setIsDuplicate(false);
+        return;
+      }
+
+      try {
+        const formattedDate = format(watchStockDate, "yyyy-MM-dd");
+        
+        const { data, error } = await supabase
+          .from("stocks")
+          .select("id")
+          .eq("shop_id", watchShopId)
+          .eq("product_id", watchProductId)
+          .eq("stock_date", formattedDate)
+          .single();
+
+        if (error && error.code !== "PGRST116") { // No rows returned
+          console.error("Error checking for duplicate entries:", error);
+          return;
+        }
+
+        setIsDuplicate(!!data);
+      } catch (error) {
+        console.error("Error checking for duplicate:", error);
+      }
+    };
+
+    checkDuplicateEntry();
+  }, [watchShopId, watchProductId, watchStockDate]);
 
   // Fetch previous day's actual stock and update opening stock
   useEffect(() => {
@@ -174,6 +208,12 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
       return;
     }
 
+    // Check for duplicates
+    if (isDuplicate) {
+      toast.error("A stock entry already exists for this shop, product, and date");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -230,6 +270,15 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
             {validationError && (
               <Alert variant="destructive">
                 <AlertDescription>{validationError}</AlertDescription>
+              </Alert>
+            )}
+            
+            {isDuplicate && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  Warning: A stock entry already exists for this shop, product, and date.
+                  Submitting will create a duplicate entry.
+                </AlertDescription>
               </Alert>
             )}
             
