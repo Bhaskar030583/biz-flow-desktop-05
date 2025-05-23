@@ -6,8 +6,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, Store, Package } from "lucide-react";
+import { Calendar as CalendarIcon, Store, Package, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Shop {
   id: string;
@@ -24,7 +25,7 @@ interface DashboardFiltersProps {
   onFilterChange: (filters: {
     startDate: Date | null;
     endDate: Date | null;
-    shopId: string | null;
+    shopIds: string[];
     category: string | null;
     productId: string | null;
   }) => void;
@@ -34,7 +35,8 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [shops, setShops] = useState<Shop[]>([]);
-  const [selectedShop, setSelectedShop] = useState<string | null>(null);
+  const [selectedShopIds, setSelectedShopIds] = useState<string[]>([]);
+  const [showShopDropdown, setShowShopDropdown] = useState<boolean>(false);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -70,8 +72,8 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
           .from("products")
           .select("id, name, category");
         
-        // Filter by shop if selected
-        if (selectedShop) {
+        // Filter by shop if selected shops
+        if (selectedShopIds.length > 0) {
           // This would require a join with sales to filter products by shop
           // For simplicity, we're not doing this filter here
         }
@@ -95,7 +97,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
     }
 
     fetchProducts();
-  }, [selectedShop]);
+  }, [selectedShopIds]);
 
   // Filter products by category
   const filteredProducts = selectedCategory
@@ -107,19 +109,53 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
     onFilterChange({
       startDate,
       endDate,
-      shopId: selectedShop,
+      shopIds: selectedShopIds,
       category: selectedCategory,
       productId: selectedProduct
     });
-  }, [startDate, endDate, selectedShop, selectedCategory, selectedProduct, onFilterChange]);
+  }, [startDate, endDate, selectedShopIds, selectedCategory, selectedProduct, onFilterChange]);
 
   // Reset filters
   const resetFilters = () => {
     setStartDate(null);
     setEndDate(null);
-    setSelectedShop(null);
+    setSelectedShopIds([]);
     setSelectedCategory(null);
     setSelectedProduct(null);
+  };
+
+  // Toggle shop selection
+  const toggleShop = (shopId: string) => {
+    setSelectedShopIds(prevSelected => {
+      if (prevSelected.includes(shopId)) {
+        return prevSelected.filter(id => id !== shopId);
+      } else {
+        return [...prevSelected, shopId];
+      }
+    });
+  };
+
+  // Toggle all shops
+  const toggleAllShops = () => {
+    if (selectedShopIds.length === shops.length) {
+      setSelectedShopIds([]);
+    } else {
+      setSelectedShopIds(shops.map(shop => shop.id));
+    }
+  };
+
+  // Get shop display text
+  const getShopDisplayText = () => {
+    if (selectedShopIds.length === 0) {
+      return "Select Shop(s)";
+    } else if (selectedShopIds.length === shops.length) {
+      return "All Shops";
+    } else if (selectedShopIds.length === 1) {
+      const shop = shops.find(s => s.id === selectedShopIds[0]);
+      return shop ? shop.name : "1 Shop";
+    } else {
+      return `${selectedShopIds.length} Shops`;
+    }
   };
 
   return (
@@ -172,23 +208,62 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
         </Popover>
       </div>
 
-      {/* Shop Select */}
+      {/* Shop Multi-Select */}
       <div>
-        <Select
-          value={selectedShop || undefined}
-          onValueChange={(value) => setSelectedShop(value || null)}
-        >
-          <SelectTrigger className={cn(!selectedShop && "text-muted-foreground")}>
-            <Store className="w-4 h-4 mr-2" />
-            <SelectValue placeholder="Select Shop" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Shops</SelectItem>
-            {shops.map((shop) => (
-              <SelectItem key={shop.id} value={shop.id}>{shop.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={showShopDropdown} onOpenChange={setShowShopDropdown}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full justify-between text-left font-normal"
+            >
+              <div className="flex items-center">
+                <Store className="w-4 h-4 mr-2" />
+                <span className={cn(selectedShopIds.length === 0 && "text-muted-foreground")}>
+                  {getShopDisplayText()}
+                </span>
+              </div>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56 p-0" align="start">
+            <div className="p-2 border-b border-gray-100">
+              <div 
+                className="flex items-center space-x-2 px-2 py-1.5 rounded-md hover:bg-gray-100 cursor-pointer"
+                onClick={toggleAllShops}
+              >
+                <Checkbox 
+                  checked={shops.length > 0 && selectedShopIds.length === shops.length}
+                  className="border-indigo-500 data-[state=checked]:bg-indigo-500 data-[state=checked]:text-white"
+                />
+                <label className="text-sm cursor-pointer flex-1">All Shops</label>
+              </div>
+            </div>
+            <div className="py-2 max-h-60 overflow-auto">
+              {shops.map((shop) => (
+                <div 
+                  key={shop.id}
+                  className="flex items-center space-x-2 px-2 py-1.5 rounded-md hover:bg-gray-100 cursor-pointer"
+                  onClick={() => toggleShop(shop.id)}
+                >
+                  <Checkbox 
+                    checked={selectedShopIds.includes(shop.id)}
+                    className="border-indigo-500 data-[state=checked]:bg-indigo-500 data-[state=checked]:text-white"
+                  />
+                  <label className="text-sm cursor-pointer flex-1">{shop.name}</label>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-gray-100 p-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full"
+                onClick={() => setShowShopDropdown(false)}
+              >
+                Apply
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Category Select */}
@@ -236,7 +311,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
       <Button 
         variant="outline" 
         onClick={resetFilters}
-        className="mt-2 lg:mt-0 col-span-1 md:col-span-2 lg:col-span-5"
+        className="mt-2 lg:mt-0 col-span-1 md:col-span-2 lg:col-span-5 bg-white hover:bg-gray-50"
       >
         Reset Filters
       </Button>

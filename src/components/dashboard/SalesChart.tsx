@@ -16,7 +16,7 @@ interface SalesDataPoint {
 interface SalesChartProps {
   startDate: Date | null;
   endDate: Date | null;
-  shopId: string | null;
+  shopIds: string[];
   categoryId: string | null;
   productId: string | null;
 }
@@ -36,7 +36,7 @@ interface SaleData {
   products: ProductData;
 }
 
-export function SalesChart({ startDate, endDate, shopId, categoryId, productId }: SalesChartProps) {
+export function SalesChart({ startDate, endDate, shopIds, categoryId, productId }: SalesChartProps) {
   const [salesData, setSalesData] = useState<SalesDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -63,8 +63,8 @@ export function SalesChart({ startDate, endDate, shopId, categoryId, productId }
         if (endDate) {
           query = query.lte("sale_date", format(endDate, "yyyy-MM-dd"));
         }
-        if (shopId) {
-          query = query.eq("shop_id", shopId);
+        if (shopIds && shopIds.length > 0) {
+          query = query.in("shop_id", shopIds);
         }
         if (productId) {
           query = query.eq("product_id", productId);
@@ -118,7 +118,7 @@ export function SalesChart({ startDate, endDate, shopId, categoryId, productId }
     }
     
     fetchSalesData();
-  }, [startDate, endDate, shopId, categoryId, productId]);
+  }, [startDate, endDate, shopIds, categoryId, productId]);
 
   if (loading) {
     return (

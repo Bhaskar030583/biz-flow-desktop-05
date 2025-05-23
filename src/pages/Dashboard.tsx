@@ -11,7 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 interface DashboardFilters {
   startDate: Date | null;
   endDate: Date | null;
-  shopId: string | null;
+  shopIds: string[];
   category: string | null;
   productId: string | null;
 }
@@ -21,7 +21,7 @@ const Dashboard = () => {
   const [filters, setFilters] = useState<DashboardFilters>({
     startDate: null,
     endDate: null,
-    shopId: null,
+    shopIds: [],
     category: null,
     productId: null
   });
@@ -32,7 +32,7 @@ const Dashboard = () => {
     // Convert "all" values to null
     const processedFilters = {
       ...newFilters,
-      shopId: newFilters.shopId === "all" ? null : newFilters.shopId,
+      shopIds: newFilters.shopIds || [],
       category: newFilters.category === "all" ? null : newFilters.category,
       productId: newFilters.productId === "all" ? null : newFilters.productId
     };
@@ -71,9 +71,9 @@ const Dashboard = () => {
         }
         
         // Apply shop filter if present
-        if (filters.shopId) {
-          givenQuery = givenQuery.eq("shop_id", filters.shopId);
-          receivedQuery = receivedQuery.eq("shop_id", filters.shopId);
+        if (filters.shopIds && filters.shopIds.length > 0) {
+          givenQuery = givenQuery.in("shop_id", filters.shopIds);
+          receivedQuery = receivedQuery.in("shop_id", filters.shopIds);
         }
         
         // Execute both queries
@@ -211,7 +211,7 @@ const Dashboard = () => {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                {filters.startDate || filters.endDate || filters.shopId ? 
+                {filters.startDate || filters.endDate || filters.shopIds.length > 0 ? 
                   `Filtered credit data` : 
                   `All credit data`
                 }
@@ -230,7 +230,7 @@ const Dashboard = () => {
             <SalesChart 
               startDate={filters.startDate} 
               endDate={filters.endDate}
-              shopId={filters.shopId}
+              shopIds={filters.shopIds}
               categoryId={filters.category}
               productId={filters.productId}
             />
@@ -238,7 +238,7 @@ const Dashboard = () => {
         </Card>
         
         {/* Welcome Card - Show only if no filters are applied */}
-        {!filters.startDate && !filters.endDate && !filters.shopId && !filters.category && !filters.productId && (
+        {!filters.startDate && !filters.endDate && filters.shopIds.length === 0 && !filters.category && !filters.productId && (
           <Card className="border-none shadow-sm bg-gradient-to-r from-cyan-50 to-blue-50 border border-blue-100">
             <CardHeader className="border-b border-blue-100">
               <CardTitle className="flex items-center gap-2 text-blue-800">
