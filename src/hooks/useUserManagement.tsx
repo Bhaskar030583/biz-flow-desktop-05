@@ -32,14 +32,14 @@ export const useUserManagement = () => {
         throw error;
       }
       
-      // Map the profiles to User type
+      // Map the profiles to User type ensuring correct typings
       const formattedUsers: User[] = profiles?.map((profile) => ({
         id: profile.id,
-        full_name: profile.full_name,
-        email: 'user@example.com', // Placeholder - this would need to be fetched from auth.users
-        avatar_url: profile.avatar_url,
-        role: profile.role || 'user',
-        created_at: profile.created_at
+        full_name: profile.full_name || '',
+        email: profile.email || 'user@example.com', // Placeholder
+        avatar_url: profile.avatar_url || '',
+        role: (profile.role as UserRole) || 'user',
+        created_at: profile.created_at || new Date().toISOString()
       })) || [];
       
       setUsers(formattedUsers);
@@ -51,7 +51,7 @@ export const useUserManagement = () => {
   };
   
   // Setup user role management
-  const { updateUserRole } = useUserRoleManagement(users as any[], setUsers as any);
+  const { updateUserRole } = useUserRoleManagement(users, setUsers);
 
   // Handle adding new user
   const handleAddUser = async (e: React.FormEvent) => {

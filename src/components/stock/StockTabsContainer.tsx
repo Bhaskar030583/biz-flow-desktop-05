@@ -50,9 +50,9 @@ const StockTabsContainer: React.FC<StockTabsContainerProps> = ({
           <div className="bg-white p-6 rounded-lg shadow-md border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/30">
             <StockForm 
               onSuccess={handleStockAdded} 
-              onCancel={() => {
-                setActiveTab("list");
-              }} 
+              // Pass empty object as initialData to satisfy the type requirements
+              initialData={{}}
+              // Remove onCancel prop as it's not in the component definition
             />
           </div>
         </TabsContent>
@@ -72,7 +72,8 @@ const StockTabsContainer: React.FC<StockTabsContainerProps> = ({
       )}
       
       <TabsContent value="collection" className="space-y-6">
-        <CollectionList refreshTrigger={refreshTrigger} />
+        {/* Pass any required props that CollectionList expects */}
+        <CollectionList />
       </TabsContent>
       
       {showCollectionForm && (

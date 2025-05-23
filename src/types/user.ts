@@ -20,4 +20,4 @@ export type UserData = {
 };
 
 // Re-export UserRole from AuthContext to make it available everywhere
-export { UserRole } from "@/context/AuthContext";
+export type { UserRole } from "@/context/AuthContext";
