@@ -1,14 +1,7 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Filter, ChevronDown, Search } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Search, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -16,99 +9,115 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface Shop {
-  id: string;
-  name: string;
-}
-
-interface Product {
-  id: string;
-  name: string;
-}
+import { useDebounce } from "@/hooks/useStockQueries";
 
 interface StockFiltersProps {
   searchTerm: string;
-  setSearchTerm: (term: string) => void;
+  setSearchTerm: (value: string) => void;
   shopFilter: string;
-  setShopFilter: (filter: string) => void;
+  setShopFilter: (value: string) => void;
   productFilter: string;
-  setProductFilter: (filter: string) => void;
-  shops: Shop[];
-  products: Product[];
+  setProductFilter: (value: string) => void;
+  shops: { id: string; name: string }[];
+  products: { id: string; name: string }[];
 }
 
-const StockFilters = ({ 
-  searchTerm, 
-  setSearchTerm, 
-  shopFilter, 
-  setShopFilter, 
-  productFilter, 
+const StockFilters = ({
+  searchTerm,
+  setSearchTerm,
+  shopFilter,
+  setShopFilter,
+  productFilter,
   setProductFilter,
   shops,
-  products 
+  products,
 }: StockFiltersProps) => {
+  const [inputValue, setInputValue] = useState(searchTerm);
+  const debouncedSearchTerm = useDebounce(inputValue);
+  
+  // Update the actual search term when the debounced value changes
+  useEffect(() => {
+    setSearchTerm(debouncedSearchTerm);
+  }, [debouncedSearchTerm, setSearchTerm]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
+
+  const handleClearSearch = () => {
+    setInputValue("");
+  };
+
+  const hasFilters = searchTerm !== "" || shopFilter !== "" || productFilter !== "";
+
   return (
-    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
-      <div className="relative flex-1 sm:max-w-[240px]">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="text"
-          placeholder="Search stocks..."
-          className="pl-9"
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-        />
+    <div className="flex flex-col space-y-2">
+      <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+        <div className="relative w-full">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search stocks..."
+            className="pl-9 w-full"
+            value={inputValue}
+            onChange={handleInputChange}
+          />
+          {inputValue && (
+            <button
+              onClick={handleClearSearch}
+              className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-1 gap-2">
+          <Select value={shopFilter} onValueChange={setShopFilter}>
+            <SelectTrigger className="w-full min-w-[120px]">
+              <SelectValue placeholder="All Shops" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Shops</SelectItem>
+              {shops.map((shop) => (
+                <SelectItem key={shop.id} value={shop.id}>
+                  {shop.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={productFilter} onValueChange={setProductFilter}>
+            <SelectTrigger className="w-full min-w-[120px]">
+              <SelectValue placeholder="All Products" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Products</SelectItem>
+              {products.map((product) => (
+                <SelectItem key={product.id} value={product.id}>
+                  {product.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="flex-shrink-0">
-            <Filter className="mr-2 h-4 w-4" />
-            Filter
-            <ChevronDown className="ml-1 h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[200px]">
-          <div className="p-2">
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Shop</p>
-              <Select value={shopFilter} onValueChange={setShopFilter}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="All Shops" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Shops</SelectItem>
-                  {shops.map((shop) => (
-                    <SelectItem key={shop.id} value={shop.id}>
-                      {shop.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="mt-3 space-y-2">
-              <p className="text-sm font-medium">Product</p>
-              <Select value={productFilter} onValueChange={setProductFilter}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="All Products" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Products</SelectItem>
-                  {products.map((product) => (
-                    <SelectItem key={product.id} value={product.id}>
-                      {product.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
+
+      {hasFilters && (
+        <div className="flex justify-end">
+          <button
+            onClick={() => {
+              setInputValue("");
+              setShopFilter("");
+              setProductFilter("");
+            }}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Clear all filters
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
-export default StockFilters;
+export default React.memo(StockFilters);

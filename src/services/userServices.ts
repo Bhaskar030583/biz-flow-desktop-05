@@ -19,7 +19,7 @@ export const fetchUsersService = async (): Promise<UserData[]> => {
   }
   
   // Explicitly type the response from the RPC call
-  // Fix for the TypeScript error - specify the correct generic type
+  // Fix for the TypeScript error - use proper type casting
   const { data: authUsers, error: authError } = await supabase
     .rpc('get_auth_users_view') as { data: AuthUserView[] | null, error: any };
   
