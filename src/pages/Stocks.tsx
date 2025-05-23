@@ -105,12 +105,19 @@ const Stocks = () => {
         `)
         .order("stock_date", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        toast.error(`Failed to fetch data: ${error.message}`);
+        setExporting(false);
+        setExportProgress(0);
+        return;
+      }
       
       setExportProgress(40);
 
       if (!data || data.length === 0) {
         toast.warning("No stock data to export");
+        setExporting(false);
+        setExportProgress(0);
         return;
       }
 

@@ -39,7 +39,7 @@ export const fetchUsersService = async (): Promise<UserData[]> => {
     
     return {
       id: profile.id,
-      email: authUser.email,
+      email: authUser.email as string,  // Type assertion to fix the error
       role: (profile.role as UserRole) || "user",
       created_at: profile.created_at || "",
       full_name: profile.full_name || "",

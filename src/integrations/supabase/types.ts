@@ -191,9 +191,11 @@ export type Database = {
       stocks: {
         Row: {
           actual_stock: number
+          cash_received: number | null
           closing_stock: number
           created_at: string
           id: string
+          online_received: number | null
           opening_stock: number
           operator_name: string | null
           product_id: string
@@ -204,9 +206,11 @@ export type Database = {
         }
         Insert: {
           actual_stock: number
+          cash_received?: number | null
           closing_stock: number
           created_at?: string
           id?: string
+          online_received?: number | null
           opening_stock: number
           operator_name?: string | null
           product_id: string
@@ -217,9 +221,11 @@ export type Database = {
         }
         Update: {
           actual_stock?: number
+          cash_received?: number | null
           closing_stock?: number
           created_at?: string
           id?: string
+          online_received?: number | null
           opening_stock?: number
           operator_name?: string | null
           product_id?: string
