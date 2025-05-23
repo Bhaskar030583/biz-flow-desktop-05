@@ -94,31 +94,19 @@ const StockChart: React.FC<ChartProps> = ({ entries, isLoading = false }) => {
   const chartConfig = {
     sales: {
       label: "Sales Amount",
-      theme: {
-        light: "#4f46e5",
-        dark: "#818cf8"
-      }
+      color: "hsl(var(--chart-sales))"
     },
     profit: {
       label: "Profit",
-      theme: {
-        light: "#10b981",
-        dark: "#34d399"
-      }
+      color: "hsl(var(--chart-profit))"
     },
     loss: {
       label: "Loss",
-      theme: {
-        light: "#ef4444",
-        dark: "#f87171"
-      }
+      color: "hsl(var(--chart-loss))"
     },
     units: {
       label: "Units Sold",
-      theme: {
-        light: "#f59e0b",
-        dark: "#fbbf24"
-      }
+      color: "hsl(var(--chart-units))"
     }
   };
 
@@ -137,7 +125,6 @@ const StockChart: React.FC<ChartProps> = ({ entries, isLoading = false }) => {
           
           <TabsContent value="sales" className="space-y-4">
             <ChartContainer 
-              config={chartConfig} 
               className="aspect-[4/3] sm:aspect-[16/9] h-[300px] sm:h-[400px]"
             >
               <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
@@ -173,8 +160,8 @@ const StockChart: React.FC<ChartProps> = ({ entries, isLoading = false }) => {
                 <Line 
                   type="monotone" 
                   dataKey="totalSales" 
-                  name="sales"
-                  stroke="var(--color-sales)" 
+                  name="Sales"
+                  stroke={chartConfig.sales.color} 
                   strokeWidth={2} 
                   dot={{ r: 4, strokeWidth: 2 }}
                   activeDot={{ r: 6, strokeWidth: 2 }}
@@ -185,7 +172,6 @@ const StockChart: React.FC<ChartProps> = ({ entries, isLoading = false }) => {
           
           <TabsContent value="units" className="space-y-4">
             <ChartContainer 
-              config={chartConfig} 
               className="aspect-[4/3] sm:aspect-[16/9] h-[300px] sm:h-[400px]"
             >
               <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
@@ -219,8 +205,8 @@ const StockChart: React.FC<ChartProps> = ({ entries, isLoading = false }) => {
                 />
                 <Bar 
                   dataKey="totalSold" 
-                  name="units" 
-                  fill="var(--color-units)" 
+                  name="Units" 
+                  fill={chartConfig.units.color} 
                   radius={[4, 4, 0, 0]} 
                   barSize={20} 
                 />
@@ -230,7 +216,6 @@ const StockChart: React.FC<ChartProps> = ({ entries, isLoading = false }) => {
           
           <TabsContent value="profit" className="space-y-4">
             <ChartContainer 
-              config={chartConfig} 
               className="aspect-[4/3] sm:aspect-[16/9] h-[300px] sm:h-[400px]"
             >
               <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
@@ -266,9 +251,9 @@ const StockChart: React.FC<ChartProps> = ({ entries, isLoading = false }) => {
                 />
                 <ReferenceLine y={0} stroke="#666" strokeWidth={1} />
                 <Bar 
-                  dataKey="totalProfit" 
-                  name={({ totalProfit }: { totalProfit: number }) => totalProfit >= 0 ? "profit" : "loss"}
-                  fill={({ totalProfit }: { totalProfit: number }) => totalProfit >= 0 ? "var(--color-profit)" : "var(--color-loss)"}
+                  dataKey="totalProfit"
+                  name="Profit/Loss"
+                  fill={(data) => data.totalProfit >= 0 ? chartConfig.profit.color : chartConfig.loss.color}
                   radius={[4, 4, 0, 0]} 
                   barSize={20} 
                 />

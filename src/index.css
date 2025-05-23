@@ -43,6 +43,12 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Chart colors with higher contrast */
+    --chart-sales: 226 70% 40%;
+    --chart-profit: 142 70% 30%;
+    --chart-loss: 0 70% 45%;
+    --chart-units: 32 90% 45%;
   }
 
   .dark {
@@ -82,6 +88,12 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Chart colors with higher contrast for dark mode */
+    --chart-sales: 226 70% 65%;
+    --chart-profit: 142 70% 50%;
+    --chart-loss: 0 70% 60%;
+    --chart-units: 32 90% 55%;
   }
 }
 
@@ -92,6 +104,23 @@
 
   body {
     @apply bg-background text-foreground transition-colors duration-300;
+  }
+  
+  /* High contrast text utility classes */
+  .text-high-contrast {
+    @apply text-foreground font-medium;
+  }
+  
+  .text-on-primary {
+    @apply text-primary-foreground;
+  }
+  
+  .text-on-secondary {
+    @apply text-secondary-foreground;
+  }
+  
+  .text-on-accent {
+    @apply text-accent-foreground;
   }
   
   /* Animation styles */
