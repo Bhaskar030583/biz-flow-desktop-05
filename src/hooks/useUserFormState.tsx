@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { UserRole } from '@/types/user';
+import type { UserRole } from '@/types/user';
 
 export const useUserFormState = () => {
   const [email, setEmail] = useState('');

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -76,7 +77,7 @@ export function DashboardFilters({
         const uniqueCategories = Array.from(
           new Set((productsData || []).map(product => product.category))
         ).map(category => ({
-          name: category
+          name: category || "unnamed_category" // Ensure category is never empty or undefined
         }));
         
         setCategories(uniqueCategories);
@@ -132,6 +133,7 @@ export function DashboardFilters({
                     selected={startDate || undefined}
                     onSelect={setStartDate}
                     initialFocus
+                    className={cn("p-3 pointer-events-auto")}
                   />
                 </PopoverContent>
               </Popover>
@@ -155,6 +157,7 @@ export function DashboardFilters({
                     selected={endDate || undefined}
                     onSelect={setEndDate}
                     initialFocus
+                    className={cn("p-3 pointer-events-auto")}
                   />
                 </PopoverContent>
               </Popover>

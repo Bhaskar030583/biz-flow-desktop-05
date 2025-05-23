@@ -64,7 +64,7 @@ const Users = () => {
               </CardHeader>
               <CardContent>
                 <UserTable 
-                  users={users} 
+                  users={users as any[]} 
                   isLoading={loading} 
                   updateUserRole={updateUserRole} 
                 />

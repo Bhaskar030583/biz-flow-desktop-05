@@ -62,9 +62,9 @@ const StockFilters = ({
     <div className="flex flex-col space-y-2">
       <div className="flex flex-wrap gap-2 sm:flex-nowrap">
         <div className="relative w-full">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search stocks..."
+          <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search stocks..." 
             className="pl-9 w-full"
             value={inputValue}
             onChange={handleInputChange}
@@ -109,7 +109,7 @@ const StockFilters = ({
           </Select>
 
           {setPaymentModeFilter && (
-            <Select value={paymentModeFilter} onValueChange={setPaymentModeFilter}>
+            <Select value={paymentModeFilter || "_all"} onValueChange={setPaymentModeFilter}>
               <SelectTrigger className="w-full min-w-[130px]">
                 <SelectValue placeholder="Payment Mode" />
               </SelectTrigger>

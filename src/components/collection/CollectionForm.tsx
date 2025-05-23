@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -135,11 +136,15 @@ export const CollectionForm = ({ onSuccess, initialData }) => {
               <SelectValue placeholder="Select shop" />
             </SelectTrigger>
             <SelectContent>
-              {shops.map((shop) => (
-                <SelectItem key={shop.id} value={shop.id}>
-                  {shop.name}
-                </SelectItem>
-              ))}
+              {shops.length > 0 ? (
+                shops.map((shop) => (
+                  <SelectItem key={shop.id} value={shop.id}>
+                    {shop.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no_shops">No shops available</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>
