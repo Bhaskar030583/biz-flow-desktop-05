@@ -1,54 +1,37 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export interface UserWithProfile {
-  id: string;
-  email: string;
-  role: string;
-  is_active: boolean;
-  created_at: string;
-  full_name: string | null;
-  avatar_url: string | null;
-}
-
-export const fetchUsers = async (): Promise<UserWithProfile[]> => {
-  const { data, error } = await supabase.rpc('get_auth_users_view');
-
-  if (error) throw error;
-
-  return data || [];
-};
-
-// Alias for backward compatibility
-export const fetchUsersService = fetchUsers;
-
-export const getUserById = async (userId: string): Promise<UserWithProfile> => {
+export const fetchUserById = async (id: string) => {
   const { data, error } = await supabase
-    .rpc('get_auth_users_view')
-    .eq('id', userId)
+    .from("profiles")
+    .select("*")
+    .eq("id", id)
     .single();
 
   if (error) throw error;
-  if (!data) throw new Error('User not found');
-
+  
   return data;
 };
 
-export const updateUserRole = async (userId: string, role: string): Promise<void> => {
-  const { error } = await supabase
-    .from('profiles')
-    .update({ role })
-    .eq('id', userId);
+export const updateUserById = async (id: string, userData: any) => {
+  const { data, error } = await supabase
+    .from("profiles")
+    .update(userData)
+    .eq("id", id)
+    .select();
 
   if (error) throw error;
+  
+  return data;
 };
 
-export const updateUserStatus = async (userId: string, is_active: boolean): Promise<void> => {
-  // We use app_metadata instead of user_metadata for status because it's admin-controlled
-  const { error } = await supabase.auth.admin.updateUserById(
-    userId,
-    { app_metadata: { is_active } }
-  );
+export const deleteUserById = async (id: string) => {
+  const { error } = await supabase
+    .from("profiles")
+    .delete()
+    .eq("id", id);
 
   if (error) throw error;
+  
+  return { success: true };
 };

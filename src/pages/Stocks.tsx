@@ -24,6 +24,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { DateRange } from "react-day-picker";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { generateStockTemplate } from "@/utils/templateUtils";
+import CollectionForm from "@/components/collection/CollectionForm";
+import CollectionList from "@/components/collection/CollectionList";
 
 const Stocks = () => {
   const [showForm, setShowForm] = useState(false);
@@ -39,9 +41,9 @@ const Stocks = () => {
     to: new Date(),
   });
   const [dateLabel, setDateLabel] = useState("Last 7 days");
+  const [showCollectionForm, setShowCollectionForm] = useState(false);
 
   useEffect(() => {
-    // Count stock entries when component loads or refreshTrigger changes
     const countStockEntries = async () => {
       try {
         const { count, error } = await supabase
@@ -69,6 +71,12 @@ const Stocks = () => {
     setShowImport(false);
     setRefreshTrigger(prev => prev + 1);
     toast.success("Stock data imported successfully");
+  };
+  
+  const handleCollectionAdded = () => {
+    setShowCollectionForm(false);
+    setRefreshTrigger(prev => prev + 1);
+    toast.success("Collection data added successfully");
   };
   
   const handleDatePresetChange = (preset: string) => {
@@ -108,7 +116,6 @@ const Stocks = () => {
 
   const handleExport = async () => {
     try {
-      // Check if there are any stocks to export
       if (stockCount === 0) {
         toast.error("No stock entries to export. Please add stock entries first.");
         return;
@@ -117,7 +124,6 @@ const Stocks = () => {
       setExporting(true);
       setExportProgress(10);
       
-      // Fetch stock data
       const { data, error } = await supabase
         .from("stocks")
         .select(`
@@ -151,7 +157,6 @@ const Stocks = () => {
         return;
       }
 
-      // Format data for export
       const exportData = data.map(entry => ({
         Date: entry.stock_date,
         Shop: entry.shops?.name,
@@ -172,22 +177,18 @@ const Stocks = () => {
       
       setExportProgress(70);
 
-      // Create worksheet
       const ws = utils.json_to_sheet(exportData);
       const wb = utils.book_new();
       utils.book_append_sheet(wb, ws, "Stock Data");
 
-      // Generate file name with date
       const fileName = `stock_data_${new Date().toISOString().split('T')[0]}.xlsx`;
       
       setExportProgress(90);
       
-      // Write and download file
       writeFile(wb, fileName);
       setExportProgress(100);
       toast.success("Stock data exported successfully");
       
-      // Reset progress after a delay
       setTimeout(() => {
         setExporting(false);
         setExportProgress(0);
@@ -310,7 +311,7 @@ const Stocks = () => {
                 <DropdownMenuTrigger asChild>
                   <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white flex-1 sm:flex-none">
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Stock
+                    Add
                     <ChevronDown className="ml-2 h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -319,6 +320,7 @@ const Stocks = () => {
                     onClick={() => {
                       setShowBatchEntry(false);
                       setShowForm(!showForm);
+                      setShowCollectionForm(false);
                       setActiveTab("entry");
                     }}
                     className="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer"
@@ -330,12 +332,25 @@ const Stocks = () => {
                     onClick={() => {
                       setShowForm(false);
                       setShowBatchEntry(!showBatchEntry);
+                      setShowCollectionForm(false);
                       setActiveTab("batch");
                     }}
                     className="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer"
                   >
                     <Layers className="mr-2 h-4 w-4" />
                     {showBatchEntry ? "Cancel Batch Entry" : "Batch Stock Entry"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      setShowForm(false);
+                      setShowBatchEntry(false);
+                      setShowCollectionForm(!showCollectionForm);
+                      setActiveTab("collection");
+                    }}
+                    className="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer"
+                  >
+                    <Calendar className="mr-2 h-4 w-4" />
+                    {showCollectionForm ? "Cancel Collection" : "Add Collection"}
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => setShowImport(true)}
@@ -365,6 +380,8 @@ const Stocks = () => {
             <TabsTrigger value="list" className="flex-1">Stock List</TabsTrigger>
             {showForm && <TabsTrigger value="entry" className="flex-1">Add Stock Entry</TabsTrigger>}
             {showBatchEntry && <TabsTrigger value="batch" className="flex-1">Batch Entry</TabsTrigger>}
+            <TabsTrigger value="collection" className="flex-1">Collection</TabsTrigger>
+            {showCollectionForm && <TabsTrigger value="add-collection" className="flex-1">Add Collection</TabsTrigger>}
           </TabsList>
           
           <TabsContent value="list" className="space-y-6">
@@ -389,6 +406,24 @@ const Stocks = () => {
                   setShowBatchEntry(false);
                   setActiveTab("list");
                 }} />
+              </div>
+            </TabsContent>
+          )}
+          
+          <TabsContent value="collection" className="space-y-6">
+            <CollectionList refreshTrigger={refreshTrigger} />
+          </TabsContent>
+          
+          {showCollectionForm && (
+            <TabsContent value="add-collection" className="space-y-6">
+              <div className="bg-white p-6 rounded-lg shadow-md border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/30">
+                <CollectionForm 
+                  onSuccess={handleCollectionAdded}
+                  onCancel={() => {
+                    setShowCollectionForm(false);
+                    setActiveTab("collection");
+                  }}
+                />
               </div>
             </TabsContent>
           )}
