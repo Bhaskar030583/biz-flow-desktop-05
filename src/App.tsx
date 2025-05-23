@@ -33,12 +33,12 @@ const App = () => (
               </PrivateRoute>
             } />
             <Route path="/shops" element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={["admin"]}>
                 <Shops />
               </PrivateRoute>
             } />
             <Route path="/products" element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={["admin"]}>
                 <Products />
               </PrivateRoute>
             } />
@@ -48,7 +48,7 @@ const App = () => (
               </PrivateRoute>
             } />
             <Route path="/credits" element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={["admin"]}>
                 <Credits />
               </PrivateRoute>
             } />
