@@ -1,6 +1,17 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+export const fetchUsers = async () => {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  
+  return data || [];
+};
+
 export const fetchUserById = async (id: string) => {
   const { data, error } = await supabase
     .from("profiles")

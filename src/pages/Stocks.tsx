@@ -1,31 +1,16 @@
+
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import StockForm from "@/components/stock/StockForm";
-import StockList from "@/components/stock/StockList";
-import BatchStockEntry from "@/components/stock/BatchStockEntry";
-import { Button } from "@/components/ui/button";
-import { PlusCircle, FileDown, FileUp, Layers, Calendar, ChevronDown, Download } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import StockImport from "@/components/stock/StockImport";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { utils, writeFile } from "xlsx";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format, subDays, startOfDay, endOfDay, startOfToday, endOfToday, startOfYesterday, endOfYesterday } from "date-fns";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { subDays } from "date-fns";
 import { DateRange } from "react-day-picker";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { generateStockTemplate } from "@/utils/templateUtils";
-import CollectionForm from "@/components/collection/CollectionForm";
-import CollectionList from "@/components/collection/CollectionList";
+import StockImport from "@/components/stock/StockImport";
+import StockHeader from "@/components/stock/StockHeader";
+import StockExportProgress from "@/components/stock/StockExportProgress";
+import StockTabsContainer from "@/components/stock/StockTabsContainer";
+import { exportStockData } from "@/components/stock/StockExportService";
 
 const Stocks = () => {
   const [showForm, setShowForm] = useState(false);
@@ -78,356 +63,53 @@ const Stocks = () => {
     setRefreshTrigger(prev => prev + 1);
     toast.success("Collection data added successfully");
   };
-  
-  const handleDatePresetChange = (preset: string) => {
-    switch (preset) {
-      case "today":
-        setDateRange({
-          from: startOfToday(),
-          to: endOfToday()
-        });
-        setDateLabel("Today");
-        break;
-      case "yesterday":
-        setDateRange({
-          from: startOfYesterday(),
-          to: endOfYesterday()
-        });
-        setDateLabel("Yesterday");
-        break;
-      case "last7days":
-        setDateRange({
-          from: subDays(new Date(), 7),
-          to: new Date()
-        });
-        setDateLabel("Last 7 days");
-        break;
-      case "last30days":
-        setDateRange({
-          from: subDays(new Date(), 30),
-          to: new Date()
-        });
-        setDateLabel("Last 30 days");
-        break;
-      default:
-        break;
-    }
-  };
 
   const handleExport = async () => {
-    try {
-      if (stockCount === 0) {
-        toast.error("No stock entries to export. Please add stock entries first.");
-        return;
-      }
-      
-      setExporting(true);
-      setExportProgress(10);
-      
-      const { data, error } = await supabase
-        .from("stocks")
-        .select(`
-          id, 
-          stock_date, 
-          opening_stock, 
-          closing_stock, 
-          actual_stock,
-          shift,
-          operator_name,
-          cash_received,
-          online_received,
-          shops (id, name),
-          products (id, name, price, cost_price)
-        `)
-        .order("stock_date", { ascending: false });
-
-      if (error) {
-        toast.error(`Failed to fetch data: ${error.message}`);
-        setExporting(false);
-        setExportProgress(0);
-        return;
-      }
-      
-      setExportProgress(40);
-
-      if (!data || data.length === 0) {
-        toast.warning("No stock data to export");
-        setExporting(false);
-        setExportProgress(0);
-        return;
-      }
-
-      const exportData = data.map(entry => ({
-        Date: entry.stock_date,
-        Shop: entry.shops?.name,
-        Product: entry.products?.name,
-        "Opening Stock": entry.opening_stock,
-        "Closing Stock": entry.closing_stock,
-        "Actual Stock": entry.actual_stock,
-        "Shift": entry.shift || "N/A",
-        "Operator": entry.operator_name || "N/A",
-        "Cash Received": entry.cash_received || 0,
-        "Online Received": entry.online_received || 0,
-        "Total Received": (entry.cash_received || 0) + (entry.online_received || 0),
-        "Units Sold": entry.opening_stock - entry.closing_stock,
-        "Sales Amount": (entry.opening_stock - entry.closing_stock) * Number(entry.products?.price || 0),
-        "Profit/Loss": ((entry.opening_stock - entry.closing_stock) * Number(entry.products?.price || 0)) - 
-                      ((entry.opening_stock - entry.closing_stock) * Number(entry.products?.cost_price || 0))
-      }));
-      
-      setExportProgress(70);
-
-      const ws = utils.json_to_sheet(exportData);
-      const wb = utils.book_new();
-      utils.book_append_sheet(wb, ws, "Stock Data");
-
-      const fileName = `stock_data_${new Date().toISOString().split('T')[0]}.xlsx`;
-      
-      setExportProgress(90);
-      
-      writeFile(wb, fileName);
-      setExportProgress(100);
-      toast.success("Stock data exported successfully");
-      
-      setTimeout(() => {
-        setExporting(false);
-        setExportProgress(0);
-      }, 1000);
-      
-    } catch (error) {
-      console.error("Export error:", error);
-      toast.error("Failed to export data");
-      setExporting(false);
-      setExportProgress(0);
+    if (stockCount === 0) {
+      toast.error("No stock entries to export. Please add stock entries first.");
+      return;
     }
-  };
-
-  const handleDownloadTemplate = () => {
-    try {
-      generateStockTemplate();
-      toast.success("Template downloaded successfully");
-    } catch (error) {
-      console.error("Error generating template:", error);
-      toast.error("Failed to download template");
-    }
+    
+    await exportStockData(setExporting, setExportProgress);
   };
 
   return (
     <DashboardLayout>
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-700 to-purple-600 bg-clip-text text-transparent mb-1">Stock Management</h1>
-            <p className="text-muted-foreground text-sm">Track inventory, monitor sales, and analyze performance</p>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-3">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 justify-start w-full sm:w-auto"
-                >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  {dateLabel}
-                  <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-white">
-                <DropdownMenuItem onClick={() => handleDatePresetChange("today")} className="cursor-pointer">
-                  Today
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDatePresetChange("yesterday")} className="cursor-pointer">
-                  Yesterday
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDatePresetChange("last7days")} className="cursor-pointer">
-                  Last 7 days
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDatePresetChange("last30days")} className="cursor-pointer">
-                  Last 30 days
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <div className="px-2 py-2">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left"
-                      >
-                        Custom Range
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-white" align="start">
-                      <div className="p-3">
-                        <div className="space-y-2">
-                          <h4 className="font-medium">Select date range</h4>
-                          <div className="border rounded-md p-2">
-                            <CalendarComponent
-                              initialFocus
-                              mode="range"
-                              defaultMonth={dateRange?.from}
-                              selected={dateRange}
-                              onSelect={(range) => {
-                                setDateRange(range);
-                                if (range?.from && range?.to) {
-                                  setDateLabel(`${format(range.from, "MMM d")} - ${format(range.to, "MMM d")}`);
-                                }
-                              }}
-                              numberOfMonths={2}
-                              className="pointer-events-auto"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className="bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 flex-1 sm:flex-none"
-                onClick={handleDownloadTemplate}
-                title="Download import template"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Template
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 flex-1 sm:flex-none"
-                onClick={handleExport}
-                disabled={exporting || stockCount === 0}
-                title={stockCount === 0 ? "No stock entries to export" : "Export to Excel"}
-              >
-                <FileDown className="mr-2 h-4 w-4" /> 
-                {exporting ? "Exporting..." : "Export"}
-              </Button>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white flex-1 sm:flex-none">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add
-                    <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-white border border-indigo-100 shadow-lg w-[220px]">
-                  <DropdownMenuItem 
-                    onClick={() => {
-                      setShowBatchEntry(false);
-                      setShowForm(!showForm);
-                      setShowCollectionForm(false);
-                      setActiveTab("entry");
-                    }}
-                    className="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer"
-                  >
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    {showForm ? "Cancel Entry" : "Add Single Stock Entry"}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => {
-                      setShowForm(false);
-                      setShowBatchEntry(!showBatchEntry);
-                      setShowCollectionForm(false);
-                      setActiveTab("batch");
-                    }}
-                    className="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer"
-                  >
-                    <Layers className="mr-2 h-4 w-4" />
-                    {showBatchEntry ? "Cancel Batch Entry" : "Batch Stock Entry"}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => {
-                      setShowForm(false);
-                      setShowBatchEntry(false);
-                      setShowCollectionForm(!showCollectionForm);
-                      setActiveTab("collection");
-                    }}
-                    className="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer"
-                  >
-                    <Calendar className="mr-2 h-4 w-4" />
-                    {showCollectionForm ? "Cancel Collection" : "Add Collection"}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setShowImport(true)}
-                    className="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer"
-                  >
-                    <FileUp className="mr-2 h-4 w-4" />
-                    Import from Excel
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </div>
+        <StockHeader 
+          stockCount={stockCount}
+          exporting={exporting}
+          dateLabel={dateLabel}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          setDateLabel={setDateLabel}
+          handleExport={handleExport}
+          showForm={showForm}
+          setShowForm={setShowForm}
+          showBatchEntry={showBatchEntry}
+          setShowBatchEntry={setShowBatchEntry}
+          showCollectionForm={showCollectionForm}
+          setShowCollectionForm={setShowCollectionForm}
+          setShowImport={setShowImport}
+          setActiveTab={setActiveTab}
+        />
 
-        {exporting && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">Exporting data...</span>
-              <span className="text-sm text-muted-foreground">{exportProgress}%</span>
-            </div>
-            <Progress value={exportProgress} className="h-2" />
-          </div>
-        )}
+        <StockExportProgress 
+          exporting={exporting} 
+          exportProgress={exportProgress} 
+        />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-6 bg-muted/50">
-            <TabsTrigger value="list" className="flex-1">Stock List</TabsTrigger>
-            {showForm && <TabsTrigger value="entry" className="flex-1">Add Stock Entry</TabsTrigger>}
-            {showBatchEntry && <TabsTrigger value="batch" className="flex-1">Batch Entry</TabsTrigger>}
-            <TabsTrigger value="collection" className="flex-1">Collection</TabsTrigger>
-            {showCollectionForm && <TabsTrigger value="add-collection" className="flex-1">Add Collection</TabsTrigger>}
-          </TabsList>
-          
-          <TabsContent value="list" className="space-y-6">
-            <StockList refreshTrigger={refreshTrigger} dateRange={dateRange} />
-          </TabsContent>
-          
-          {showForm && (
-            <TabsContent value="entry" className="space-y-6">
-              <div className="bg-white p-6 rounded-lg shadow-md border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/30">
-                <StockForm onSuccess={handleStockAdded} onCancel={() => {
-                  setShowForm(false);
-                  setActiveTab("list");
-                }} />
-              </div>
-            </TabsContent>
-          )}
-
-          {showBatchEntry && (
-            <TabsContent value="batch" className="space-y-6">
-              <div className="bg-white p-6 rounded-lg shadow-md border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/30">
-                <BatchStockEntry onSuccess={handleStockAdded} onCancel={() => {
-                  setShowBatchEntry(false);
-                  setActiveTab("list");
-                }} />
-              </div>
-            </TabsContent>
-          )}
-          
-          <TabsContent value="collection" className="space-y-6">
-            <CollectionList refreshTrigger={refreshTrigger} />
-          </TabsContent>
-          
-          {showCollectionForm && (
-            <TabsContent value="add-collection" className="space-y-6">
-              <div className="bg-white p-6 rounded-lg shadow-md border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/30">
-                <CollectionForm 
-                  onSuccess={handleCollectionAdded}
-                  onCancel={() => {
-                    setShowCollectionForm(false);
-                    setActiveTab("collection");
-                  }}
-                />
-              </div>
-            </TabsContent>
-          )}
-        </Tabs>
+        <StockTabsContainer 
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          showForm={showForm}
+          showBatchEntry={showBatchEntry}
+          showCollectionForm={showCollectionForm}
+          refreshTrigger={refreshTrigger}
+          dateRange={dateRange}
+          handleStockAdded={handleStockAdded}
+          handleCollectionAdded={handleCollectionAdded}
+        />
         
         <Dialog open={showImport} onOpenChange={setShowImport}>
           <DialogContent className="sm:max-w-lg">
