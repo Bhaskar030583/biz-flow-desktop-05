@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SalesChart } from "@/components/dashboard/SalesChart";
@@ -13,6 +14,8 @@ const Dashboard = () => {
   const [selectedShops, setSelectedShops] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [stockEntries, setStockEntries] = useState<any[]>([]);
+  const [isLoadingStock, setIsLoadingStock] = useState<boolean>(false);
   const [salesData, setSalesData] = useState<any>({
     totalSales: 0,
     totalProducts: 0,
@@ -134,7 +137,59 @@ const Dashboard = () => {
     }
     
     fetchSummaryData();
+    fetchStockData();
   }, [startDate, endDate, selectedShops, selectedCategory, selectedProduct]);
+  
+  const fetchStockData = async () => {
+    try {
+      setIsLoadingStock(true);
+      
+      // Build the query to fetch stock data
+      let query = supabase
+        .from("stocks")
+        .select(`
+          id, 
+          stock_date, 
+          opening_stock, 
+          closing_stock, 
+          actual_stock,
+          products (id, name, price, cost_price),
+          shops (id, name)
+        `);
+      
+      // Apply date filters
+      if (startDate) {
+        const formattedStartDate = startDate.toISOString().split('T')[0];
+        query = query.gte("stock_date", formattedStartDate);
+      }
+      
+      if (endDate) {
+        const formattedEndDate = endDate.toISOString().split('T')[0];
+        query = query.lte("stock_date", formattedEndDate);
+      }
+      
+      // Apply shop filter
+      if (selectedShops && selectedShops.length > 0) {
+        query = query.in("shop_id", selectedShops);
+      }
+      
+      // Apply product filter
+      if (selectedProduct) {
+        query = query.eq("product_id", selectedProduct);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      setStockEntries(data || []);
+    } catch (error) {
+      console.error("Error fetching stock data:", error);
+      setStockEntries([]);
+    } finally {
+      setIsLoadingStock(false);
+    }
+  };
   
   const formatIndianRupee = (value: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -323,10 +378,8 @@ const Dashboard = () => {
         
         <div>
           <StockChart 
-            startDate={startDate}
-            endDate={endDate}
-            shopIds={selectedShops}
-            productId={selectedProduct}
+            entries={stockEntries}
+            isLoading={isLoadingStock}
           />
         </div>
       </div>

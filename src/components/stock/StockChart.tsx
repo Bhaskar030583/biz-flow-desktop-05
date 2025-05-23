@@ -38,18 +38,28 @@ interface GroupedData {
   totalSold: number;
   totalSales: number;
   totalProfit: number;
+  formattedDate: string;
 }
 
 interface ChartProps {
-  entries: StockEntry[];
+  entries?: StockEntry[];
   isLoading?: boolean;
+  startDate?: Date | null;
+  endDate?: Date | null;
+  shopIds?: string[];
+  productId?: string | null;
 }
 
-const StockChart: React.FC<ChartProps> = ({ entries, isLoading = false }) => {
+const StockChart: React.FC<ChartProps> = ({ entries = [], isLoading = false }) => {
   // Group data by date for charts
   const chartData = useMemo(() => {
     // Create a map to aggregate data by date
     const dateMap = new Map<string, GroupedData>();
+    
+    // Make sure entries is defined and is an array before using forEach
+    if (!entries || !Array.isArray(entries)) {
+      return [];
+    }
     
     entries.forEach(entry => {
       const date = entry.stock_date;
@@ -61,7 +71,7 @@ const StockChart: React.FC<ChartProps> = ({ entries, isLoading = false }) => {
       if (dateMap.has(date)) {
         const existing = dateMap.get(date)!;
         dateMap.set(date, {
-          date,
+          ...existing,
           totalSold: existing.totalSold + unitsSold,
           totalSales: existing.totalSales + sales,
           totalProfit: existing.totalProfit + profit
@@ -71,18 +81,15 @@ const StockChart: React.FC<ChartProps> = ({ entries, isLoading = false }) => {
           date,
           totalSold: unitsSold,
           totalSales: sales,
-          totalProfit: profit
+          totalProfit: profit,
+          formattedDate: format(new Date(date), 'dd MMM')
         });
       }
     });
     
     // Convert map to array and sort by date
     return Array.from(dateMap.values())
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .map(item => ({
-        ...item,
-        formattedDate: format(new Date(item.date), 'dd MMM')
-      }));
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [entries]);
 
   // If we have no data or loading, show empty state
@@ -199,7 +206,6 @@ const StockChart: React.FC<ChartProps> = ({ entries, isLoading = false }) => {
                   <Bar 
                     dataKey="totalProfit"
                     name="Profit/Loss"
-                    // Fix: Use a string value for the fill prop instead of a function
                     fill={chartConfig.profit.color}
                     radius={[4, 4, 0, 0]} 
                     barSize={20} 
