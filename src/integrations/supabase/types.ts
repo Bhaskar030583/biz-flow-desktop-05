@@ -192,7 +192,9 @@ export type Database = {
           created_at: string
           id: string
           opening_stock: number
+          operator_name: string | null
           product_id: string
+          shift: string | null
           shop_id: string
           stock_date: string
           user_id: string
@@ -203,7 +205,9 @@ export type Database = {
           created_at?: string
           id?: string
           opening_stock: number
+          operator_name?: string | null
           product_id: string
+          shift?: string | null
           shop_id: string
           stock_date: string
           user_id: string
@@ -214,7 +218,9 @@ export type Database = {
           created_at?: string
           id?: string
           opening_stock?: number
+          operator_name?: string | null
           product_id?: string
+          shift?: string | null
           shop_id?: string
           stock_date?: string
           user_id?: string
