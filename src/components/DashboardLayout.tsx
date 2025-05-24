@@ -102,9 +102,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <div className="flex items-center justify-between h-16 px-4 border-b border-blue-200 dark:border-blue-800">
           <Link to="/dashboard" className="flex items-center">
             <img 
-              src="/lovable-uploads/13b8d922-e2b4-4692-a8dd-472a7be60eef.png" 
-              alt="Logo" 
-              className="h-8 w-auto"
+              src="/lovable-uploads/79288f35-ce3c-472b-b6f1-e02b46930395.png" 
+              alt="ABC Cafe Logo" 
+              className="h-10 w-auto"
             />
           </Link>
           <ModeToggle />

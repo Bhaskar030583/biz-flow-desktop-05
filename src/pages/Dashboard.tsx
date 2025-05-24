@@ -51,6 +51,12 @@ const Dashboard = () => {
           />
         </div>
         
+        <PaymentMethodsDisplay 
+          cashAmount={data.cashAmount}
+          cardAmount={data.cardAmount}
+          onlineAmount={data.onlineAmount}
+        />
+        
         <DashboardMetrics 
           totalRevenue={data.totalRevenue}
           totalSales={data.totalSales}
@@ -70,12 +76,6 @@ const Dashboard = () => {
           selectedShops={selectedShops}
           selectedCategory={selectedCategory}
           selectedProduct={selectedProduct}
-        />
-        
-        <PaymentMethodsDisplay 
-          cashAmount={data.cashAmount}
-          cardAmount={data.cardAmount}
-          onlineAmount={data.onlineAmount}
         />
         
         <div>
