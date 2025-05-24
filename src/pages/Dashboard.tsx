@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
@@ -7,6 +6,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardMetrics } from "@/components/dashboard/DashboardMetrics";
 import { ChartsOverview } from "@/components/dashboard/ChartsOverview";
 import { PaymentMethodsDisplay } from "@/components/dashboard/PaymentMethodsDisplay";
+import { GridViewControls } from "@/components/dashboard/GridViewControls";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 const Dashboard = () => {
@@ -15,6 +15,7 @@ const Dashboard = () => {
   const [selectedShops, setSelectedShops] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [gridColumns, setGridColumns] = useState<number>(5);
   
   const { data, isLoading, isLoadingStock } = useDashboardData(
     startDate, 
@@ -57,6 +58,11 @@ const Dashboard = () => {
           onlineAmount={data.onlineAmount}
         />
         
+        <GridViewControls
+          currentView={gridColumns}
+          onViewChange={setGridColumns}
+        />
+        
         <DashboardMetrics 
           totalRevenue={data.totalRevenue}
           totalSales={data.totalSales}
@@ -68,6 +74,7 @@ const Dashboard = () => {
           grossProfit={data.grossProfit}
           netProfit={data.netProfit}
           totalLoss={data.totalLoss}
+          gridColumns={gridColumns}
         />
         
         <ChartsOverview 
