@@ -11,7 +11,7 @@ import {
   SettingsIcon,
   LogOut,
   PanelLeftClose,
-  PanelLeftOpen,
+  Menu,
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -64,6 +64,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   ];
 
   const handleLogout = async () => {
+    console.log('Logout button clicked');
     await signOut();
     navigate('/auth/login');
   };
@@ -81,50 +82,55 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     }
   };
 
+  console.log('DashboardLayout rendering, current location:', location.pathname);
+  console.log('User:', user?.email, 'Role:', userRole);
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-indigo-950">
-        <Sidebar className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-white/20 dark:border-gray-700/30 shadow-xl">
-          <SidebarHeader className="border-b border-gray-100 dark:border-gray-800 p-6">
+        <Sidebar className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-white/20 dark:border-gray-700/30 shadow-xl" collapsible="offcanvas">
+          <SidebarHeader className="border-b border-gray-100 dark:border-gray-800 p-4">
             <div className="flex items-center justify-between mb-4">
-              <Link to="/dashboard" className="flex items-center gap-3">
+              <Link to="/dashboard" className="flex items-center gap-3 flex-1">
                 <img 
                   src="/lovable-uploads/8b453aae-4e22-4d63-857c-9994a32b7796.png" 
                   alt="ABC Cafe Logo" 
-                  className="h-12 w-auto rounded-lg shadow-sm"
+                  className="h-10 w-auto rounded-lg shadow-sm"
                 />
-                <div>
-                  <h2 className="font-bold text-gray-900 dark:text-white bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">ABC Cafe</h2>
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-bold text-gray-900 dark:text-white bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent text-lg">ABC Cafe</h2>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Business Management</p>
                 </div>
               </Link>
-              <SidebarTrigger>
-                <PanelLeftClose className="h-4 w-4" />
+              <SidebarTrigger className="flex-shrink-0">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Menu className="h-4 w-4" />
+                </Button>
               </SidebarTrigger>
             </div>
-            <div>
+            <div className="flex justify-center">
               <ModeToggle />
             </div>
           </SidebarHeader>
           
-          <SidebarContent className="p-6">
+          <SidebarContent className="p-4">
             <SidebarGroup>
-              <SidebarGroupLabel className="text-amber-700 dark:text-amber-300 font-semibold mb-2">Navigation</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-amber-700 dark:text-amber-300 font-semibold mb-3 px-2">Navigation</SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu className="space-y-2">
+                <SidebarMenu className="space-y-1">
                   {navItems.map((item) => (
                     <SidebarMenuItem key={item.id}>
                       <SidebarMenuButton 
                         asChild 
                         isActive={location.pathname === item.path}
-                        className={`flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 dark:hover:bg-amber-950/20 rounded-xl transition-all duration-200 group ${
+                        className={`flex items-center px-3 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 dark:hover:bg-amber-950/20 rounded-lg transition-all duration-200 group w-full ${
                           location.pathname === item.path 
                             ? 'bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 text-amber-700 dark:text-amber-300 shadow-sm border-l-4 border-amber-500 font-medium' 
                             : ''
                         }`}
                       >
-                        <Link to={item.path}>
-                          <span className="mr-3 transition-transform group-hover:scale-110">{item.icon}</span>
+                        <Link to={item.path} className="flex items-center gap-3 w-full">
+                          <span className="transition-transform group-hover:scale-110">{item.icon}</span>
                           <span className="font-medium">{item.name}</span>
                         </Link>
                       </SidebarMenuButton>
@@ -135,53 +141,44 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </SidebarGroup>
           </SidebarContent>
           
-          <SidebarFooter className="p-6 border-t border-gray-100 dark:border-gray-800">
-            <div className="flex flex-col gap-4">
-              {/* User Profile Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex h-auto w-full items-center justify-start gap-3 rounded-xl p-4 text-sm font-normal hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-all duration-200">
-                    <Avatar className="h-12 w-12 ring-2 ring-amber-100 dark:ring-amber-900 shadow-lg">
-                      <AvatarImage src={user?.user_metadata?.avatar_url as string} alt={user?.user_metadata?.full_name as string} />
-                      <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-600 text-white font-bold">
-                        {(user?.user_metadata?.full_name as string)?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="text-left flex-1 min-w-0">
-                      <div className="font-semibold text-gray-900 dark:text-white truncate">
-                        {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge 
-                          variant="secondary" 
-                          className={`text-xs font-medium ${getRoleBadgeColor(userRole)}`}
-                        >
-                          {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
-                        </Badge>
-                      </div>
-                    </div>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl rounded-xl">
-                  <DropdownMenuLabel className="text-amber-700 dark:text-amber-300 font-semibold">My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer py-3 px-4 hover:bg-amber-50 dark:hover:bg-amber-950/20">
-                    <SettingsIcon className="mr-3 h-4 w-4" />
-                    Settings & Preferences
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer py-3 px-4 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30">
-                    <LogOut className="mr-3 h-4 w-4" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+          <SidebarFooter className="p-4 border-t border-gray-100 dark:border-gray-800">
+            <div className="space-y-3">
+              {/* User Profile Display */}
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20">
+                <Avatar className="h-10 w-10 ring-2 ring-amber-100 dark:ring-amber-900 shadow-lg">
+                  <AvatarImage src={user?.user_metadata?.avatar_url as string} alt={user?.user_metadata?.full_name as string} />
+                  <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-600 text-white font-bold text-sm">
+                    {(user?.user_metadata?.full_name as string)?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-gray-900 dark:text-white truncate text-sm">
+                    {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+                  </div>
+                  <Badge 
+                    variant="secondary" 
+                    className={`text-xs font-medium mt-1 ${getRoleBadgeColor(userRole)}`}
+                  >
+                    {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+                  </Badge>
+                </div>
+              </div>
               
-              {/* Direct Logout Button */}
+              {/* Settings Button */}
+              <Button 
+                onClick={() => navigate('/settings')}
+                variant="outline" 
+                className="flex items-center justify-center gap-2 w-full py-2.5 text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-950/20 border-gray-200 hover:border-amber-300"
+              >
+                <SettingsIcon className="h-4 w-4" />
+                <span>Settings</span>
+              </Button>
+              
+              {/* Logout Button */}
               <Button 
                 onClick={handleLogout}
-                variant="outline" 
-                className="flex items-center justify-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 border-red-200 hover:border-red-300 w-full py-3"
+                variant="destructive" 
+                className="flex items-center justify-center gap-2 w-full py-2.5 bg-red-600 hover:bg-red-700 text-white"
               >
                 <LogOut className="h-4 w-4" />
                 <span>Log Out</span>
