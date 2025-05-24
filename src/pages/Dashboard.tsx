@@ -56,6 +56,9 @@ const Dashboard = () => {
           totalSales={data.totalSales}
           totalProducts={data.totalProducts}
           averageSaleValue={averageSaleValue}
+          creditGiven={data.creditGiven}
+          creditReceived={data.creditReceived}
+          creditBalance={data.creditBalance}
         />
         
         <ChartsOverview 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -10,6 +9,9 @@ export interface DashboardData {
   cardAmount: number;
   onlineAmount: number;
   stockEntries: any[];
+  creditGiven: number;
+  creditReceived: number;
+  creditBalance: number;
 }
 
 export const useDashboardData = (
@@ -26,7 +28,10 @@ export const useDashboardData = (
     cashAmount: 0,
     cardAmount: 0,
     onlineAmount: 0,
-    stockEntries: []
+    stockEntries: [],
+    creditGiven: 0,
+    creditReceived: 0,
+    creditBalance: 0
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingStock, setIsLoadingStock] = useState(true);
@@ -77,6 +82,48 @@ export const useDashboardData = (
             onlineAmount += Number(item.amount) || 0;
           }
         });
+
+        // Fetch credit data (given and received)
+        let creditQuery = supabase.from("credits").select(`
+          credit_type,
+          amount,
+          credit_date
+        `)
+        .in('credit_type', ['given', 'received']);
+
+        // Apply date filters to credits
+        if (startDate) {
+          const formattedStartDate = startDate.toISOString().split('T')[0];
+          creditQuery = creditQuery.gte("credit_date", formattedStartDate);
+        }
+        
+        if (endDate) {
+          const formattedEndDate = endDate.toISOString().split('T')[0];
+          creditQuery = creditQuery.lte("credit_date", formattedEndDate);
+        }
+        
+        // Apply shop filter to credits
+        if (selectedShops && selectedShops.length > 0) {
+          creditQuery = creditQuery.in("shop_id", selectedShops);
+        }
+
+        const { data: creditData, error: creditError } = await creditQuery;
+        
+        if (creditError) throw creditError;
+
+        // Calculate credit totals
+        let creditGiven = 0;
+        let creditReceived = 0;
+
+        creditData?.forEach((item) => {
+          if (item.credit_type === 'given') {
+            creditGiven += Number(item.amount) || 0;
+          } else if (item.credit_type === 'received') {
+            creditReceived += Number(item.amount) || 0;
+          }
+        });
+
+        const creditBalance = creditReceived - creditGiven;
         
         // Fetch sales data
         let salesQuery = supabase
@@ -137,7 +184,10 @@ export const useDashboardData = (
           cashAmount,
           cardAmount,
           onlineAmount,
-          stockEntries: data.stockEntries
+          stockEntries: data.stockEntries,
+          creditGiven,
+          creditReceived,
+          creditBalance
         });
       } catch (error) {
         console.error("Error fetching summary data:", error);
