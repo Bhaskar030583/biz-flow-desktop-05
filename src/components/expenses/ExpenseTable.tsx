@@ -20,10 +20,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Expense } from '@/hooks/useExpenseManagement';
+import { Expense, ExpenseCategory } from '@/hooks/useExpenseManagement';
 import { formatCurrency } from '@/utils/formatters';
 import { Trash2, Edit, FileText, Calendar, Store } from "lucide-react";
 import ExpenseEditDialog from './ExpenseEditDialog';
+
+interface Category {
+  value: ExpenseCategory;
+  label: string;
+}
 
 interface ExpenseTableProps {
   expenses: Expense[];
@@ -31,10 +36,11 @@ interface ExpenseTableProps {
   onDelete: (id: string) => Promise<void>;
   onEdit: (expense: Expense) => Promise<void>;
   shops: Array<{ id: string; name: string }>;
+  categories?: Category[];
 }
 
 // Map category values to display labels
-const categoryLabels: Record<string, string> = {
+const defaultCategoryLabels: Record<string, string> = {
   rent: "Rent",
   utilities: "Utilities",
   inventory: "Inventory",
@@ -82,9 +88,22 @@ const LoadingState = () => (
   </div>
 );
 
-const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, isLoading, onDelete, onEdit, shops }) => {
+const ExpenseTable: React.FC<ExpenseTableProps> = ({ 
+  expenses, 
+  isLoading, 
+  onDelete, 
+  onEdit, 
+  shops,
+  categories 
+}) => {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  // Create category labels map from categories prop or use defaults
+  const categoryLabels = categories?.reduce((acc, cat) => {
+    acc[cat.value] = cat.label;
+    return acc;
+  }, {} as Record<string, string>) || defaultCategoryLabels;
 
   const handleEditClick = (expense: Expense) => {
     setEditingExpense(expense);
@@ -215,6 +234,7 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, isLoading, onDele
         onClose={handleEditCancel}
         onSave={handleEditSave}
         shops={shops}
+        categories={categories}
       />
     </>
   );

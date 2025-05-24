@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +17,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExpenseCategory } from '@/hooks/useExpenseManagement';
 
+interface Category {
+  value: ExpenseCategory;
+  label: string;
+}
+
 interface ExpenseFormProps {
   description: string;
   setDescription: (value: string) => void;
@@ -34,6 +38,7 @@ interface ExpenseFormProps {
   isSubmitting: boolean;
   shops: { id: string; name: string }[];
   handleAddExpense: () => Promise<void>;
+  categories: Category[];
 }
 
 const ExpenseForm: React.FC<ExpenseFormProps> = ({
@@ -52,22 +57,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
   isSubmitting,
   shops,
   handleAddExpense,
+  categories,
 }) => {
-  const categoryOptions = [
-    { value: 'rent', label: 'Rent' },
-    { value: 'utilities', label: 'Utilities' },
-    { value: 'inventory', label: 'Inventory' },
-    { value: 'salaries', label: 'Salaries' },
-    { value: 'marketing', label: 'Marketing' },
-    { value: 'equipment', label: 'Equipment' },
-    { value: 'maintenance', label: 'Maintenance' },
-    { value: 'transportation', label: 'Transportation' },
-    { value: 'taxes', label: 'Taxes' },
-    { value: 'insurance', label: 'Insurance' },
-    { value: 'office_supplies', label: 'Office Supplies' },
-    { value: 'other', label: 'Other' }
-  ];
-
   const paymentOptions = [
     { value: 'cash', label: 'Cash' },
     { value: 'card', label: 'Card' },
@@ -112,7 +103,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categoryOptions.map(option => (
+                  {categories.map(option => (
                     <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                   ))}
                 </SelectContent>

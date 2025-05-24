@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -18,15 +17,29 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Expense, ExpenseCategory } from '@/hooks/useExpenseManagement';
 
+interface Category {
+  value: ExpenseCategory;
+  label: string;
+}
+
 interface ExpenseEditDialogProps {
   expense: Expense | null;
   isOpen: boolean;
   onClose: () => void;
   onSave: (expense: Expense) => void;
   shops: Array<{ id: string; name: string }>;
+  categories?: Category[];
 }
 
-const categories: { value: ExpenseCategory; label: string }[] = [
+const paymentMethods = [
+  { value: 'cash', label: 'Cash' },
+  { value: 'card', label: 'Card' },
+  { value: 'online', label: 'Online' },
+  { value: 'check', label: 'Check' },
+  { value: 'other', label: 'Other' },
+];
+
+const defaultCategories: Category[] = [
   { value: 'rent', label: 'Rent' },
   { value: 'utilities', label: 'Utilities' },
   { value: 'inventory', label: 'Inventory' },
@@ -41,20 +54,13 @@ const categories: { value: ExpenseCategory; label: string }[] = [
   { value: 'other', label: 'Other' },
 ];
 
-const paymentMethods = [
-  { value: 'cash', label: 'Cash' },
-  { value: 'card', label: 'Card' },
-  { value: 'online', label: 'Online' },
-  { value: 'check', label: 'Check' },
-  { value: 'other', label: 'Other' },
-];
-
 const ExpenseEditDialog: React.FC<ExpenseEditDialogProps> = ({
   expense,
   isOpen,
   onClose,
   onSave,
   shops,
+  categories = defaultCategories,
 }) => {
   const [editedExpense, setEditedExpense] = React.useState<Expense | null>(null);
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(undefined);
