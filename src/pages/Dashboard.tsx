@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
@@ -31,13 +32,15 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-          <DashboardHeader 
-            title="Dashboard" 
-            subtitle="View your business analytics and performance" 
-          />
-          
+      <div className="w-full max-w-7xl mx-auto">
+        {/* Header Section */}
+        <DashboardHeader 
+          title="Dashboard" 
+          subtitle="View your business analytics and performance" 
+        />
+        
+        {/* Filters Section */}
+        <div className="mb-6">
           <DashboardFilters
             startDate={startDate}
             endDate={endDate}
@@ -52,40 +55,53 @@ const Dashboard = () => {
           />
         </div>
         
-        <PaymentMethodsDisplay 
-          cashAmount={data.cashAmount}
-          cardAmount={data.cardAmount}
-          onlineAmount={data.onlineAmount}
-        />
+        {/* Payment Methods Section */}
+        <div className="mb-6">
+          <PaymentMethodsDisplay 
+            cashAmount={data.cashAmount}
+            cardAmount={data.cardAmount}
+            onlineAmount={data.onlineAmount}
+          />
+        </div>
         
-        <GridViewControls
-          currentView={gridColumns}
-          onViewChange={setGridColumns}
-        />
+        {/* Grid View Controls */}
+        <div className="mb-4">
+          <GridViewControls
+            currentView={gridColumns}
+            onViewChange={setGridColumns}
+          />
+        </div>
         
-        <DashboardMetrics 
-          totalRevenue={data.totalRevenue}
-          totalSales={data.totalSales}
-          totalProducts={data.totalProducts}
-          averageSaleValue={averageSaleValue}
-          creditGiven={data.creditGiven}
-          creditReceived={data.creditReceived}
-          creditBalance={data.creditBalance}
-          grossProfit={data.grossProfit}
-          netProfit={data.netProfit}
-          totalLoss={data.totalLoss}
-          gridColumns={gridColumns}
-        />
+        {/* Metrics Section */}
+        <div className="mb-6">
+          <DashboardMetrics 
+            totalRevenue={data.totalRevenue}
+            totalSales={data.totalSales}
+            totalProducts={data.totalProducts}
+            averageSaleValue={averageSaleValue}
+            creditGiven={data.creditGiven}
+            creditReceived={data.creditReceived}
+            creditBalance={data.creditBalance}
+            grossProfit={data.grossProfit}
+            netProfit={data.netProfit}
+            totalLoss={data.totalLoss}
+            gridColumns={gridColumns}
+          />
+        </div>
         
-        <ChartsOverview 
-          startDate={startDate}
-          endDate={endDate}
-          selectedShops={selectedShops}
-          selectedCategory={selectedCategory}
-          selectedProduct={selectedProduct}
-        />
+        {/* Charts Overview Section */}
+        <div className="mb-6">
+          <ChartsOverview 
+            startDate={startDate}
+            endDate={endDate}
+            selectedShops={selectedShops}
+            selectedCategory={selectedCategory}
+            selectedProduct={selectedProduct}
+          />
+        </div>
         
-        <div>
+        {/* Stock Chart Section */}
+        <div className="mb-6">
           <StockChart 
             entries={data.stockEntries}
             isLoading={isLoadingStock}
