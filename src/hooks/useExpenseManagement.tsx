@@ -68,29 +68,51 @@ export const useExpenseManagement = () => {
     enabled: !!user
   });
 
-  // For now, let's handle expenses as if we're waiting for the migration to complete
+  // Fetch expenses with shop names
   const { data: expenses = [], isLoading: isLoadingExpenses } = useQuery({
     queryKey: ['expenses'],
     queryFn: async () => {
       if (!user) return [];
       
-      // This is placeholder logic until we have the expenses table
-      // After the migration is complete, we'll implement proper fetching
-      console.log("Attempting to fetch expenses, but table may not exist yet");
+      const { data, error } = await supabase
+        .from('expenses')
+        .select(`
+          *,
+          shops!inner(name)
+        `)
+        .eq('user_id', user.id)
+        .order('expense_date', { ascending: false });
       
-      // Return empty array for now
-      return [] as Expense[];
+      if (error) {
+        console.error('Error fetching expenses:', error);
+        toast.error('Failed to load expenses');
+        return [];
+      }
+      
+      // Transform the data to include shop_name
+      return data.map(expense => ({
+        ...expense,
+        shop_name: expense.shops.name
+      })) as Expense[];
     },
     enabled: !!user
   });
 
-  // Mutation for adding expenses (placeholder until we have the table)
+  // Mutation for adding expenses
   const addExpenseMutation = useMutation({
     mutationFn: async (expenseData: Omit<Expense, 'id' | 'created_at' | 'shop_name'>) => {
-      // This is a placeholder. After migration, we'll implement actual API call
-      console.log("Would add expense:", expenseData);
-      toast.error("Expenses table doesn't exist yet. Please run the required database migration first.");
-      throw new Error("Expenses table doesn't exist yet");
+      const { data, error } = await supabase
+        .from('expenses')
+        .insert([expenseData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding expense:', error);
+        throw error;
+      }
+
+      return data;
     },
     onSuccess: () => {
       // Reset form and refetch data
@@ -112,13 +134,18 @@ export const useExpenseManagement = () => {
     }
   });
 
-  // Delete expense function (placeholder until we have the table)
+  // Delete expense mutation
   const deleteExpenseMutation = useMutation({
     mutationFn: async (id: string) => {
-      // This is a placeholder. After migration, we'll implement actual API call
-      console.log("Would delete expense:", id);
-      toast.error("Expenses table doesn't exist yet. Please run the required database migration first.");
-      throw new Error("Expenses table doesn't exist yet");
+      const { error } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting expense:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
