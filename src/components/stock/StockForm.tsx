@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -103,21 +102,25 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
     fetchShopsAndProducts();
   }, []);
 
+  // Filter out shops and products with empty IDs
+  const validShops = shops.filter(shop => shop.id && shop.id.trim() !== "");
+  const validProducts = products.filter(product => product.id && product.id.trim() !== "");
+
   // Update selected shop details when shop_id changes
   useEffect(() => {
     if (watchShopId) {
-      const shop = shops.find(shop => shop.id === watchShopId);
+      const shop = validShops.find(shop => shop.id === watchShopId);
       setSelectedShop(shop);
     }
-  }, [watchShopId, shops]);
+  }, [watchShopId, validShops]);
 
   // Update selected product details when product_id changes
   useEffect(() => {
     if (watchProductId) {
-      const product = products.find(product => product.id === watchProductId);
+      const product = validProducts.find(product => product.id === watchProductId);
       setSelectedProduct(product);
     }
-  }, [watchProductId, products]);
+  }, [watchProductId, validProducts]);
 
   // Check for duplicate entries when shop, product, or date changes
   useEffect(() => {
@@ -339,7 +342,7 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {shops.map((shop) => (
+                        {validShops.map((shop) => (
                           <SelectItem key={shop.id} value={shop.id}>
                             {shop.name}
                           </SelectItem>
@@ -367,7 +370,7 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {products.map((product) => (
+                        {validProducts.map((product) => (
                           <SelectItem key={product.id} value={product.id}>
                             {product.name}
                           </SelectItem>
