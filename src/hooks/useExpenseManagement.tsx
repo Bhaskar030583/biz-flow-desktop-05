@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -157,6 +156,40 @@ export const useExpenseManagement = () => {
     }
   });
 
+  // Edit expense mutation
+  const editExpenseMutation = useMutation({
+    mutationFn: async (expense: Expense) => {
+      const { data, error } = await supabase
+        .from('expenses')
+        .update({
+          amount: expense.amount,
+          category: expense.category,
+          description: expense.description,
+          expense_date: expense.expense_date,
+          payment_method: expense.payment_method,
+          shop_id: expense.shop_id,
+        })
+        .eq('id', expense.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating expense:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      toast.success('Expense updated successfully');
+    },
+    onError: (error: any) => {
+      console.error('Error updating expense:', error);
+      toast.error(`Failed to update expense: ${error.message}`);
+    }
+  });
+
   // Handle add expense
   const handleAddExpense = async () => {
     if (!user || !amount || !shopId || !category || !description) {
@@ -187,10 +220,13 @@ export const useExpenseManagement = () => {
   // Handle delete expense
   const handleDeleteExpense = async (id: string) => {
     if (!user || !id) return;
+    await deleteExpenseMutation.mutateAsync(id);
+  };
 
-    if (confirm('Are you sure you want to delete this expense?')) {
-      await deleteExpenseMutation.mutateAsync(id);
-    }
+  // Handle edit expense
+  const handleEditExpense = async (expense: Expense) => {
+    if (!user) return;
+    await editExpenseMutation.mutateAsync(expense);
   };
 
   return {
@@ -212,5 +248,6 @@ export const useExpenseManagement = () => {
     isLoadingExpenses,
     handleAddExpense,
     handleDeleteExpense,
+    handleEditExpense,
   };
 };

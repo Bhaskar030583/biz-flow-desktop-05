@@ -29,6 +29,7 @@ const Expenses = () => {
     isLoadingExpenses,
     handleAddExpense,
     handleDeleteExpense,
+    handleEditExpense,
   } = useExpenseManagement();
 
   return (
@@ -60,7 +61,9 @@ const Expenses = () => {
                 <ExpenseTable 
                   expenses={expenses} 
                   isLoading={isLoadingExpenses} 
-                  onDelete={handleDeleteExpense} 
+                  onDelete={handleDeleteExpense}
+                  onEdit={handleEditExpense}
+                  shops={shops}
                 />
               </CardContent>
             </Card>

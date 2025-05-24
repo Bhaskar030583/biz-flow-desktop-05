@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -10,14 +9,28 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Expense } from '@/hooks/useExpenseManagement';
 import { formatCurrency } from '@/utils/formatters';
-import { Trash2, FileText, Calendar, Store } from "lucide-react";
+import { Trash2, Edit, FileText, Calendar, Store } from "lucide-react";
+import ExpenseEditDialog from './ExpenseEditDialog';
 
 interface ExpenseTableProps {
   expenses: Expense[];
   isLoading: boolean;
   onDelete: (id: string) => Promise<void>;
+  onEdit: (expense: Expense) => Promise<void>;
+  shops: Array<{ id: string; name: string }>;
 }
 
 // Map category values to display labels
@@ -69,7 +82,26 @@ const LoadingState = () => (
   </div>
 );
 
-const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, isLoading, onDelete }) => {
+const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, isLoading, onDelete, onEdit, shops }) => {
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const handleEditClick = (expense: Expense) => {
+    setEditingExpense(expense);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSave = async (updatedExpense: Expense) => {
+    await onEdit(updatedExpense);
+    setEditingExpense(null);
+    setIsEditDialogOpen(false);
+  };
+
+  const handleEditCancel = () => {
+    setEditingExpense(null);
+    setIsEditDialogOpen(false);
+  };
+
   if (isLoading) {
     return <LoadingState />;
   }
@@ -79,71 +111,112 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, isLoading, onDele
   }
 
   return (
-    <div className="rounded-md border shadow-sm overflow-hidden">
-      <Table>
-        <TableHeader className="bg-muted/50">
-          <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Shop</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Payment Method</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {expenses.map((expense) => (
-            <TableRow key={expense.id} className="hover:bg-muted/30 transition-colors">
-              <TableCell className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                {new Date(expense.expense_date).toLocaleDateString()}
-              </TableCell>
-              
-              <TableCell className="font-medium">
-                <div className="flex items-center">
-                  <Store className="h-4 w-4 mr-2 text-indigo-500" />
-                  {expense.shop_name}
-                </div>
-              </TableCell>
-              
-              <TableCell>
-                <Badge variant="outline" className="font-normal">
-                  {categoryLabels[expense.category] || expense.category}
-                </Badge>
-              </TableCell>
-              
-              <TableCell className="max-w-xs">
-                <div className="truncate" title={expense.description}>
-                  {expense.description}
-                </div>
-              </TableCell>
-              
-              <TableCell>
-                <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${paymentMethodColors[expense.payment_method] || paymentMethodColors.other}`}>
-                  {expense.payment_method.charAt(0).toUpperCase() + expense.payment_method.slice(1)}
-                </span>
-              </TableCell>
-              
-              <TableCell className="text-right font-medium">
-                {formatCurrency(Number(expense.amount))}
-              </TableCell>
-              
-              <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onDelete(expense.id)}
-                  className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TableCell>
+    <>
+      <div className="rounded-md border shadow-sm overflow-hidden">
+        <Table>
+          <TableHeader className="bg-muted/50">
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Shop</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Payment Method</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {expenses.map((expense) => (
+              <TableRow key={expense.id} className="hover:bg-muted/30 transition-colors">
+                <TableCell className="flex items-center">
+                  <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                  {new Date(expense.expense_date).toLocaleDateString()}
+                </TableCell>
+                
+                <TableCell className="font-medium">
+                  <div className="flex items-center">
+                    <Store className="h-4 w-4 mr-2 text-indigo-500" />
+                    {expense.shop_name}
+                  </div>
+                </TableCell>
+                
+                <TableCell>
+                  <Badge variant="outline" className="font-normal">
+                    {categoryLabels[expense.category] || expense.category}
+                  </Badge>
+                </TableCell>
+                
+                <TableCell className="max-w-xs">
+                  <div className="truncate" title={expense.description}>
+                    {expense.description}
+                  </div>
+                </TableCell>
+                
+                <TableCell>
+                  <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${paymentMethodColors[expense.payment_method] || paymentMethodColors.other}`}>
+                    {expense.payment_method.charAt(0).toUpperCase() + expense.payment_method.slice(1)}
+                  </span>
+                </TableCell>
+                
+                <TableCell className="text-right font-medium">
+                  {formatCurrency(Number(expense.amount))}
+                </TableCell>
+                
+                <TableCell className="text-right">
+                  <div className="flex gap-1 justify-end">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEditClick(expense)}
+                      className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Expense</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this expense? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => onDelete(expense.id)}
+                            className="bg-red-500 hover:bg-red-600"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <ExpenseEditDialog
+        expense={editingExpense}
+        isOpen={isEditDialogOpen}
+        onClose={handleEditCancel}
+        onSave={handleEditSave}
+        shops={shops}
+      />
+    </>
   );
 };
 
