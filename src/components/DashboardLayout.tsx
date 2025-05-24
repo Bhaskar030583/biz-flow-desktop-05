@@ -92,10 +92,20 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           className="w-72 p-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-white/20 dark:border-gray-700/30"
         >
           <SheetHeader className="p-6 border-b border-gray-100 dark:border-gray-800">
-            <SheetTitle className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Navigation
+            <SheetTitle className="flex items-center gap-3">
+              <img 
+                src="/lovable-uploads/8b453aae-4e22-4d63-857c-9994a32b7796.png" 
+                alt="ABC Cafe Logo" 
+                className="h-12 w-auto rounded-lg shadow-sm"
+              />
+              <div className="text-left">
+                <div className="text-xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                  ABC Cafe
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Business Management</p>
+              </div>
             </SheetTitle>
-            <SheetDescription className="text-gray-600 dark:text-gray-400">
+            <SheetDescription className="text-gray-600 dark:text-gray-400 text-left">
               Access all dashboard features
             </SheetDescription>
           </SheetHeader>
@@ -105,9 +115,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 <Link
                   key={item.id}
                   to={item.path}
-                  className={`flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-xl transition-all duration-200 group ${
+                  className={`flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 dark:hover:bg-amber-950/20 rounded-xl transition-all duration-200 group ${
                     location.pathname === item.path 
-                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 text-blue-700 dark:text-blue-300 shadow-sm border-l-4 border-blue-500' 
+                      ? 'bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 text-amber-700 dark:text-amber-300 shadow-sm border-l-4 border-amber-500 font-medium' 
                       : ''
                   }`}
                   onClick={() => setIsMenuOpen(false)}
@@ -136,12 +146,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <div className="flex items-center justify-between h-20 px-6 border-b border-gray-100 dark:border-gray-800">
           <Link to="/dashboard" className="flex items-center gap-3">
             <img 
-              src="/lovable-uploads/79288f35-ce3c-472b-b6f1-e02b46930395.png" 
+              src="/lovable-uploads/8b453aae-4e22-4d63-857c-9994a32b7796.png" 
               alt="ABC Cafe Logo" 
               className="h-12 w-auto rounded-lg shadow-sm"
             />
             <div>
-              <h2 className="font-bold text-gray-900 dark:text-white">BizFlow</h2>
+              <h2 className="font-bold text-gray-900 dark:text-white bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">ABC Cafe</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400">Business Management</p>
             </div>
           </Link>
@@ -153,9 +163,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <Link
               key={item.id}
               to={item.path}
-              className={`flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-xl transition-all duration-200 group ${
+              className={`flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 dark:hover:bg-amber-950/20 rounded-xl transition-all duration-200 group ${
                 location.pathname === item.path 
-                  ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 text-blue-700 dark:text-blue-300 shadow-sm border-l-4 border-blue-500 font-medium' 
+                  ? 'bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 text-amber-700 dark:text-amber-300 shadow-sm border-l-4 border-amber-500 font-medium' 
                   : ''
               }`}
             >
@@ -168,10 +178,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <div className="p-6 border-t border-gray-100 dark:border-gray-800">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex h-auto w-full items-center justify-start gap-3 rounded-xl p-4 text-sm font-normal hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all duration-200">
-                <Avatar className="h-12 w-12 ring-2 ring-blue-100 dark:ring-blue-900 shadow-lg">
+              <Button variant="ghost" className="flex h-auto w-full items-center justify-start gap-3 rounded-xl p-4 text-sm font-normal hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-all duration-200">
+                <Avatar className="h-12 w-12 ring-2 ring-amber-100 dark:ring-amber-900 shadow-lg">
                   <AvatarImage src={user?.user_metadata?.avatar_url as string} alt={user?.user_metadata?.full_name as string} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold">
+                  <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-600 text-white font-bold">
                     {(user?.user_metadata?.full_name as string)?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -191,9 +201,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl rounded-xl">
-              <DropdownMenuLabel className="text-blue-700 dark:text-blue-300 font-semibold">My Account</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-amber-700 dark:text-amber-300 font-semibold">My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer py-3 px-4 hover:bg-blue-50 dark:hover:bg-blue-950/30">
+              <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer py-3 px-4 hover:bg-amber-50 dark:hover:bg-amber-950/20">
                 <SettingsIcon className="mr-3 h-4 w-4" />
                 Settings & Preferences
               </DropdownMenuItem>
