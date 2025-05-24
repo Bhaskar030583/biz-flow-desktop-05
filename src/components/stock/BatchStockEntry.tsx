@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -120,13 +119,17 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
         if (shopsResponse.error) throw shopsResponse.error;
         if (productsResponse.error) throw productsResponse.error;
 
-        setShops(shopsResponse.data || []);
+        // Filter out shops and products with empty IDs
+        const validShops = (shopsResponse.data || []).filter(shop => shop.id && shop.id.trim() !== "");
+        const validProducts = (productsResponse.data || []).filter(product => product.id && product.id.trim() !== "");
+
+        setShops(validShops);
         
         // Initialize products array with all products
-        const formattedProducts = (productsResponse.data || []).map(product => ({
+        const formattedProducts = validProducts.map(product => ({
           product_id: product.id,
           product_name: product.name,
-          category: product.category,
+          category: product.category || "Uncategorized",
           opening_stock: 0,
           closing_stock: 0,
           actual_stock: 0,
@@ -136,7 +139,7 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
 
         // Extract unique categories
         const uniqueCategories = Array.from(
-          new Set((productsResponse.data || []).map(product => product.category))
+          new Set(validProducts.map(product => product.category || "Uncategorized"))
         );
         setCategories(uniqueCategories as string[]);
         
@@ -151,6 +154,9 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
 
     fetchShopsAndProducts();
   }, []);
+
+  // Filter out shops and products with empty IDs for rendering
+  const validShops = shops.filter(shop => shop.id && shop.id.trim() !== "");
 
   // Update shop selection
   useEffect(() => {
@@ -197,18 +203,21 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
           
         if (productsError) throw productsError;
 
+        // Filter valid products
+        const validProducts = (allProducts || []).filter(product => product.id && product.id.trim() !== "");
+
         // Map previous stock data or default to 0
-        const productsWithStock = allProducts?.map(product => {
+        const productsWithStock = validProducts.map(product => {
           const prevStock = prevData?.find(item => item.product_id === product.id);
           return {
             product_id: product.id,
             product_name: product.name,
-            category: product.category,
+            category: product.category || "Uncategorized",
             opening_stock: prevStock ? prevStock.actual_stock : 0,
             closing_stock: 0,
             actual_stock: 0,
           };
-        }) || [];
+        });
 
         // Set form data
         form.setValue("products", productsWithStock);
@@ -392,7 +401,7 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {shops.map((shop) => (
+                        {validShops.map((shop) => (
                           <SelectItem key={shop.id} value={shop.id}>
                             {shop.name}
                           </SelectItem>
