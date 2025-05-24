@@ -54,9 +54,9 @@ const StockFilters = ({
 
   const hasFilters = 
     searchTerm !== "" || 
-    shopFilter !== "" || 
-    productFilter !== "" ||
-    (paymentModeFilter && paymentModeFilter !== "");
+    (shopFilter !== "" && shopFilter !== "_all") || 
+    (productFilter !== "" && productFilter !== "_all") ||
+    (paymentModeFilter && paymentModeFilter !== "" && paymentModeFilter !== "_all");
 
   return (
     <div className="flex flex-col space-y-2">
@@ -80,7 +80,7 @@ const StockFilters = ({
         </div>
 
         <div className="flex flex-1 gap-2">
-          <Select value={shopFilter} onValueChange={setShopFilter}>
+          <Select value={shopFilter || "_all"} onValueChange={setShopFilter}>
             <SelectTrigger className="w-full min-w-[120px]">
               <SelectValue placeholder="All Shops" />
             </SelectTrigger>
@@ -94,7 +94,7 @@ const StockFilters = ({
             </SelectContent>
           </Select>
 
-          <Select value={productFilter} onValueChange={setProductFilter}>
+          <Select value={productFilter || "_all"} onValueChange={setProductFilter}>
             <SelectTrigger className="w-full min-w-[120px]">
               <SelectValue placeholder="All Products" />
             </SelectTrigger>
@@ -128,10 +128,10 @@ const StockFilters = ({
           <button
             onClick={() => {
               setInputValue("");
-              setShopFilter("");
-              setProductFilter("");
+              setShopFilter("_all");
+              setProductFilter("_all");
               if (setPaymentModeFilter) {
-                setPaymentModeFilter("");
+                setPaymentModeFilter("_all");
               }
             }}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"

@@ -131,11 +131,11 @@ export const useStockQueries = ({
       entry.shops?.name?.toLowerCase().includes(searchLower) ||
       entry.operator_name?.toLowerCase().includes(searchLower);
       
-    // Shop filter
-    const matchesShop = !shopFilter || entry.shops?.id === shopFilter;
+    // Shop filter - handle both empty string and "_all" as "show all"
+    const matchesShop = !shopFilter || shopFilter === "_all" || entry.shops?.id === shopFilter;
     
-    // Product filter
-    const matchesProduct = !productFilter || entry.products?.id === productFilter;
+    // Product filter - handle both empty string and "_all" as "show all"
+    const matchesProduct = !productFilter || productFilter === "_all" || entry.products?.id === productFilter;
     
     return matchesSearch && matchesShop && matchesProduct;
   }) || [];
