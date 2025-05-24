@@ -138,44 +138,56 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           </SidebarContent>
           
           <SidebarFooter className="p-6 border-t border-gray-100 dark:border-gray-800">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex h-auto w-full items-center justify-start gap-3 rounded-xl p-4 text-sm font-normal hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-all duration-200">
-                  <Avatar className="h-12 w-12 ring-2 ring-amber-100 dark:ring-amber-900 shadow-lg">
-                    <AvatarImage src={user?.user_metadata?.avatar_url as string} alt={user?.user_metadata?.full_name as string} />
-                    <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-600 text-white font-bold">
-                      {(user?.user_metadata?.full_name as string)?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="text-left flex-1 min-w-0">
-                    <div className="font-semibold text-gray-900 dark:text-white truncate">
-                      {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+            <div className="flex flex-col gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex h-auto w-full items-center justify-start gap-3 rounded-xl p-4 text-sm font-normal hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-all duration-200">
+                    <Avatar className="h-12 w-12 ring-2 ring-amber-100 dark:ring-amber-900 shadow-lg">
+                      <AvatarImage src={user?.user_metadata?.avatar_url as string} alt={user?.user_metadata?.full_name as string} />
+                      <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-600 text-white font-bold">
+                        {(user?.user_metadata?.full_name as string)?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="text-left flex-1 min-w-0">
+                      <div className="font-semibold text-gray-900 dark:text-white truncate">
+                        {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge 
+                          variant="secondary" 
+                          className={`text-xs font-medium ${getRoleBadgeColor(userRole)}`}
+                        >
+                          {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge 
-                        variant="secondary" 
-                        className={`text-xs font-medium ${getRoleBadgeColor(userRole)}`}
-                      >
-                        {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
-                      </Badge>
-                    </div>
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl rounded-xl">
-                <DropdownMenuLabel className="text-amber-700 dark:text-amber-300 font-semibold">My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer py-3 px-4 hover:bg-amber-50 dark:hover:bg-amber-950/20">
-                  <SettingsIcon className="mr-3 h-4 w-4" />
-                  Settings & Preferences
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer py-3 px-4 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30">
-                  <LogOut className="mr-3 h-4 w-4" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl rounded-xl">
+                  <DropdownMenuLabel className="text-amber-700 dark:text-amber-300 font-semibold">My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer py-3 px-4 hover:bg-amber-50 dark:hover:bg-amber-950/20">
+                    <SettingsIcon className="mr-3 h-4 w-4" />
+                    Settings & Preferences
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer py-3 px-4 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30">
+                    <LogOut className="mr-3 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              {/* Direct logout button as backup */}
+              <Button 
+                onClick={handleLogout}
+                variant="outline" 
+                className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 border-red-200 hover:border-red-300"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Log Out</span>
+              </Button>
+            </div>
           </SidebarFooter>
         </Sidebar>
 
