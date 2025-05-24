@@ -98,10 +98,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   <p className="text-xs text-gray-500 dark:text-gray-400">Business Management</p>
                 </div>
               </Link>
-              <SidebarTrigger className="ml-auto">
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <PanelLeftClose className="h-4 w-4" />
-                </Button>
+              <SidebarTrigger>
+                <PanelLeftClose className="h-4 w-4" />
               </SidebarTrigger>
             </div>
             <div>
@@ -138,7 +136,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           </SidebarContent>
           
           <SidebarFooter className="p-6 border-t border-gray-100 dark:border-gray-800">
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-4">
+              {/* User Profile Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex h-auto w-full items-center justify-start gap-3 rounded-xl p-4 text-sm font-normal hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-all duration-200">
@@ -178,11 +177,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 </DropdownMenuContent>
               </DropdownMenu>
               
-              {/* Direct logout button as backup */}
+              {/* Direct Logout Button */}
               <Button 
                 onClick={handleLogout}
                 variant="outline" 
-                className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 border-red-200 hover:border-red-300"
+                className="flex items-center justify-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 border-red-200 hover:border-red-300 w-full py-3"
               >
                 <LogOut className="h-4 w-4" />
                 <span>Log Out</span>
