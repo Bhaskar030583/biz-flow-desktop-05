@@ -2,7 +2,6 @@
 import React from "react";
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ModeToggle } from '@/components/ModeToggle';
 
 interface DashboardHeaderProps {
   title: string;
@@ -26,7 +25,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       </div>
       
       <div className="flex items-center gap-4">
-        <ModeToggle />
         <Avatar className="h-9 w-9 border-2 border-primary/10">
           <AvatarImage src={user?.user_metadata?.avatar_url || ""} alt="User" />
           <AvatarFallback className="bg-primary/10 text-primary font-semibold">
