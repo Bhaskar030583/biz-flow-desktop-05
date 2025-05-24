@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useSettings, CurrencyType, TimeFormat, DateFormat, ColorTheme } from "@/context/SettingsContext";
-import { ModeToggle } from "@/components/ModeToggle";
 import { Palette, Clock, Calendar, DollarSign } from "lucide-react";
 
 const Settings = () => {
@@ -44,16 +43,6 @@ const Settings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label htmlFor="theme-toggle">Dark Mode</Label>
-                  <p className="text-sm text-muted-foreground">Toggle between light and dark themes</p>
-                </div>
-                <ModeToggle />
-              </div>
-              
-              <Separator />
-              
               <div className="space-y-3">
                 <Label htmlFor="color-theme">Color Theme</Label>
                 <Select value={colorTheme} onValueChange={(value: ColorTheme) => setColorTheme(value)}>
