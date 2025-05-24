@@ -7,7 +7,8 @@ import {
   Package, 
   BarChart3,
   CreditCard,
-  Receipt
+  Receipt,
+  TrendingDown
 } from "lucide-react";
 
 interface MetricsProps {
@@ -18,6 +19,8 @@ interface MetricsProps {
   creditGiven: number;
   creditReceived: number;
   creditBalance: number;
+  totalProfit: number;
+  totalLoss: number;
 }
 
 export const DashboardMetrics: React.FC<MetricsProps> = ({
@@ -27,7 +30,9 @@ export const DashboardMetrics: React.FC<MetricsProps> = ({
   averageSaleValue,
   creditGiven,
   creditReceived,
-  creditBalance
+  creditBalance,
+  totalProfit,
+  totalLoss
 }) => {
   const formatIndianRupee = (value: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -38,7 +43,7 @@ export const DashboardMetrics: React.FC<MetricsProps> = ({
   };
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 mb-6">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-9 mb-6">
       <Card className="shadow-sm hover:shadow-md transition-shadow">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
@@ -108,6 +113,40 @@ export const DashboardMetrics: React.FC<MetricsProps> = ({
             </div>
             <div className="p-3 bg-primary/10 rounded-full">
               <BarChart3 className="h-6 w-6 text-primary" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm hover:shadow-md transition-shadow">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-1">Total Profit</p>
+              <div className="text-2xl font-bold text-green-500">{formatIndianRupee(totalProfit)}</div>
+              <div className="mt-2 text-xs text-muted-foreground">
+                <span>From sales</span>
+              </div>
+            </div>
+            <div className="p-3 bg-green-100 rounded-full">
+              <TrendingUp className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm hover:shadow-md transition-shadow">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-1">Total Loss</p>
+              <div className="text-2xl font-bold text-red-500">{formatIndianRupee(totalLoss)}</div>
+              <div className="mt-2 text-xs text-muted-foreground">
+                <span>From sales</span>
+              </div>
+            </div>
+            <div className="p-3 bg-red-100 rounded-full">
+              <TrendingDown className="h-6 w-6 text-red-600" />
             </div>
           </div>
         </CardContent>

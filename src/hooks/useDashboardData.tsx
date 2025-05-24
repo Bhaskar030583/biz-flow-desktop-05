@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -12,6 +13,8 @@ export interface DashboardData {
   creditGiven: number;
   creditReceived: number;
   creditBalance: number;
+  totalProfit: number;
+  totalLoss: number;
 }
 
 export const useDashboardData = (
@@ -31,7 +34,9 @@ export const useDashboardData = (
     stockEntries: [],
     creditGiven: 0,
     creditReceived: 0,
-    creditBalance: 0
+    creditBalance: 0,
+    totalProfit: 0,
+    totalLoss: 0
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingStock, setIsLoadingStock] = useState(true);
@@ -125,14 +130,14 @@ export const useDashboardData = (
 
         const creditBalance = creditReceived - creditGiven;
         
-        // Fetch sales data
+        // Fetch sales data with cost_price for profit calculation
         let salesQuery = supabase
           .from("sales")
           .select(`
             quantity,
             price,
             sale_date,
-            products(id, name, price, category)
+            products(id, name, price, cost_price, category)
           `);
         
         // Apply date filters to sales
@@ -165,15 +170,31 @@ export const useDashboardData = (
           ? salesData?.filter((sale) => sale.products?.category === selectedCategory)
           : salesData;
         
-        // Calculate sales metrics
+        // Calculate sales metrics and profit/loss
         let totalSales = 0;
         let totalProducts = 0;
         let totalRevenue = 0;
+        let totalProfit = 0;
+        let totalLoss = 0;
         
         filteredSales?.forEach((sale) => {
           totalSales++;
-          totalProducts += Number(sale.quantity) || 0;
-          totalRevenue += (Number(sale.price) * Number(sale.quantity)) || 0;
+          const quantity = Number(sale.quantity) || 0;
+          const sellingPrice = Number(sale.price) || 0;
+          const costPrice = Number(sale.products?.cost_price) || 0;
+          
+          totalProducts += quantity;
+          totalRevenue += (sellingPrice * quantity);
+          
+          // Calculate profit or loss per sale
+          const profitPerUnit = sellingPrice - costPrice;
+          const totalProfitForSale = profitPerUnit * quantity;
+          
+          if (totalProfitForSale > 0) {
+            totalProfit += totalProfitForSale;
+          } else {
+            totalLoss += Math.abs(totalProfitForSale);
+          }
         });
 
         // Update state with all data
@@ -187,7 +208,9 @@ export const useDashboardData = (
           stockEntries: data.stockEntries,
           creditGiven,
           creditReceived,
-          creditBalance
+          creditBalance,
+          totalProfit,
+          totalLoss
         });
       } catch (error) {
         console.error("Error fetching summary data:", error);

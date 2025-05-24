@@ -59,6 +59,8 @@ const Dashboard = () => {
           creditGiven={data.creditGiven}
           creditReceived={data.creditReceived}
           creditBalance={data.creditBalance}
+          totalProfit={data.totalProfit}
+          totalLoss={data.totalLoss}
         />
         
         <ChartsOverview 
