@@ -1,4 +1,3 @@
-
 import React from "react";
 import { PlusCircle, FileDown, FileUp, Layers, Calendar, ChevronDown, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -207,7 +206,7 @@ const StockHeader: React.FC<StockHeaderProps> = ({
                   setShowCollectionForm(false);
                   setActiveTab("entry");
                 }}
-                className="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer"
+                className="text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer focus:bg-gradient-to-r focus:from-indigo-50 focus:to-purple-50 focus:text-indigo-700"
               >
                 <PlusCircle className="mr-2 h-4 w-4" />
                 {showForm ? "Cancel Entry" : "Add Single Stock Entry"}
@@ -219,7 +218,7 @@ const StockHeader: React.FC<StockHeaderProps> = ({
                   setShowCollectionForm(false);
                   setActiveTab("batch");
                 }}
-                className="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer"
+                className="text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer focus:bg-gradient-to-r focus:from-indigo-50 focus:to-purple-50 focus:text-indigo-700"
               >
                 <Layers className="mr-2 h-4 w-4" />
                 {showBatchEntry ? "Cancel Batch Entry" : "Batch Stock Entry"}
@@ -231,14 +230,14 @@ const StockHeader: React.FC<StockHeaderProps> = ({
                   setShowCollectionForm(!showCollectionForm);
                   setActiveTab("collection");
                 }}
-                className="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer"
+                className="text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer focus:bg-gradient-to-r focus:from-indigo-50 focus:to-purple-50 focus:text-indigo-700"
               >
                 <Calendar className="mr-2 h-4 w-4" />
                 {showCollectionForm ? "Cancel Collection" : "Add Collection"}
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => setShowImport(true)}
-                className="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer"
+                className="text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer focus:bg-gradient-to-r focus:from-indigo-50 focus:to-purple-50 focus:text-indigo-700"
               >
                 <FileUp className="mr-2 h-4 w-4" />
                 Import from Excel
