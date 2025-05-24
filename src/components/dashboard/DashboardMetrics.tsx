@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -8,7 +7,8 @@ import {
   BarChart3,
   CreditCard,
   Receipt,
-  TrendingDown
+  TrendingDown,
+  DollarSign
 } from "lucide-react";
 
 interface MetricsProps {
@@ -19,7 +19,8 @@ interface MetricsProps {
   creditGiven: number;
   creditReceived: number;
   creditBalance: number;
-  totalProfit: number;
+  grossProfit: number;
+  netProfit: number;
   totalLoss: number;
 }
 
@@ -31,7 +32,8 @@ export const DashboardMetrics: React.FC<MetricsProps> = ({
   creditGiven,
   creditReceived,
   creditBalance,
-  totalProfit,
+  grossProfit,
+  netProfit,
   totalLoss
 }) => {
   const formatIndianRupee = (value: number) => {
@@ -122,14 +124,33 @@ export const DashboardMetrics: React.FC<MetricsProps> = ({
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground mb-1">Total Profit</p>
-              <div className="text-2xl font-bold text-green-500">{formatIndianRupee(totalProfit)}</div>
+              <p className="text-sm font-medium text-muted-foreground mb-1">Gross Profit</p>
+              <div className="text-2xl font-bold text-green-500">{formatIndianRupee(grossProfit)}</div>
               <div className="mt-2 text-xs text-muted-foreground">
-                <span>From sales</span>
+                <span>Sales profit only</span>
               </div>
             </div>
             <div className="p-3 bg-green-100 rounded-full">
-              <TrendingUp className="h-6 w-6 text-green-600" />
+              <DollarSign className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm hover:shadow-md transition-shadow">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-1">Net Profit</p>
+              <div className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {formatIndianRupee(Math.abs(netProfit))}
+              </div>
+              <div className="mt-2 text-xs text-muted-foreground">
+                <span>{netProfit >= 0 ? 'After all expenses' : 'Net loss'}</span>
+              </div>
+            </div>
+            <div className={`p-3 rounded-full ${netProfit >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
+              <TrendingUp className={`h-6 w-6 ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`} />
             </div>
           </div>
         </CardContent>

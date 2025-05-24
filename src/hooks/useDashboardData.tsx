@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -13,7 +12,8 @@ export interface DashboardData {
   creditGiven: number;
   creditReceived: number;
   creditBalance: number;
-  totalProfit: number;
+  grossProfit: number;
+  netProfit: number;
   totalLoss: number;
 }
 
@@ -35,7 +35,8 @@ export const useDashboardData = (
     creditGiven: 0,
     creditReceived: 0,
     creditBalance: 0,
-    totalProfit: 0,
+    grossProfit: 0,
+    netProfit: 0,
     totalLoss: 0
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -174,7 +175,7 @@ export const useDashboardData = (
         let totalSales = 0;
         let totalProducts = 0;
         let totalRevenue = 0;
-        let totalProfit = 0;
+        let grossProfit = 0;
         let totalLoss = 0;
         
         filteredSales?.forEach((sale) => {
@@ -186,17 +187,20 @@ export const useDashboardData = (
           totalProducts += quantity;
           totalRevenue += (sellingPrice * quantity);
           
-          // Calculate profit or loss per sale
+          // Calculate gross profit (selling price - cost price) * quantity
           const profitPerUnit = sellingPrice - costPrice;
           const totalProfitForSale = profitPerUnit * quantity;
           
           if (totalProfitForSale > 0) {
-            totalProfit += totalProfitForSale;
+            grossProfit += totalProfitForSale;
           } else {
             totalLoss += Math.abs(totalProfitForSale);
           }
         });
 
+        // Calculate net profit (gross profit - credit given + credit received)
+        const netProfit = grossProfit - creditGiven + creditReceived;
+        
         // Update state with all data
         setData({
           totalSales,
@@ -209,7 +213,8 @@ export const useDashboardData = (
           creditGiven,
           creditReceived,
           creditBalance,
-          totalProfit,
+          grossProfit,
+          netProfit,
           totalLoss
         });
       } catch (error) {

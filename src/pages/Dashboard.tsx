@@ -59,7 +59,8 @@ const Dashboard = () => {
           creditGiven={data.creditGiven}
           creditReceived={data.creditReceived}
           creditBalance={data.creditBalance}
-          totalProfit={data.totalProfit}
+          grossProfit={data.grossProfit}
+          netProfit={data.netProfit}
           totalLoss={data.totalLoss}
         />
         
