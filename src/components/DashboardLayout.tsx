@@ -100,8 +100,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       {/* Sidebar (Hidden on small screens) */}
       <div className="hidden md:flex flex-col w-64 bg-gradient-to-b from-white to-blue-50 dark:from-gray-800 dark:to-blue-950 border-r border-blue-200 dark:border-blue-800 shadow-xl">
         <div className="flex items-center justify-between h-16 px-4 border-b border-blue-200 dark:border-blue-800">
-          <Link to="/dashboard" className="text-xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-            My Business
+          <Link to="/dashboard" className="flex items-center">
+            <img 
+              src="/lovable-uploads/13b8d922-e2b4-4692-a8dd-472a7be60eef.png" 
+              alt="Logo" 
+              className="h-8 w-auto"
+            />
           </Link>
           <ModeToggle />
         </div>
@@ -131,7 +135,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   <div className="font-semibold text-gray-800 dark:text-white">{user?.user_metadata?.full_name || 'User'}</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</div>
                 </div>
-                <SettingsIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-gray-800 border-blue-200 dark:border-blue-800">
