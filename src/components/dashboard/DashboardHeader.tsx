@@ -31,15 +31,22 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
   return (
     <div className="flex items-center justify-between w-full mb-8 p-6 bg-gradient-to-r from-white/80 to-blue-50/80 dark:from-gray-900/80 dark:to-blue-950/80 backdrop-blur-sm rounded-2xl border border-blue-100 dark:border-blue-800 shadow-sm">
-      <div className="flex-1">
-        <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
-          {title}
-        </h1>
-        {subtitle && (
-          <p className="text-base md:text-lg text-muted-foreground font-medium leading-relaxed max-w-2xl">
-            {subtitle}
-          </p>
-        )}
+      <div className="flex items-center gap-4 flex-1">
+        <img 
+          src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
+          alt="ABC Cafe Logo" 
+          className="h-16 w-auto rounded-lg shadow-sm"
+        />
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="text-base md:text-lg text-muted-foreground font-medium leading-relaxed max-w-2xl">
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
       
       <div className="flex items-center gap-4">
