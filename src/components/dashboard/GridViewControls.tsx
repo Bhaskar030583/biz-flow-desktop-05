@@ -15,6 +15,7 @@ export const GridViewControls: React.FC<GridViewControlsProps> = ({
   const viewOptions = [
     { columns: 2, icon: Grid2x2, label: '2 columns' },
     { columns: 3, icon: Grid3x3, label: '3 columns' },
+    { columns: 4, icon: LayoutGrid, label: '4 columns' },
     { columns: 5, icon: LayoutGrid, label: '5 columns' },
     { columns: 6, icon: LayoutGrid, label: '6 columns' },
     { columns: 7, icon: LayoutGrid, label: '7 columns' }
