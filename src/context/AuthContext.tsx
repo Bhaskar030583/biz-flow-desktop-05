@@ -31,6 +31,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<UserRole>("user"); // Default to user role
   const [loading, setLoading] = useState(true);
+  
+  // Move useNavigate inside a component that's guaranteed to be within Router context
   const navigate = useNavigate();
 
   const fetchUserRole = async (userId: string, userEmail?: string | null) => {
