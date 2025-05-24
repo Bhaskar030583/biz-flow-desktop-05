@@ -21,9 +21,9 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       case 'admin':
         return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
       case 'lead':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300';
-      case 'sales':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
+      case 'sales':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
     }
@@ -40,7 +40,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             className="h-10 sm:h-12 lg:h-14 w-auto rounded-lg shadow-md flex-shrink-0"
           />
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-1 sm:mb-2 leading-tight break-words">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold bg-gradient-to-r from-blue-600 via-green-600 to-blue-600 bg-clip-text text-transparent mb-1 sm:mb-2 leading-tight break-words">
               {title}
             </h1>
             {subtitle && (
@@ -68,7 +68,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </div>
           <Avatar className="h-8 sm:h-10 lg:h-12 w-8 sm:w-10 lg:w-12 border-2 border-white dark:border-gray-700 shadow-lg ring-2 ring-blue-100 dark:ring-blue-900 flex-shrink-0">
             <AvatarImage src={user?.user_metadata?.avatar_url || ""} alt="User" />
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-xs sm:text-sm">
+            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-green-600 text-white font-bold text-xs sm:text-sm">
               {userInitials}
             </AvatarFallback>
           </Avatar>

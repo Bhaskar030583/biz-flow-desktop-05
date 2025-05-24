@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -14,41 +13,41 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 142 76% 36%;
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 142 76% 95%;
+    --accent-foreground: 142 76% 36%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 210 100% 50%;
 
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-foreground: 142 76% 36%;
+    --sidebar-primary: 210 100% 50%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-accent: 142 76% 95%;
+    --sidebar-accent-foreground: 142 76% 36%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 210 100% 50%;
 
-    /* Default theme colors */
-    --chart-sales: 226 70% 40%;
-    --chart-profit: 142 70% 30%;
+    /* Blue, White, Green theme colors */
+    --chart-sales: 210 100% 50%;
+    --chart-profit: 142 76% 36%;
     --chart-loss: 0 70% 45%;
-    --chart-units: 32 90% 45%;
+    --chart-units: 210 80% 45%;
   }
 
   .dark {
@@ -61,102 +60,114 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 210 100% 60%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 142 76% 50%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 142 76% 20%;
+    --accent-foreground: 142 76% 90%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 210 100% 60%;
 
     --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-foreground: 142 76% 90%;
+    --sidebar-primary: 210 100% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-accent: 142 76% 20%;
+    --sidebar-accent-foreground: 142 76% 90%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 210 100% 60%;
 
-    /* Default theme colors for dark mode */
-    --chart-sales: 226 70% 65%;
-    --chart-profit: 142 70% 50%;
+    /* Blue, White, Green theme colors for dark mode */
+    --chart-sales: 210 100% 65%;
+    --chart-profit: 142 76% 60%;
     --chart-loss: 0 70% 60%;
-    --chart-units: 32 90% 55%;
+    --chart-units: 210 80% 65%;
   }
 
   /* Professional Color Theme */
   [data-color-theme="professional"] {
-    --primary: 210 100% 13%;
-    --primary-foreground: 210 20% 98%;
-    --accent: 210 40% 92%;
-    --accent-foreground: 210 100% 13%;
-    --chart-sales: 210 100% 20%;
-    --chart-profit: 157 100% 20%;
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 142 76% 36%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 142 76% 95%;
+    --accent-foreground: 142 76% 36%;
+    --chart-sales: 210 100% 50%;
+    --chart-profit: 142 76% 36%;
     --chart-loss: 0 84% 50%;
-    --chart-units: 210 50% 30%;
+    --chart-units: 210 80% 45%;
   }
 
   [data-color-theme="professional"].dark {
-    --primary: 210 20% 98%;
-    --primary-foreground: 210 100% 13%;
-    --chart-sales: 210 100% 70%;
-    --chart-profit: 157 100% 60%;
+    --primary: 210 100% 60%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 142 76% 50%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --chart-sales: 210 100% 65%;
+    --chart-profit: 142 76% 60%;
     --chart-loss: 0 84% 70%;
-    --chart-units: 210 50% 70%;
+    --chart-units: 210 80% 65%;
   }
 
   /* Modern Color Theme */
   [data-color-theme="modern"] {
-    --primary: 270 95% 30%;
-    --primary-foreground: 210 20% 98%;
-    --accent: 270 30% 92%;
-    --accent-foreground: 270 95% 30%;
-    --chart-sales: 270 95% 40%;
-    --chart-profit: 320 95% 40%;
+    --primary: 210 100% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 142 76% 40%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 142 76% 92%;
+    --accent-foreground: 142 76% 40%;
+    --chart-sales: 210 100% 45%;
+    --chart-profit: 142 76% 40%;
     --chart-loss: 0 84% 50%;
-    --chart-units: 290 95% 35%;
+    --chart-units: 210 80% 40%;
   }
 
   [data-color-theme="modern"].dark {
-    --primary: 270 30% 92%;
-    --primary-foreground: 270 95% 30%;
-    --chart-sales: 270 95% 70%;
-    --chart-profit: 320 95% 70%;
+    --primary: 210 100% 65%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 142 76% 55%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --chart-sales: 210 100% 65%;
+    --chart-profit: 142 76% 55%;
     --chart-loss: 0 84% 70%;
-    --chart-units: 290 95% 65%;
+    --chart-units: 210 80% 60%;
   }
 
   /* Vibrant Color Theme */
   [data-color-theme="vibrant"] {
-    --primary: 142 76% 28%;
-    --primary-foreground: 210 20% 98%;
-    --accent: 142 30% 92%;
-    --accent-foreground: 142 76% 28%;
-    --chart-sales: 142 76% 35%;
-    --chart-profit: 32 95% 45%;
+    --primary: 210 100% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 142 76% 45%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 142 76% 90%;
+    --accent-foreground: 142 76% 45%;
+    --chart-sales: 210 100% 55%;
+    --chart-profit: 142 76% 45%;
     --chart-loss: 0 84% 50%;
-    --chart-units: 170 76% 35%;
+    --chart-units: 210 80% 50%;
   }
 
   [data-color-theme="vibrant"].dark {
-    --primary: 142 30% 92%;
-    --primary-foreground: 142 76% 28%;
-    --chart-sales: 142 76% 65%;
-    --chart-profit: 32 95% 75%;
+    --primary: 210 100% 70%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 142 76% 60%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --chart-sales: 210 100% 70%;
+    --chart-profit: 142 76% 60%;
     --chart-loss: 0 84% 70%;
-    --chart-units: 170 76% 65%;
+    --chart-units: 210 80% 65%;
   }
 }
 
@@ -208,7 +219,7 @@
   
   /* Professional gradient backgrounds */
   .gradient-bg-primary {
-    @apply bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20;
+    @apply bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900;
   }
   
   .gradient-bg-success {

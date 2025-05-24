@@ -72,9 +72,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       case 'admin':
         return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
       case 'lead':
-        return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300';
-      case 'sales':
         return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
+      case 'sales':
+        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';
       default:
         return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300';
     }
@@ -85,9 +85,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-indigo-950">
-        <Sidebar className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-white/20 dark:border-gray-700/30 shadow-xl" collapsible="offcanvas">
-          <SidebarHeader className="border-b border-gray-100 dark:border-gray-800 p-4">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-blue-950 dark:via-gray-900 dark:to-green-950">
+        <Sidebar className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-blue-100/50 dark:border-green-700/30 shadow-xl" collapsible="offcanvas">
+          <SidebarHeader className="border-b border-blue-100 dark:border-green-800 p-4">
             <div className="flex items-center justify-between mb-4">
               <Link to="/dashboard" className="flex items-center gap-3 flex-1">
                 <img 
@@ -96,7 +96,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   className="h-10 w-auto rounded-lg shadow-sm"
                 />
                 <div className="flex-1 min-w-0">
-                  <h2 className="font-bold text-gray-900 dark:text-white bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent text-lg">ABC Cafe</h2>
+                  <h2 className="font-bold text-gray-900 dark:text-white bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent text-lg">ABC Cafe</h2>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Business Management</p>
                 </div>
               </Link>
@@ -108,7 +108,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           
           <SidebarContent className="p-4">
             <SidebarGroup>
-              <SidebarGroupLabel className="text-amber-700 dark:text-amber-300 font-semibold mb-3 px-2">Navigation</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-blue-700 dark:text-blue-300 font-semibold mb-3 px-2">Navigation</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu className="space-y-1">
                   {navItems.map((item) => (
@@ -116,9 +116,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                       <SidebarMenuButton 
                         asChild 
                         isActive={location.pathname === item.path}
-                        className={`flex items-center px-3 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 dark:hover:bg-amber-950/20 rounded-lg transition-all duration-200 group w-full ${
+                        className={`flex items-center px-3 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-green-50 dark:hover:bg-blue-950/20 rounded-lg transition-all duration-200 group w-full ${
                           location.pathname === item.path 
-                            ? 'bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 text-amber-700 dark:text-amber-300 shadow-sm border-l-4 border-amber-500 font-medium' 
+                            ? 'bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-950/30 dark:to-green-950/30 text-blue-700 dark:text-blue-300 shadow-sm border-l-4 border-blue-500 font-medium' 
                             : ''
                         }`}
                       >
@@ -134,13 +134,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </SidebarGroup>
           </SidebarContent>
           
-          <SidebarFooter className="p-4 border-t border-gray-100 dark:border-gray-800">
+          <SidebarFooter className="p-4 border-t border-blue-100 dark:border-green-800">
             <div className="space-y-3">
               {/* User Profile Display */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20">
-                <Avatar className="h-10 w-10 ring-2 ring-amber-100 dark:ring-amber-900 shadow-lg">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20">
+                <Avatar className="h-10 w-10 ring-2 ring-blue-100 dark:ring-blue-900 shadow-lg">
                   <AvatarImage src={user?.user_metadata?.avatar_url as string} alt={user?.user_metadata?.full_name as string} />
-                  <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-600 text-white font-bold text-sm">
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-green-600 text-white font-bold text-sm">
                     {(user?.user_metadata?.full_name as string)?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -173,7 +173,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <SidebarInset className="flex-1">
           <div className="flex-1 overflow-x-hidden overflow-y-auto">
             {/* Header with Sidebar Trigger */}
-            <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+            <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-blue-200 dark:border-green-700">
               <div className="flex items-center gap-4 px-4 py-3">
                 <SidebarTrigger className="flex-shrink-0">
                   <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -181,7 +181,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   </Button>
                 </SidebarTrigger>
                 <div className="flex-1">
-                  <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h1 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
                     {navItems.find(item => item.path === location.pathname)?.name || 'Dashboard'}
                   </h1>
                 </div>
