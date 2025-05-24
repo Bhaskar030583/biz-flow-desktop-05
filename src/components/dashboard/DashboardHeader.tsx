@@ -2,6 +2,7 @@
 import React from "react";
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 interface DashboardHeaderProps {
   title: string;
@@ -12,22 +13,52 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   title, 
   subtitle 
 }) => {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const userInitials = user?.email ? user.email.substring(0, 2).toUpperCase() : "US";
 
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
+      case 'lead':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300';
+      case 'sales':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
+    }
+  };
+
   return (
-    <div className="flex items-center justify-between w-full">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-indigo-700 to-purple-600 bg-clip-text text-transparent mb-1">
+    <div className="flex items-center justify-between w-full mb-8 p-6 bg-gradient-to-r from-white/80 to-blue-50/80 dark:from-gray-900/80 dark:to-blue-950/80 backdrop-blur-sm rounded-2xl border border-blue-100 dark:border-blue-800 shadow-sm">
+      <div className="flex-1">
+        <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
           {title}
         </h1>
-        {subtitle && <p className="text-muted-foreground text-sm md:text-base">{subtitle}</p>}
+        {subtitle && (
+          <p className="text-base md:text-lg text-muted-foreground font-medium leading-relaxed max-w-2xl">
+            {subtitle}
+          </p>
+        )}
       </div>
       
       <div className="flex items-center gap-4">
-        <Avatar className="h-9 w-9 border-2 border-primary/10">
+        <div className="text-right hidden sm:block">
+          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+          </p>
+          <div className="flex items-center justify-end gap-2 mt-1">
+            <Badge 
+              variant="secondary" 
+              className={`text-xs font-medium px-2 py-1 ${getRoleBadgeColor(userRole)}`}
+            >
+              {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+            </Badge>
+          </div>
+        </div>
+        <Avatar className="h-12 w-12 border-3 border-white dark:border-gray-700 shadow-lg ring-2 ring-blue-100 dark:ring-blue-900">
           <AvatarImage src={user?.user_metadata?.avatar_url || ""} alt="User" />
-          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-sm">
             {userInitials}
           </AvatarFallback>
         </Avatar>
