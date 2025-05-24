@@ -25,7 +25,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarTrigger,
   SidebarInset,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
@@ -80,9 +79,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   };
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-indigo-950">
-        <Sidebar className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-white/20 dark:border-gray-700/30 shadow-xl">
+        <Sidebar collapsible="none" className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-white/20 dark:border-gray-700/30 shadow-xl">
           <SidebarHeader className="border-b border-gray-100 dark:border-gray-800 p-6">
             <Link to="/dashboard" className="flex items-center gap-3">
               <img 
@@ -171,9 +170,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         </Sidebar>
 
         <SidebarInset className="flex-1">
-          <header className="flex h-16 shrink-0 items-center gap-2 px-4 border-b">
-            <SidebarTrigger className="-ml-1" />
-          </header>
           <div className="flex-1 overflow-x-hidden overflow-y-auto">
             <div className="min-h-full p-4 md:p-8">
               <div className="max-w-7xl mx-auto">

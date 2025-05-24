@@ -25,6 +25,41 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [dateFormat, setDateFormat] = useState<DateFormat>('DD/MM/YYYY');
   const [colorTheme, setColorTheme] = useState<ColorTheme>('default');
 
+  // Apply theme styles to the document
+  const applyThemeStyles = (theme: ColorTheme) => {
+    const root = document.documentElement;
+    
+    // Remove existing theme classes
+    root.classList.remove('theme-default', 'theme-professional', 'theme-modern', 'theme-vibrant');
+    
+    // Add new theme class
+    root.classList.add(`theme-${theme}`);
+    
+    // Apply CSS custom properties based on theme
+    switch (theme) {
+      case 'professional':
+        root.style.setProperty('--primary-color', '#1e40af');
+        root.style.setProperty('--secondary-color', '#475569');
+        root.style.setProperty('--accent-color', '#1e40af');
+        break;
+      case 'modern':
+        root.style.setProperty('--primary-color', '#7c3aed');
+        root.style.setProperty('--secondary-color', '#ec4899');
+        root.style.setProperty('--accent-color', '#7c3aed');
+        break;
+      case 'vibrant':
+        root.style.setProperty('--primary-color', '#059669');
+        root.style.setProperty('--secondary-color', '#ea580c');
+        root.style.setProperty('--accent-color', '#059669');
+        break;
+      default:
+        root.style.setProperty('--primary-color', '#3b82f6');
+        root.style.setProperty('--secondary-color', '#6b7280');
+        root.style.setProperty('--accent-color', '#3b82f6');
+        break;
+    }
+  };
+
   // Load settings from localStorage on mount
   useEffect(() => {
     const savedCurrency = localStorage.getItem('app-currency') as CurrencyType;
@@ -35,7 +70,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (savedCurrency) setCurrency(savedCurrency);
     if (savedTimeFormat) setTimeFormat(savedTimeFormat);
     if (savedDateFormat) setDateFormat(savedDateFormat);
-    if (savedColorTheme) setColorTheme(savedColorTheme);
+    if (savedColorTheme) {
+      setColorTheme(savedColorTheme);
+      applyThemeStyles(savedColorTheme);
+    } else {
+      applyThemeStyles('default');
+    }
   }, []);
 
   // Save settings to localStorage when they change
@@ -57,15 +97,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const handleSetColorTheme = (newTheme: ColorTheme) => {
     setColorTheme(newTheme);
     localStorage.setItem('app-colortheme', newTheme);
-    
-    // Apply theme classes to document
-    document.documentElement.setAttribute('data-color-theme', newTheme);
+    applyThemeStyles(newTheme);
+    console.log('Theme changed to:', newTheme);
   };
-
-  // Apply theme on mount
-  useEffect(() => {
-    document.documentElement.setAttribute('data-color-theme', colorTheme);
-  }, [colorTheme]);
 
   return (
     <SettingsContext.Provider
