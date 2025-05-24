@@ -33,12 +33,12 @@ const StockTabsContainer: React.FC<StockTabsContainerProps> = ({
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="mb-6 bg-muted/50">
-        <TabsTrigger value="list" className="flex-1">Stock List</TabsTrigger>
-        {showForm && <TabsTrigger value="entry" className="flex-1">Add Stock Entry</TabsTrigger>}
-        {showBatchEntry && <TabsTrigger value="batch" className="flex-1">Batch Entry</TabsTrigger>}
-        <TabsTrigger value="collection" className="flex-1">Collection</TabsTrigger>
-        {showCollectionForm && <TabsTrigger value="add-collection" className="flex-1">Add Collection</TabsTrigger>}
+      <TabsList className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border border-blue-200 dark:border-blue-800">
+        <TabsTrigger value="list" className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white">Stock List</TabsTrigger>
+        {showForm && <TabsTrigger value="entry" className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white">Add Stock Entry</TabsTrigger>}
+        {showBatchEntry && <TabsTrigger value="batch" className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white">Batch Entry</TabsTrigger>}
+        <TabsTrigger value="collection" className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white">Collection</TabsTrigger>
+        {showCollectionForm && <TabsTrigger value="add-collection" className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white">Add Collection</TabsTrigger>}
       </TabsList>
       
       <TabsContent value="list" className="space-y-6">
@@ -47,10 +47,10 @@ const StockTabsContainer: React.FC<StockTabsContainerProps> = ({
       
       {showForm && (
         <TabsContent value="entry" className="space-y-6">
-          <div className="bg-white p-6 rounded-lg shadow-md border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/30">
+          <div className="bg-gradient-to-br from-white to-blue-50 dark:from-gray-900 dark:to-blue-950 p-6 rounded-lg shadow-lg border border-blue-200 dark:border-blue-800">
             <StockForm 
-              onSuccess={handleStockAdded} 
-              // Fix: Remove initialData prop as it doesn't exist in StockFormProps
+              onSuccess={handleStockAdded}
+              onCancel={() => setActiveTab("list")}
             />
           </div>
         </TabsContent>
@@ -58,10 +58,10 @@ const StockTabsContainer: React.FC<StockTabsContainerProps> = ({
 
       {showBatchEntry && (
         <TabsContent value="batch" className="space-y-6">
-          <div className="bg-white p-6 rounded-lg shadow-md border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/30">
+          <div className="bg-gradient-to-br from-white to-blue-50 dark:from-gray-900 dark:to-blue-950 p-6 rounded-lg shadow-lg border border-blue-200 dark:border-blue-800">
             <BatchStockEntry 
               onSuccess={handleStockAdded}
-              // Fix: Pass required props according to BatchStockEntry component definition
+              onCancel={() => setActiveTab("list")}
             />
           </div>
         </TabsContent>
@@ -73,12 +73,10 @@ const StockTabsContainer: React.FC<StockTabsContainerProps> = ({
       
       {showCollectionForm && (
         <TabsContent value="add-collection" className="space-y-6">
-          <div className="bg-white p-6 rounded-lg shadow-md border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/30">
+          <div className="bg-gradient-to-br from-white to-blue-50 dark:from-gray-900 dark:to-blue-950 p-6 rounded-lg shadow-lg border border-blue-200 dark:border-blue-800">
             <CollectionForm 
               onSuccess={handleCollectionAdded}
-              onCancel={() => {
-                setActiveTab("collection");
-              }}
+              initialData={{}}
             />
           </div>
         </TabsContent>

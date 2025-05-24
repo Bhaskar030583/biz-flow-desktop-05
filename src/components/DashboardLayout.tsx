@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   HomeIcon,
@@ -9,8 +10,6 @@ import {
   ReceiptIndianRupee,
   SettingsIcon,
   LogOut,
-  MoonIcon,
-  SunIcon
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -52,6 +51,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     { id: 5, name: 'Credits', path: '/credits', icon: <Receipt className="h-6 w-6" /> },
     { id: 6, name: 'Expenses', path: '/expenses', icon: <ReceiptIndianRupee className="h-6 w-6" /> },
     { id: 7, name: 'Users', path: '/users', icon: <UsersIcon className="h-6 w-6" /> },
+    { id: 8, name: 'Settings', path: '/settings', icon: <SettingsIcon className="h-6 w-6" /> },
   ];
 
   const handleLogout = async () => {
@@ -60,19 +60,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-950">
       {/* Mobile Menu */}
       <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" className="md:hidden absolute top-4 left-4 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full p-2">
+          <Button variant="ghost" className="md:hidden absolute top-4 left-4 text-gray-600 dark:text-gray-400 hover:bg-white/80 dark:hover:bg-gray-800/80 rounded-full p-2 shadow-lg">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
           </Button>
         </SheetTrigger>
-        <SheetContent className="sm:max-w-xs pt-6">
+        <SheetContent className="sm:max-w-xs pt-6 bg-gradient-to-b from-white to-blue-50 dark:from-gray-900 dark:to-blue-950">
           <SheetHeader>
-            <SheetTitle>Menu</SheetTitle>
+            <SheetTitle className="text-primary">Menu</SheetTitle>
             <SheetDescription>
               Navigate through your dashboard.
             </SheetDescription>
@@ -82,15 +82,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               <Link
                 key={item.id}
                 to={item.path}
-                className={`flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md ${location.pathname === item.path ? 'bg-gray-200 dark:bg-gray-700 font-medium' : ''}`}
+                className={`flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition-all duration-200 ${location.pathname === item.path ? 'bg-primary/15 dark:bg-primary/25 font-medium text-primary' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
-                <span className="mr-2">{item.icon}</span>
+                <span className="mr-3">{item.icon}</span>
                 {item.name}
               </Link>
             ))}
-            <Button variant="ghost" className="justify-start" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
+            <Button variant="ghost" className="justify-start mt-4 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950" onClick={handleLogout}>
+              <LogOut className="mr-3 h-4 w-4" />
               Logout
             </Button>
           </div>
@@ -98,49 +98,51 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       </Sheet>
 
       {/* Sidebar (Hidden on small screens) */}
-      <div className="hidden md:flex flex-col w-64 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
-          <Link to="/dashboard" className="text-lg font-semibold text-gray-800 dark:text-white">
+      <div className="hidden md:flex flex-col w-64 bg-gradient-to-b from-white to-blue-50 dark:from-gray-800 dark:to-blue-950 border-r border-blue-200 dark:border-blue-800 shadow-xl">
+        <div className="flex items-center justify-between h-16 px-4 border-b border-blue-200 dark:border-blue-800">
+          <Link to="/dashboard" className="text-xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
             My Business
           </Link>
           <ModeToggle />
         </div>
-        <nav className="flex-1 p-4">
+        <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => (
             <Link
               key={item.id}
               to={item.path}
-              className={`flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md ${location.pathname === item.path ? 'bg-gray-200 dark:bg-gray-700 font-medium' : ''}`}
+              className={`flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition-all duration-200 ${location.pathname === item.path ? 'bg-primary/15 dark:bg-primary/25 font-medium text-primary shadow-sm' : ''}`}
             >
-              <span className="mr-2">{item.icon}</span>
+              <span className="mr-3">{item.icon}</span>
               {item.name}
             </Link>
           ))}
         </nav>
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-t border-blue-200 dark:border-blue-800">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex h-8 w-full items-center justify-center gap-2 rounded-md p-0 text-sm font-normal">
-                <Avatar className="h-8 w-8">
+              <Button variant="ghost" className="flex h-auto w-full items-center justify-start gap-3 rounded-lg p-3 text-sm font-normal hover:bg-primary/10">
+                <Avatar className="h-10 w-10 ring-2 ring-primary/20">
                   <AvatarImage src={user?.user_metadata?.avatar_url as string} alt={user?.user_metadata?.full_name as string} />
-                  <AvatarFallback>{(user?.user_metadata?.full_name as string)?.charAt(0)}</AvatarFallback>
+                  <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                    {(user?.user_metadata?.full_name as string)?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
-                <span className="text-left flex-1">
-                  <div className="font-semibold text-gray-800 dark:text-white">{user?.user_metadata?.full_name}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</div>
-                </span>
+                <div className="text-left flex-1">
+                  <div className="font-semibold text-gray-800 dark:text-white">{user?.user_metadata?.full_name || 'User'}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</div>
+                </div>
                 <SettingsIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-gray-800 border-blue-200 dark:border-blue-800">
+              <DropdownMenuLabel className="text-primary">My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem disabled>
+              <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
                 <SettingsIcon className="mr-2 h-4 w-4" />
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
+              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 focus:text-red-700 focus:bg-red-50 dark:focus:bg-red-950">
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
               </DropdownMenuItem>
@@ -150,8 +152,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-x-hidden overflow-y-auto p-4">
-        {children}
+      <div className="flex-1 overflow-x-hidden overflow-y-auto p-6">
+        <div className="max-w-7xl mx-auto">
+          {children}
+        </div>
       </div>
     </div>
   );

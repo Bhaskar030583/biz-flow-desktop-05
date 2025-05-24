@@ -44,7 +44,7 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Chart colors with higher contrast */
+    /* Default theme colors */
     --chart-sales: 226 70% 40%;
     --chart-profit: 142 70% 30%;
     --chart-loss: 0 70% 45%;
@@ -89,11 +89,74 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Chart colors with higher contrast for dark mode */
+    /* Default theme colors for dark mode */
     --chart-sales: 226 70% 65%;
     --chart-profit: 142 70% 50%;
     --chart-loss: 0 70% 60%;
     --chart-units: 32 90% 55%;
+  }
+
+  /* Professional Color Theme */
+  [data-color-theme="professional"] {
+    --primary: 210 100% 13%;
+    --primary-foreground: 210 20% 98%;
+    --accent: 210 40% 92%;
+    --accent-foreground: 210 100% 13%;
+    --chart-sales: 210 100% 20%;
+    --chart-profit: 157 100% 20%;
+    --chart-loss: 0 84% 50%;
+    --chart-units: 210 50% 30%;
+  }
+
+  [data-color-theme="professional"].dark {
+    --primary: 210 20% 98%;
+    --primary-foreground: 210 100% 13%;
+    --chart-sales: 210 100% 70%;
+    --chart-profit: 157 100% 60%;
+    --chart-loss: 0 84% 70%;
+    --chart-units: 210 50% 70%;
+  }
+
+  /* Modern Color Theme */
+  [data-color-theme="modern"] {
+    --primary: 270 95% 30%;
+    --primary-foreground: 210 20% 98%;
+    --accent: 270 30% 92%;
+    --accent-foreground: 270 95% 30%;
+    --chart-sales: 270 95% 40%;
+    --chart-profit: 320 95% 40%;
+    --chart-loss: 0 84% 50%;
+    --chart-units: 290 95% 35%;
+  }
+
+  [data-color-theme="modern"].dark {
+    --primary: 270 30% 92%;
+    --primary-foreground: 270 95% 30%;
+    --chart-sales: 270 95% 70%;
+    --chart-profit: 320 95% 70%;
+    --chart-loss: 0 84% 70%;
+    --chart-units: 290 95% 65%;
+  }
+
+  /* Vibrant Color Theme */
+  [data-color-theme="vibrant"] {
+    --primary: 142 76% 28%;
+    --primary-foreground: 210 20% 98%;
+    --accent: 142 30% 92%;
+    --accent-foreground: 142 76% 28%;
+    --chart-sales: 142 76% 35%;
+    --chart-profit: 32 95% 45%;
+    --chart-loss: 0 84% 50%;
+    --chart-units: 170 76% 35%;
+  }
+
+  [data-color-theme="vibrant"].dark {
+    --primary: 142 30% 92%;
+    --primary-foreground: 142 76% 28%;
+    --chart-sales: 142 76% 65%;
+    --chart-profit: 32 95% 75%;
+    --chart-loss: 0 84% 70%;
+    --chart-units: 170 76% 65%;
   }
 }
 
@@ -136,11 +199,28 @@
     @apply animate-slide-in-right;
   }
   
-  /* Transitions for dark mode */
+  /* Transitions for dark mode and themes */
   .card, 
   .button, 
   .dropdown-menu {
     @apply transition-colors duration-300;
+  }
+  
+  /* Professional gradient backgrounds */
+  .gradient-bg-primary {
+    @apply bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20;
+  }
+  
+  .gradient-bg-success {
+    @apply bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950;
+  }
+  
+  .gradient-bg-warning {
+    @apply bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950;
+  }
+  
+  .gradient-bg-danger {
+    @apply bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950 dark:to-rose-950;
   }
   
   /* Mobile responsive tables */

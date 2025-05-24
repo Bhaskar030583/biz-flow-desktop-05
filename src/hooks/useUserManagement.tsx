@@ -24,16 +24,7 @@ export const useUserManagement = () => {
     try {
       setLoading(true);
       
-      // First get auth users to retrieve emails
-      const { data: authUsers, error: authError } = await supabase
-        .from('auth_users_view') // This is a view that joins auth.users with profiles
-        .select('*');
-      
-      if (authError) {
-        throw authError;
-      }
-      
-      // Then get profiles for other details
+      // Get profiles with user data
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select('*');
@@ -43,15 +34,11 @@ export const useUserManagement = () => {
       }
       
       // Map the profiles to User type ensuring correct typings
-      // Merge auth_users_view data with profiles data to get emails
       const formattedUsers: User[] = profiles?.map((profile) => {
-        // Find matching auth user to get email
-        const authUser = authUsers?.find(u => u.id === profile.id);
-        
         return {
           id: profile.id,
           full_name: profile.full_name || '',
-          email: authUser?.email || 'email@example.com', // Use email from auth_users_view
+          email: 'user@example.com', // Placeholder since auth.users is not directly accessible
           avatar_url: profile.avatar_url || '',
           role: (profile.role as UserRole) || 'user',
           created_at: profile.created_at || new Date().toISOString()
