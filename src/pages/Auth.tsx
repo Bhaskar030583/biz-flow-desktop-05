@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -103,13 +102,22 @@ const Auth = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-indigo-950">
       <div className="w-full max-w-md p-4">
-        <Card className="w-full">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Business Metrics Dashboard</CardTitle>
-            <CardDescription className="text-center">
-              {activeTab === "login" ? "Login to your account" : "Create a new account"}
+        <Card className="w-full shadow-xl border-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl">
+          <CardHeader className="space-y-4 text-center">
+            <div className="flex justify-center mb-4">
+              <img 
+                src="/lovable-uploads/8b453aae-4e22-4d63-857c-9994a32b7796.png" 
+                alt="ABC Cafe Logo" 
+                className="h-20 w-auto rounded-lg shadow-lg"
+              />
+            </div>
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+              ABC Cafe
+            </CardTitle>
+            <CardDescription className="text-center text-gray-600 dark:text-gray-400">
+              {activeTab === "login" ? "Welcome back to your dashboard" : "Create your business account"}
             </CardDescription>
           </CardHeader>
           <CardContent>

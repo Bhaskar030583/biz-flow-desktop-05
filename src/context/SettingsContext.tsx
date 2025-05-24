@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type CurrencyType = 'INR' | 'USD' | 'EUR' | 'GBP' | 'JPY';
@@ -38,24 +37,28 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Apply CSS custom properties based on theme
     switch (theme) {
       case 'professional':
-        root.style.setProperty('--primary-color', '#1e40af');
-        root.style.setProperty('--secondary-color', '#475569');
-        root.style.setProperty('--accent-color', '#1e40af');
+        root.style.setProperty('--primary', '222.2 84% 4.9%');
+        root.style.setProperty('--primary-foreground', '210 40% 98%');
+        root.style.setProperty('--accent', '210 40% 96%');
+        root.style.setProperty('--accent-foreground', '222.2 84% 4.9%');
         break;
       case 'modern':
-        root.style.setProperty('--primary-color', '#7c3aed');
-        root.style.setProperty('--secondary-color', '#ec4899');
-        root.style.setProperty('--accent-color', '#7c3aed');
+        root.style.setProperty('--primary', '271.5 81% 56%');
+        root.style.setProperty('--primary-foreground', '210 40% 98%');
+        root.style.setProperty('--accent', '270 95% 95%');
+        root.style.setProperty('--accent-foreground', '271.5 81% 56%');
         break;
       case 'vibrant':
-        root.style.setProperty('--primary-color', '#059669');
-        root.style.setProperty('--secondary-color', '#ea580c');
-        root.style.setProperty('--accent-color', '#059669');
+        root.style.setProperty('--primary', '142.1 76% 36%');
+        root.style.setProperty('--primary-foreground', '355.7 100% 97%');
+        root.style.setProperty('--accent', '142.1 76% 95%');
+        root.style.setProperty('--accent-foreground', '142.1 76% 36%');
         break;
       default:
-        root.style.setProperty('--primary-color', '#3b82f6');
-        root.style.setProperty('--secondary-color', '#6b7280');
-        root.style.setProperty('--accent-color', '#3b82f6');
+        root.style.setProperty('--primary', '221.2 83.2% 53.3%');
+        root.style.setProperty('--primary-foreground', '210 40% 98%');
+        root.style.setProperty('--accent', '210 40% 96%');
+        root.style.setProperty('--accent-foreground', '222.2 84% 4.9%');
         break;
     }
   };
@@ -99,6 +102,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem('app-colortheme', newTheme);
     applyThemeStyles(newTheme);
     console.log('Theme changed to:', newTheme);
+    
+    // Force a small delay to ensure DOM updates
+    setTimeout(() => {
+      console.log('Theme application completed for:', newTheme);
+    }, 100);
   };
 
   return (

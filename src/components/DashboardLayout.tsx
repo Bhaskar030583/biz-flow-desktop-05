@@ -10,6 +10,8 @@ import {
   ReceiptIndianRupee,
   SettingsIcon,
   LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -26,6 +28,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarInset,
+  SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -81,20 +84,27 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-indigo-950">
-        <Sidebar collapsible="none" className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-white/20 dark:border-gray-700/30 shadow-xl">
+        <Sidebar className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-white/20 dark:border-gray-700/30 shadow-xl">
           <SidebarHeader className="border-b border-gray-100 dark:border-gray-800 p-6">
-            <Link to="/dashboard" className="flex items-center gap-3">
-              <img 
-                src="/lovable-uploads/8b453aae-4e22-4d63-857c-9994a32b7796.png" 
-                alt="ABC Cafe Logo" 
-                className="h-12 w-auto rounded-lg shadow-sm"
-              />
-              <div>
-                <h2 className="font-bold text-gray-900 dark:text-white bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">ABC Cafe</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Business Management</p>
-              </div>
-            </Link>
-            <div className="mt-4">
+            <div className="flex items-center justify-between mb-4">
+              <Link to="/dashboard" className="flex items-center gap-3">
+                <img 
+                  src="/lovable-uploads/8b453aae-4e22-4d63-857c-9994a32b7796.png" 
+                  alt="ABC Cafe Logo" 
+                  className="h-12 w-auto rounded-lg shadow-sm"
+                />
+                <div>
+                  <h2 className="font-bold text-gray-900 dark:text-white bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">ABC Cafe</h2>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Business Management</p>
+                </div>
+              </Link>
+              <SidebarTrigger className="ml-auto">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <PanelLeftClose className="h-4 w-4" />
+                </Button>
+              </SidebarTrigger>
+            </div>
+            <div>
               <ModeToggle />
             </div>
           </SidebarHeader>
