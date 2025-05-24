@@ -52,9 +52,9 @@ const StockFilters = ({
     setInputValue("");
   };
 
-  // Filter out shops and products with empty IDs
-  const validShops = shops.filter(shop => shop.id && shop.id.trim() !== "");
-  const validProducts = products.filter(product => product.id && product.id.trim() !== "");
+  // Filter out shops and products with empty or invalid IDs
+  const validShops = shops.filter(shop => shop.id && shop.id.trim() !== "" && shop.name);
+  const validProducts = products.filter(product => product.id && product.id.trim() !== "" && product.name);
 
   const hasFilters = 
     searchTerm !== "" || 
@@ -91,7 +91,7 @@ const StockFilters = ({
             <SelectContent className="bg-white">
               <SelectItem value="_all">All Shops</SelectItem>
               {validShops.map((shop) => (
-                <SelectItem key={shop.id} value={shop.id}>
+                <SelectItem key={shop.id} value={shop.id || `shop_${shop.name}`}>
                   {shop.name}
                 </SelectItem>
               ))}
@@ -105,7 +105,7 @@ const StockFilters = ({
             <SelectContent className="bg-white">
               <SelectItem value="_all">All Products</SelectItem>
               {validProducts.map((product) => (
-                <SelectItem key={product.id} value={product.id}>
+                <SelectItem key={product.id} value={product.id || `product_${product.name}`}>
                   {product.name}
                 </SelectItem>
               ))}

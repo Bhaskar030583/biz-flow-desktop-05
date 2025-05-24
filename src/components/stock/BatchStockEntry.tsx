@@ -119,9 +119,9 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
         if (shopsResponse.error) throw shopsResponse.error;
         if (productsResponse.error) throw productsResponse.error;
 
-        // Filter out shops and products with empty IDs
-        const validShops = (shopsResponse.data || []).filter(shop => shop.id && shop.id.trim() !== "");
-        const validProducts = (productsResponse.data || []).filter(product => product.id && product.id.trim() !== "");
+        // Filter out shops and products with empty or invalid IDs
+        const validShops = (shopsResponse.data || []).filter(shop => shop.id && shop.id.trim() !== "" && shop.name);
+        const validProducts = (productsResponse.data || []).filter(product => product.id && product.id.trim() !== "" && product.name);
 
         setShops(validShops);
         
@@ -155,8 +155,8 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
     fetchShopsAndProducts();
   }, []);
 
-  // Filter out shops and products with empty IDs for rendering
-  const validShops = shops.filter(shop => shop.id && shop.id.trim() !== "");
+  // Filter out shops with empty IDs for rendering
+  const validShops = shops.filter(shop => shop.id && shop.id.trim() !== "" && shop.name);
 
   // Update shop selection
   useEffect(() => {
@@ -402,7 +402,7 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
                       </FormControl>
                       <SelectContent>
                         {validShops.map((shop) => (
-                          <SelectItem key={shop.id} value={shop.id}>
+                          <SelectItem key={shop.id} value={shop.id || `shop_${shop.name}`}>
                             {shop.name}
                           </SelectItem>
                         ))}

@@ -102,9 +102,9 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
     fetchShopsAndProducts();
   }, []);
 
-  // Filter out shops and products with empty IDs
-  const validShops = shops.filter(shop => shop.id && shop.id.trim() !== "");
-  const validProducts = products.filter(product => product.id && product.id.trim() !== "");
+  // Filter out shops and products with empty or invalid IDs
+  const validShops = shops.filter(shop => shop.id && shop.id.trim() !== "" && shop.name);
+  const validProducts = products.filter(product => product.id && product.id.trim() !== "" && product.name);
 
   // Update selected shop details when shop_id changes
   useEffect(() => {
@@ -343,7 +343,7 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                       </FormControl>
                       <SelectContent>
                         {validShops.map((shop) => (
-                          <SelectItem key={shop.id} value={shop.id}>
+                          <SelectItem key={shop.id} value={shop.id || `shop_${shop.name}`}>
                             {shop.name}
                           </SelectItem>
                         ))}
@@ -371,7 +371,7 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                       </FormControl>
                       <SelectContent>
                         {validProducts.map((product) => (
-                          <SelectItem key={product.id} value={product.id}>
+                          <SelectItem key={product.id} value={product.id || `product_${product.name}`}>
                             {product.name}
                           </SelectItem>
                         ))}
