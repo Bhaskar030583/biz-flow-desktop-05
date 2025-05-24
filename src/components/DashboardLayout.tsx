@@ -102,11 +102,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   <p className="text-xs text-gray-500 dark:text-gray-400">Business Management</p>
                 </div>
               </Link>
-              <SidebarTrigger className="flex-shrink-0">
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Menu className="h-4 w-4" />
-                </Button>
-              </SidebarTrigger>
             </div>
             <div className="flex justify-center">
               <ModeToggle />
@@ -164,16 +159,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 </div>
               </div>
               
-              {/* Settings Button */}
-              <Button 
-                onClick={() => navigate('/settings')}
-                variant="outline" 
-                className="flex items-center justify-center gap-2 w-full py-2.5 text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-950/20 border-gray-200 hover:border-amber-300"
-              >
-                <SettingsIcon className="h-4 w-4" />
-                <span>Settings</span>
-              </Button>
-              
               {/* Logout Button */}
               <Button 
                 onClick={handleLogout}
@@ -189,6 +174,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
         <SidebarInset className="flex-1">
           <div className="flex-1 overflow-x-hidden overflow-y-auto">
+            {/* Header with Sidebar Trigger */}
+            <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-4 px-4 py-3">
+                <SidebarTrigger className="flex-shrink-0">
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </SidebarTrigger>
+                <div className="flex-1">
+                  <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {navItems.find(item => item.path === location.pathname)?.name || 'Dashboard'}
+                  </h1>
+                </div>
+              </div>
+            </div>
+            
             <div className="min-h-full p-4 md:p-8">
               <div className="max-w-7xl mx-auto">
                 {children}
