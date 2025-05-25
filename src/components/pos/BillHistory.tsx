@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,10 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { BillViewModal } from "./BillViewModal";
+import { BillEditModal } from "./BillEditModal";
+import { getBillDetails } from "@/services/billService";
+import { downloadBillAsPDF } from "@/utils/billDownloadUtils";
 
 interface Bill {
   id: string;
@@ -40,6 +43,10 @@ export const BillHistory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedBillId, setSelectedBillId] = useState<string>("");
+  const [selectedBillDetails, setSelectedBillDetails] = useState<any>(null);
 
   const fetchBills = async () => {
     if (!user) return;
@@ -101,19 +108,33 @@ export const BillHistory: React.FC = () => {
     }
   };
 
-  const handleViewBill = (billId: string) => {
-    console.log("View bill:", billId);
-    toast.info("View bill functionality will be implemented");
+  const handleViewBill = async (billId: string) => {
+    try {
+      console.log("View bill:", billId);
+      const billDetails = await getBillDetails(billId);
+      setSelectedBillDetails(billDetails);
+      setViewModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching bill details:", error);
+      toast.error("Failed to load bill details");
+    }
   };
 
   const handleEditBill = (billId: string) => {
     console.log("Edit bill:", billId);
-    toast.info("Edit bill functionality will be implemented");
+    setSelectedBillId(billId);
+    setEditModalOpen(true);
   };
 
-  const handleDownloadBill = (billId: string) => {
-    console.log("Download bill:", billId);
-    toast.info("Download bill functionality will be implemented");
+  const handleDownloadBill = async (billId: string) => {
+    try {
+      console.log("Download bill:", billId);
+      await downloadBillAsPDF(billId);
+      toast.success("Bill downloaded successfully");
+    } catch (error) {
+      console.error("Error downloading bill:", error);
+      toast.error("Failed to download bill");
+    }
   };
 
   const handleCancelBill = async (billId: string) => {
@@ -140,6 +161,16 @@ export const BillHistory: React.FC = () => {
     }
   };
 
+  const handleBillUpdated = () => {
+    fetchBills(); // Refresh the bills list
+  };
+
+  const handleDownloadFromModal = async () => {
+    if (selectedBillDetails) {
+      await handleDownloadBill(selectedBillDetails.id);
+    }
+  };
+
   const filteredBills = bills.filter(bill => {
     const matchesSearch = bill.bill_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (bill.customer?.name && bill.customer.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -160,140 +191,156 @@ export const BillHistory: React.FC = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Receipt className="h-5 w-5" />
-          Bill History ({bills.length})
-        </CardTitle>
-        
-        <div className="flex gap-4 flex-col sm:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search by bill number or customer name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Receipt className="h-5 w-5" />
+            Bill History ({bills.length})
+          </CardTitle>
           
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-500" />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent>
-        <div className="max-h-96 overflow-y-auto">
-          {filteredBills.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Receipt className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>{searchTerm || statusFilter !== "all" ? "No bills found matching your filters" : "No bills generated yet"}</p>
-              <p className="text-sm">Bills will appear here after completing sales</p>
+          <div className="flex gap-4 flex-col sm:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search by bill number or customer name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredBills.map(bill => (
-                <div
-                  key={bill.id}
-                  className="border rounded-lg p-4 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-medium text-lg">{bill.bill_number}</h3>
-                        <Badge className={getStatusColor(bill.payment_status)}>
-                          {bill.payment_status}
-                        </Badge>
-                      </div>
+            
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-500" />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          <span>{format(new Date(bill.bill_date), 'MMM dd, yyyy HH:mm')}</span>
+        <CardContent>
+          <div className="max-h-96 overflow-y-auto">
+            {filteredBills.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Receipt className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>{searchTerm || statusFilter !== "all" ? "No bills found matching your filters" : "No bills generated yet"}</p>
+                <p className="text-sm">Bills will appear here after completing sales</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredBills.map(bill => (
+                  <div
+                    key={bill.id}
+                    className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-medium text-lg">{bill.bill_number}</h3>
+                          <Badge className={getStatusColor(bill.payment_status)}>
+                            {bill.payment_status}
+                          </Badge>
                         </div>
-                        
-                        {bill.customer && (
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
                           <div className="flex items-center gap-2">
-                            <User className="h-4 w-4" />
-                            <span>{bill.customer.name}</span>
+                            <Calendar className="h-4 w-4" />
+                            <span>{format(new Date(bill.bill_date), 'MMM dd, yyyy HH:mm')}</span>
                           </div>
-                        )}
-                        
-                        <div className="flex items-center gap-2">
-                          <span>{getPaymentMethodIcon(bill.payment_method)}</span>
-                          <span className="capitalize">{bill.payment_method}</span>
-                        </div>
+                          
+                          {bill.customer && (
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4" />
+                              <span>{bill.customer.name}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-2">
+                            <span>{getPaymentMethodIcon(bill.payment_method)}</span>
+                            <span className="capitalize">{bill.payment_method}</span>
+                          </div>
 
-                        <div className="flex items-center gap-2 font-semibold text-green-600">
-                          <span>₹{Number(bill.total_amount).toFixed(2)}</span>
+                          <div className="flex items-center gap-2 font-semibold text-green-600">
+                            <span>₹{Number(bill.total_amount).toFixed(2)}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex gap-1 ml-4">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 w-8 p-0"
-                        title="View bill details"
-                        onClick={() => handleViewBill(bill.id)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 w-8 p-0"
-                        title="Edit bill"
-                        onClick={() => handleEditBill(bill.id)}
-                        disabled={bill.payment_status === 'cancelled'}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 w-8 p-0"
-                        title="Download bill"
-                        onClick={() => handleDownloadBill(bill.id)}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-
-                      {bill.payment_status !== 'cancelled' && (
+                      <div className="flex gap-1 ml-4">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
-                          title="Cancel bill"
-                          onClick={() => handleCancelBill(bill.id)}
+                          className="h-8 w-8 p-0"
+                          title="View bill details"
+                          onClick={() => handleViewBill(bill.id)}
                         >
-                          <X className="h-4 w-4" />
+                          <Eye className="h-4 w-4" />
                         </Button>
-                      )}
+                        
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 w-8 p-0"
+                          title="Edit bill"
+                          onClick={() => handleEditBill(bill.id)}
+                          disabled={bill.payment_status === 'cancelled'}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 w-8 p-0"
+                          title="Download bill"
+                          onClick={() => handleDownloadBill(bill.id)}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+
+                        {bill.payment_status !== 'cancelled' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                            title="Cancel bill"
+                            onClick={() => handleCancelBill(bill.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <BillViewModal
+        isOpen={viewModalOpen}
+        onClose={() => setViewModalOpen(false)}
+        bill={selectedBillDetails}
+        onDownload={handleDownloadFromModal}
+      />
+
+      <BillEditModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        billId={selectedBillId}
+        onBillUpdated={handleBillUpdated}
+      />
+    </>
   );
 };
