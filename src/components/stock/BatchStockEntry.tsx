@@ -160,6 +160,23 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
     return stockEntries.reduce((sum, entry) => sum + (entry.actual_stock * entry.price), 0);
   };
 
+  // Enhanced validation for shops to prevent empty string values
+  const validShops = (shops || []).filter(shop => {
+    return shop && 
+           shop.id && 
+           typeof shop.id === 'string' && 
+           shop.id.trim() !== "" && 
+           shop.id !== "null" &&
+           shop.id !== "undefined" &&
+           shop.id.length > 0 &&
+           !shop.id.match(/^\s*$/) && // No whitespace-only strings
+           shop.name && 
+           typeof shop.name === 'string' && 
+           shop.name.trim() !== "" &&
+           shop.name.length > 0 &&
+           !shop.name.match(/^\s*$/); // No whitespace-only strings
+  });
+
   const getCategories = () => {
     const categories = [...new Set(products.map(p => p.category))].filter(Boolean);
     return categories;
@@ -207,13 +224,6 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
       setLoading(false);
     }
   };
-
-  // Filter out shops and products with empty or invalid IDs
-  const validShops = shops.filter(shop => {
-    const hasValidId = shop.id && shop.id.trim() !== "";
-    const hasValidName = shop.name && shop.name.trim() !== "";
-    return hasValidId && hasValidName;
-  });
 
   const validCategories = getCategories();
 
@@ -278,12 +288,18 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
                 <SelectTrigger>
                   <SelectValue placeholder="Select shop" />
                 </SelectTrigger>
-                <SelectContent>
-                  {validShops.map(shop => (
-                    <SelectItem key={shop.id} value={shop.id}>
-                      {shop.name}
+                <SelectContent className="bg-white z-50">
+                  {validShops.length === 0 ? (
+                    <SelectItem value="no-shops-available" disabled>
+                      No shops available
                     </SelectItem>
-                  ))}
+                  ) : (
+                    validShops.map(shop => (
+                      <SelectItem key={shop.id} value={shop.id}>
+                        {shop.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -294,7 +310,7 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
                 <SelectTrigger>
                   <SelectValue placeholder="Select shift" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white z-50">
                   <SelectItem value="morning">Morning</SelectItem>
                   <SelectItem value="afternoon">Afternoon</SelectItem>
                   <SelectItem value="evening">Evening</SelectItem>
@@ -338,13 +354,19 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
                 <SelectTrigger>
                   <SelectValue placeholder="Filter by category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white z-50">
                   <SelectItem value="">All Categories</SelectItem>
-                  {validCategories.map(category => (
-                    <SelectItem key={category} value={category}>
-                      {category}
+                  {validCategories.length === 0 ? (
+                    <SelectItem value="no-categories-available" disabled>
+                      No categories available
                     </SelectItem>
-                  ))}
+                  ) : (
+                    validCategories.map(category => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
