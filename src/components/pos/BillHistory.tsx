@@ -13,7 +13,9 @@ import {
   CreditCard,
   Eye,
   Download,
-  Filter
+  Filter,
+  Edit,
+  X
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -96,6 +98,45 @@ export const BillHistory: React.FC = () => {
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleViewBill = (billId: string) => {
+    console.log("View bill:", billId);
+    toast.info("View bill functionality will be implemented");
+  };
+
+  const handleEditBill = (billId: string) => {
+    console.log("Edit bill:", billId);
+    toast.info("Edit bill functionality will be implemented");
+  };
+
+  const handleDownloadBill = (billId: string) => {
+    console.log("Download bill:", billId);
+    toast.info("Download bill functionality will be implemented");
+  };
+
+  const handleCancelBill = async (billId: string) => {
+    try {
+      const { error } = await supabase
+        .from('bills')
+        .update({ payment_status: 'cancelled' })
+        .eq('id', billId)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setBills(bills.map(bill => 
+        bill.id === billId 
+          ? { ...bill, payment_status: 'cancelled' }
+          : bill
+      ));
+
+      toast.success("Bill cancelled successfully");
+    } catch (error) {
+      console.error("Error cancelling bill:", error);
+      toast.error("Failed to cancel bill");
     }
   };
 
@@ -208,17 +249,43 @@ export const BillHistory: React.FC = () => {
                         variant="outline"
                         className="h-8 w-8 p-0"
                         title="View bill details"
+                        onClick={() => handleViewBill(bill.id)}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
+                      
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 w-8 p-0"
+                        title="Edit bill"
+                        onClick={() => handleEditBill(bill.id)}
+                        disabled={bill.payment_status === 'cancelled'}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+
                       <Button
                         size="sm"
                         variant="outline"
                         className="h-8 w-8 p-0"
                         title="Download bill"
+                        onClick={() => handleDownloadBill(bill.id)}
                       >
                         <Download className="h-4 w-4" />
                       </Button>
+
+                      {bill.payment_status !== 'cancelled' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                          title="Cancel bill"
+                          onClick={() => handleCancelBill(bill.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
