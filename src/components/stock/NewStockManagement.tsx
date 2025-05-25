@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,9 +9,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { format } from "date-fns";
-import { Save, RefreshCw, Plus, Package2, Store, Lock, Zap } from "lucide-react";
+import { Save, RefreshCw, Plus, Package2, Store, Lock } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import StockTemplate from "./StockTemplate";
+import QuickStockActions from "./QuickStockActions";
+import StockItemCard from "./StockItemCard";
 
 interface Product {
   id: string;
@@ -213,6 +214,16 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
     );
   };
 
+  const handleBulkAdd = (amount: number) => {
+    setStockItems(prev => 
+      prev.map(item => ({
+        ...item,
+        stockAdded: item.stockAdded + amount
+      }))
+    );
+    toast.success(`Added ${amount} to all products`);
+  };
+
   const saveStockData = async () => {
     if (!selectedShop) {
       toast.error('Please select a shop');
@@ -342,11 +353,6 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
                 {stockItems.length} products
               </Badge>
             )}
-            {totalStockAdded > 0 && (
-              <Badge variant="default" className="ml-2 bg-green-600">
-                +{totalStockAdded} items to add
-              </Badge>
-            )}
             {isAdmin && (
               <Badge variant="outline" className="ml-2 text-green-600 border-green-600">
                 Admin
@@ -402,30 +408,16 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
             </div>
 
             <div className="flex items-end">
-              <Button
-                onClick={() => setQuickAddMode(!quickAddMode)}
-                variant={quickAddMode ? "default" : "outline"}
-                size="sm"
-                className="w-full h-8"
-              >
-                <Zap className="h-3 w-3 mr-1" />
-                Quick Mode
-              </Button>
+              <QuickStockActions
+                quickAddMode={quickAddMode}
+                setQuickAddMode={setQuickAddMode}
+                totalStockAdded={totalStockAdded}
+                onClearAllAdditions={clearAllStockAdditions}
+                onBulkAdd={handleBulkAdd}
+                hasStockItems={stockItems.length > 0}
+              />
             </div>
           </div>
-
-          {totalStockAdded > 0 && (
-            <div className="flex justify-end">
-              <Button
-                onClick={clearAllStockAdditions}
-                variant="outline"
-                size="sm"
-                className="text-red-600 hover:text-red-700"
-              >
-                Clear All Additions
-              </Button>
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -483,77 +475,23 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
               <CardTitle className="flex items-center gap-2 text-base">
                 <Package2 className="h-4 w-4" />
                 Store Inventory ({stockItems.length})
+                {totalStockAdded > 0 && (
+                  <Badge variant="default" className="bg-green-600 ml-2">
+                    +{totalStockAdded} items
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3">
               <div className="space-y-3 max-h-80 overflow-y-auto">
                 {stockItems.map(item => (
-                  <div key={item.productId} className="p-2 border rounded-lg">
-                    <div className="mb-2">
-                      <div className="font-medium text-sm">{item.productName}</div>
-                      <div className="text-xs text-gray-500">{item.category}</div>
-                    </div>
-                    <div className={`grid gap-2 ${quickAddMode ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                      {!quickAddMode && (
-                        <>
-                          <div>
-                            <Label htmlFor={`opening-${item.productId}`} className="text-xs flex items-center gap-1">
-                              Opening Stock
-                              {!isAdmin && <Lock className="h-3 w-3" />}
-                            </Label>
-                            <Input
-                              id={`opening-${item.productId}`}
-                              type="number"
-                              value={item.openingStock}
-                              onChange={(e) => updateStockItem(item.productId, 'openingStock', parseInt(e.target.value) || 0)}
-                              className="h-7 text-sm"
-                              min="0"
-                              disabled={!isAdmin}
-                              title={!isAdmin ? "Only admins can edit opening stock" : ""}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor={`actual-${item.productId}`} className="text-xs">Actual Stock</Label>
-                            <Input
-                              id={`actual-${item.productId}`}
-                              type="number"
-                              value={item.actualStock}
-                              onChange={(e) => updateStockItem(item.productId, 'actualStock', parseInt(e.target.value) || 0)}
-                              className="h-7 text-sm"
-                              min="0"
-                            />
-                          </div>
-                        </>
-                      )}
-                      <div className={quickAddMode ? 'col-span-1' : ''}>
-                        <Label htmlFor={`stock-added-${item.productId}`} className="text-xs text-blue-600 font-medium">
-                          Stock to Add
-                        </Label>
-                        <Input
-                          id={`stock-added-${item.productId}`}
-                          type="number"
-                          value={item.stockAdded}
-                          onChange={(e) => updateStockItem(item.productId, 'stockAdded', parseInt(e.target.value) || 0)}
-                          className="h-7 text-sm border-blue-300 focus:border-blue-500"
-                          min="0"
-                          placeholder="Add stock"
-                        />
-                      </div>
-                      {!quickAddMode && (
-                        <div>
-                          <Label htmlFor={`available-${item.productId}`} className="text-xs">Available Stock</Label>
-                          <Input
-                            id={`available-${item.productId}`}
-                            type="number"
-                            value={item.availableStock}
-                            onChange={(e) => updateStockItem(item.productId, 'availableStock', parseInt(e.target.value) || 0)}
-                            className="h-7 text-sm"
-                            min="0"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <StockItemCard
+                    key={item.productId}
+                    item={item}
+                    quickAddMode={quickAddMode}
+                    isAdmin={isAdmin}
+                    onUpdateStock={updateStockItem}
+                  />
                 ))}
                 {stockItems.length === 0 && (
                   <div className="text-center py-6 text-muted-foreground">
