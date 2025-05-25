@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { BatchStockEntryModal } from "./BatchStockEntryModal";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useDataSyncActions } from "@/context/DataSyncContext";
+import { useDataSyncActions } from "@/hooks/useDataSyncActions";
 
 interface Product {
   id: string;
