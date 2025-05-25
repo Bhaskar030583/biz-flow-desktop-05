@@ -44,7 +44,7 @@ const StockTabsContainer = ({
       </TabsContent>
 
       <TabsContent value="chart" className="space-y-4">
-        <StockChart refreshTrigger={refreshTrigger} />
+        <StockChart />
       </TabsContent>
 
       <TabsContent value="view" className="space-y-4">
@@ -69,6 +69,7 @@ const StockTabsContainer = ({
         {showCollectionForm && (
           <CollectionForm 
             onSuccess={handleCollectionAdded}
+            initialData={null}
           />
         )}
 

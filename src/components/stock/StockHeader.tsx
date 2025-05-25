@@ -1,3 +1,4 @@
+
 import React from "react";
 import { PlusCircle, FileDown, FileUp, Layers, Calendar, ChevronDown, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,20 +9,12 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { format, subDays } from "date-fns";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { DateRange } from "react-day-picker";
 import { generateStockTemplate } from "@/utils/templateUtils";
 import { toast } from "sonner";
 
 interface StockHeaderProps {
   stockCount: number;
   exporting: boolean;
-  dateLabel: string;
-  dateRange: DateRange | undefined;
-  setDateRange: (range: DateRange | undefined) => void;
-  setDateLabel: (label: string) => void;
   handleExport: () => void;
   showForm: boolean;
   setShowForm: (show: boolean) => void;
@@ -36,10 +29,6 @@ interface StockHeaderProps {
 const StockHeader: React.FC<StockHeaderProps> = ({
   stockCount,
   exporting,
-  dateLabel,
-  dateRange,
-  setDateRange,
-  setDateLabel,
   handleExport,
   showForm,
   setShowForm,
@@ -50,43 +39,6 @@ const StockHeader: React.FC<StockHeaderProps> = ({
   setShowImport,
   setActiveTab,
 }) => {
-  const handleDatePresetChange = (preset: string) => {
-    switch (preset) {
-      case "today":
-        setDateRange({
-          from: new Date(),
-          to: new Date()
-        });
-        setDateLabel("Today");
-        break;
-      case "yesterday":
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        setDateRange({
-          from: yesterday,
-          to: yesterday
-        });
-        setDateLabel("Yesterday");
-        break;
-      case "last7days":
-        setDateRange({
-          from: subDays(new Date(), 7),
-          to: new Date()
-        });
-        setDateLabel("Last 7 days");
-        break;
-      case "last30days":
-        setDateRange({
-          from: subDays(new Date(), 30),
-          to: new Date()
-        });
-        setDateLabel("Last 30 days");
-        break;
-      default:
-        break;
-    }
-  };
-
   const handleDownloadTemplate = () => {
     try {
       generateStockTemplate();
@@ -104,70 +56,7 @@ const StockHeader: React.FC<StockHeaderProps> = ({
         <p className="text-muted-foreground text-sm">Track inventory, monitor sales, and analyze performance</p>
       </div>
       
-      <div className="flex flex-col sm:flex-row gap-3">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 justify-start w-full sm:w-auto"
-            >
-              <Calendar className="mr-2 h-4 w-4" />
-              {dateLabel}
-              <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 bg-white">
-            <DropdownMenuItem onClick={() => handleDatePresetChange("today")} className="cursor-pointer">
-              Today
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleDatePresetChange("yesterday")} className="cursor-pointer">
-              Yesterday
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleDatePresetChange("last7days")} className="cursor-pointer">
-              Last 7 days
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleDatePresetChange("last30days")} className="cursor-pointer">
-              Last 30 days
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <div className="px-2 py-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left"
-                  >
-                    Custom Range
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-white" align="start">
-                  <div className="p-3">
-                    <div className="space-y-2">
-                      <h4 className="font-medium">Select date range</h4>
-                      <div className="border rounded-md p-2">
-                        <CalendarComponent
-                          initialFocus
-                          mode="range"
-                          defaultMonth={dateRange?.from}
-                          selected={dateRange}
-                          onSelect={(range) => {
-                            setDateRange(range);
-                            if (range?.from && range?.to) {
-                              setDateLabel(`${format(range.from, "MMM d")} - ${format(range.to, "MMM d")}`);
-                            }
-                          }}
-                          numberOfMonths={2}
-                          className="pointer-events-auto"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        
+      <div className="flex flex-col sm:flex-row gap-3">        
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -204,7 +93,7 @@ const StockHeader: React.FC<StockHeaderProps> = ({
                   setShowBatchEntry(false);
                   setShowForm(!showForm);
                   setShowCollectionForm(false);
-                  setActiveTab("entry");
+                  setActiveTab("management");
                 }}
                 className="text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer focus:bg-gradient-to-r focus:from-indigo-50 focus:to-purple-50 focus:text-indigo-700"
               >
@@ -216,7 +105,7 @@ const StockHeader: React.FC<StockHeaderProps> = ({
                   setShowForm(false);
                   setShowBatchEntry(!showBatchEntry);
                   setShowCollectionForm(false);
-                  setActiveTab("batch");
+                  setActiveTab("management");
                 }}
                 className="text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer focus:bg-gradient-to-r focus:from-indigo-50 focus:to-purple-50 focus:text-indigo-700"
               >
@@ -228,7 +117,7 @@ const StockHeader: React.FC<StockHeaderProps> = ({
                   setShowForm(false);
                   setShowBatchEntry(false);
                   setShowCollectionForm(!showCollectionForm);
-                  setActiveTab("collection");
+                  setActiveTab("management");
                 }}
                 className="text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer focus:bg-gradient-to-r focus:from-indigo-50 focus:to-purple-50 focus:text-indigo-700"
               >
