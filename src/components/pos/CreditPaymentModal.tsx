@@ -83,6 +83,14 @@ export const CreditPaymentModal: React.FC<CreditPaymentModalProps> = ({
 
     setIsProcessing(true);
     try {
+      // Generate bill first
+      await generateBill({
+        customerId: selectedCustomerId,
+        totalAmount,
+        paymentMethod: 'credit',
+        cartItems
+      });
+
       // Create the credit transaction
       const { error } = await supabase
         .from('credit_transactions')
@@ -98,7 +106,7 @@ export const CreditPaymentModal: React.FC<CreditPaymentModalProps> = ({
 
       const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
       
-      toast.success(`Credit sale of ₹${totalAmount.toFixed(2)} recorded for ${selectedCustomer?.name}`);
+      toast.success(`Credit sale of ₹${totalAmount.toFixed(2)} recorded for ${selectedCustomer?.name} and bill generated!`);
       onPaymentComplete();
       setSelectedCustomerId("");
     } catch (error) {

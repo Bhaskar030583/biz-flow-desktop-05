@@ -9,6 +9,101 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bill_items: {
+        Row: {
+          bill_id: string
+          created_at: string
+          id: string
+          product_id: string
+          product_name: string
+          quantity: number
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          bill_id: string
+          created_at?: string
+          id?: string
+          product_id: string
+          product_name: string
+          quantity: number
+          total_price: number
+          unit_price: number
+        }
+        Update: {
+          bill_id?: string
+          created_at?: string
+          id?: string
+          product_id?: string
+          product_name?: string
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_items_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bills: {
+        Row: {
+          bill_date: string
+          bill_number: string
+          created_at: string
+          customer_id: string | null
+          id: string
+          payment_method: string
+          payment_status: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bill_date?: string
+          bill_number: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          payment_method: string
+          payment_status?: string
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bill_date?: string
+          bill_number?: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          payment_method?: string
+          payment_status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bills_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_transactions: {
         Row: {
           amount: number
@@ -383,7 +478,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_bill_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

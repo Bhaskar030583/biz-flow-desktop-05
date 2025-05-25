@@ -19,12 +19,16 @@ import {
   Grid2X2,
   LayoutGrid,
   Users,
-  UserCheck
+  UserCheck,
+  Receipt
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CashPaymentModal } from "./CashPaymentModal";
 import { CustomerManagement } from "./CustomerManagement";
 import { CreditPaymentModal } from "./CreditPaymentModal";
+import { BillHistory } from "./BillHistory";
+import { generateBill } from "@/services/billService";
+import { toast } from "sonner";
 
 interface POSItem {
   id: string;
@@ -99,6 +103,48 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
     setShowCashModal(true);
   };
 
+  const handleCardPayment = async () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+
+    try {
+      await generateBill({
+        totalAmount: getTotalAmount(),
+        paymentMethod: 'card',
+        cartItems: cart
+      });
+
+      toast.success("Card payment completed and bill generated!");
+      setCart([]);
+    } catch (error) {
+      console.error("Error processing card payment:", error);
+      toast.error("Failed to process card payment");
+    }
+  };
+
+  const handleUPIPayment = async () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+
+    try {
+      await generateBill({
+        totalAmount: getTotalAmount(),
+        paymentMethod: 'upi',
+        cartItems: cart
+      });
+
+      toast.success("UPI payment completed and bill generated!");
+      setCart([]);
+    } catch (error) {
+      console.error("Error processing UPI payment:", error);
+      toast.error("Failed to process UPI payment");
+    }
+  };
+
   const handleCreditPayment = () => {
     setShowCreditModal(true);
   };
@@ -150,7 +196,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
         {/* Main Content Section */}
         <div className={`space-y-4 ${isMobile ? 'order-2' : 'lg:col-span-3'}`}>
           <Tabs defaultValue="pos" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="pos" className="flex items-center gap-2">
                 <Calculator className="h-4 w-4" />
                 POS System
@@ -158,6 +204,10 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
               <TabsTrigger value="customers" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Customers
+              </TabsTrigger>
+              <TabsTrigger value="bills" className="flex items-center gap-2">
+                <Receipt className="h-4 w-4" />
+                Bill History
               </TabsTrigger>
             </TabsList>
 
@@ -293,6 +343,10 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
             <TabsContent value="customers" className="mt-4">
               <CustomerManagement />
             </TabsContent>
+
+            <TabsContent value="bills" className="mt-4">
+              <BillHistory />
+            </TabsContent>
           </Tabs>
         </div>
 
@@ -376,11 +430,21 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
                         <Banknote className="h-3 w-3" />
                         Cash
                       </Button>
-                      <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs p-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center gap-1 text-xs p-2"
+                        onClick={handleCardPayment}
+                      >
                         <CreditCard className="h-3 w-3" />
                         Card
                       </Button>
-                      <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs p-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center gap-1 text-xs p-2"
+                        onClick={handleUPIPayment}
+                      >
                         <Smartphone className="h-3 w-3" />
                         UPI
                       </Button>
