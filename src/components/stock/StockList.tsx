@@ -1,10 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Search } from "lucide-react";
-import { DateRange } from "react-day-picker";
-import { format } from "date-fns";
 
 // Import our components
 import StockSummaryCards from "./StockSummaryCards";
@@ -16,10 +15,9 @@ import { calculateStockProfit, calculateStockSummary, sortStockEntries, filterSt
 
 interface StockListProps {
   refreshTrigger: number;
-  dateRange?: DateRange;
 }
 
-const StockList = ({ refreshTrigger, dateRange }: StockListProps) => {
+const StockList = ({ refreshTrigger }: StockListProps) => {
   const [stockEntries, setStockEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,17 +52,6 @@ const StockList = ({ refreshTrigger, dateRange }: StockListProps) => {
             products (id, name, price, cost_price)
           `)
           .order("stock_date", { ascending: false });
-        
-        // Add date range filter if provided
-        if (dateRange?.from) {
-          const fromDate = format(dateRange.from, 'yyyy-MM-dd');
-          query = query.gte('stock_date', fromDate);
-        }
-        
-        if (dateRange?.to) {
-          const toDate = format(dateRange.to, 'yyyy-MM-dd');
-          query = query.lte('stock_date', toDate);
-        }
         
         // Execute the query
         const { data, error } = await query;
@@ -103,7 +90,7 @@ const StockList = ({ refreshTrigger, dateRange }: StockListProps) => {
     };
 
     fetchStockEntries();
-  }, [refreshTrigger, localRefreshTrigger, dateRange]);
+  }, [refreshTrigger, localRefreshTrigger]);
   
   // Handle sorting change
   const handleSortChange = (field: string) => {
@@ -164,10 +151,7 @@ const StockList = ({ refreshTrigger, dateRange }: StockListProps) => {
             </div>
             <h3 className="text-lg font-medium mb-2">No Stock Entries Found</h3>
             <p className="text-muted-foreground mb-6">
-              {dateRange && dateRange.from ? 
-                `No entries found between ${format(dateRange.from, 'MMM dd, yyyy')} and ${dateRange.to ? format(dateRange.to, 'MMM dd, yyyy') : 'today'}. Try a different date range.` :
-                'Please add some stock data or import from Excel to get started.'
-              }
+              Please add some stock data or import from Excel to get started.
             </p>
           </div>
         </CardContent>
@@ -209,7 +193,7 @@ const StockList = ({ refreshTrigger, dateRange }: StockListProps) => {
           
           <div className="mt-4 text-sm text-muted-foreground text-center">
             Showing {sortedFilteredEntries.length} of {stockEntries.length} entries
-            {(searchTerm || shopFilter !== "" && shopFilter !== "_all" || productFilter !== "" && productFilter !== "_all" || (paymentModeFilter && paymentModeFilter !== "" && paymentModeFilter !== "_all") || dateRange?.from) && " (filtered)"}
+            {(searchTerm || shopFilter !== "" && shopFilter !== "_all" || productFilter !== "" && productFilter !== "_all" || (paymentModeFilter && paymentModeFilter !== "" && paymentModeFilter !== "_all")) && " (filtered)"}
           </div>
         </CardContent>
       </Card>

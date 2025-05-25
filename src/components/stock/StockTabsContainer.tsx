@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DateRange } from "react-day-picker";
 import StockList from "./StockList";
 import StockChart from "./StockChart";
 import NewStockManagement from "./NewStockManagement";
@@ -15,7 +14,6 @@ interface StockTabsContainerProps {
   showBatchEntry: boolean;
   showCollectionForm: boolean;
   refreshTrigger: number;
-  dateRange?: DateRange;
   handleStockAdded: () => void;
   handleBatchAdded: () => void;
   handleCollectionAdded: () => void;
@@ -28,7 +26,6 @@ const StockTabsContainer = ({
   showBatchEntry,
   showCollectionForm,
   refreshTrigger,
-  dateRange,
   handleStockAdded,
   handleBatchAdded,
   handleCollectionAdded,
@@ -43,11 +40,11 @@ const StockTabsContainer = ({
       </TabsList>
 
       <TabsContent value="list" className="space-y-4">
-        <StockList refreshTrigger={refreshTrigger} dateRange={dateRange} />
+        <StockList refreshTrigger={refreshTrigger} />
       </TabsContent>
 
       <TabsContent value="chart" className="space-y-4">
-        <StockChart refreshTrigger={refreshTrigger} dateRange={dateRange} />
+        <StockChart refreshTrigger={refreshTrigger} />
       </TabsContent>
 
       <TabsContent value="view" className="space-y-4">
@@ -72,7 +69,6 @@ const StockTabsContainer = ({
         {showCollectionForm && (
           <CollectionForm 
             onSuccess={handleCollectionAdded}
-            onCancel={() => setActiveTab("list")}
           />
         )}
 

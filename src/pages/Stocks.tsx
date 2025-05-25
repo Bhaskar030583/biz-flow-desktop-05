@@ -4,8 +4,6 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { subDays } from "date-fns";
-import { DateRange } from "react-day-picker";
 import { useDataSync } from "@/context/DataSyncContext";
 import { useDataSyncActions } from "@/hooks/useDataSyncActions";
 import StockImport from "@/components/stock/StockImport";
@@ -25,11 +23,6 @@ const Stocks = () => {
   const [exportProgress, setExportProgress] = useState(0);
   const [activeTab, setActiveTab] = useState("list");
   const [stockCount, setStockCount] = useState(0);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 7),
-    to: new Date(),
-  });
-  const [dateLabel, setDateLabel] = useState("Last 7 days");
   const [showCollectionForm, setShowCollectionForm] = useState(false);
 
   useEffect(() => {
@@ -90,10 +83,6 @@ const Stocks = () => {
         <StockHeader 
           stockCount={stockCount}
           exporting={exporting}
-          dateLabel={dateLabel}
-          dateRange={dateRange}
-          setDateRange={setDateRange}
-          setDateLabel={setDateLabel}
           handleExport={handleExport}
           showForm={showForm}
           setShowForm={setShowForm}
@@ -117,7 +106,6 @@ const Stocks = () => {
           showBatchEntry={showBatchEntry}
           showCollectionForm={showCollectionForm}
           refreshTrigger={combinedRefreshTrigger}
-          dateRange={dateRange}
           handleStockAdded={handleStockAdded}
           handleBatchAdded={handleBatchAdded}
           handleCollectionAdded={handleCollectionAdded}
