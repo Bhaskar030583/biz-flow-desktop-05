@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { format } from "date-fns";
 import { 
   Save, 
@@ -55,6 +57,7 @@ interface BatchStockEntryProps {
 }
 
 const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }) => {
+  const { user } = useAuth();
   const [stockDate, setStockDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [selectedShop, setSelectedShop] = useState<string>('');
   const [shift, setShift] = useState<string>('');
@@ -70,9 +73,11 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    fetchProducts();
-    fetchShops();
-  }, []);
+    if (user) {
+      fetchProducts();
+      fetchShops();
+    }
+  }, [user]);
 
   const fetchProducts = async () => {
     try {
@@ -173,6 +178,11 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
   }, {} as Record<string, StockEntry[]>);
 
   const handleSubmit = async () => {
+    if (!user) {
+      toast.error('You must be logged in to save stock entries');
+      return;
+    }
+
     if (!selectedShop || stockEntries.length === 0) {
       toast.error('Please select a shop and add at least one product');
       return;
@@ -183,6 +193,7 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
       const stockData = stockEntries.map(entry => ({
         product_id: entry.product_id,
         shop_id: selectedShop,
+        user_id: user.id,
         stock_date: stockDate,
         opening_stock: entry.opening_stock,
         actual_stock: entry.actual_stock,
@@ -207,6 +218,17 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
       setLoading(false);
     }
   };
+
+  // Show login message if user is not authenticated
+  if (!user) {
+    return (
+      <Card className="border-red-200">
+        <CardContent className="p-6 text-center">
+          <p className="text-red-600">Please log in to access batch stock entry.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
