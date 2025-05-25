@@ -18,6 +18,8 @@ import Users from "./pages/Users";
 import Settings from "./pages/Settings";
 import Expenses from "./pages/Expenses";
 import POS from "./pages/POS";
+import Customers from "./pages/Customers";
+import Bills from "./pages/Bills";
 import NotFound from "./pages/NotFound";
 import "./App.css";
 
@@ -72,6 +74,22 @@ function App() {
                     element={
                       <PrivateRoute>
                         <POS />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/customers"
+                    element={
+                      <PrivateRoute>
+                        <Customers />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/bills"
+                    element={
+                      <PrivateRoute>
+                        <Bills />
                       </PrivateRoute>
                     }
                   />

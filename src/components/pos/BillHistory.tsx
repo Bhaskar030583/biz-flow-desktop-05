@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,7 +56,14 @@ export const BillHistory: React.FC = () => {
         .order('bill_date', { ascending: false });
 
       if (error) throw error;
-      setBills(data || []);
+      
+      // Transform the data to match our interface
+      const transformedBills = (data || []).map(bill => ({
+        ...bill,
+        customer: bill.customers ? { name: bill.customers.name } : null
+      }));
+      
+      setBills(transformedBills);
     } catch (error) {
       console.error("Error fetching bills:", error);
       toast.error("Failed to load bill history");

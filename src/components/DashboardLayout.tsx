@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -31,6 +30,7 @@ import {
   Receipt,
   Calculator,
   Menu,
+  UserCheck,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -47,6 +47,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     { icon: Store, label: "Shops", path: "/shops" },
     { icon: BarChart3, label: "Stocks", path: "/stocks" },
     { icon: Calculator, label: "POS", path: "/pos" },
+    { icon: UserCheck, label: "Customers", path: "/customers" },
+    { icon: Receipt, label: "Bills", path: "/bills" },
     { icon: CreditCard, label: "Credits", path: "/credits" },
     { icon: Receipt, label: "Expenses", path: "/expenses" },
     { icon: Users, label: "Users", path: "/users" },
