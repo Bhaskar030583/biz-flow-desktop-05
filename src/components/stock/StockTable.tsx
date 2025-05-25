@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { 
@@ -98,6 +97,20 @@ const StockTable = ({
       closing_stock: entry.closing_stock,
       actual_stock: entry.actual_stock,
       stock_added: entry.stock_added || 0
+    });
+  };
+
+  const handleEditedValueChange = (field: keyof typeof editedValues, value: number) => {
+    setEditedValues(prev => {
+      const newValues = { ...prev, [field]: Math.max(0, value) };
+      
+      // When stock is added, update the closing stock
+      if (field === 'stock_added' && editingEntry) {
+        const stockDifference = Math.max(0, value) - (editingEntry.stock_added || 0);
+        newValues.closing_stock = Math.max(0, prev.closing_stock + stockDifference);
+      }
+      
+      return newValues;
     });
   };
 
@@ -412,7 +425,7 @@ const StockTable = ({
                       type="number" 
                       min="0" 
                       value={editedValues.opening_stock} 
-                      onChange={(e) => setEditedValues({...editedValues, opening_stock: Number(e.target.value)})}
+                      onChange={(e) => handleEditedValueChange('opening_stock', Number(e.target.value))}
                     />
                   </div>
                 )}
@@ -430,7 +443,7 @@ const StockTable = ({
                     type="number" 
                     min="0" 
                     value={editedValues.stock_added} 
-                    onChange={(e) => setEditedValues({...editedValues, stock_added: Number(e.target.value)})} 
+                    onChange={(e) => handleEditedValueChange('stock_added', Number(e.target.value))}
                   />
                 </div>
                 
@@ -440,7 +453,7 @@ const StockTable = ({
                     type="number" 
                     min="0" 
                     value={editedValues.closing_stock} 
-                    onChange={(e) => setEditedValues({...editedValues, closing_stock: Number(e.target.value)})} 
+                    onChange={(e) => handleEditedValueChange('closing_stock', Number(e.target.value))}
                   />
                 </div>
                 
@@ -450,7 +463,7 @@ const StockTable = ({
                     type="number" 
                     min="0" 
                     value={editedValues.actual_stock} 
-                    onChange={(e) => setEditedValues({...editedValues, actual_stock: Number(e.target.value)})} 
+                    onChange={(e) => handleEditedValueChange('actual_stock', Number(e.target.value))}
                   />
                 </div>
               </div>
