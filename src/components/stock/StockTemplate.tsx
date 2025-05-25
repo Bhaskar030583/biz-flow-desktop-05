@@ -18,9 +18,6 @@ interface StockTemplateData {
   shop_id: string;
   products: {
     product_id: string;
-    opening_stock: number;
-    closing_stock: number;
-    actual_stock: number;
     stock_added: number;
   }[];
   created_at: string;
@@ -80,8 +77,11 @@ const StockTemplate: React.FC<StockTemplateProps> = ({
       return;
     }
 
-    if (currentStockItems.length === 0) {
-      toast.error('No stock items to save');
+    // Filter items that have stock to add
+    const itemsWithStock = currentStockItems.filter(item => item.stockAdded > 0);
+    
+    if (itemsWithStock.length === 0) {
+      toast.error('No products with stock additions to save');
       return;
     }
 
@@ -92,11 +92,8 @@ const StockTemplate: React.FC<StockTemplateProps> = ({
         name: templateName.trim(),
         user_id: user?.id,
         shop_id: currentShopId,
-        products: currentStockItems.map(item => ({
+        products: itemsWithStock.map(item => ({
           product_id: item.productId,
-          opening_stock: item.openingStock,
-          closing_stock: item.availableStock,
-          actual_stock: item.actualStock,
           stock_added: item.stockAdded
         }))
       };
@@ -107,7 +104,7 @@ const StockTemplate: React.FC<StockTemplateProps> = ({
 
       if (error) throw error;
 
-      toast.success('Template saved successfully');
+      toast.success('Stock addition template saved successfully');
       setTemplateName("");
       setShowCreateDialog(false);
       fetchTemplates();
@@ -139,7 +136,7 @@ const StockTemplate: React.FC<StockTemplateProps> = ({
 
   const applyTemplate = (template: StockTemplateData) => {
     onApplyTemplate(template);
-    toast.success(`Template "${template.name}" applied successfully`);
+    toast.success(`Stock addition template "${template.name}" applied successfully`);
   };
 
   return (
@@ -148,7 +145,7 @@ const StockTemplate: React.FC<StockTemplateProps> = ({
         <CardTitle className="flex items-center justify-between text-base">
           <div className="flex items-center gap-2">
             <File className="h-4 w-4" />
-            Stock Templates
+            Stock Addition Templates
           </div>
           
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
@@ -156,7 +153,7 @@ const StockTemplate: React.FC<StockTemplateProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!currentShopId || currentStockItems.length === 0}
+                disabled={!currentShopId || currentStockItems.filter(item => item.stockAdded > 0).length === 0}
                 className="h-7"
               >
                 <Plus className="h-3 w-3 mr-1" />
@@ -165,7 +162,7 @@ const StockTemplate: React.FC<StockTemplateProps> = ({
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Save Stock Template</DialogTitle>
+                <DialogTitle>Save Stock Addition Template</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
@@ -179,7 +176,7 @@ const StockTemplate: React.FC<StockTemplateProps> = ({
                 </div>
                 <div className="bg-muted/50 p-3 rounded-md">
                   <p className="text-sm text-muted-foreground">
-                    This will save the current stock configuration for {currentStockItems.length} products
+                    This will save stock additions for {currentStockItems.filter(item => item.stockAdded > 0).length} products
                   </p>
                 </div>
                 <div className="flex justify-end gap-2">
@@ -201,8 +198,8 @@ const StockTemplate: React.FC<StockTemplateProps> = ({
           {templates.length === 0 ? (
             <div className="text-center py-6 text-muted-foreground">
               <File className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No templates saved</p>
-              <p className="text-xs">Save your current stock setup as a template</p>
+              <p className="text-sm">No stock addition templates saved</p>
+              <p className="text-xs">Save templates for quick stock additions</p>
             </div>
           ) : (
             templates.map((template) => (
@@ -211,7 +208,7 @@ const StockTemplate: React.FC<StockTemplateProps> = ({
                   <div>
                     <h4 className="font-medium text-sm">{template.name}</h4>
                     <p className="text-xs text-muted-foreground">
-                      {template.products.length} products
+                      {template.products.length} products with stock additions
                     </p>
                   </div>
                   <div className="flex gap-1">

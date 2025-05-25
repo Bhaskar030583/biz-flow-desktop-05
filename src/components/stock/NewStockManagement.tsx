@@ -273,7 +273,24 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
 
       if (error) throw error;
 
-      const templateStockItems = template.products.map((templateProduct: any) => {
+      // Apply only stock additions from template
+      const updatedStockItems = stockItems.map(existingItem => {
+        const templateProduct = template.products.find((p: any) => p.product_id === existingItem.productId);
+        if (templateProduct) {
+          return {
+            ...existingItem,
+            stockAdded: templateProduct.stock_added
+          };
+        }
+        return existingItem;
+      });
+
+      // Add new products from template that aren't in current stock
+      const newTemplateProducts = template.products.filter((templateProduct: any) => 
+        !stockItems.some(item => item.productId === templateProduct.product_id)
+      );
+
+      const newStockItems = newTemplateProducts.map((templateProduct: any) => {
         const product = productsData?.find(p => p.id === templateProduct.product_id);
         if (!product) return null;
 
@@ -281,14 +298,15 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
           productId: product.id,
           productName: product.name,
           category: product.category,
-          openingStock: templateProduct.opening_stock,
-          actualStock: templateProduct.actual_stock,
-          availableStock: templateProduct.closing_stock,
+          openingStock: 0,
+          actualStock: 0,
+          availableStock: 0,
           stockAdded: templateProduct.stock_added,
         };
       }).filter(Boolean);
 
-      setStockItems(templateStockItems);
+      setStockItems([...updatedStockItems, ...newStockItems]);
+      toast.success(`Stock addition template applied for ${template.products.length} products`);
     } catch (error) {
       console.error('Error applying template:', error);
       toast.error('Failed to apply template');
