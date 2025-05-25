@@ -143,25 +143,41 @@ export const BillViewModal: React.FC<BillViewModalProps> = ({
             </div>
           </div>
 
-          {/* Bill Items */}
+          {/* Bill Items with Enhanced Display */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Items</h3>
-            <div className="space-y-2">
-              {bill.bill_items.map((item) => (
+            <h3 className="text-lg font-semibold mb-4">Items ({bill.bill_items.length})</h3>
+            <div className="space-y-3">
+              {bill.bill_items.map((item, index) => (
                 <div
                   key={item.id}
-                  className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                  className="border rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm"
                 >
-                  <div className="flex-1">
-                    <p className="font-medium">{item.product_name}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      ₹{Number(item.unit_price).toFixed(2)} × {item.quantity}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold">
-                      ₹{Number(item.total_price).toFixed(2)}
-                    </p>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          #{index + 1}
+                        </span>
+                        <h4 className="font-semibold text-lg">{item.product_name}</h4>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
+                        <div>
+                          <span className="font-medium">Quantity:</span>
+                          <span className="ml-2 text-lg font-bold text-blue-600">
+                            {item.quantity}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Unit Price:</span>
+                          <span className="ml-2">₹{Number(item.unit_price).toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xl font-bold text-green-600">
+                        ₹{Number(item.total_price).toFixed(2)}
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))}
