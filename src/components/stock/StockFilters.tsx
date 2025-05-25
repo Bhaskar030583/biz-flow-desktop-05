@@ -52,30 +52,24 @@ const StockFilters = ({
     setInputValue("");
   };
 
-  // Enhanced validation - ensure no empty string values can pass through
-  const validShops = (shops || []).filter(shop => {
-    return shop && 
-           shop.id && 
-           typeof shop.id === 'string' && 
-           shop.id.trim().length > 0 && 
-           shop.id !== "null" &&
-           shop.id !== "undefined" &&
-           shop.name && 
-           typeof shop.name === 'string' && 
-           shop.name.trim().length > 0;
-  });
+  // Enhanced validation with stricter checks
+  const isValidItem = (item: any): item is { id: string; name: string } => {
+    return (
+      item &&
+      typeof item === 'object' &&
+      typeof item.id === 'string' &&
+      typeof item.name === 'string' &&
+      item.id.trim().length > 0 &&
+      item.name.trim().length > 0 &&
+      item.id !== "null" &&
+      item.id !== "undefined" &&
+      item.name !== "null" &&
+      item.name !== "undefined"
+    );
+  };
 
-  const validProducts = (products || []).filter(product => {
-    return product && 
-           product.id && 
-           typeof product.id === 'string' && 
-           product.id.trim().length > 0 && 
-           product.id !== "null" &&
-           product.id !== "undefined" &&
-           product.name && 
-           typeof product.name === 'string' && 
-           product.name.trim().length > 0;
-  });
+  const validShops = Array.isArray(shops) ? shops.filter(isValidItem) : [];
+  const validProducts = Array.isArray(products) ? products.filter(isValidItem) : [];
 
   const hasFilters = 
     searchTerm !== "" || 
@@ -111,16 +105,15 @@ const StockFilters = ({
             </SelectTrigger>
             <SelectContent className="bg-white z-50">
               <SelectItem value="_all">All Shops</SelectItem>
-              {validShops.length > 0 ? (
-                validShops.map((shop) => (
-                  <SelectItem key={shop.id} value={shop.id}>
-                    {shop.name}
-                  </SelectItem>
-                ))
-              ) : (
-                <SelectItem value="_no_shops" disabled>
-                  No shops available
+              {validShops.map((shop) => (
+                <SelectItem key={shop.id} value={shop.id}>
+                  {shop.name}
                 </SelectItem>
+              ))}
+              {validShops.length === 0 && (
+                <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                  No shops available
+                </div>
               )}
             </SelectContent>
           </Select>
@@ -131,16 +124,15 @@ const StockFilters = ({
             </SelectTrigger>
             <SelectContent className="bg-white z-50">
               <SelectItem value="_all">All Products</SelectItem>
-              {validProducts.length > 0 ? (
-                validProducts.map((product) => (
-                  <SelectItem key={product.id} value={product.id}>
-                    {product.name}
-                  </SelectItem>
-                ))
-              ) : (
-                <SelectItem value="_no_products" disabled>
-                  No products available
+              {validProducts.map((product) => (
+                <SelectItem key={product.id} value={product.id}>
+                  {product.name}
                 </SelectItem>
+              ))}
+              {validProducts.length === 0 && (
+                <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                  No products available
+                </div>
               )}
             </SelectContent>
           </Select>

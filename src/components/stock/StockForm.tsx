@@ -102,30 +102,39 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
     fetchShopsAndProducts();
   }, []);
 
-  // Enhanced validation - ensure no empty string values can pass through
-  const validShops = (shops || []).filter(shop => {
-    return shop && 
-           shop.id && 
-           typeof shop.id === 'string' && 
-           shop.id.trim().length > 0 && 
-           shop.id !== "null" &&
-           shop.id !== "undefined" &&
-           shop.name && 
-           typeof shop.name === 'string' && 
-           shop.name.trim().length > 0;
-  });
+  // Enhanced validation with stricter checks
+  const isValidShop = (shop: any): shop is { id: string; name: string } => {
+    return (
+      shop &&
+      typeof shop === 'object' &&
+      typeof shop.id === 'string' &&
+      typeof shop.name === 'string' &&
+      shop.id.trim().length > 0 &&
+      shop.name.trim().length > 0 &&
+      shop.id !== "null" &&
+      shop.id !== "undefined" &&
+      shop.name !== "null" &&
+      shop.name !== "undefined"
+    );
+  };
 
-  const validProducts = (products || []).filter(product => {
-    return product && 
-           product.id && 
-           typeof product.id === 'string' && 
-           product.id.trim().length > 0 && 
-           product.id !== "null" &&
-           product.id !== "undefined" &&
-           product.name && 
-           typeof product.name === 'string' && 
-           product.name.trim().length > 0;
-  });
+  const isValidProduct = (product: any): product is { id: string; name: string } => {
+    return (
+      product &&
+      typeof product === 'object' &&
+      typeof product.id === 'string' &&
+      typeof product.name === 'string' &&
+      product.id.trim().length > 0 &&
+      product.name.trim().length > 0 &&
+      product.id !== "null" &&
+      product.id !== "undefined" &&
+      product.name !== "null" &&
+      product.name !== "undefined"
+    );
+  };
+
+  const validShops = Array.isArray(shops) ? shops.filter(isValidShop) : [];
+  const validProducts = Array.isArray(products) ? products.filter(isValidProduct) : [];
 
   // Update selected shop details when shop_id changes
   useEffect(() => {
@@ -363,16 +372,15 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-white z-50">
-                        {validShops.length > 0 ? (
-                          validShops.map((shop) => (
-                            <SelectItem key={shop.id} value={shop.id}>
-                              {shop.name}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="_no_shops" disabled>
-                            No shops available
+                        {validShops.map((shop) => (
+                          <SelectItem key={shop.id} value={shop.id}>
+                            {shop.name}
                           </SelectItem>
+                        ))}
+                        {validShops.length === 0 && (
+                          <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                            No shops available
+                          </div>
                         )}
                       </SelectContent>
                     </Select>
@@ -397,16 +405,15 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-white z-50">
-                        {validProducts.length > 0 ? (
-                          validProducts.map((product) => (
-                            <SelectItem key={product.id} value={product.id}>
-                              {product.name}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="_no_products" disabled>
-                            No products available
+                        {validProducts.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.name}
                           </SelectItem>
+                        ))}
+                        {validProducts.length === 0 && (
+                          <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                            No products available
+                          </div>
                         )}
                       </SelectContent>
                     </Select>
