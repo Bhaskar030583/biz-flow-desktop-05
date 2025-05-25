@@ -480,6 +480,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
         onClose={() => setShowCashModal(false)}
         totalAmount={getTotalAmount()}
         onPaymentComplete={handlePaymentComplete}
+        cartItems={cart}
+        storeInfo={storeInfo}
       />
 
       <SplitPaymentModal
