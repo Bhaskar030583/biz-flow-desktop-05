@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const shopSchema = z.object({
-  name: z.string().min(2, { message: "Shop name must be at least 2 characters" }),
+  name: z.string().min(2, { message: "Store name must be at least 2 characters" }),
   address: z.string().optional(),
   phone: z.string().optional(),
 });
@@ -42,7 +42,7 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "You must be logged in to create a shop",
+        description: "You must be logged in to create a store",
       });
       return;
     }
@@ -51,7 +51,7 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
     setErrorMessage("");
     
     try {
-      console.log("Creating shop with data:", { ...data, user_id: user.id });
+      console.log("Creating store with data:", { ...data, user_id: user.id });
       
       const { data: insertedData, error } = await supabase
         .from("shops")
@@ -68,21 +68,21 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
         throw error;
       }
       
-      console.log("Shop created successfully:", insertedData);
+      console.log("Store created successfully:", insertedData);
       
       toast({
-        title: "Shop created",
-        description: "Your shop has been created successfully",
+        title: "Store created",
+        description: "Your store has been created successfully",
       });
       
       form.reset();
       if (onSuccess) onSuccess();
     } catch (error: any) {
-      console.error("Error creating shop:", error);
+      console.error("Error creating store:", error);
       setErrorMessage(error.message || "Something went wrong");
       toast({
         variant: "destructive",
-        title: "Failed to create shop",
+        title: "Failed to create store",
         description: error.message || "Something went wrong",
       });
     } finally {
@@ -93,7 +93,7 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Add New Shop</CardTitle>
+        <CardTitle>Add New Store</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -109,9 +109,9 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Shop Name</FormLabel>
+                  <FormLabel>Store Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter shop name" {...field} />
+                    <Input placeholder="Enter store name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -125,7 +125,7 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
                 <FormItem>
                   <FormLabel>Address (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter shop address" {...field} />
+                    <Input placeholder="Enter store address" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -147,7 +147,7 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
             />
             
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating..." : "Create Shop"}
+              {isLoading ? "Creating..." : "Create Store"}
             </Button>
           </form>
         </Form>

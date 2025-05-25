@@ -37,7 +37,7 @@ export function ShopList() {
       } catch (error: any) {
         toast({
           variant: "destructive",
-          title: "Failed to fetch shops",
+          title: "Failed to fetch stores",
           description: error.message || "Something went wrong",
         });
       } finally {
@@ -60,20 +60,20 @@ export function ShopList() {
       setShops(shops.filter(shop => shop.id !== id));
       
       toast({
-        title: "Shop deleted",
-        description: "The shop has been deleted successfully",
+        title: "Store deleted",
+        description: "The store has been deleted successfully",
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Failed to delete shop",
+        title: "Failed to delete store",
         description: error.message || "Something went wrong",
       });
     }
   }
 
   if (loading) {
-    return <div className="text-center py-4">Loading shops...</div>;
+    return <div className="text-center py-4">Loading stores...</div>;
   }
 
   if (shops.length === 0) {
@@ -81,7 +81,7 @@ export function ShopList() {
       <Card>
         <CardContent className="pt-6">
           <div className="text-center py-4 text-muted-foreground">
-            No shops found. Please add a shop to get started.
+            No stores found. Please add a store to get started.
           </div>
         </CardContent>
       </Card>
@@ -91,14 +91,14 @@ export function ShopList() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Your Shops</CardTitle>
+        <CardTitle>Your Stores</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Shop Name</TableHead>
+                <TableHead>Store Name</TableHead>
                 <TableHead>Address</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead className="text-right">Action</TableHead>

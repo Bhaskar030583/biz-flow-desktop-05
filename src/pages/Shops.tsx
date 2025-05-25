@@ -15,17 +15,17 @@ const Shops = () => {
     return null;
   }
 
-  const handleShopSuccess = () => {
+  const handleStoreSuccess = () => {
     setRefreshList(prev => prev + 1);
   };
 
   return (
     <DashboardLayout>
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Manage Shops</h1>
+        <h1 className="text-2xl font-bold mb-6">Manage Stores</h1>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div>
-            <ShopForm onSuccess={handleShopSuccess} />
+            <ShopForm onSuccess={handleStoreSuccess} />
           </div>
           <div className="lg:col-span-2">
             <ShopList key={`${refreshList}-${refreshTrigger}`} />

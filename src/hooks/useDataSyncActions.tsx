@@ -20,11 +20,11 @@ export const useDataSyncActions = () => {
   const syncAfterShopChange = useCallback((operation: string, shopData?: any) => {
     syncData(operation, 'shop', shopData);
     if (operation === 'create') {
-      toast.success('Shop added successfully');
+      toast.success('Store added successfully');
     } else if (operation === 'update') {
-      toast.success('Shop updated successfully');
+      toast.success('Store updated successfully');
     } else if (operation === 'delete') {
-      toast.success('Shop deleted successfully');
+      toast.success('Store deleted successfully');
     }
   }, [syncData]);
 

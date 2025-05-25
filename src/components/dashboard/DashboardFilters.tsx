@@ -164,13 +164,13 @@ export function DashboardFilters({
             </div>
           </div>
 
-          {/* Shop Selection */}
+          {/* Store Selection */}
           <div>
-            <label className="block text-sm font-medium mb-1">Shop</label>
+            <label className="block text-sm font-medium mb-1">Store</label>
             <Select
-              value={selectedShops.length === 1 ? selectedShops[0] : "all_shops"}
+              value={selectedShops.length === 1 ? selectedShops[0] : "all_stores"}
               onValueChange={(value) => {
-                if (value === "all_shops") {
+                if (value === "all_stores") {
                   setSelectedShops([]);
                 } else {
                   setSelectedShops([value]);
@@ -178,10 +178,10 @@ export function DashboardFilters({
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="All Shops" />
+                <SelectValue placeholder="All Stores" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all_shops">All Shops</SelectItem>
+                <SelectItem value="all_stores">All Stores</SelectItem>
                 {shops.map((shop) => (
                   <SelectItem key={shop.id} value={shop.id}>
                     {shop.name}
