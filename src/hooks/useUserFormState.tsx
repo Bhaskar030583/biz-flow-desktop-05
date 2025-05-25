@@ -6,6 +6,7 @@ export const useUserFormState = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [code, setCode] = useState('');
   const [role, setRole] = useState<UserRole>('user');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -16,6 +17,8 @@ export const useUserFormState = () => {
     setPassword,
     fullName,
     setFullName,
+    code,
+    setCode,
     role,
     setRole,
     isSubmitting,

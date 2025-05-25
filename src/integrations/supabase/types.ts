@@ -305,6 +305,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          code: string | null
           created_at: string
           full_name: string | null
           id: string
@@ -313,6 +314,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          code?: string | null
           created_at?: string
           full_name?: string | null
           id: string
@@ -321,6 +323,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          code?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
@@ -384,6 +387,7 @@ export type Database = {
           id: string
           name: string
           phone: string | null
+          store_code: string | null
           updated_at: string
           user_id: string
         }
@@ -393,6 +397,7 @@ export type Database = {
           id?: string
           name: string
           phone?: string | null
+          store_code?: string | null
           updated_at?: string
           user_id: string
         }
@@ -402,6 +407,7 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
+          store_code?: string | null
           updated_at?: string
           user_id?: string
         }

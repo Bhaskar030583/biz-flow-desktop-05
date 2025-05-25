@@ -21,6 +21,8 @@ const Users = () => {
     setPassword,
     fullName,
     setFullName,
+    code,
+    setCode,
     role,
     setRole,
     isSubmitting,
@@ -87,6 +89,8 @@ const Users = () => {
                   setPassword={setPassword}
                   fullName={fullName}
                   setFullName={setFullName}
+                  code={code}
+                  setCode={setCode}
                   role={role}
                   setRole={setRole}
                   isSubmitting={isSubmitting}

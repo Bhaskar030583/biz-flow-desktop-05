@@ -16,6 +16,7 @@ export const useUserManagement = () => {
     email, setEmail,
     password, setPassword,
     fullName, setFullName,
+    code, setCode,
     role, setRole,
     isSubmitting, setIsSubmitting
   } = useUserFormState();
@@ -70,12 +71,18 @@ export const useUserManagement = () => {
         options: {
           data: {
             full_name: fullName,
+            code: code,
             role: role,
           },
         },
       });
       
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('duplicate') || error.message.includes('unique')) {
+          throw new Error("User code or email already exists. Please choose different values.");
+        }
+        throw error;
+      }
       
       toast.success(`User added successfully`);
       
@@ -83,6 +90,7 @@ export const useUserManagement = () => {
       setEmail('');
       setPassword('');
       setFullName('');
+      setCode('');
       setRole('user' as UserRole);
       
       // Refresh users list
@@ -110,6 +118,8 @@ export const useUserManagement = () => {
     setPassword, 
     fullName,
     setFullName,
+    code,
+    setCode,
     role,
     setRole,
     isSubmitting,

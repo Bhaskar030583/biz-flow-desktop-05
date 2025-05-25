@@ -22,6 +22,8 @@ interface AddUserFormProps {
   setPassword: (value: string) => void;
   fullName: string;
   setFullName: (value: string) => void;
+  code: string;
+  setCode: (value: string) => void;
   role: UserRole;
   setRole: (value: UserRole) => void;
   isSubmitting: boolean;
@@ -35,6 +37,8 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({
   setPassword,
   fullName,
   setFullName,
+  code,
+  setCode,
   role,
   setRole,
   isSubmitting,
@@ -49,6 +53,17 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             placeholder="John Doe"
+            required
+          />
+        </div>
+        
+        <div className="grid gap-2">
+          <Label htmlFor="code">User Code</Label>
+          <Input
+            id="code"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="Enter unique user code"
             required
           />
         </div>

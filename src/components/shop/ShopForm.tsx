@@ -13,6 +13,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const shopSchema = z.object({
   name: z.string().min(2, { message: "Store name must be at least 2 characters" }),
+  store_code: z.string().min(2, { message: "Store code must be at least 2 characters" }),
   address: z.string().optional(),
   phone: z.string().optional(),
 });
@@ -32,6 +33,7 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
     resolver: zodResolver(shopSchema),
     defaultValues: {
       name: "",
+      store_code: "",
       address: "",
       phone: "",
     },
@@ -57,6 +59,7 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
         .from("shops")
         .insert({
           name: data.name,
+          store_code: data.store_code,
           address: data.address || null,
           phone: data.phone || null,
           user_id: user.id,
@@ -65,6 +68,9 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
 
       if (error) {
         console.error("Supabase error:", error);
+        if (error.code === '23505' && error.message.includes('store_code')) {
+          throw new Error("Store code already exists. Please choose a different code.");
+        }
         throw error;
       }
       
@@ -112,6 +118,20 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
                   <FormLabel>Store Name</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter store name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="store_code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Store Code</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter unique store code" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
