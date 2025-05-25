@@ -30,14 +30,24 @@ const StockTabsContainer = ({
   handleBatchAdded,
   handleCollectionAdded,
 }: StockTabsContainerProps) => {
+  console.log("StockTabsContainer rendered with activeTab:", activeTab);
+  
   return (
     <div className="w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-4 w-full mb-4">
-          <TabsTrigger value="list" className="text-xs sm:text-sm">Stock List</TabsTrigger>
-          <TabsTrigger value="chart" className="text-xs sm:text-sm">Analytics</TabsTrigger>
-          <TabsTrigger value="view" className="text-xs sm:text-sm">Real-time</TabsTrigger>
-          <TabsTrigger value="management" className="text-xs sm:text-sm">Management</TabsTrigger>
+        <TabsList className="grid w-full mb-4" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+          <TabsTrigger value="list" className="text-xs sm:text-sm px-2 py-2">
+            Stock List
+          </TabsTrigger>
+          <TabsTrigger value="chart" className="text-xs sm:text-sm px-2 py-2">
+            Analytics
+          </TabsTrigger>
+          <TabsTrigger value="view" className="text-xs sm:text-sm px-2 py-2">
+            Real-time
+          </TabsTrigger>
+          <TabsTrigger value="management" className="text-xs sm:text-sm px-2 py-2">
+            Management
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">
