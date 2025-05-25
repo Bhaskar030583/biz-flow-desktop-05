@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,9 @@ import {
   Smartphone,
   Calculator,
   Grid3X3,
-  Search
+  Search,
+  Grid2X2,
+  LayoutGrid
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -40,6 +41,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
   const [cart, setCart] = useState<POSItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [gridColumns, setGridColumns] = useState(3);
   const isMobile = useIsMobile();
 
   const addToCart = (product: any) => {
@@ -95,6 +97,28 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
     return matchesSearch && matchesCategory;
   });
 
+  // Grid view options
+  const gridViewOptions = [
+    { columns: 2, icon: Grid2X2, label: '2 columns' },
+    { columns: 3, icon: Grid3X3, label: '3 columns' },
+    { columns: 4, icon: LayoutGrid, label: '4 columns' },
+    { columns: 5, icon: LayoutGrid, label: '5 columns' },
+    { columns: 6, icon: LayoutGrid, label: '6 columns' }
+  ];
+
+  // Dynamic grid class based on selected columns
+  const getGridClass = () => {
+    if (isMobile) return 'grid-cols-1';
+    switch (gridColumns) {
+      case 2: return 'grid-cols-2';
+      case 3: return 'grid-cols-2 xl:grid-cols-3';
+      case 4: return 'grid-cols-2 xl:grid-cols-4';
+      case 5: return 'grid-cols-3 xl:grid-cols-5';
+      case 6: return 'grid-cols-3 xl:grid-cols-6';
+      default: return 'grid-cols-2 xl:grid-cols-3';
+    }
+  };
+
   return (
     <div className={`grid gap-4 h-full ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-4'}`}>
       {/* Products Section */}
@@ -131,6 +155,24 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
                 </Button>
               ))}
             </div>
+
+            {/* Grid View Controls */}
+            <div className="flex items-center gap-2 mt-3">
+              <span className="text-sm text-muted-foreground mr-2">Grid View:</span>
+              {gridViewOptions.map(({ columns, icon: Icon, label }) => (
+                <Button
+                  key={columns}
+                  variant={gridColumns === columns ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setGridColumns(columns)}
+                  className="flex items-center gap-1"
+                  title={label}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{columns}</span>
+                </Button>
+              ))}
+            </div>
           </CardHeader>
           
           <CardContent>
@@ -142,7 +184,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
                   <p className="text-sm">Try adjusting your search or category filter</p>
                 </div>
               ) : (
-                <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-2 xl:grid-cols-3'}`}>
+                <div className={`grid gap-3 ${getGridClass()}`}>
                   {filteredProducts.map(product => (
                     <Card
                       key={product.id}
