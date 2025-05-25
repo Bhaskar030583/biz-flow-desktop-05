@@ -31,57 +31,35 @@ const StockTabsContainer = ({
   handleCollectionAdded,
 }: StockTabsContainerProps) => {
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid grid-cols-4 w-full">
-        <TabsTrigger value="list">Stock List</TabsTrigger>
-        <TabsTrigger value="chart">Analytics</TabsTrigger>
-        <TabsTrigger value="view">Real-time View</TabsTrigger>
-        <TabsTrigger value="management">Management</TabsTrigger>
-      </TabsList>
+    <div className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-4 w-full mb-4">
+          <TabsTrigger value="list" className="text-xs sm:text-sm">Stock List</TabsTrigger>
+          <TabsTrigger value="chart" className="text-xs sm:text-sm">Analytics</TabsTrigger>
+          <TabsTrigger value="view" className="text-xs sm:text-sm">Real-time</TabsTrigger>
+          <TabsTrigger value="management" className="text-xs sm:text-sm">Management</TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="list" className="space-y-4">
-        <StockList refreshTrigger={refreshTrigger} />
-      </TabsContent>
+        <TabsContent value="list" className="space-y-4">
+          <StockList refreshTrigger={refreshTrigger} />
+        </TabsContent>
 
-      <TabsContent value="chart" className="space-y-4">
-        <StockChart />
-      </TabsContent>
+        <TabsContent value="chart" className="space-y-4">
+          <StockChart />
+        </TabsContent>
 
-      <TabsContent value="view" className="space-y-4">
-        <StockRealtimeView />
-      </TabsContent>
+        <TabsContent value="view" className="space-y-4">
+          <StockRealtimeView />
+        </TabsContent>
 
-      <TabsContent value="management" className="space-y-4">
-        {showForm && (
+        <TabsContent value="management" className="space-y-4">
           <NewStockManagement 
             onSuccess={handleStockAdded}
             onCancel={() => setActiveTab("list")}
           />
-        )}
-        
-        {showBatchEntry && (
-          <NewStockManagement 
-            onSuccess={handleBatchAdded}
-            onCancel={() => setActiveTab("list")}
-          />
-        )}
-        
-        {showCollectionForm && (
-          <CollectionForm 
-            onSuccess={handleCollectionAdded}
-            initialData={null}
-          />
-        )}
-
-        {!showForm && !showBatchEntry && !showCollectionForm && (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">
-              Use the buttons in the header to add stock entries, manage batch entries, or add collections.
-            </p>
-          </div>
-        )}
-      </TabsContent>
-    </Tabs>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
