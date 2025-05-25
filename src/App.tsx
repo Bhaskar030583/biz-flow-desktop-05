@@ -28,10 +28,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <SettingsProvider>
-          <AuthProvider>
-            <TooltipProvider>
-              <Toaster />
-              <BrowserRouter>
+          <TooltipProvider>
+            <Toaster />
+            <BrowserRouter>
+              <AuthProvider>
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
@@ -109,9 +109,9 @@ function App() {
                   />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
-          </AuthProvider>
+              </AuthProvider>
+            </BrowserRouter>
+          </TooltipProvider>
         </SettingsProvider>
       </ThemeProvider>
     </QueryClientProvider>
