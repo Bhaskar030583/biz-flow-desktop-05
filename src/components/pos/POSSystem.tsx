@@ -96,9 +96,9 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
   });
 
   return (
-    <div className={`grid gap-4 h-full ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3'}`}>
+    <div className={`grid gap-4 h-full ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-4'}`}>
       {/* Products Section */}
-      <div className={`space-y-4 ${isMobile ? 'order-2' : 'lg:col-span-2'}`}>
+      <div className={`space-y-4 ${isMobile ? 'order-2' : 'lg:col-span-3'}`}>
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
@@ -185,63 +185,63 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
         </Card>
       </div>
 
-      {/* Cart Section */}
+      {/* Cart Section - Reduced size */}
       <div className={`space-y-4 ${isMobile ? 'order-1' : ''}`}>
-        <Card className="h-full">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+        <Card className="h-fit">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center justify-between text-lg">
               <span className="flex items-center gap-2">
-                <Calculator className="h-5 w-5" />
+                <Calculator className="h-4 w-4" />
                 Cart ({cart.length})
               </span>
-              <Badge variant="secondary">
+              <Badge variant="secondary" className="text-sm">
                 ₹{getTotalAmount().toFixed(2)}
               </Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 p-4">
             {/* Cart Items */}
-            <div className="space-y-2 max-h-64 overflow-y-auto">
+            <div className="space-y-1 max-h-48 overflow-y-auto">
               {cart.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>Cart is empty</p>
-                  <p className="text-sm">Add products to get started</p>
+                <div className="text-center py-4 text-gray-500">
+                  <ShoppingCart className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Cart is empty</p>
+                  <p className="text-xs">Add products to get started</p>
                 </div>
               ) : (
                 cart.map(item => (
-                  <div key={item.id} className="flex items-center justify-between p-2 border rounded">
+                  <div key={item.id} className="flex items-center justify-between p-2 border rounded text-xs">
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{item.name}</div>
-                      <div className="text-xs text-gray-500">₹{item.price} each</div>
+                      <div className="font-medium truncate">{item.name}</div>
+                      <div className="text-gray-500">₹{item.price} each</div>
                     </div>
                     <div className="flex items-center gap-1">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => updateQuantity(item.id, -1)}
-                        className="h-6 w-6 p-0"
+                        className="h-5 w-5 p-0"
                       >
-                        <Minus className="h-3 w-3" />
+                        <Minus className="h-2 w-2" />
                       </Button>
-                      <span className="w-8 text-center text-sm font-medium">
+                      <span className="w-6 text-center font-medium">
                         {item.quantity}
                       </span>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => updateQuantity(item.id, 1)}
-                        className="h-6 w-6 p-0"
+                        className="h-5 w-5 p-0"
                       >
-                        <Plus className="h-3 w-3" />
+                        <Plus className="h-2 w-2" />
                       </Button>
                       <Button
                         size="sm"
                         variant="destructive"
                         onClick={() => removeFromCart(item.id)}
-                        className="h-6 w-6 p-0 ml-1"
+                        className="h-5 w-5 p-0 ml-1"
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Trash2 className="h-2 w-2" />
                       </Button>
                     </div>
                   </div>
@@ -255,23 +255,23 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
                 {/* Payment Methods */}
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Payment Method</div>
-                  <div className={`grid gap-2 ${isMobile ? 'grid-cols-1' : 'grid-cols-3'}`}>
-                    <Button variant="outline" size="sm" className="flex items-center gap-1">
-                      <Banknote className="h-4 w-4" />
+                  <div className="grid grid-cols-3 gap-1">
+                    <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs p-2">
+                      <Banknote className="h-3 w-3" />
                       Cash
                     </Button>
-                    <Button variant="outline" size="sm" className="flex items-center gap-1">
-                      <CreditCard className="h-4 w-4" />
+                    <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs p-2">
+                      <CreditCard className="h-3 w-3" />
                       Card
                     </Button>
-                    <Button variant="outline" size="sm" className="flex items-center gap-1">
-                      <Smartphone className="h-4 w-4" />
+                    <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs p-2">
+                      <Smartphone className="h-3 w-3" />
                       UPI
                     </Button>
                   </div>
                 </div>
                 
-                <Button className="w-full bg-green-600 hover:bg-green-700">
+                <Button className="w-full bg-green-600 hover:bg-green-700 text-sm py-2">
                   Complete Sale - ₹{getTotalAmount().toFixed(2)}
                 </Button>
               </>
