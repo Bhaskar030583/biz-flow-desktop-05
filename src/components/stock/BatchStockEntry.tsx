@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -268,11 +267,15 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
                   <SelectValue placeholder="Select shop" />
                 </SelectTrigger>
                 <SelectContent>
-                  {shops.map(shop => (
-                    <SelectItem key={shop.id} value={shop.id}>
-                      {shop.name}
-                    </SelectItem>
-                  ))}
+                  {shops.map(shop => {
+                    // Ensure we always have a non-empty value
+                    const selectValue = shop.id && shop.id.trim() !== "" ? shop.id : `shop_fallback_${Math.random().toString(36).substr(2, 9)}`;
+                    return (
+                      <SelectItem key={shop.id || shop.name} value={selectValue}>
+                        {shop.name}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
@@ -329,11 +332,15 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">All Categories</SelectItem>
-                  {getCategories().map(category => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
+                  {getCategories().map(category => {
+                    // Ensure we always have a non-empty value for categories
+                    const selectValue = category && category.trim() !== "" ? category : `category_fallback_${Math.random().toString(36).substr(2, 9)}`;
+                    return (
+                      <SelectItem key={category || 'unknown'} value={selectValue}>
+                        {category}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>

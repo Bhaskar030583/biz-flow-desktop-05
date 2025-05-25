@@ -342,11 +342,15 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {validShops.map((shop) => (
-                          <SelectItem key={shop.id} value={shop.id || `shop_${shop.name}`}>
-                            {shop.name}
-                          </SelectItem>
-                        ))}
+                        {validShops.map((shop) => {
+                          // Ensure we always have a non-empty value
+                          const selectValue = shop.id && shop.id.trim() !== "" ? shop.id : `shop_fallback_${Math.random().toString(36).substr(2, 9)}`;
+                          return (
+                            <SelectItem key={shop.id || shop.name} value={selectValue}>
+                              {shop.name}
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -370,11 +374,15 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {validProducts.map((product) => (
-                          <SelectItem key={product.id} value={product.id || `product_${product.name}`}>
-                            {product.name}
-                          </SelectItem>
-                        ))}
+                        {validProducts.map((product) => {
+                          // Ensure we always have a non-empty value
+                          const selectValue = product.id && product.id.trim() !== "" ? product.id : `product_fallback_${Math.random().toString(36).substr(2, 9)}`;
+                          return (
+                            <SelectItem key={product.id || product.name} value={selectValue}>
+                              {product.name}
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                     <FormMessage />

@@ -52,9 +52,18 @@ const StockFilters = ({
     setInputValue("");
   };
 
-  // Filter out shops and products with empty or invalid IDs
-  const validShops = shops.filter(shop => shop.id && shop.id.trim() !== "" && shop.name);
-  const validProducts = products.filter(product => product.id && product.id.trim() !== "" && product.name);
+  // Filter out shops and products with empty or invalid IDs, and ensure we have valid fallback values
+  const validShops = shops.filter(shop => {
+    const hasValidId = shop.id && shop.id.trim() !== "";
+    const hasValidName = shop.name && shop.name.trim() !== "";
+    return hasValidId && hasValidName;
+  });
+
+  const validProducts = products.filter(product => {
+    const hasValidId = product.id && product.id.trim() !== "";
+    const hasValidName = product.name && product.name.trim() !== "";
+    return hasValidId && hasValidName;
+  });
 
   const hasFilters = 
     searchTerm !== "" || 
@@ -90,11 +99,15 @@ const StockFilters = ({
             </SelectTrigger>
             <SelectContent className="bg-white">
               <SelectItem value="_all">All Shops</SelectItem>
-              {validShops.map((shop) => (
-                <SelectItem key={shop.id} value={shop.id || `shop_${shop.name}`}>
-                  {shop.name}
-                </SelectItem>
-              ))}
+              {validShops.map((shop) => {
+                // Ensure we always have a non-empty value
+                const selectValue = shop.id || `shop_fallback_${Math.random().toString(36).substr(2, 9)}`;
+                return (
+                  <SelectItem key={shop.id || shop.name} value={selectValue}>
+                    {shop.name}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
 
@@ -104,11 +117,15 @@ const StockFilters = ({
             </SelectTrigger>
             <SelectContent className="bg-white">
               <SelectItem value="_all">All Products</SelectItem>
-              {validProducts.map((product) => (
-                <SelectItem key={product.id} value={product.id || `product_${product.name}`}>
-                  {product.name}
-                </SelectItem>
-              ))}
+              {validProducts.map((product) => {
+                // Ensure we always have a non-empty value
+                const selectValue = product.id || `product_fallback_${Math.random().toString(36).substr(2, 9)}`;
+                return (
+                  <SelectItem key={product.id || product.name} value={selectValue}>
+                    {product.name}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
 
