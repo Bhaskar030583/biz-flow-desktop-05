@@ -19,6 +19,7 @@ const Stocks = () => {
   const { syncAfterStockChange } = useDataSyncActions();
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [showBatchEntry, setShowBatchEntry] = useState(false);
   const [refreshStockTrigger, setRefreshStockTrigger] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
@@ -50,6 +51,12 @@ const Stocks = () => {
 
   const handleStockAdded = async () => {
     setShowForm(false);
+    setRefreshStockTrigger(prev => prev + 1);
+    await syncAfterStockChange('create');
+  };
+
+  const handleBatchAdded = async () => {
+    setShowBatchEntry(false);
     setRefreshStockTrigger(prev => prev + 1);
     await syncAfterStockChange('create');
   };
@@ -90,6 +97,8 @@ const Stocks = () => {
           handleExport={handleExport}
           showForm={showForm}
           setShowForm={setShowForm}
+          showBatchEntry={showBatchEntry}
+          setShowBatchEntry={setShowBatchEntry}
           showCollectionForm={showCollectionForm}
           setShowCollectionForm={setShowCollectionForm}
           setShowImport={setShowImport}
@@ -105,10 +114,12 @@ const Stocks = () => {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           showForm={showForm}
+          showBatchEntry={showBatchEntry}
           showCollectionForm={showCollectionForm}
           refreshTrigger={combinedRefreshTrigger}
           dateRange={dateRange}
           handleStockAdded={handleStockAdded}
+          handleBatchAdded={handleBatchAdded}
           handleCollectionAdded={handleCollectionAdded}
         />
         
