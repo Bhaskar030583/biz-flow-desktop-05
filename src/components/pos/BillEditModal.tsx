@@ -27,6 +27,13 @@ interface Product {
   category: string;
 }
 
+interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+}
+
 interface BillEditModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -42,10 +49,12 @@ export const BillEditModal: React.FC<BillEditModalProps> = ({
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [paymentStatus, setPaymentStatus] = useState<string>("");
+  const [customerId, setCustomerId] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [billData, setBillData] = useState<any>(null);
   const [billItems, setBillItems] = useState<BillItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [showAddItem, setShowAddItem] = useState(false);
 
@@ -53,8 +62,16 @@ export const BillEditModal: React.FC<BillEditModalProps> = ({
     if (isOpen && billId) {
       fetchBillData();
       fetchProducts();
+      fetchCustomers();
     }
   }, [isOpen, billId]);
+
+  // Auto-set payment status to pending when payment method is credit
+  useEffect(() => {
+    if (paymentMethod === 'credit') {
+      setPaymentStatus('pending');
+    }
+  }, [paymentMethod]);
 
   const fetchBillData = async () => {
     try {
@@ -80,6 +97,7 @@ export const BillEditModal: React.FC<BillEditModalProps> = ({
       setBillItems(data.bill_items || []);
       setPaymentMethod(data.payment_method);
       setPaymentStatus(data.payment_status);
+      setCustomerId(data.customer_id || "");
     } catch (error) {
       console.error("Error fetching bill data:", error);
       toast.error("Failed to load bill data");
@@ -98,6 +116,21 @@ export const BillEditModal: React.FC<BillEditModalProps> = ({
     } catch (error) {
       console.error("Error fetching products:", error);
       toast.error("Failed to load products");
+    }
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('id, name, phone, email')
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      setCustomers(data || []);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+      toast.error("Failed to load customers");
     }
   };
 
@@ -162,6 +195,12 @@ export const BillEditModal: React.FC<BillEditModalProps> = ({
   const handleSave = async () => {
     if (!billData) return;
 
+    // Validate customer selection for credit payment
+    if (paymentMethod === 'credit' && !customerId) {
+      toast.error("Please select a customer for credit payment");
+      return;
+    }
+
     setLoading(true);
     try {
       const newTotalAmount = calculateTotalAmount();
@@ -172,6 +211,7 @@ export const BillEditModal: React.FC<BillEditModalProps> = ({
         .update({
           payment_method: paymentMethod,
           payment_status: paymentStatus,
+          customer_id: customerId || null,
           total_amount: newTotalAmount,
           updated_at: new Date().toISOString()
         })
@@ -373,7 +413,6 @@ export const BillEditModal: React.FC<BillEditModalProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="card">Card</SelectItem>
                   <SelectItem value="upi">UPI</SelectItem>
                   <SelectItem value="credit">Credit</SelectItem>
                 </SelectContent>
@@ -382,7 +421,11 @@ export const BillEditModal: React.FC<BillEditModalProps> = ({
 
             <div>
               <Label htmlFor="payment-status">Payment Status</Label>
-              <Select value={paymentStatus} onValueChange={setPaymentStatus}>
+              <Select 
+                value={paymentStatus} 
+                onValueChange={setPaymentStatus}
+                disabled={paymentMethod === 'credit'}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select payment status" />
                 </SelectTrigger>
@@ -392,8 +435,37 @@ export const BillEditModal: React.FC<BillEditModalProps> = ({
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
+              {paymentMethod === 'credit' && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Payment status is automatically set to "Pending" for credit payments
+                </p>
+              )}
             </div>
           </div>
+
+          {/* Customer Selection for Credit Payment */}
+          {paymentMethod === 'credit' && (
+            <div>
+              <Label htmlFor="customer-select">Customer (Required for Credit Payment)</Label>
+              <Select value={customerId} onValueChange={setCustomerId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a customer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map((customer) => (
+                    <SelectItem key={customer.id} value={customer.id}>
+                      {customer.name} - {customer.phone}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!customerId && (
+                <p className="text-xs text-red-600 mt-1">
+                  Please select a customer for credit payment
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={onClose}>
