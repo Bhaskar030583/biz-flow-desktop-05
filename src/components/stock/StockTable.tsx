@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { 
@@ -253,7 +254,9 @@ const StockTable = ({
                   <TableCell>{entry.shops?.name}</TableCell>
                   <TableCell>{entry.products?.name}</TableCell>
                   <TableCell className="text-right">{entry.opening_stock}</TableCell>
-                  <TableCell className="text-right">{entry.stock_added || 0}</TableCell>
+                  <TableCell className="text-right font-medium text-blue-600">
+                    {entry.stock_added || 0}
+                  </TableCell>
                   <TableCell className="text-right">{entry.closing_stock}</TableCell>
                   <TableCell className="text-right">{entry.actual_stock}</TableCell>
                   <TableCell>
@@ -342,7 +345,11 @@ const StockTable = ({
               <div className="space-y-2">
                 <div className="responsive-table-cell" data-label="Stock">
                   <span className="text-sm">
-                    Opening: {entry.opening_stock} {entry.stock_added ? `(+${entry.stock_added} added)` : ''} → Closing: {entry.closing_stock}
+                    Opening: {entry.opening_stock} 
+                    {entry.stock_added ? (
+                      <span className="text-blue-600 font-medium"> (+{entry.stock_added} added)</span>
+                    ) : ''} 
+                    → Closing: {entry.closing_stock}
                   </span>
                 </div>
                 
