@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -162,6 +163,57 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
     const categories = [...new Set(products.map(p => p.category))].filter(Boolean);
     return categories;
   };
+
+  const handleSubmit = async () => {
+    if (!selectedShop) {
+      toast.error('Please select a shop');
+      return;
+    }
+
+    if (stockEntries.length === 0) {
+      toast.error('Please add at least one product');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const stockData = stockEntries.map(entry => ({
+        stock_date: stockDate,
+        product_id: entry.product_id,
+        shop_id: selectedShop,
+        opening_stock: entry.opening_stock,
+        actual_stock: entry.actual_stock,
+        closing_stock: entry.closing_stock,
+        stock_added: entry.stock_added || 0,
+        shift: shift || null,
+        operator_name: operatorName || null,
+        user_id: user?.id
+      }));
+
+      const { error } = await supabase
+        .from('stocks')
+        .insert(stockData);
+
+      if (error) throw error;
+
+      toast.success(`Successfully saved ${stockEntries.length} stock entries`);
+      onSuccess();
+    } catch (error) {
+      console.error('Error saving stock entries:', error);
+      toast.error('Failed to save stock entries');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter out shops and products with empty or invalid IDs
+  const validShops = shops.filter(shop => {
+    const hasValidId = shop.id && shop.id.trim() !== "";
+    const hasValidName = shop.name && shop.name.trim() !== "";
+    return hasValidId && hasValidName;
+  });
+
+  const validCategories = getCategories();
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
