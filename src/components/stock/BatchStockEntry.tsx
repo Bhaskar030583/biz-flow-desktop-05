@@ -159,8 +159,8 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
   };
 
   const getCategories = () => {
-    const categories = [...new Set(products.map(p => p.category))];
-    return categories.filter(Boolean);
+    const categories = [...new Set(products.map(p => p.category))].filter(Boolean);
+    return categories;
   };
 
   const filteredProducts = products.filter(product => {
@@ -175,48 +175,6 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
     groups[category].push(entry);
     return groups;
   }, {} as Record<string, StockEntry[]>);
-
-  const handleSubmit = async () => {
-    if (!user) {
-      toast.error('You must be logged in to save stock entries');
-      return;
-    }
-
-    if (!selectedShop || stockEntries.length === 0) {
-      toast.error('Please select a shop and add at least one product');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const stockData = stockEntries.map(entry => ({
-        product_id: entry.product_id,
-        shop_id: selectedShop,
-        user_id: user.id,
-        stock_date: stockDate,
-        opening_stock: entry.opening_stock,
-        actual_stock: entry.actual_stock,
-        closing_stock: entry.closing_stock,
-        stock_added: entry.stock_added,
-        shift: shift || null,
-        operator_name: operatorName || null,
-      }));
-
-      const { error } = await supabase
-        .from('stocks')
-        .insert(stockData);
-
-      if (error) throw error;
-
-      toast.success(`Successfully added ${stockEntries.length} stock entries`);
-      onSuccess();
-    } catch (error) {
-      console.error('Error saving batch stock entries:', error);
-      toast.error('Failed to save stock entries');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Show login message if user is not authenticated
   if (!user) {
@@ -267,15 +225,11 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
                   <SelectValue placeholder="Select shop" />
                 </SelectTrigger>
                 <SelectContent>
-                  {shops.map(shop => {
-                    // Ensure we always have a non-empty value
-                    const selectValue = shop.id && shop.id.trim() !== "" ? shop.id : `shop_fallback_${Math.random().toString(36).substr(2, 9)}`;
-                    return (
-                      <SelectItem key={shop.id || shop.name} value={selectValue}>
-                        {shop.name}
-                      </SelectItem>
-                    );
-                  })}
+                  {validShops.map(shop => (
+                    <SelectItem key={shop.id} value={shop.id}>
+                      {shop.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -332,15 +286,11 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">All Categories</SelectItem>
-                  {getCategories().map(category => {
-                    // Ensure we always have a non-empty value for categories
-                    const selectValue = category && category.trim() !== "" ? category : `category_fallback_${Math.random().toString(36).substr(2, 9)}`;
-                    return (
-                      <SelectItem key={category || 'unknown'} value={selectValue}>
-                        {category}
-                      </SelectItem>
-                    );
-                  })}
+                  {validCategories.map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
