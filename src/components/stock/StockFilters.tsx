@@ -52,33 +52,29 @@ const StockFilters = ({
     setInputValue("");
   };
 
-  // Enhanced validation - more strict filtering to prevent empty string values
+  // Enhanced validation - ensure no empty string values can pass through
   const validShops = (shops || []).filter(shop => {
     return shop && 
            shop.id && 
            typeof shop.id === 'string' && 
-           shop.id.trim() !== "" && 
+           shop.id.trim().length > 0 && 
            shop.id !== "null" &&
            shop.id !== "undefined" &&
-           shop.id.length > 0 &&
            shop.name && 
            typeof shop.name === 'string' && 
-           shop.name.trim() !== "" &&
-           shop.name.length > 0;
+           shop.name.trim().length > 0;
   });
 
   const validProducts = (products || []).filter(product => {
     return product && 
            product.id && 
            typeof product.id === 'string' && 
-           product.id.trim() !== "" && 
+           product.id.trim().length > 0 && 
            product.id !== "null" &&
            product.id !== "undefined" &&
-           product.id.length > 0 &&
            product.name && 
            typeof product.name === 'string' && 
-           product.name.trim() !== "" &&
-           product.name.length > 0;
+           product.name.trim().length > 0;
   });
 
   const hasFilters = 
@@ -115,16 +111,16 @@ const StockFilters = ({
             </SelectTrigger>
             <SelectContent className="bg-white z-50">
               <SelectItem value="_all">All Shops</SelectItem>
-              {validShops.length === 0 ? (
-                <SelectItem value="no-shops-available" disabled>
-                  No shops available
-                </SelectItem>
-              ) : (
+              {validShops.length > 0 ? (
                 validShops.map((shop) => (
                   <SelectItem key={shop.id} value={shop.id}>
                     {shop.name}
                   </SelectItem>
                 ))
+              ) : (
+                <SelectItem value="_no_shops" disabled>
+                  No shops available
+                </SelectItem>
               )}
             </SelectContent>
           </Select>
@@ -135,16 +131,16 @@ const StockFilters = ({
             </SelectTrigger>
             <SelectContent className="bg-white z-50">
               <SelectItem value="_all">All Products</SelectItem>
-              {validProducts.length === 0 ? (
-                <SelectItem value="no-products-available" disabled>
-                  No products available
-                </SelectItem>
-              ) : (
+              {validProducts.length > 0 ? (
                 validProducts.map((product) => (
                   <SelectItem key={product.id} value={product.id}>
                     {product.name}
                   </SelectItem>
                 ))
+              ) : (
+                <SelectItem value="_no_products" disabled>
+                  No products available
+                </SelectItem>
               )}
             </SelectContent>
           </Select>
