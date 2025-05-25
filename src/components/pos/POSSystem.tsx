@@ -9,7 +9,7 @@ import {
   Plus, 
   Minus, 
   Trash2, 
-  CreditCard,
+  Split,
   Banknote,
   Smartphone,
   Calculator,
@@ -22,6 +22,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CashPaymentModal } from "./CashPaymentModal";
 import { CreditPaymentModal } from "./CreditPaymentModal";
+import { SplitPaymentModal } from "./SplitPaymentModal";
 import { generateBill } from "@/services/billService";
 import { toast } from "sonner";
 
@@ -50,6 +51,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
   const [gridColumns, setGridColumns] = useState(3);
   const [showCashModal, setShowCashModal] = useState(false);
   const [showCreditModal, setShowCreditModal] = useState(false);
+  const [showSplitModal, setShowSplitModal] = useState(false);
   const isMobile = useIsMobile();
 
   const addToCart = (product: any) => {
@@ -96,6 +98,10 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
 
   const handleCashPayment = () => {
     setShowCashModal(true);
+  };
+
+  const handleSplitPayment = () => {
+    setShowSplitModal(true);
   };
 
   const handleCardPayment = async () => {
@@ -148,6 +154,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
     setCart([]);
     setShowCashModal(false);
     setShowCreditModal(false);
+    setShowSplitModal(false);
   };
 
   // Get unique categories
@@ -397,10 +404,10 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
                         variant="outline" 
                         size="sm" 
                         className="flex items-center gap-1 text-xs p-2"
-                        onClick={handleCardPayment}
+                        onClick={handleSplitPayment}
                       >
-                        <CreditCard className="h-3 w-3" />
-                        Card
+                        <Split className="h-3 w-3" />
+                        Split
                       </Button>
                       <Button 
                         variant="outline" 
@@ -437,6 +444,14 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
         isOpen={showCashModal}
         onClose={() => setShowCashModal(false)}
         totalAmount={getTotalAmount()}
+        onPaymentComplete={handlePaymentComplete}
+      />
+
+      <SplitPaymentModal
+        isOpen={showSplitModal}
+        onClose={() => setShowSplitModal(false)}
+        totalAmount={getTotalAmount()}
+        cartItems={cart}
         onPaymentComplete={handlePaymentComplete}
       />
 
