@@ -49,9 +49,63 @@ export function ShopList() {
     fetchShops();
   }, [user]);
 
+  async function checkRelatedData(shopId: string, shopName: string) {
+    try {
+      // Check for credits
+      const { data: credits, error: creditsError } = await supabase
+        .from("credits")
+        .select("id")
+        .eq("shop_id", shopId)
+        .limit(1);
+
+      if (creditsError) throw creditsError;
+
+      // Check for expenses
+      const { data: expenses, error: expensesError } = await supabase
+        .from("expenses")
+        .select("id")
+        .eq("shop_id", shopId)
+        .limit(1);
+
+      if (expensesError) throw expensesError;
+
+      // Check for stock entries
+      const { data: stocks, error: stocksError } = await supabase
+        .from("stocks")
+        .select("id")
+        .eq("shop_id", shopId)
+        .limit(1);
+
+      if (stocksError) throw stocksError;
+
+      const relatedItems = [];
+      if (credits && credits.length > 0) relatedItems.push("credits");
+      if (expenses && expenses.length > 0) relatedItems.push("expenses");
+      if (stocks && stocks.length > 0) relatedItems.push("stock entries");
+
+      return relatedItems;
+    } catch (error) {
+      console.error("Error checking related data:", error);
+      return [];
+    }
+  }
+
   async function handleDelete(id: string, shopName: string) {
     try {
       console.log(`Attempting to delete shop: ${shopName} (${id})`);
+      
+      // First check what related data exists
+      const relatedItems = await checkRelatedData(id, shopName);
+      
+      if (relatedItems.length > 0) {
+        const itemsList = relatedItems.join(", ");
+        toast({
+          variant: "destructive",
+          title: "Cannot Delete Store",
+          description: `The store "${shopName}" cannot be deleted because it has ${relatedItems.length} type(s) of related data: ${itemsList}. Please remove all ${itemsList} for this store first, then try deleting again.`,
+        });
+        return;
+      }
       
       const { error } = await supabase
         .from("shops")
@@ -65,8 +119,18 @@ export function ShopList() {
         if (error.code === '23503') {
           toast({
             variant: "destructive",
-            title: "Cannot delete store",
-            description: `Cannot delete "${shopName}" because it has related data (credits, expenses, or stock entries). Please remove all related records first.`,
+            title: "Cannot Delete Store",
+            description: `The store "${shopName}" cannot be deleted because it has related data. This could include credits, expenses, sales, or stock entries. Please remove all related records first and try again.`,
+          });
+          return;
+        }
+        
+        // Handle other specific error codes
+        if (error.code === '42501') {
+          toast({
+            variant: "destructive",
+            title: "Permission Denied",
+            description: `You don't have permission to delete the store "${shopName}". Please contact your administrator.`,
           });
           return;
         }
@@ -78,15 +142,15 @@ export function ShopList() {
       setShops(shops.filter(shop => shop.id !== id));
       
       toast({
-        title: "Store deleted",
-        description: `"${shopName}" has been deleted successfully`,
+        title: "Store Deleted Successfully",
+        description: `The store "${shopName}" has been permanently deleted from your account.`,
       });
     } catch (error: any) {
       console.error("Error deleting store:", error);
       toast({
         variant: "destructive",
-        title: "Failed to delete store",
-        description: error.message || "Something went wrong",
+        title: "Failed to Delete Store",
+        description: `Unable to delete "${shopName}". Error: ${error.message || "An unexpected error occurred. Please try again or contact support."}`,
       });
     }
   }
