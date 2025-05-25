@@ -33,7 +33,7 @@ interface CustomerListProps {
 }
 
 export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) => {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -63,6 +63,11 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
   }, [user, refreshTrigger]);
 
   const handleDeleteCustomer = async (customerId: string) => {
+    if (userRole !== "admin") {
+      toast.error("Only administrators can delete customers");
+      return;
+    }
+
     if (!confirm("Are you sure you want to delete this customer?")) return;
 
     try {
@@ -175,15 +180,17 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        className="h-8 w-8 p-0"
-                        onClick={() => handleDeleteCustomer(customer.id)}
-                        title="Delete customer"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {userRole === "admin" && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleDeleteCustomer(customer.id)}
+                          title="Delete customer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
