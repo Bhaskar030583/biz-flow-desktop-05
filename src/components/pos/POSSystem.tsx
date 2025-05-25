@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -106,17 +107,19 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
     { columns: 6, icon: LayoutGrid, label: '6 columns' }
   ];
 
-  // Dynamic grid class based on selected columns
+  // Dynamic grid class based on selected columns - Fixed version
   const getGridClass = () => {
-    if (isMobile) return 'grid-cols-1';
-    switch (gridColumns) {
-      case 2: return 'grid-cols-2';
-      case 3: return 'grid-cols-2 xl:grid-cols-3';
-      case 4: return 'grid-cols-2 xl:grid-cols-4';
-      case 5: return 'grid-cols-3 xl:grid-cols-5';
-      case 6: return 'grid-cols-3 xl:grid-cols-6';
-      default: return 'grid-cols-2 xl:grid-cols-3';
-    }
+    if (isMobile) return 'grid-cols-1 sm:grid-cols-2';
+    
+    const gridClasses = {
+      2: 'grid-cols-2',
+      3: 'grid-cols-2 lg:grid-cols-3',
+      4: 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+      5: 'grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
+      6: 'grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'
+    };
+    
+    return gridClasses[gridColumns as keyof typeof gridClasses] || 'grid-cols-2 lg:grid-cols-3';
   };
 
   return (
@@ -159,19 +162,29 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
             {/* Grid View Controls */}
             <div className="flex items-center gap-2 mt-3">
               <span className="text-sm text-muted-foreground mr-2">Grid View:</span>
-              {gridViewOptions.map(({ columns, icon: Icon, label }) => (
-                <Button
-                  key={columns}
-                  variant={gridColumns === columns ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setGridColumns(columns)}
-                  className="flex items-center gap-1"
-                  title={label}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{columns}</span>
-                </Button>
-              ))}
+              <div className="flex flex-wrap gap-1">
+                {gridViewOptions.map(({ columns, icon: Icon, label }) => (
+                  <Button
+                    key={columns}
+                    variant={gridColumns === columns ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      console.log(`Grid columns changed to: ${columns}`);
+                      setGridColumns(columns);
+                    }}
+                    className="flex items-center gap-1"
+                    title={label}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="hidden sm:inline text-xs">{columns}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+            
+            {/* Debug info - remove after testing */}
+            <div className="text-xs text-gray-500">
+              Current grid: {gridColumns} columns | Class: {getGridClass()}
             </div>
           </CardHeader>
           
@@ -184,7 +197,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
                   <p className="text-sm">Try adjusting your search or category filter</p>
                 </div>
               ) : (
-                <div className={`grid gap-3 ${getGridClass()}`}>
+                <div className={`grid gap-3 ${getGridClass()}`} key={gridColumns}>
                   {filteredProducts.map(product => (
                     <Card
                       key={product.id}
