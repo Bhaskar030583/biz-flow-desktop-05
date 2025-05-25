@@ -34,7 +34,11 @@ import {
   Search, 
   Filter,
   Loader2,
-  AlertCircle 
+  AlertCircle,
+  Package,
+  TrendingUp,
+  Eye,
+  EyeOff 
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -51,6 +55,7 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
 
 // Define the form schema
 const batchStockSchema = z.object({
@@ -90,6 +95,8 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
   const [categories, setCategories] = useState<string[]>([]);
   const [validationError, setValidationError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showOnlyWithValues, setShowOnlyWithValues] = useState(false);
+  const [highlightChanged, setHighlightChanged] = useState(true);
 
   // Define form with default values
   const form = useForm<BatchStockFormValues>({
@@ -341,12 +348,50 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
     }
   };
 
-  // Filter products by search term and category
+  // Filter products by search term, category, and value filter
   const filteredProducts = form.watch("products").filter(product => {
     const matchesSearch = product.product_name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = activeCategory ? product.category === activeCategory : true;
-    return matchesSearch && matchesCategory;
+    const hasValues = product.closing_stock > 0 || product.actual_stock > 0;
+    const matchesValueFilter = showOnlyWithValues ? hasValues : true;
+    return matchesSearch && matchesCategory && matchesValueFilter;
   });
+
+  // Calculate total stock value for current products
+  const calculateTotalStockValue = () => {
+    return form.watch("products").reduce((total, product) => {
+      // Get product price from the products list
+      const productInfo = products.find(p => p.product_id === product.product_id);
+      const price = productInfo?.price || 0;
+      const stockValue = product.actual_stock * price;
+      return total + stockValue;
+    }, 0);
+  };
+
+  const formatIndianRupee = (value: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+
+  // Quick input functions
+  const handleQuickFill = (productIndex: number, type: 'closing' | 'actual', value: number) => {
+    const newProducts = [...form.getValues().products];
+    if (type === 'closing') {
+      newProducts[productIndex].closing_stock = value;
+    } else {
+      newProducts[productIndex].actual_stock = value;
+    }
+    form.setValue("products", newProducts);
+  };
+
+  const handleCopyToActual = (productIndex: number) => {
+    const newProducts = [...form.getValues().products];
+    newProducts[productIndex].actual_stock = newProducts[productIndex].closing_stock;
+    form.setValue("products", newProducts);
+  };
 
   // Group products by category for better organization
   const groupedProducts = filteredProducts.reduce((groups: Record<string, any[]>, product) => {
@@ -366,12 +411,34 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
   const progressPercentage = totalProducts > 0 ? (productsWithData / totalProducts) * 100 : 0;
 
   return (
-    <Card className="max-w-6xl mx-auto shadow-lg border-indigo-100">
-      <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
-        <CardTitle className="text-2xl font-bold text-indigo-800">Batch Stock Entry</CardTitle>
-        <CardDescription className="text-indigo-600">
+    <Card className="max-w-6xl mx-auto shadow-lg border-blue-200">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-green-50 border-b border-blue-200">
+        <CardTitle className="text-2xl font-bold text-blue-800 flex items-center gap-2">
+          <Package className="h-6 w-6" />
+          Batch Stock Entry
+        </CardTitle>
+        <CardDescription className="text-blue-600">
           Enter closing stock for multiple products at once
         </CardDescription>
+        
+        {/* Stock Value Summary */}
+        <div className="flex items-center gap-4 mt-4 p-3 bg-white rounded-lg border border-blue-100">
+          <div className="flex items-center gap-2">
+            <IndianRupee className="h-5 w-5 text-green-600" />
+            <span className="text-sm font-medium text-gray-700">Total Stock Value:</span>
+            <span className="text-lg font-bold text-green-600">
+              {formatIndianRupee(calculateTotalStockValue())}
+            </span>
+          </div>
+          <Separator orientation="vertical" className="h-6" />
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+            <span className="text-sm font-medium text-gray-700">Products with Data:</span>
+            <span className="text-lg font-bold text-blue-600">
+              {productsWithData} / {totalProducts}
+            </span>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="pt-6">
         <Form {...form}>
@@ -503,220 +570,207 @@ const BatchStockEntry = ({ onSuccess, onCancel }: BatchStockEntryProps) => {
 
             {loading ? (
               <div className="flex items-center justify-center py-10">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
-                <span className="ml-2 text-indigo-700">Loading products and previous stock data...</span>
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                <span className="ml-2 text-blue-700">Loading products and previous stock data...</span>
               </div>
             ) : (
-              <div className="space-y-6 bg-gradient-to-r from-white to-indigo-50/20 rounded-lg border border-indigo-100 p-5">
-                <div className="flex flex-col md:flex-row justify-between gap-4">
-                  <div className="flex-1">
+              <div className="space-y-6 bg-gradient-to-r from-white to-blue-50/20 rounded-lg border border-blue-100 p-5">
+                {/* Enhanced Filter Section */}
+                <div className="flex flex-col lg:flex-row justify-between gap-4">
+                  <div className="flex-1 max-w-md">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-400" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
                       <Input 
                         placeholder="Search products..." 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 border-indigo-200 focus:ring-indigo-300"
+                        className="pl-9 border-blue-200 focus:ring-blue-300"
                       />
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-indigo-500" />
-                    <span className="text-sm font-medium text-indigo-700">Filter by Category:</span>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge 
-                        variant={!activeCategory ? "default" : "outline"}
-                        className={`cursor-pointer hover:bg-indigo-100 ${!activeCategory ? 'bg-indigo-600' : 'border-indigo-200 text-indigo-700'}`}
-                        onClick={() => setActiveCategory(null)}
-                      >
-                        All
-                      </Badge>
-                      {categories.map(category => (
+                  <div className="flex flex-wrap items-center gap-4">
+                    {/* View Options */}
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={showOnlyWithValues}
+                        onCheckedChange={setShowOnlyWithValues}
+                        id="show-values"
+                      />
+                      <label htmlFor="show-values" className="text-sm font-medium text-blue-700 flex items-center gap-1">
+                        {showOnlyWithValues ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                        Show only with values
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={highlightChanged}
+                        onCheckedChange={setHighlightChanged}
+                        id="highlight-changed"
+                      />
+                      <label htmlFor="highlight-changed" className="text-sm font-medium text-blue-700">
+                        Highlight changes
+                      </label>
+                    </div>
+
+                    {/* Category Filter */}
+                    <div className="flex items-center gap-2">
+                      <Filter className="h-4 w-4 text-blue-500" />
+                      <span className="text-sm font-medium text-blue-700">Category:</span>
+                      <div className="flex flex-wrap gap-2">
                         <Badge 
-                          key={category} 
-                          variant={activeCategory === category ? "default" : "outline"}
-                          className={`cursor-pointer hover:bg-indigo-100 ${activeCategory === category ? 'bg-indigo-600' : 'border-indigo-200 text-indigo-700'}`}
-                          onClick={() => setActiveCategory(category)}
+                          variant={!activeCategory ? "default" : "outline"}
+                          className={`cursor-pointer hover:bg-blue-100 ${!activeCategory ? 'bg-blue-600' : 'border-blue-200 text-blue-700'}`}
+                          onClick={() => setActiveCategory(null)}
                         >
-                          {category}
+                          All
                         </Badge>
-                      ))}
+                        {categories.map(category => (
+                          <Badge 
+                            key={category} 
+                            variant={activeCategory === category ? "default" : "outline"}
+                            className={`cursor-pointer hover:bg-blue-100 ${activeCategory === category ? 'bg-blue-600' : 'border-blue-200 text-blue-700'}`}
+                            onClick={() => setActiveCategory(category)}
+                          >
+                            {category}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-sm text-indigo-700">
+                {/* Progress Section */}
+                <div className="flex items-center justify-between text-sm text-blue-700 bg-blue-50 p-3 rounded-lg">
                   <span>
                     {productsWithData} of {totalProducts} products completed ({Math.round(progressPercentage)}%)
                   </span>
                   <span>
-                    {Object.keys(filteredProducts.length > 0 ? groupedProducts : {}).length} categories shown
+                    {filteredProducts.length} products shown
                   </span>
                 </div>
 
                 <div className="relative pt-1">
-                  <div className="overflow-hidden h-2 text-xs flex rounded bg-indigo-200">
+                  <div className="overflow-hidden h-3 text-xs flex rounded-full bg-blue-200">
                     <div 
                       style={{ width: `${progressPercentage}%` }}
-                      className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-indigo-500 to-purple-500"
+                      className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
                     ></div>
                   </div>
                 </div>
 
-                <Tabs defaultValue="table" className="w-full">
-                  <TabsList className="mb-4 bg-indigo-100/50">
-                    <TabsTrigger value="table" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
-                      Table View
-                    </TabsTrigger>
-                    <TabsTrigger value="accordion" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
-                      Category View
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="table" className="border-none p-0">
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse">
-                        <thead>
-                          <tr className="bg-indigo-50">
-                            <th className="text-left py-2 px-3 text-indigo-800 font-medium">Product</th>
-                            <th className="text-left py-2 px-3 text-indigo-800 font-medium">Category</th>
-                            <th className="text-right py-2 px-3 text-indigo-800 font-medium">Opening Stock</th>
-                            <th className="text-right py-2 px-3 text-indigo-800 font-medium">Closing Stock</th>
-                            <th className="text-right py-2 px-3 text-indigo-800 font-medium">Actual Stock</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredProducts.length > 0 ? (
-                            filteredProducts.map((product, index) => {
-                              const productIndex = form.getValues().products.findIndex(
-                                p => p.product_id === product.product_id
-                              );
-                              
-                              return (
-                                <tr key={product.product_id} className="border-b border-indigo-100 hover:bg-indigo-50/30">
-                                  <td className="py-3 px-3 text-indigo-800">{product.product_name}</td>
-                                  <td className="py-3 px-3 text-indigo-600">{product.category}</td>
-                                  <td className="py-3 px-3 text-right font-medium text-indigo-800">
-                                    {product.opening_stock}
-                                  </td>
-                                  <td className="py-3 px-3">
-                                    <Input
-                                      type="number"
-                                      className="w-24 ml-auto text-right border-indigo-200 focus:ring-indigo-300"
-                                      value={product.closing_stock}
-                                      onChange={(e) => {
-                                        const newProducts = [...form.getValues().products];
-                                        newProducts[productIndex].closing_stock = parseInt(e.target.value) || 0;
-                                        form.setValue("products", newProducts);
-                                      }}
-                                    />
-                                  </td>
-                                  <td className="py-3 px-3">
-                                    <Input
-                                      type="number"
-                                      className="w-24 ml-auto text-right border-indigo-200 focus:ring-indigo-300"
-                                      value={product.actual_stock}
-                                      onChange={(e) => {
-                                        const newProducts = [...form.getValues().products];
-                                        newProducts[productIndex].actual_stock = parseInt(e.target.value) || 0;
-                                        form.setValue("products", newProducts);
-                                      }}
-                                    />
-                                  </td>
-                                </tr>
-                              );
-                            })
-                          ) : (
-                            <tr>
-                              <td colSpan={5} className="py-6 text-center text-indigo-600">
-                                <FileText className="h-12 w-12 mx-auto mb-2 text-indigo-300" />
-                                <p>No products match your filter. Try adjusting your search or filters.</p>
+                {/* Enhanced Table View */}
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
+                    <thead>
+                      <tr className="bg-gradient-to-r from-blue-50 to-green-50">
+                        <th className="text-left py-3 px-4 text-blue-800 font-semibold border-b border-blue-200">Product</th>
+                        <th className="text-left py-3 px-4 text-blue-800 font-semibold border-b border-blue-200">Category</th>
+                        <th className="text-center py-3 px-4 text-blue-800 font-semibold border-b border-blue-200">Opening</th>
+                        <th className="text-center py-3 px-4 text-green-800 font-semibold border-b border-blue-200">Closing Stock</th>
+                        <th className="text-center py-3 px-4 text-green-800 font-semibold border-b border-blue-200">Actual Stock</th>
+                        <th className="text-center py-3 px-4 text-blue-800 font-semibold border-b border-blue-200">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredProducts.length > 0 ? (
+                        filteredProducts.map((product, index) => {
+                          const productIndex = form.getValues().products.findIndex(
+                            p => p.product_id === product.product_id
+                          );
+                          
+                          const hasChanges = product.closing_stock > 0 || product.actual_stock > 0;
+                          
+                          return (
+                            <tr 
+                              key={product.product_id} 
+                              className={`border-b border-blue-100 hover:bg-blue-50/50 transition-colors ${
+                                highlightChanged && hasChanges ? 'bg-green-50 border-green-200' : ''
+                              }`}
+                            >
+                              <td className="py-3 px-4 text-blue-800 font-medium">{product.product_name}</td>
+                              <td className="py-3 px-4">
+                                <Badge variant="outline" className="border-blue-200 text-blue-600">
+                                  {product.category}
+                                </Badge>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <div className="bg-gray-100 rounded-lg px-3 py-2 text-gray-700 font-semibold">
+                                  {product.opening_stock}
+                                </div>
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    type="number"
+                                    className={`w-20 text-center border-green-200 focus:ring-green-300 ${
+                                      product.closing_stock > 0 ? 'bg-green-50 border-green-300' : ''
+                                    }`}
+                                    value={product.closing_stock}
+                                    onChange={(e) => {
+                                      const newProducts = [...form.getValues().products];
+                                      newProducts[productIndex].closing_stock = parseInt(e.target.value) || 0;
+                                      form.setValue("products", newProducts);
+                                    }}
+                                    placeholder="0"
+                                  />
+                                  <div className="flex flex-col gap-1">
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-6 px-2 text-xs border-blue-200"
+                                      onClick={() => handleQuickFill(productIndex, 'closing', product.opening_stock)}
+                                    >
+                                      Same
+                                    </Button>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    type="number"
+                                    className={`w-20 text-center border-green-200 focus:ring-green-300 ${
+                                      product.actual_stock > 0 ? 'bg-green-50 border-green-300' : ''
+                                    }`}
+                                    value={product.actual_stock}
+                                    onChange={(e) => {
+                                      const newProducts = [...form.getValues().products];
+                                      newProducts[productIndex].actual_stock = parseInt(e.target.value) || 0;
+                                      form.setValue("products", newProducts);
+                                    }}
+                                    placeholder="0"
+                                  />
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2 text-xs border-blue-200 text-blue-600"
+                                  onClick={() => handleCopyToActual(productIndex)}
+                                  disabled={product.closing_stock === 0}
+                                >
+                                  Copy →
+                                </Button>
                               </td>
                             </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="accordion" className="border-none p-0">
-                    {Object.keys(groupedProducts).length > 0 ? (
-                      <Accordion type="multiple" defaultValue={[Object.keys(groupedProducts)[0]]} className="space-y-4">
-                        {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
-                          <AccordionItem 
-                            key={category} 
-                            value={category}
-                            className="border border-indigo-100 rounded-md overflow-hidden"
-                          >
-                            <AccordionTrigger className="px-4 py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-medium">
-                              {category} <span className="ml-2 text-indigo-500 text-xs font-normal">({categoryProducts.length} items)</span>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="overflow-x-auto">
-                                <table className="w-full border-collapse">
-                                  <thead>
-                                    <tr className="border-b border-indigo-100">
-                                      <th className="text-left py-2 px-3 text-indigo-700 font-medium">Product</th>
-                                      <th className="text-right py-2 px-3 text-indigo-700 font-medium">Opening Stock</th>
-                                      <th className="text-right py-2 px-3 text-indigo-700 font-medium">Closing Stock</th>
-                                      <th className="text-right py-2 px-3 text-indigo-700 font-medium">Actual Stock</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {categoryProducts.map((product) => {
-                                      const productIndex = form.getValues().products.findIndex(
-                                        p => p.product_id === product.product_id
-                                      );
-                                      
-                                      return (
-                                        <tr key={product.product_id} className="border-b border-indigo-50 hover:bg-indigo-50/30">
-                                          <td className="py-2 px-3 text-indigo-800">{product.product_name}</td>
-                                          <td className="py-2 px-3 text-right font-medium text-indigo-800">
-                                            {product.opening_stock}
-                                          </td>
-                                          <td className="py-2 px-3">
-                                            <Input
-                                              type="number"
-                                              className="w-24 ml-auto text-right border-indigo-200 focus:ring-indigo-300"
-                                              value={product.closing_stock}
-                                              onChange={(e) => {
-                                                const newProducts = [...form.getValues().products];
-                                                newProducts[productIndex].closing_stock = parseInt(e.target.value) || 0;
-                                                form.setValue("products", newProducts);
-                                              }}
-                                            />
-                                          </td>
-                                          <td className="py-2 px-3">
-                                            <Input
-                                              type="number"
-                                              className="w-24 ml-auto text-right border-indigo-200 focus:ring-indigo-300"
-                                              value={product.actual_stock}
-                                              onChange={(e) => {
-                                                const newProducts = [...form.getValues().products];
-                                                newProducts[productIndex].actual_stock = parseInt(e.target.value) || 0;
-                                                form.setValue("products", newProducts);
-                                              }}
-                                            />
-                                          </td>
-                                        </tr>
-                                      );
-                                    })}
-                                  </tbody>
-                                </table>
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        ))}
-                      </Accordion>
-                    ) : (
-                      <div className="py-10 text-center text-indigo-600 bg-indigo-50/30 rounded-md border border-indigo-100">
-                        <FileText className="h-12 w-12 mx-auto mb-2 text-indigo-300" />
-                        <p>No products match your filter. Try adjusting your search or filters.</p>
-                      </div>
-                    )}
-                  </TabsContent>
-                </Tabs>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan={6} className="py-8 text-center text-blue-600">
+                            <FileText className="h-12 w-12 mx-auto mb-2 text-blue-300" />
+                            <p>No products match your filter. Try adjusting your search or filters.</p>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 

@@ -8,6 +8,8 @@ import { DashboardMetrics } from "@/components/dashboard/DashboardMetrics";
 import { ChartsOverview } from "@/components/dashboard/ChartsOverview";
 import { PaymentMethodsDisplay } from "@/components/dashboard/PaymentMethodsDisplay";
 import { GridViewControls } from "@/components/dashboard/GridViewControls";
+import { LowStockAlert } from "@/components/dashboard/LowStockAlert";
+import { TotalStockValue } from "@/components/dashboard/TotalStockValue";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 const Dashboard = () => {
@@ -38,6 +40,14 @@ const Dashboard = () => {
           title="Dashboard" 
           subtitle="View your business analytics and performance" 
         />
+        
+        {/* Quick Actions Bar */}
+        <div className="mb-6 flex flex-wrap items-center gap-3 p-4 bg-white rounded-lg border border-blue-100 shadow-sm">
+          <div className="flex items-center gap-3">
+            <TotalStockValue />
+            <LowStockAlert threshold={10} />
+          </div>
+        </div>
         
         {/* Filters Section */}
         <div className="mb-6">
