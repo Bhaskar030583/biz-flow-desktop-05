@@ -48,7 +48,6 @@ const Dashboard = () => {
         {/* Quick Actions Bar */}
         <div className={`mb-6 flex ${isMobile ? 'flex-col gap-3' : 'flex-wrap items-center gap-3'} p-4 bg-white rounded-lg border border-blue-100 shadow-sm`}>
           <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center gap-3'}`}>
-            <TotalStockValue />
             <LowStockAlert threshold={10} />
           </div>
         </div>
@@ -67,6 +66,11 @@ const Dashboard = () => {
             selectedProduct={selectedProduct}
             setSelectedProduct={setSelectedProduct}
           />
+        </div>
+        
+        {/* Total Stock Value Section */}
+        <div className="mb-6">
+          <TotalStockValue />
         </div>
         
         {/* Payment Methods Section */}
