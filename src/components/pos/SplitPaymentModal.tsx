@@ -59,13 +59,6 @@ export const SplitPaymentModal: React.FC<SplitPaymentModalProps> = ({
     }
   };
 
-  const handleQuickSplit = (upiPercent: number) => {
-    const upiAmt = (totalAmount * upiPercent / 100);
-    const cashAmt = totalAmount - upiAmt;
-    setUpiAmount(upiAmt.toFixed(2));
-    setCashAmount(cashAmt.toFixed(2));
-  };
-
   const getTotalEntered = () => {
     return (parseFloat(upiAmount) || 0) + (parseFloat(cashAmount) || 0);
   };
@@ -175,24 +168,6 @@ export const SplitPaymentModal: React.FC<SplitPaymentModalProps> = ({
                 placeholder="0.00"
                 step="0.01"
               />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Quick Split Options</Label>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => handleQuickSplit(50)}>
-                50/50
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleQuickSplit(70)}>
-                70/30
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleQuickSplit(80)}>
-                80/20
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleQuickSplit(100)}>
-                UPI Only
-              </Button>
             </div>
           </div>
 
