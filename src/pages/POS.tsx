@@ -34,11 +34,16 @@ const POS = () => {
     setShowStoreModal(false);
   };
 
+  const handleStoreModalClose = () => {
+    setShowStoreModal(false);
+  };
+
   return (
     <DashboardLayout>
       <StoreInfoModal
         isOpen={showStoreModal}
         onComplete={handleStoreInfoComplete}
+        onClose={handleStoreModalClose}
       />
       
       {!showStoreModal && (

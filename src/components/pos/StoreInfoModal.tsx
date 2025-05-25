@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface StoreInfoModalProps {
   isOpen: boolean;
   onComplete: (storeInfo: { storeName: string; salespersonName: string }) => void;
+  onClose?: () => void;
 }
 
 interface Shop {
@@ -21,7 +22,8 @@ interface Shop {
 
 export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
   isOpen,
-  onComplete
+  onComplete,
+  onClose
 }) => {
   const { user } = useAuth();
   const [selectedStoreId, setSelectedStoreId] = useState("");
@@ -95,8 +97,14 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     });
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open && onClose) {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
