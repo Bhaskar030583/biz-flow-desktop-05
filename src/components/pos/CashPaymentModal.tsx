@@ -35,11 +35,9 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
   }, [amountReceived, totalAmount]);
 
   const handleComplete = () => {
-    if (parseFloat(amountReceived) >= totalAmount) {
-      onPaymentComplete();
-      setAmountReceived("");
-      setBalance(0);
-    }
+    onPaymentComplete();
+    setAmountReceived("");
+    setBalance(0);
   };
 
   const handleQuickAmount = (amount: number) => {
@@ -138,7 +136,6 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
             </Button>
             <Button
               onClick={handleComplete}
-              disabled={!amountReceived || parseFloat(amountReceived) < totalAmount}
               className="flex-1 bg-green-600 hover:bg-green-700"
             >
               <Calculator className="h-4 w-4 mr-2" />
