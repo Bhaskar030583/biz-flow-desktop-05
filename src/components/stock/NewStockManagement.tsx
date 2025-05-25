@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +31,7 @@ interface StockItem {
   openingStock: number;
   actualStock: number;
   availableStock: number;
+  stockAdded: number;
 }
 
 interface NewStockManagementProps {
@@ -126,6 +126,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
           opening_stock,
           actual_stock,
           closing_stock,
+          stock_added,
           products (id, name, category)
         `)
         .eq('shop_id', selectedShop)
@@ -157,6 +158,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
           openingStock: existingStock?.opening_stock || previousStock?.actual_stock || 0,
           actualStock: existingStock?.actual_stock || 0,
           availableStock: existingStock?.closing_stock || 0,
+          stockAdded: existingStock?.stock_added || 0,
         };
       });
 
@@ -181,6 +183,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
       openingStock: 0,
       actualStock: 0,
       availableStock: 0,
+      stockAdded: 0,
     };
 
     setStockItems(prev => [...prev, newItem]);
@@ -196,6 +199,11 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
           // Auto-fill opening stock from actual stock for non-admin users
           if (field === 'actualStock' && !isAdmin) {
             updatedItem.openingStock = Math.max(0, value);
+          }
+          
+          // When stock is added, update the available stock
+          if (field === 'stockAdded') {
+            updatedItem.availableStock = item.availableStock + Math.max(0, value) - item.stockAdded;
           }
           
           return updatedItem;
@@ -225,6 +233,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
         opening_stock: item.openingStock,
         closing_stock: item.availableStock,
         actual_stock: item.actualStock,
+        stock_added: item.stockAdded,
         user_id: user?.id
       }));
 
@@ -387,7 +396,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
                       <div className="font-medium">{item.productName}</div>
                       <div className="text-sm text-gray-500">{item.category}</div>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
                         <Label htmlFor={`opening-${item.productId}`} className="text-xs flex items-center gap-1">
                           Opening Stock
@@ -413,6 +422,18 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
                           onChange={(e) => updateStockItem(item.productId, 'actualStock', parseInt(e.target.value) || 0)}
                           className="h-8"
                           min="0"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor={`stock-added-${item.productId}`} className="text-xs text-blue-600">Stock Added</Label>
+                        <Input
+                          id={`stock-added-${item.productId}`}
+                          type="number"
+                          value={item.stockAdded}
+                          onChange={(e) => updateStockItem(item.productId, 'stockAdded', parseInt(e.target.value) || 0)}
+                          className="h-8 border-blue-300 focus:border-blue-500"
+                          min="0"
+                          placeholder="Add stock"
                         />
                       </div>
                       <div>
