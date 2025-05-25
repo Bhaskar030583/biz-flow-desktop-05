@@ -60,7 +60,14 @@ const StockTemplate: React.FC<StockTemplateProps> = ({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setTemplates(data || []);
+      
+      // Type cast the products field to match our interface
+      const typedTemplates: StockTemplateData[] = (data || []).map(template => ({
+        ...template,
+        products: template.products as StockTemplateData['products']
+      }));
+      
+      setTemplates(typedTemplates);
     } catch (error) {
       console.error('Error fetching templates:', error);
       toast.error('Failed to fetch templates');
