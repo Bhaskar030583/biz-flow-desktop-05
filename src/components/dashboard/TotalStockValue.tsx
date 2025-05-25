@@ -32,18 +32,22 @@ interface StockValue {
   sold_value: number;
   added_units: number;
   added_value: number;
+  pos_sold_units: number;
+  pos_sold_value: number;
 }
 
 interface StockSummary {
   totalCurrentValue: number;
   totalSoldValue: number;
   totalAddedValue: number;
+  totalPOSSoldValue: number;
   totalValue: number;
   totalProducts: number;
   byCategory: Record<string, { 
     currentValue: number; 
     soldValue: number; 
     addedValue: number; 
+    posSoldValue: number;
     totalValue: number; 
     products: number; 
   }>;
@@ -51,6 +55,7 @@ interface StockSummary {
     currentValue: number; 
     soldValue: number; 
     addedValue: number; 
+    posSoldValue: number;
     totalValue: number; 
     products: number; 
   }>;
@@ -61,6 +66,7 @@ export const TotalStockValue: React.FC = () => {
     totalCurrentValue: 0,
     totalSoldValue: 0,
     totalAddedValue: 0,
+    totalPOSSoldValue: 0,
     totalValue: 0,
     totalProducts: 0,
     byCategory: {},
@@ -100,6 +106,27 @@ export const TotalStockValue: React.FC = () => {
 
       if (error) throw error;
 
+      // Get POS sales data
+      const { data: salesData, error: salesError } = await supabase
+        .from("sales")
+        .select(`
+          product_id,
+          shop_id,
+          quantity,
+          products!inner (
+            id,
+            name,
+            category,
+            cost_price
+          ),
+          shops!inner (
+            id,
+            name
+          )
+        `);
+
+      if (salesError) throw salesError;
+
       // Group by product-shop combination and get the latest entry
       const latestStocks = new Map();
       
@@ -111,6 +138,17 @@ export const TotalStockValue: React.FC = () => {
         }
       });
 
+      // Calculate POS sales by product-shop combination
+      const posSales = new Map();
+      salesData?.forEach(sale => {
+        const key = `${sale.product_id}-${sale.shop_id}`;
+        if (posSales.has(key)) {
+          posSales.set(key, posSales.get(key) + sale.quantity);
+        } else {
+          posSales.set(key, sale.quantity);
+        }
+      });
+
       // Calculate stock values based on cost price
       const stockValues: StockValue[] = Array.from(latestStocks.values())
         .map(stock => {
@@ -118,6 +156,10 @@ export const TotalStockValue: React.FC = () => {
           const currentStock = stock.actual_stock || 0;
           const soldUnits = Math.max(0, stock.opening_stock - stock.closing_stock);
           const addedUnits = stock.stock_added || 0;
+          
+          // Get POS sales for this product-shop combination
+          const key = `${stock.product_id}-${stock.shop_id}`;
+          const posSoldUnits = posSales.get(key) || 0;
           
           return {
             shop_name: stock.shops.name,
@@ -130,7 +172,9 @@ export const TotalStockValue: React.FC = () => {
             sold_units: soldUnits,
             sold_value: soldUnits * costPrice,
             added_units: addedUnits,
-            added_value: addedUnits * costPrice
+            added_value: addedUnits * costPrice,
+            pos_sold_units: posSoldUnits,
+            pos_sold_value: posSoldUnits * costPrice
           };
         });
 
@@ -139,13 +183,14 @@ export const TotalStockValue: React.FC = () => {
         totalCurrentValue: stockValues.reduce((sum, item) => sum + item.value, 0),
         totalSoldValue: stockValues.reduce((sum, item) => sum + item.sold_value, 0),
         totalAddedValue: stockValues.reduce((sum, item) => sum + item.added_value, 0),
+        totalPOSSoldValue: stockValues.reduce((sum, item) => sum + item.pos_sold_value, 0),
         totalValue: 0,
         totalProducts: stockValues.length,
         byCategory: {},
         byShop: {}
       };
 
-      // Calculate total value (current + sold + added)
+      // Calculate total value (current + sold + added - POS sold)
       summary.totalValue = summary.totalCurrentValue + summary.totalSoldValue + summary.totalAddedValue;
 
       // Group by category
@@ -155,6 +200,7 @@ export const TotalStockValue: React.FC = () => {
             currentValue: 0, 
             soldValue: 0, 
             addedValue: 0, 
+            posSoldValue: 0,
             totalValue: 0, 
             products: 0 
           };
@@ -162,6 +208,7 @@ export const TotalStockValue: React.FC = () => {
         summary.byCategory[item.category].currentValue += item.value;
         summary.byCategory[item.category].soldValue += item.sold_value;
         summary.byCategory[item.category].addedValue += item.added_value;
+        summary.byCategory[item.category].posSoldValue += item.pos_sold_value;
         summary.byCategory[item.category].totalValue += (item.value + item.sold_value + item.added_value);
         summary.byCategory[item.category].products += 1;
       });
@@ -173,6 +220,7 @@ export const TotalStockValue: React.FC = () => {
             currentValue: 0, 
             soldValue: 0, 
             addedValue: 0, 
+            posSoldValue: 0,
             totalValue: 0, 
             products: 0 
           };
@@ -180,6 +228,7 @@ export const TotalStockValue: React.FC = () => {
         summary.byShop[item.shop_name].currentValue += item.value;
         summary.byShop[item.shop_name].soldValue += item.sold_value;
         summary.byShop[item.shop_name].addedValue += item.added_value;
+        summary.byShop[item.shop_name].posSoldValue += item.pos_sold_value;
         summary.byShop[item.shop_name].totalValue += (item.value + item.sold_value + item.added_value);
         summary.byShop[item.shop_name].products += 1;
       });
@@ -226,6 +275,7 @@ export const TotalStockValue: React.FC = () => {
                   <span>Current: {formatIndianRupee(stockSummary.totalCurrentValue)}</span>
                   <span>Sold: {formatIndianRupee(stockSummary.totalSoldValue)}</span>
                   <span>Added: {formatIndianRupee(stockSummary.totalAddedValue)}</span>
+                  <span>POS Sold: {formatIndianRupee(stockSummary.totalPOSSoldValue)}</span>
                 </div>
               </div>
               <div className="p-2 bg-green-100 rounded-full ml-2">
@@ -257,7 +307,7 @@ export const TotalStockValue: React.FC = () => {
         <ScrollArea className="max-h-96">
           <div className="space-y-6">
             {/* Summary Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card className="border-blue-200">
                 <CardContent className="p-4 text-center">
                   <h3 className="font-semibold text-blue-700 mb-2">Current Stock</h3>
@@ -279,6 +329,14 @@ export const TotalStockValue: React.FC = () => {
                   <h3 className="font-semibold text-purple-700 mb-2">Added Stock</h3>
                   <div className="text-xl font-bold text-purple-600">
                     {formatIndianRupee(stockSummary.totalAddedValue)}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-red-200">
+                <CardContent className="p-4 text-center">
+                  <h3 className="font-semibold text-red-700 mb-2">POS Sold</h3>
+                  <div className="text-xl font-bold text-red-600">
+                    {formatIndianRupee(stockSummary.totalPOSSoldValue)}
                   </div>
                 </CardContent>
               </Card>
@@ -356,7 +414,7 @@ export const TotalStockValue: React.FC = () => {
                           <span>{item.shop_name}</span>
                         </div>
                         <div className="text-xs text-gray-600 mt-1">
-                          Current: {item.current_stock} | Sold: {item.sold_units} | Added: {item.added_units}
+                          Current: {item.current_stock} | Sold: {item.sold_units} | Added: {item.added_units} | POS Sold: {item.pos_sold_units}
                         </div>
                       </div>
                       <div className="text-right">
@@ -367,7 +425,7 @@ export const TotalStockValue: React.FC = () => {
                           @ {formatIndianRupee(item.cost_price)} cost price
                         </div>
                         <div className="text-xs text-gray-400">
-                          C: {formatIndianRupee(item.value)} | S: {formatIndianRupee(item.sold_value)} | A: {formatIndianRupee(item.added_value)}
+                          C: {formatIndianRupee(item.value)} | S: {formatIndianRupee(item.sold_value)} | A: {formatIndianRupee(item.added_value)} | P: {formatIndianRupee(item.pos_sold_value)}
                         </div>
                       </div>
                     </div>
