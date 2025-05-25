@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Receipt, 
   Search, 
@@ -10,7 +12,8 @@ import {
   User,
   CreditCard,
   Eye,
-  Download
+  Download,
+  Filter
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +36,7 @@ export const BillHistory: React.FC = () => {
   const { user } = useAuth();
   const [bills, setBills] = useState<Bill[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchBills = async () => {
@@ -95,10 +99,14 @@ export const BillHistory: React.FC = () => {
     }
   };
 
-  const filteredBills = bills.filter(bill =>
-    bill.bill_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (bill.customer?.name && bill.customer.name.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredBills = bills.filter(bill => {
+    const matchesSearch = bill.bill_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (bill.customer?.name && bill.customer.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesStatus = statusFilter === "all" || bill.payment_status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   if (isLoading) {
     return (
@@ -118,14 +126,31 @@ export const BillHistory: React.FC = () => {
           Bill History ({bills.length})
         </CardTitle>
         
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Search by bill number or customer name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex gap-4 flex-col sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search by bill number or customer name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-500" />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </CardHeader>
 
@@ -134,7 +159,7 @@ export const BillHistory: React.FC = () => {
           {filteredBills.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Receipt className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>{searchTerm ? "No bills found matching your search" : "No bills generated yet"}</p>
+              <p>{searchTerm || statusFilter !== "all" ? "No bills found matching your filters" : "No bills generated yet"}</p>
               <p className="text-sm">Bills will appear here after completing sales</p>
             </div>
           ) : (
