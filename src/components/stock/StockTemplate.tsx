@@ -4,17 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-import { Save, Trash2, Plus, FileTemplate } from "lucide-react";
+import { Save, Trash2, Plus, File } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-interface StockTemplate {
+interface StockTemplateData {
   id: string;
   name: string;
+  user_id: string;
   shop_id: string;
   products: {
     product_id: string;
@@ -24,10 +24,11 @@ interface StockTemplate {
     stock_added: number;
   }[];
   created_at: string;
+  updated_at: string;
 }
 
 interface StockTemplateProps {
-  onApplyTemplate: (template: StockTemplate) => void;
+  onApplyTemplate: (template: StockTemplateData) => void;
   currentShopId: string;
   currentStockItems: any[];
 }
@@ -38,7 +39,7 @@ const StockTemplate: React.FC<StockTemplateProps> = ({
   currentStockItems 
 }) => {
   const { user } = useAuth();
-  const [templates, setTemplates] = useState<StockTemplate[]>([]);
+  const [templates, setTemplates] = useState<StockTemplateData[]>([]);
   const [templateName, setTemplateName] = useState("");
   const [loading, setLoading] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -129,7 +130,7 @@ const StockTemplate: React.FC<StockTemplateProps> = ({
     }
   };
 
-  const applyTemplate = (template: StockTemplate) => {
+  const applyTemplate = (template: StockTemplateData) => {
     onApplyTemplate(template);
     toast.success(`Template "${template.name}" applied successfully`);
   };
@@ -139,7 +140,7 @@ const StockTemplate: React.FC<StockTemplateProps> = ({
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between text-base">
           <div className="flex items-center gap-2">
-            <FileTemplate className="h-4 w-4" />
+            <File className="h-4 w-4" />
             Stock Templates
           </div>
           
@@ -192,7 +193,7 @@ const StockTemplate: React.FC<StockTemplateProps> = ({
         <div className="space-y-2 max-h-60 overflow-y-auto">
           {templates.length === 0 ? (
             <div className="text-center py-6 text-muted-foreground">
-              <FileTemplate className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <File className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">No templates saved</p>
               <p className="text-xs">Save your current stock setup as a template</p>
             </div>
