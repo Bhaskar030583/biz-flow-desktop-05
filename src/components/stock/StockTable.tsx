@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { 
@@ -89,6 +90,24 @@ const StockTable = ({
     
     checkAdminStatus();
   }, [user]);
+
+  // Calculate actual sales and losses
+  const calculateSalesMetrics = (entry: StockEntry) => {
+    const totalAvailable = entry.opening_stock + (entry.stock_added || 0);
+    const actualSold = Math.max(0, totalAvailable - entry.actual_stock);
+    const stockLoss = Math.max(0, entry.closing_stock - entry.actual_stock);
+    const salesAmount = actualSold * Number(entry.products?.price || 0);
+    const costOfSold = actualSold * Number(entry.products?.cost_price || 0);
+    const costOfLost = stockLoss * Number(entry.products?.cost_price || 0);
+    const profit = salesAmount - costOfSold - costOfLost;
+    
+    return { 
+      actualSold, 
+      stockLoss, 
+      salesAmount, 
+      profit 
+    };
+  };
 
   const handleEditClick = (entry: StockEntry) => {
     console.log('Editing entry with stock_added:', entry.stock_added); // Debug log
@@ -240,9 +259,7 @@ const StockTable = ({
           </TableHeader>
           <TableBody>
             {entries.map((entry, index) => {
-              const sold = entry.opening_stock - entry.closing_stock;
-              const salesAmount = sold * Number(entry.products?.price || 0);
-              const profit = calculateProfit(entry);
+              const { actualSold, salesAmount, profit } = calculateSalesMetrics(entry);
               
               console.log(`Entry ${entry.id} stock_added:`, entry.stock_added); // Debug log
 
@@ -281,7 +298,7 @@ const StockTable = ({
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="text-right font-medium">{sold}</TableCell>
+                  <TableCell className="text-right font-medium">{actualSold}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end">
                       <IndianRupee className="h-3.5 w-3.5 mr-1" />
@@ -326,9 +343,7 @@ const StockTable = ({
       {/* Mobile view */}
       <div className="sm:hidden space-y-4">
         {entries.map((entry, index) => {
-          const sold = entry.opening_stock - entry.closing_stock;
-          const salesAmount = sold * Number(entry.products?.price || 0);
-          const profit = calculateProfit(entry);
+          const { actualSold, salesAmount, profit } = calculateSalesMetrics(entry);
 
           return (
             <div 
@@ -358,7 +373,7 @@ const StockTable = ({
                 </div>
                 
                 <div className="responsive-table-cell" data-label="Units Sold">
-                  <span className="font-medium">{sold}</span>
+                  <span className="font-medium">{actualSold}</span>
                 </div>
 
                 <div className="responsive-table-cell" data-label="Sales Amount">
