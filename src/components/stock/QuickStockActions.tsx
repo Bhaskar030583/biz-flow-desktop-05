@@ -24,7 +24,7 @@ const QuickStockActions: React.FC<QuickStockActionsProps> = ({
   const quickAddAmounts = [5, 10, 20, 50];
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <Button
           onClick={() => setQuickAddMode(!quickAddMode)}
@@ -44,8 +44,8 @@ const QuickStockActions: React.FC<QuickStockActionsProps> = ({
       </div>
 
       {quickAddMode && hasStockItems && (
-        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <div className="mb-2">
+        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="mb-3">
             <span className="text-sm font-medium text-blue-800">Quick Add to All:</span>
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -55,7 +55,7 @@ const QuickStockActions: React.FC<QuickStockActionsProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => onBulkAdd(amount)}
-                className="h-7 text-xs border-blue-300 hover:bg-blue-100"
+                className="h-8 text-sm border-blue-300 hover:bg-blue-100"
               >
                 +{amount}
               </Button>

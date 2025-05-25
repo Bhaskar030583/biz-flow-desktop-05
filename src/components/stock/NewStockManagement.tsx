@@ -218,10 +218,22 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
     setStockItems(prev => 
       prev.map(item => ({
         ...item,
-        stockAdded: item.stockAdded + amount
+        stockAdded: item.stockAdded + amount,
+        availableStock: item.availableStock + amount
       }))
     );
     toast.success(`Added ${amount} to all products`);
+  };
+
+  const clearAllStockAdditions = () => {
+    setStockItems(prev => 
+      prev.map(item => ({ 
+        ...item, 
+        stockAdded: 0,
+        availableStock: item.availableStock - item.stockAdded
+      }))
+    );
+    toast.success('All stock additions cleared');
   };
 
   const saveStockData = async () => {
@@ -319,11 +331,6 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
     }
   };
 
-  const clearAllStockAdditions = () => {
-    setStockItems(prev => prev.map(item => ({ ...item, stockAdded: 0 })));
-    toast.success('All stock additions cleared');
-  };
-
   if (!user) {
     return (
       <Card className="border-red-200">
@@ -360,8 +367,8 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
             )}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-4'}`}>
+        <CardContent className="space-y-4">
+          <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-3'}`}>
             <div>
               <Label htmlFor="date" className="text-sm">Stock Date</Label>
               <Input
@@ -406,18 +413,18 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
                 Load Inventory
               </Button>
             </div>
-
-            <div className="flex items-end">
-              <QuickStockActions
-                quickAddMode={quickAddMode}
-                setQuickAddMode={setQuickAddMode}
-                totalStockAdded={totalStockAdded}
-                onClearAllAdditions={clearAllStockAdditions}
-                onBulkAdd={handleBulkAdd}
-                hasStockItems={stockItems.length > 0}
-              />
-            </div>
           </div>
+
+          {selectedShop && (
+            <QuickStockActions
+              quickAddMode={quickAddMode}
+              setQuickAddMode={setQuickAddMode}
+              totalStockAdded={totalStockAdded}
+              onClearAllAdditions={clearAllStockAdditions}
+              onBulkAdd={handleBulkAdd}
+              hasStockItems={stockItems.length > 0}
+            />
+          )}
         </CardContent>
       </Card>
 
