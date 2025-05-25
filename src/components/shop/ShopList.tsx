@@ -11,6 +11,7 @@ import { Trash2, Store } from "lucide-react";
 interface Shop {
   id: string;
   name: string;
+  store_code: string | null;
   address: string | null;
   phone: string | null;
   created_at: string;
@@ -48,22 +49,40 @@ export function ShopList() {
     fetchShops();
   }, [user]);
 
-  async function handleDelete(id: string) {
+  async function handleDelete(id: string, shopName: string) {
     try {
+      console.log(`Attempting to delete shop: ${shopName} (${id})`);
+      
       const { error } = await supabase
         .from("shops")
         .delete()
         .eq("id", id);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Delete error:", error);
+        
+        // Check if it's a foreign key constraint error
+        if (error.code === '23503') {
+          toast({
+            variant: "destructive",
+            title: "Cannot delete store",
+            description: `Cannot delete "${shopName}" because it has related data (credits, expenses, or stock entries). Please remove all related records first.`,
+          });
+          return;
+        }
+        
+        throw error;
+      }
       
+      console.log("Shop deleted successfully");
       setShops(shops.filter(shop => shop.id !== id));
       
       toast({
         title: "Store deleted",
-        description: "The store has been deleted successfully",
+        description: `"${shopName}" has been deleted successfully`,
       });
     } catch (error: any) {
+      console.error("Error deleting store:", error);
       toast({
         variant: "destructive",
         title: "Failed to delete store",
@@ -99,6 +118,7 @@ export function ShopList() {
             <TableHeader>
               <TableRow>
                 <TableHead>Store Name</TableHead>
+                <TableHead>Store Code</TableHead>
                 <TableHead>Address</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead className="text-right">Action</TableHead>
@@ -113,13 +133,14 @@ export function ShopList() {
                       {shop.name}
                     </div>
                   </TableCell>
+                  <TableCell>{shop.store_code || "—"}</TableCell>
                   <TableCell>{shop.address || "—"}</TableCell>
                   <TableCell>{shop.phone || "—"}</TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDelete(shop.id)}
+                      onClick={() => handleDelete(shop.id, shop.name)}
                     >
                       <Trash2 className="h-4 w-4" />
                       <span className="sr-only">Delete</span>
