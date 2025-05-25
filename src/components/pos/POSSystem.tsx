@@ -13,7 +13,9 @@ import {
   CreditCard,
   Banknote,
   Smartphone,
-  Calculator
+  Calculator,
+  Grid3X3,
+  Search
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -37,6 +39,7 @@ interface POSSystemProps {
 export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
   const [cart, setCart] = useState<POSItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const isMobile = useIsMobile();
 
   const addToCart = (product: any) => {
@@ -81,17 +84,16 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
     return cart.reduce((sum, item) => sum + item.total, 0);
   };
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Get unique categories
+  const categories = ["all", ...Array.from(new Set(products.map(p => p.category)))];
 
-  const groupedProducts = filteredProducts.reduce((groups, product) => {
-    const category = product.category || "Other";
-    if (!groups[category]) groups[category] = [];
-    groups[category].push(product);
-    return groups;
-  }, {} as Record<string, typeof products>);
+  // Filter products by search and category
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className={`grid gap-4 h-full ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3'}`}>
@@ -100,40 +102,84 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
-              <ShoppingCart className="h-5 w-5" />
+              <Grid3X3 className="h-5 w-5" />
               Products
             </CardTitle>
-            <Input
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="mt-2"
-            />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
-                <div key={category}>
-                  <Badge variant="outline" className="mb-2">
-                    {category}
-                  </Badge>
-                  <div className={`grid gap-2 ${isMobile ? 'grid-cols-1' : 'grid-cols-2 xl:grid-cols-3'}`}>
-                    {categoryProducts.map(product => (
-                      <Button
-                        key={product.id}
-                        variant="outline"
-                        className="p-3 h-auto text-left justify-start"
-                        onClick={() => addToCart(product)}
-                      >
-                        <div className="w-full">
-                          <div className="font-medium text-sm">{product.name}</div>
-                          <div className="text-green-600 font-bold">₹{product.price}</div>
-                        </div>
-                      </Button>
-                    ))}
-                  </div>
-                </div>
+            
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Category Filter */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {categories.map(category => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(category)}
+                  className="text-xs"
+                >
+                  {category === "all" ? "All Categories" : category}
+                </Button>
               ))}
+            </div>
+          </CardHeader>
+          
+          <CardContent>
+            <div className="max-h-96 overflow-y-auto">
+              {filteredProducts.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Grid3X3 className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No products found</p>
+                  <p className="text-sm">Try adjusting your search or category filter</p>
+                </div>
+              ) : (
+                <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-2 xl:grid-cols-3'}`}>
+                  {filteredProducts.map(product => (
+                    <Card
+                      key={product.id}
+                      className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-green-200"
+                      onClick={() => addToCart(product)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-start">
+                            <h3 className="font-medium text-sm line-clamp-2">{product.name}</h3>
+                            <Badge variant="outline" className="text-xs ml-2 shrink-0">
+                              {product.category}
+                            </Badge>
+                          </div>
+                          
+                          <div className="flex justify-between items-center">
+                            <div className="text-green-600 font-bold text-lg">
+                              ₹{product.price}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 hover:bg-green-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(product);
+                              }}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -156,43 +202,51 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
           <CardContent className="space-y-4">
             {/* Cart Items */}
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {cart.map(item => (
-                <div key={item.id} className="flex items-center justify-between p-2 border rounded">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{item.name}</div>
-                    <div className="text-xs text-gray-500">₹{item.price} each</div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => updateQuantity(item.id, -1)}
-                      className="h-6 w-6 p-0"
-                    >
-                      <Minus className="h-3 w-3" />
-                    </Button>
-                    <span className="w-8 text-center text-sm font-medium">
-                      {item.quantity}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => updateQuantity(item.id, 1)}
-                      className="h-6 w-6 p-0"
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => removeFromCart(item.id)}
-                      className="h-6 w-6 p-0 ml-1"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
+              {cart.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>Cart is empty</p>
+                  <p className="text-sm">Add products to get started</p>
                 </div>
-              ))}
+              ) : (
+                cart.map(item => (
+                  <div key={item.id} className="flex items-center justify-between p-2 border rounded">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{item.name}</div>
+                      <div className="text-xs text-gray-500">₹{item.price} each</div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => updateQuantity(item.id, -1)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <span className="w-8 text-center text-sm font-medium">
+                        {item.quantity}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => updateQuantity(item.id, 1)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => removeFromCart(item.id)}
+                        className="h-6 w-6 p-0 ml-1"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
             {cart.length > 0 && (
