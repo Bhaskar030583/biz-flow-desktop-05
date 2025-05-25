@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -272,40 +273,41 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
   }, {} as Record<string, Product[]>);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card className="border-indigo-200">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-indigo-900">
-            <Store className="h-5 w-5" />
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-indigo-900 text-lg">
+            <Store className="h-4 w-4" />
             Store Management
             {stockItems.length > 0 && (
-              <Badge variant="secondary" className="ml-2">
+              <Badge variant="secondary" className="ml-2 text-xs">
                 {stockItems.length} products
               </Badge>
             )}
             {isAdmin && (
-              <Badge variant="outline" className="ml-2 text-green-600 border-green-600">
+              <Badge variant="outline" className="ml-2 text-green-600 border-green-600 text-xs">
                 Admin Access
               </Badge>
             )}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-3'}`}>
+        <CardContent className="space-y-3">
+          <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-3'}`}>
             <div>
-              <Label htmlFor="date">Stock Date</Label>
+              <Label htmlFor="date" className="text-sm">Stock Date</Label>
               <Input
                 id="date"
                 type="date"
                 value={stockDate}
                 onChange={(e) => setStockDate(e.target.value)}
+                className="h-8"
               />
             </div>
 
             <div>
-              <Label htmlFor="shop">Select Store</Label>
+              <Label htmlFor="shop" className="text-sm">Select Store</Label>
               <Select value={selectedShop} onValueChange={setSelectedShop}>
-                <SelectTrigger>
+                <SelectTrigger className="h-8">
                   <SelectValue placeholder="Select store" />
                 </SelectTrigger>
                 <SelectContent className="bg-white z-50">
@@ -328,9 +330,10 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
                 onClick={loadStoreInventory}
                 disabled={!selectedShop}
                 variant="outline"
-                className="w-full"
+                size="sm"
+                className="w-full h-8"
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="h-3 w-3 mr-1" />
                 Load Inventory
               </Button>
             </div>
@@ -339,41 +342,41 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
       </Card>
 
       {selectedShop && (
-        <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'lg:grid-cols-2'}`}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+        <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'lg:grid-cols-2'}`}>
+          <Card className="h-fit">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Plus className="h-4 w-4" />
                 Add Products by Category
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4 max-h-96 overflow-y-auto">
+            <CardContent className="p-3">
+              <div className="space-y-3 max-h-80 overflow-y-auto">
                 {categories.map(category => (
                   <div key={category} className="space-y-2">
-                    <h4 className="font-medium text-sm text-gray-700 uppercase tracking-wide">
+                    <h4 className="font-medium text-xs text-gray-700 uppercase tracking-wide">
                       {category}
                     </h4>
-                    <div className="grid gap-2">
+                    <div className="grid gap-1">
                       {groupedProducts[category]?.map(product => (
                         <Button
                           key={product.id}
                           variant="outline"
-                          className="justify-between h-auto p-3"
+                          className="justify-between h-auto p-2 text-sm"
                           onClick={() => addProductToStore(product)}
                           disabled={stockItems.some(item => item.productId === product.id)}
                         >
                           <div className="text-left">
-                            <div className="font-medium">{product.name}</div>
+                            <div className="font-medium text-sm">{product.name}</div>
                           </div>
-                          <Badge variant="secondary">₹{product.price}</Badge>
+                          <Badge variant="secondary" className="text-xs">₹{product.price}</Badge>
                         </Button>
                       ))}
                     </div>
                   </div>
                 ))}
                 {categories.length === 0 && (
-                  <div className="text-center py-4 text-muted-foreground">
+                  <div className="text-center py-3 text-muted-foreground text-sm">
                     No products available
                   </div>
                 )}
@@ -381,22 +384,22 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <Card className="h-fit">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Package2 className="h-4 w-4" />
                 Store Inventory ({stockItems.length})
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4 max-h-96 overflow-y-auto">
+            <CardContent className="p-3">
+              <div className="space-y-3 max-h-80 overflow-y-auto">
                 {stockItems.map(item => (
-                  <div key={item.productId} className="p-3 border rounded-lg">
+                  <div key={item.productId} className="p-2 border rounded-lg">
                     <div className="mb-2">
-                      <div className="font-medium">{item.productName}</div>
-                      <div className="text-sm text-gray-500">{item.category}</div>
+                      <div className="font-medium text-sm">{item.productName}</div>
+                      <div className="text-xs text-gray-500">{item.category}</div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-2">
                       <div>
                         <Label htmlFor={`opening-${item.productId}`} className="text-xs flex items-center gap-1">
                           Opening Stock
@@ -407,7 +410,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
                           type="number"
                           value={item.openingStock}
                           onChange={(e) => updateStockItem(item.productId, 'openingStock', parseInt(e.target.value) || 0)}
-                          className="h-8"
+                          className="h-7 text-sm"
                           min="0"
                           disabled={!isAdmin}
                           title={!isAdmin ? "Only admins can edit opening stock" : ""}
@@ -420,7 +423,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
                           type="number"
                           value={item.actualStock}
                           onChange={(e) => updateStockItem(item.productId, 'actualStock', parseInt(e.target.value) || 0)}
-                          className="h-8"
+                          className="h-7 text-sm"
                           min="0"
                         />
                       </div>
@@ -431,7 +434,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
                           type="number"
                           value={item.stockAdded}
                           onChange={(e) => updateStockItem(item.productId, 'stockAdded', parseInt(e.target.value) || 0)}
-                          className="h-8 border-blue-300 focus:border-blue-500"
+                          className="h-7 text-sm border-blue-300 focus:border-blue-500"
                           min="0"
                           placeholder="Add stock"
                         />
@@ -443,7 +446,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
                           type="number"
                           value={item.availableStock}
                           onChange={(e) => updateStockItem(item.productId, 'availableStock', parseInt(e.target.value) || 0)}
-                          className="h-8"
+                          className="h-7 text-sm"
                           min="0"
                         />
                       </div>
@@ -451,10 +454,10 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
                   </div>
                 ))}
                 {stockItems.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Package2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No products in store inventory</p>
-                    <p className="text-sm">Add products from the left panel</p>
+                  <div className="text-center py-6 text-muted-foreground">
+                    <Package2 className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                    <p className="text-sm">No products in store inventory</p>
+                    <p className="text-xs">Add products from the left panel</p>
                   </div>
                 )}
               </div>
@@ -464,28 +467,29 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
       )}
 
       <div className={`flex gap-3 ${isMobile ? 'flex-col' : 'flex-row justify-end'}`}>
-        <Button variant="outline" onClick={onCancel} disabled={loading}>
+        <Button variant="outline" onClick={onCancel} disabled={loading} size="sm">
           Cancel
         </Button>
         <Button 
           onClick={saveStockData}
           disabled={loading || !selectedShop || stockItems.length === 0}
           className="bg-green-600 hover:bg-green-700"
+          size="sm"
         >
           {loading ? (
-            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
           ) : (
-            <Save className="h-4 w-4 mr-2" />
+            <Save className="h-3 w-3 mr-1" />
           )}
           Save Store Inventory
         </Button>
       </div>
 
       {!isAdmin && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
           <div className="flex items-center gap-2 text-blue-700">
-            <Lock className="h-4 w-4" />
-            <span className="text-sm font-medium">Note: Opening stock auto-fills from actual stock for non-admin users</span>
+            <Lock className="h-3 w-3" />
+            <span className="text-xs font-medium">Note: Opening stock auto-fills from actual stock for non-admin users</span>
           </div>
         </div>
       )}
