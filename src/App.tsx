@@ -1,110 +1,121 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
-import { SettingsProvider } from "./context/SettingsContext";
-import { ThemeProvider } from "./components/ThemeProvider";
-import PrivateRoute from "./components/PrivateRoute";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
+import { AuthProvider } from "@/context/AuthContext";
+import { SettingsProvider } from "@/context/SettingsContext";
+import PrivateRoute from "@/components/PrivateRoute";
+import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
-import Shops from "./pages/Shops";
 import Products from "./pages/Products";
+import Shops from "./pages/Shops";
 import Stocks from "./pages/Stocks";
 import Credits from "./pages/Credits";
-import Expenses from "./pages/Expenses";
 import Users from "./pages/Users";
 import Settings from "./pages/Settings";
+import Expenses from "./pages/Expenses";
+import POS from "./pages/POS";
 import NotFound from "./pages/NotFound";
+import "./App.css";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <BrowserRouter>
-        <AuthProvider>
-          <SettingsProvider>
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <SettingsProvider>
+          <AuthProvider>
             <TooltipProvider>
               <Toaster />
-              <Sonner />
-              <Routes>
-                <Route path="/auth/*" element={<Auth />} />
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <PrivateRoute>
-                      <Dashboard />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/shops"
-                  element={
-                    <PrivateRoute>
-                      <Shops />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/products"
-                  element={
-                    <PrivateRoute>
-                      <Products />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/stocks"
-                  element={
-                    <PrivateRoute>
-                      <Stocks />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/credits"
-                  element={
-                    <PrivateRoute>
-                      <Credits />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/expenses"
-                  element={
-                    <PrivateRoute>
-                      <Expenses />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/users"
-                  element={
-                    <PrivateRoute>
-                      <Users />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/settings"
-                  element={
-                    <PrivateRoute>
-                      <Settings />
-                    </PrivateRoute>
-                  }
-                />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <PrivateRoute>
+                        <Dashboard />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/products"
+                    element={
+                      <PrivateRoute>
+                        <Products />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/shops"
+                    element={
+                      <PrivateRoute>
+                        <Shops />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/stocks"
+                    element={
+                      <PrivateRoute>
+                        <Stocks />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/pos"
+                    element={
+                      <PrivateRoute>
+                        <POS />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/credits"
+                    element={
+                      <PrivateRoute>
+                        <Credits />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/users"
+                    element={
+                      <PrivateRoute>
+                        <Users />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings"
+                    element={
+                      <PrivateRoute>
+                        <Settings />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/expenses"
+                    element={
+                      <PrivateRoute>
+                        <Expenses />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
             </TooltipProvider>
-          </SettingsProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+          </AuthProvider>
+        </SettingsProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

@@ -11,6 +11,7 @@ import { GridViewControls } from "@/components/dashboard/GridViewControls";
 import { LowStockAlert } from "@/components/dashboard/LowStockAlert";
 import { TotalStockValue } from "@/components/dashboard/TotalStockValue";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Dashboard = () => {
   const [startDate, setStartDate] = useState<Date | null>(new Date());
@@ -19,6 +20,7 @@ const Dashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [gridColumns, setGridColumns] = useState<number>(5);
+  const isMobile = useIsMobile();
   
   const { data, isLoading, isLoadingStock } = useDashboardData(
     startDate, 
@@ -42,8 +44,8 @@ const Dashboard = () => {
         />
         
         {/* Quick Actions Bar */}
-        <div className="mb-6 flex flex-wrap items-center gap-3 p-4 bg-white rounded-lg border border-blue-100 shadow-sm">
-          <div className="flex items-center gap-3">
+        <div className={`mb-6 flex ${isMobile ? 'flex-col gap-3' : 'flex-wrap items-center gap-3'} p-4 bg-white rounded-lg border border-blue-100 shadow-sm`}>
+          <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center gap-3'}`}>
             <TotalStockValue />
             <LowStockAlert threshold={10} />
           </div>
@@ -74,13 +76,15 @@ const Dashboard = () => {
           />
         </div>
         
-        {/* Grid View Controls */}
-        <div className="mb-4">
-          <GridViewControls
-            currentView={gridColumns}
-            onViewChange={setGridColumns}
-          />
-        </div>
+        {/* Grid View Controls - Hide on mobile */}
+        {!isMobile && (
+          <div className="mb-4">
+            <GridViewControls
+              currentView={gridColumns}
+              onViewChange={setGridColumns}
+            />
+          </div>
+        )}
         
         {/* Metrics Section */}
         <div className="mb-6">
@@ -95,7 +99,7 @@ const Dashboard = () => {
             grossProfit={data.grossProfit}
             netProfit={data.netProfit}
             totalLoss={data.totalLoss}
-            gridColumns={gridColumns}
+            gridColumns={isMobile ? 2 : gridColumns}
           />
         </div>
         
