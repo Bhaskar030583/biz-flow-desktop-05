@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { format } from "date-fns";
-import { Save, RefreshCw, Plus, Package2, Store, Lock } from "lucide-react";
+import { Save, RefreshCw, Plus, Package2, Store, Lock, Zap } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import StockTemplate from "./StockTemplate";
 
@@ -50,6 +51,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
   const [loading, setLoading] = useState(false);
   const [stockDate, setStockDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [isAdmin, setIsAdmin] = useState(false);
+  const [quickAddMode, setQuickAddMode] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -135,7 +137,6 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
 
       if (error) throw error;
 
-      // Get previous day's data for opening stock calculation
       const previousDay = new Date(stockDate);
       previousDay.setDate(previousDay.getDate() - 1);
       const previousDate = format(previousDay, 'yyyy-MM-dd');
@@ -197,12 +198,10 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
         if (item.productId === productId) {
           const updatedItem = { ...item, [field]: Math.max(0, value) };
           
-          // Auto-fill opening stock from actual stock for non-admin users
           if (field === 'actualStock' && !isAdmin) {
             updatedItem.openingStock = Math.max(0, value);
           }
           
-          // When stock is added, update the available stock
           if (field === 'stockAdded') {
             updatedItem.availableStock = item.availableStock + Math.max(0, value) - item.stockAdded;
           }
@@ -264,7 +263,6 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
     }
 
     try {
-      // Get products data to merge with template
       const { data: productsData, error } = await supabase
         .from('products')
         .select('id, name, category')
@@ -273,7 +271,6 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
 
       if (error) throw error;
 
-      // Apply only stock additions from template
       const updatedStockItems = stockItems.map(existingItem => {
         const templateProduct = template.products.find((p: any) => p.product_id === existingItem.productId);
         if (templateProduct) {
@@ -285,7 +282,6 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
         return existingItem;
       });
 
-      // Add new products from template that aren't in current stock
       const newTemplateProducts = template.products.filter((templateProduct: any) => 
         !stockItems.some(item => item.productId === templateProduct.product_id)
       );
@@ -306,11 +302,15 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
       }).filter(Boolean);
 
       setStockItems([...updatedStockItems, ...newStockItems]);
-      toast.success(`Stock addition template applied for ${template.products.length} products`);
     } catch (error) {
       console.error('Error applying template:', error);
       toast.error('Failed to apply template');
     }
+  };
+
+  const clearAllStockAdditions = () => {
+    setStockItems(prev => prev.map(item => ({ ...item, stockAdded: 0 })));
+    toast.success('All stock additions cleared');
   };
 
   if (!user) {
@@ -328,27 +328,34 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
     return acc;
   }, {} as Record<string, Product[]>);
 
+  const totalStockAdded = stockItems.reduce((sum, item) => sum + item.stockAdded, 0);
+
   return (
     <div className="space-y-4">
       <Card className="border-indigo-200">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-indigo-900 text-lg">
-            <Store className="h-4 w-4" />
-            Store Management
+            <Store className="h-5 w-5" />
+            Stock Management
             {stockItems.length > 0 && (
-              <Badge variant="secondary" className="ml-2 text-xs">
+              <Badge variant="secondary" className="ml-2">
                 {stockItems.length} products
               </Badge>
             )}
+            {totalStockAdded > 0 && (
+              <Badge variant="default" className="ml-2 bg-green-600">
+                +{totalStockAdded} items to add
+              </Badge>
+            )}
             {isAdmin && (
-              <Badge variant="outline" className="ml-2 text-green-600 border-green-600 text-xs">
-                Admin Access
+              <Badge variant="outline" className="ml-2 text-green-600 border-green-600">
+                Admin
               </Badge>
             )}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-3'}`}>
+          <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-4'}`}>
             <div>
               <Label htmlFor="date" className="text-sm">Stock Date</Label>
               <Input
@@ -393,7 +400,32 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
                 Load Inventory
               </Button>
             </div>
+
+            <div className="flex items-end">
+              <Button
+                onClick={() => setQuickAddMode(!quickAddMode)}
+                variant={quickAddMode ? "default" : "outline"}
+                size="sm"
+                className="w-full h-8"
+              >
+                <Zap className="h-3 w-3 mr-1" />
+                Quick Mode
+              </Button>
+            </div>
           </div>
+
+          {totalStockAdded > 0 && (
+            <div className="flex justify-end">
+              <Button
+                onClick={clearAllStockAdditions}
+                variant="outline"
+                size="sm"
+                className="text-red-600 hover:text-red-700"
+              >
+                Clear All Additions
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -403,7 +435,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Plus className="h-4 w-4" />
-                Add Products by Category
+                Add Products
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3">
@@ -461,36 +493,42 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
                       <div className="font-medium text-sm">{item.productName}</div>
                       <div className="text-xs text-gray-500">{item.category}</div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <Label htmlFor={`opening-${item.productId}`} className="text-xs flex items-center gap-1">
-                          Opening Stock
-                          {!isAdmin && <Lock className="h-3 w-3" />}
+                    <div className={`grid gap-2 ${quickAddMode ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                      {!quickAddMode && (
+                        <>
+                          <div>
+                            <Label htmlFor={`opening-${item.productId}`} className="text-xs flex items-center gap-1">
+                              Opening Stock
+                              {!isAdmin && <Lock className="h-3 w-3" />}
+                            </Label>
+                            <Input
+                              id={`opening-${item.productId}`}
+                              type="number"
+                              value={item.openingStock}
+                              onChange={(e) => updateStockItem(item.productId, 'openingStock', parseInt(e.target.value) || 0)}
+                              className="h-7 text-sm"
+                              min="0"
+                              disabled={!isAdmin}
+                              title={!isAdmin ? "Only admins can edit opening stock" : ""}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`actual-${item.productId}`} className="text-xs">Actual Stock</Label>
+                            <Input
+                              id={`actual-${item.productId}`}
+                              type="number"
+                              value={item.actualStock}
+                              onChange={(e) => updateStockItem(item.productId, 'actualStock', parseInt(e.target.value) || 0)}
+                              className="h-7 text-sm"
+                              min="0"
+                            />
+                          </div>
+                        </>
+                      )}
+                      <div className={quickAddMode ? 'col-span-1' : ''}>
+                        <Label htmlFor={`stock-added-${item.productId}`} className="text-xs text-blue-600 font-medium">
+                          Stock to Add
                         </Label>
-                        <Input
-                          id={`opening-${item.productId}`}
-                          type="number"
-                          value={item.openingStock}
-                          onChange={(e) => updateStockItem(item.productId, 'openingStock', parseInt(e.target.value) || 0)}
-                          className="h-7 text-sm"
-                          min="0"
-                          disabled={!isAdmin}
-                          title={!isAdmin ? "Only admins can edit opening stock" : ""}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`actual-${item.productId}`} className="text-xs">Actual Stock</Label>
-                        <Input
-                          id={`actual-${item.productId}`}
-                          type="number"
-                          value={item.actualStock}
-                          onChange={(e) => updateStockItem(item.productId, 'actualStock', parseInt(e.target.value) || 0)}
-                          className="h-7 text-sm"
-                          min="0"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`stock-added-${item.productId}`} className="text-xs text-blue-600">Stock Added</Label>
                         <Input
                           id={`stock-added-${item.productId}`}
                           type="number"
@@ -501,17 +539,19 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
                           placeholder="Add stock"
                         />
                       </div>
-                      <div>
-                        <Label htmlFor={`available-${item.productId}`} className="text-xs">Available Stock</Label>
-                        <Input
-                          id={`available-${item.productId}`}
-                          type="number"
-                          value={item.availableStock}
-                          onChange={(e) => updateStockItem(item.productId, 'availableStock', parseInt(e.target.value) || 0)}
-                          className="h-7 text-sm"
-                          min="0"
-                        />
-                      </div>
+                      {!quickAddMode && (
+                        <div>
+                          <Label htmlFor={`available-${item.productId}`} className="text-xs">Available Stock</Label>
+                          <Input
+                            id={`available-${item.productId}`}
+                            type="number"
+                            value={item.availableStock}
+                            onChange={(e) => updateStockItem(item.productId, 'availableStock', parseInt(e.target.value) || 0)}
+                            className="h-7 text-sm"
+                            min="0"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
