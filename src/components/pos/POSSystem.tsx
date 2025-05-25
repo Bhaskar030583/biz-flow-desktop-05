@@ -18,11 +18,13 @@ import {
   Search,
   Grid2X2,
   LayoutGrid,
-  Users
+  Users,
+  UserCheck
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CashPaymentModal } from "./CashPaymentModal";
 import { CustomerManagement } from "./CustomerManagement";
+import { CreditPaymentModal } from "./CreditPaymentModal";
 
 interface POSItem {
   id: string;
@@ -48,6 +50,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [gridColumns, setGridColumns] = useState(3);
   const [showCashModal, setShowCashModal] = useState(false);
+  const [showCreditModal, setShowCreditModal] = useState(false);
   const isMobile = useIsMobile();
 
   const addToCart = (product: any) => {
@@ -96,9 +99,14 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
     setShowCashModal(true);
   };
 
+  const handleCreditPayment = () => {
+    setShowCreditModal(true);
+  };
+
   const handlePaymentComplete = () => {
     setCart([]);
     setShowCashModal(false);
+    setShowCreditModal(false);
   };
 
   // Get unique categories
@@ -358,7 +366,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
                   {/* Payment Methods */}
                   <div className="space-y-2">
                     <div className="text-sm font-medium">Payment Method</div>
-                    <div className="grid grid-cols-3 gap-1">
+                    <div className="grid grid-cols-2 gap-1">
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -375,6 +383,15 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
                       <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs p-2">
                         <Smartphone className="h-3 w-3" />
                         UPI
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center gap-1 text-xs p-2"
+                        onClick={handleCreditPayment}
+                      >
+                        <UserCheck className="h-3 w-3" />
+                        Credit
                       </Button>
                     </div>
                   </div>
@@ -393,6 +410,14 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
         isOpen={showCashModal}
         onClose={() => setShowCashModal(false)}
         totalAmount={getTotalAmount()}
+        onPaymentComplete={handlePaymentComplete}
+      />
+
+      <CreditPaymentModal
+        isOpen={showCreditModal}
+        onClose={() => setShowCreditModal(false)}
+        totalAmount={getTotalAmount()}
+        cartItems={cart}
         onPaymentComplete={handlePaymentComplete}
       />
     </>
