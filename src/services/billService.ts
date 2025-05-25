@@ -14,6 +14,8 @@ interface BillData {
   totalAmount: number;
   paymentMethod: 'cash' | 'card' | 'upi' | 'credit';
   cartItems: CartItem[];
+  storeName?: string;
+  salespersonName?: string;
 }
 
 export const generateBill = async (billData: BillData) => {
@@ -24,11 +26,26 @@ export const generateBill = async (billData: BillData) => {
   }
 
   try {
-    // Generate bill number
-    const { data: billNumberData, error: billNumberError } = await supabase
-      .rpc('generate_bill_number');
+    // Generate custom bill number based on store, salesperson, and date
+    const today = new Date();
+    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
+    
+    // Get count of bills for today for this user
+    const { data: billsToday, error: countError } = await supabase
+      .from('bills')
+      .select('id')
+      .eq('user_id', user.id)
+      .gte('bill_date', `${today.toISOString().slice(0, 10)}T00:00:00.000Z`)
+      .lt('bill_date', `${new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)}T00:00:00.000Z`);
 
-    if (billNumberError) throw billNumberError;
+    if (countError) throw countError;
+
+    const billCount = (billsToday?.length || 0) + 1;
+    
+    // Create bill number: STORE-SALESPERSON-YYYYMMDD-XXXX
+    const storePrefix = (billData.storeName || 'STORE').substring(0, 4).toUpperCase();
+    const salespersonPrefix = (billData.salespersonName || 'USER').substring(0, 4).toUpperCase();
+    const billNumber = `${storePrefix}-${salespersonPrefix}-${dateStr}-${billCount.toString().padStart(4, '0')}`;
 
     // Create the bill
     const { data: bill, error: billError } = await supabase
@@ -36,7 +53,7 @@ export const generateBill = async (billData: BillData) => {
       .insert({
         user_id: user.id,
         customer_id: billData.customerId || null,
-        bill_number: billNumberData,
+        bill_number: billNumber,
         total_amount: billData.totalAmount,
         payment_method: billData.paymentMethod,
         payment_status: billData.paymentMethod === 'credit' ? 'pending' : 'completed'

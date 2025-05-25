@@ -122,7 +122,9 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
       await generateBill({
         totalAmount: getTotalAmount(),
         paymentMethod: 'card',
-        cartItems: cart
+        cartItems: cart,
+        storeName: storeInfo?.storeName,
+        salespersonName: storeInfo?.salespersonName
       });
 
       toast.success("Card payment completed and bill generated!");
@@ -143,7 +145,9 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
       await generateBill({
         totalAmount: getTotalAmount(),
         paymentMethod: 'upi',
-        cartItems: cart
+        cartItems: cart,
+        storeName: storeInfo?.storeName,
+        salespersonName: storeInfo?.salespersonName
       });
 
       toast.success("UPI payment completed and bill generated!");

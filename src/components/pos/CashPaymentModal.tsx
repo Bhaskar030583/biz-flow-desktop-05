@@ -1,18 +1,29 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Banknote } from "lucide-react";
-import { toast } from "sonner";
+import { Banknote, Calculator } from "lucide-react";
 import { generateBill } from "@/services/billService";
+import { toast } from "sonner";
 
 interface CashPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   totalAmount: number;
   onPaymentComplete: () => void;
+  cartItems: Array<{
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+    total: number;
+  }>;
+  storeInfo?: {
+    storeName: string;
+    salespersonName: string;
+  } | null;
 }
 
 export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
@@ -20,57 +31,49 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
   onClose,
   totalAmount,
   onPaymentComplete,
+  cartItems,
+  storeInfo
 }) => {
-  const [cashReceived, setCashReceived] = useState<string>("");
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [cashReceived, setCashReceived] = useState("");
+  const [processing, setProcessing] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      setCashReceived("");
-    }
-  }, [isOpen]);
-
-  const handleQuickAmount = (amount: number) => {
-    setCashReceived(amount.toString());
-  };
+  const cashAmount = parseFloat(cashReceived) || 0;
+  const changeAmount = cashAmount - totalAmount;
 
   const handlePayment = async () => {
-    const receivedAmount = parseFloat(cashReceived);
-    
-    if (isNaN(receivedAmount) || receivedAmount < totalAmount) {
-      toast.error("Please enter a valid amount that covers the total");
+    if (cashAmount < totalAmount) {
+      toast.error("Cash received is less than total amount");
       return;
     }
 
-    setIsProcessing(true);
+    setProcessing(true);
     try {
-      // Import the generateBill function and cart items from parent
-      // Note: We'll need to pass cartItems as a prop to this modal
       await generateBill({
         totalAmount,
         paymentMethod: 'cash',
-        cartItems: [] // This should be passed as prop
+        cartItems,
+        storeName: storeInfo?.storeName,
+        salespersonName: storeInfo?.salespersonName
       });
 
-      const change = receivedAmount - totalAmount;
-      if (change > 0) {
-        toast.success(`Payment successful! Change: ₹${change.toFixed(2)}`);
-      } else {
-        toast.success("Payment successful!");
-      }
-      
+      toast.success("Cash payment completed and bill generated!");
       onPaymentComplete();
       setCashReceived("");
     } catch (error) {
       console.error("Error processing cash payment:", error);
-      toast.error("Failed to process payment");
+      toast.error("Failed to process cash payment");
     } finally {
-      setIsProcessing(false);
+      setProcessing(false);
     }
   };
 
+  const handleClose = () => {
+    setCashReceived("");
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -81,43 +84,45 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="cash-received">Enter Amount Received</Label>
-            <Input
-              id="cash-received"
-              value={cashReceived}
-              onChange={(e) => setCashReceived(e.target.value)}
-              type="number"
-              placeholder="0.00"
-            />
-          </div>
-
-          <div className="flex justify-between">
-            <Button variant="outline" onClick={() => handleQuickAmount(50)}>₹50</Button>
-            <Button variant="outline" onClick={() => handleQuickAmount(100)}>₹100</Button>
-            <Button variant="outline" onClick={() => handleQuickAmount(200)}>₹200</Button>
-            <Button variant="outline" onClick={() => handleQuickAmount(500)}>₹500</Button>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-2">
-            <h3 className="font-medium">Order Summary</h3>
-            <div className="flex justify-between font-medium">
-              <span>Total Amount:</span>
-              <span>₹{totalAmount.toFixed(2)}</span>
+            <Label htmlFor="total-amount">Total Amount</Label>
+            <div className="text-2xl font-bold text-green-600">
+              ₹{totalAmount.toFixed(2)}
             </div>
           </div>
 
-          <div className="flex gap-2 pt-2">
-            <Button variant="outline" onClick={onClose} className="flex-1">
+          <div className="space-y-2">
+            <Label htmlFor="cash-received">Cash Received</Label>
+            <Input
+              id="cash-received"
+              type="number"
+              step="0.01"
+              value={cashReceived}
+              onChange={(e) => setCashReceived(e.target.value)}
+              placeholder="Enter cash amount"
+              className="text-lg"
+            />
+          </div>
+
+          {cashAmount > 0 && (
+            <div className="space-y-2">
+              <Label>Change to Return</Label>
+              <div className={`text-xl font-bold ${changeAmount >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                ₹{changeAmount.toFixed(2)}
+              </div>
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleClose} className="flex-1">
               Cancel
             </Button>
             <Button
               onClick={handlePayment}
-              disabled={isProcessing}
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              disabled={cashAmount < totalAmount || processing}
+              className="flex-1 bg-green-600 hover:bg-green-700"
             >
-              {isProcessing ? "Processing..." : "Complete Payment"}
+              <Calculator className="h-4 w-4 mr-2" />
+              {processing ? "Processing..." : "Complete Payment"}
             </Button>
           </div>
         </div>
