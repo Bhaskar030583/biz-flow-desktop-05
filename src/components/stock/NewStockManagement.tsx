@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -215,6 +216,11 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
   };
 
   const handleBulkAdd = (amount: number) => {
+    if (stockItems.length === 0) {
+      toast.error('No products in store inventory. Add products first.');
+      return;
+    }
+    
     setStockItems(prev => 
       prev.map(item => ({
         ...item,
@@ -414,19 +420,19 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
               </Button>
             </div>
           </div>
-
-          {selectedShop && (
-            <QuickStockActions
-              quickAddMode={quickAddMode}
-              setQuickAddMode={setQuickAddMode}
-              totalStockAdded={totalStockAdded}
-              onClearAllAdditions={clearAllStockAdditions}
-              onBulkAdd={handleBulkAdd}
-              hasStockItems={stockItems.length > 0}
-            />
-          )}
         </CardContent>
       </Card>
+
+      {selectedShop && (
+        <QuickStockActions
+          quickAddMode={quickAddMode}
+          setQuickAddMode={setQuickAddMode}
+          totalStockAdded={totalStockAdded}
+          onClearAllAdditions={clearAllStockAdditions}
+          onBulkAdd={handleBulkAdd}
+          hasStockItems={stockItems.length > 0}
+        />
+      )}
 
       {selectedShop && (
         <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'lg:grid-cols-3'}`}>
