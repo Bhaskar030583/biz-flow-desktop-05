@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { format } from "date-fns";
-import { Save, RefreshCw, Plus, Package2, Store } from "lucide-react";
+import { Save, RefreshCw, Plus, Package2, Store, Lock } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Product {
@@ -29,6 +29,7 @@ interface StockItem {
   productId: string;
   productName: string;
   category: string;
+  openingStock: number;
   actualStock: number;
   availableStock: number;
 }
@@ -47,12 +48,14 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [stockDate, setStockDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [isAdmin, setIsAdmin] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
     if (user) {
       fetchShops();
       fetchProducts();
+      checkUserRole();
     }
   }, [user]);
 
@@ -60,7 +63,22 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
     if (selectedShop) {
       loadStoreInventory();
     }
-  }, [selectedShop]);
+  }, [selectedShop, stockDate]);
+
+  const checkUserRole = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user?.id)
+        .single();
+      
+      if (error) throw error;
+      setIsAdmin(data?.role === 'admin');
+    } catch (error) {
+      console.error('Error checking user role:', error);
+    }
+  };
 
   const fetchShops = async () => {
     try {
@@ -89,7 +107,6 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
       if (error) throw error;
       setProducts(data || []);
       
-      // Extract unique categories
       const uniqueCategories = Array.from(new Set(data?.map(p => p.category) || []));
       setCategories(uniqueCategories);
     } catch (error) {
@@ -102,11 +119,11 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
     if (!selectedShop) return;
     
     try {
-      // Get current stock for this shop
       const { data: stockData, error } = await supabase
         .from('stocks')
         .select(`
           product_id,
+          opening_stock,
           actual_stock,
           closing_stock,
           products (id, name, category)
@@ -116,18 +133,28 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
 
       if (error) throw error;
 
-      // Create stock items for all products in the store
-      const storeProducts = products.filter(product => 
-        stockData?.some(stock => stock.product_id === product.id) || 
-        stockData?.length === 0 // If no stock data, show all products
-      );
+      // Get previous day's data for opening stock calculation
+      const previousDay = new Date(stockDate);
+      previousDay.setDate(previousDay.getDate() - 1);
+      const previousDate = format(previousDay, 'yyyy-MM-dd');
+
+      const { data: previousStockData, error: prevError } = await supabase
+        .from('stocks')
+        .select('product_id, actual_stock')
+        .eq('shop_id', selectedShop)
+        .eq('stock_date', previousDate);
+
+      if (prevError) console.error('Error fetching previous stock:', prevError);
 
       const newStockItems: StockItem[] = products.map(product => {
         const existingStock = stockData?.find(stock => stock.product_id === product.id);
+        const previousStock = previousStockData?.find(stock => stock.product_id === product.id);
+        
         return {
           productId: product.id,
           productName: product.name,
           category: product.category,
+          openingStock: existingStock?.opening_stock || previousStock?.actual_stock || 0,
           actualStock: existingStock?.actual_stock || 0,
           availableStock: existingStock?.closing_stock || 0,
         };
@@ -151,6 +178,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
       productId: product.id,
       productName: product.name,
       category: product.category,
+      openingStock: 0,
       actualStock: 0,
       availableStock: 0,
     };
@@ -159,13 +187,21 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
     toast.success(`${product.name} added to store inventory`);
   };
 
-  const updateStockItem = (productId: string, field: 'actualStock' | 'availableStock', value: number) => {
+  const updateStockItem = (productId: string, field: keyof StockItem, value: number) => {
     setStockItems(prev => 
-      prev.map(item => 
-        item.productId === productId 
-          ? { ...item, [field]: Math.max(0, value) }
-          : item
-      )
+      prev.map(item => {
+        if (item.productId === productId) {
+          const updatedItem = { ...item, [field]: Math.max(0, value) };
+          
+          // Auto-fill opening stock from actual stock for non-admin users
+          if (field === 'actualStock' && !isAdmin) {
+            updatedItem.openingStock = Math.max(0, value);
+          }
+          
+          return updatedItem;
+        }
+        return item;
+      })
     );
   };
 
@@ -182,12 +218,11 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
 
     setLoading(true);
     try {
-      // Prepare stock data for upsert
       const stockData = stockItems.map(item => ({
         stock_date: stockDate,
         product_id: item.productId,
         shop_id: selectedShop,
-        opening_stock: item.availableStock,
+        opening_stock: item.openingStock,
         closing_stock: item.availableStock,
         actual_stock: item.actualStock,
         user_id: user?.id
@@ -237,6 +272,11 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
             {stockItems.length > 0 && (
               <Badge variant="secondary" className="ml-2">
                 {stockItems.length} products
+              </Badge>
+            )}
+            {isAdmin && (
+              <Badge variant="outline" className="ml-2 text-green-600 border-green-600">
+                Admin Access
               </Badge>
             )}
           </CardTitle>
@@ -347,7 +387,23 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
                       <div className="font-medium">{item.productName}</div>
                       <div className="text-sm text-gray-500">{item.category}</div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <Label htmlFor={`opening-${item.productId}`} className="text-xs flex items-center gap-1">
+                          Opening Stock
+                          {!isAdmin && <Lock className="h-3 w-3" />}
+                        </Label>
+                        <Input
+                          id={`opening-${item.productId}`}
+                          type="number"
+                          value={item.openingStock}
+                          onChange={(e) => updateStockItem(item.productId, 'openingStock', parseInt(e.target.value) || 0)}
+                          className="h-8"
+                          min="0"
+                          disabled={!isAdmin}
+                          title={!isAdmin ? "Only admins can edit opening stock" : ""}
+                        />
+                      </div>
                       <div>
                         <Label htmlFor={`actual-${item.productId}`} className="text-xs">Actual Stock</Label>
                         <Input
@@ -403,6 +459,15 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
           Save Store Inventory
         </Button>
       </div>
+
+      {!isAdmin && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-blue-700">
+            <Lock className="h-4 w-4" />
+            <span className="text-sm font-medium">Note: Opening stock auto-fills from actual stock for non-admin users</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
