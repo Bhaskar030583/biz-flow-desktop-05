@@ -20,6 +20,13 @@ interface BillItem {
   product_id: string;
 }
 
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+}
+
 interface BillEditModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -38,10 +45,14 @@ export const BillEditModal: React.FC<BillEditModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [billData, setBillData] = useState<any>(null);
   const [billItems, setBillItems] = useState<BillItem[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [showAddItem, setShowAddItem] = useState(false);
 
   useEffect(() => {
     if (isOpen && billId) {
       fetchBillData();
+      fetchProducts();
     }
   }, [isOpen, billId]);
 
@@ -75,6 +86,21 @@ export const BillEditModal: React.FC<BillEditModalProps> = ({
     }
   };
 
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, price, category')
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      toast.error("Failed to load products");
+    }
+  };
+
   const updateItemQuantity = (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     
@@ -95,6 +121,38 @@ export const BillEditModal: React.FC<BillEditModalProps> = ({
 
   const removeItem = (itemId: string) => {
     setBillItems(items => items.filter(item => item.id !== itemId));
+  };
+
+  const addNewItem = () => {
+    if (!selectedProductId) {
+      toast.error("Please select a product");
+      return;
+    }
+
+    const selectedProduct = products.find(p => p.id === selectedProductId);
+    if (!selectedProduct) return;
+
+    // Check if item already exists
+    const existingItem = billItems.find(item => item.product_id === selectedProductId);
+    if (existingItem) {
+      // Increase quantity of existing item
+      updateItemQuantity(existingItem.id, existingItem.quantity + 1);
+    } else {
+      // Add new item
+      const newItem: BillItem = {
+        id: `temp-${Date.now()}`, // Temporary ID for new items
+        product_id: selectedProductId,
+        product_name: selectedProduct.name,
+        quantity: 1,
+        unit_price: selectedProduct.price,
+        total_price: selectedProduct.price
+      };
+      setBillItems(items => [...items, newItem]);
+    }
+
+    setSelectedProductId("");
+    setShowAddItem(false);
+    toast.success("Item added successfully");
   };
 
   const calculateTotalAmount = () => {
@@ -188,7 +246,56 @@ export const BillEditModal: React.FC<BillEditModalProps> = ({
 
           {/* Bill Items Section */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Items ({billItems.length})</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Items ({billItems.length})</h3>
+              <Button
+                size="sm"
+                onClick={() => setShowAddItem(true)}
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Item
+              </Button>
+            </div>
+
+            {/* Add New Item Form */}
+            {showAddItem && (
+              <div className="border rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20 mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Label htmlFor="product-select">Select Product</Label>
+                    <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a product to add" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {products.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.name} - ₹{Number(product.price).toFixed(2)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={addNewItem}>
+                      Add
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowAddItem(false);
+                        setSelectedProductId("");
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {billItems.map((item) => (
                 <div
@@ -248,6 +355,7 @@ export const BillEditModal: React.FC<BillEditModalProps> = ({
               {billItems.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
                   <p>No items in this bill</p>
+                  <p className="text-sm">Click "Add Item" to add products to this bill</p>
                 </div>
               )}
             </div>
