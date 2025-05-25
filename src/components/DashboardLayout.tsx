@@ -44,7 +44,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const menuItems = [
     { icon: Home, label: "Dashboard", path: "/dashboard" },
     { icon: Package, label: "Products", path: "/products" },
-    { icon: Store, label: "Shops", path: "/shops" },
+    { icon: Store, label: "Stores", path: "/shops" },
     { icon: BarChart3, label: "Stocks", path: "/stocks" },
     { icon: Calculator, label: "POS", path: "/pos" },
     { icon: UserCheck, label: "Customers", path: "/customers" },
