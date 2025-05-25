@@ -17,7 +17,9 @@ import {
   Search,
   Grid2X2,
   LayoutGrid,
-  UserCheck
+  UserCheck,
+  Store,
+  User
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CashPaymentModal } from "./CashPaymentModal";
@@ -34,6 +36,11 @@ interface POSItem {
   total: number;
 }
 
+interface StoreInfo {
+  storeName: string;
+  salespersonName: string;
+}
+
 interface POSSystemProps {
   products?: Array<{
     id: string;
@@ -42,9 +49,10 @@ interface POSSystemProps {
     category: string;
     quantity?: number;
   }>;
+  storeInfo?: StoreInfo | null;
 }
 
-export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
+export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }) => {
   const [cart, setCart] = useState<POSItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -194,6 +202,29 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [] }) => {
 
   return (
     <>
+      {/* Store Information Header */}
+      {storeInfo && (
+        <Card className="mb-4">
+          <CardContent className="py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Store className="h-4 w-4 text-blue-600" />
+                  <span className="font-medium">{storeInfo.storeName}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-gray-600">{storeInfo.salespersonName}</span>
+                </div>
+              </div>
+              <Badge variant="outline" className="text-xs">
+                POS Session Active
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className={`grid gap-4 h-full ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-4'}`}>
         {/* Main Content Section - Products Only */}
         <div className={`space-y-4 ${isMobile ? 'order-2' : 'lg:col-span-3'}`}>
