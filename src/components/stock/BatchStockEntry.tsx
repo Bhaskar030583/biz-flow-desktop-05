@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +24,7 @@ import {
 } from "lucide-react";
 import { BatchStockEntryModal } from "./BatchStockEntryModal";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useDataSyncActions } from "@/context/DataSyncContext";
 
 interface Product {
   id: string;
@@ -58,6 +58,7 @@ interface BatchStockEntryProps {
 
 const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }) => {
   const { user } = useAuth();
+  const { syncAfterStockChange } = useDataSyncActions();
   const [stockDate, setStockDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [selectedShop, setSelectedShop] = useState<string>('');
   const [shift, setShift] = useState<string>('');
@@ -196,7 +197,8 @@ const BatchStockEntry: React.FC<BatchStockEntryProps> = ({ onSuccess, onCancel }
 
       if (error) throw error;
 
-      toast.success(`Successfully saved ${stockEntries.length} stock entries`);
+      // Trigger data synchronization
+      await syncAfterStockChange('create', { count: stockEntries.length });
       onSuccess();
     } catch (error) {
       console.error('Error saving stock entries:', error);

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/context/AuthContext";
 import { SettingsProvider } from "@/context/SettingsContext";
+import { DataSyncProvider } from "@/context/DataSyncContext";
 import PrivateRoute from "@/components/PrivateRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -23,7 +24,14 @@ import Bills from "./pages/Bills";
 import NotFound from "./pages/NotFound";
 import "./App.css";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   return (
@@ -34,99 +42,101 @@ function App() {
             <Toaster />
             <BrowserRouter>
               <AuthProvider>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <PrivateRoute>
-                        <Dashboard />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/products"
-                    element={
-                      <PrivateRoute>
-                        <Products />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/shops"
-                    element={
-                      <PrivateRoute>
-                        <Shops />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/stocks"
-                    element={
-                      <PrivateRoute>
-                        <Stocks />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/pos"
-                    element={
-                      <PrivateRoute>
-                        <POS />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/customers"
-                    element={
-                      <PrivateRoute>
-                        <Customers />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/bills"
-                    element={
-                      <PrivateRoute>
-                        <Bills />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/credits"
-                    element={
-                      <PrivateRoute>
-                        <Credits />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/users"
-                    element={
-                      <PrivateRoute>
-                        <Users />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/settings"
-                    element={
-                      <PrivateRoute>
-                        <Settings />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/expenses"
-                    element={
-                      <PrivateRoute>
-                        <Expenses />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <DataSyncProvider>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route
+                      path="/dashboard"
+                      element={
+                        <PrivateRoute>
+                          <Dashboard />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/products"
+                      element={
+                        <PrivateRoute>
+                          <Products />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/shops"
+                      element={
+                        <PrivateRoute>
+                          <Shops />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/stocks"
+                      element={
+                        <PrivateRoute>
+                          <Stocks />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/pos"
+                      element={
+                        <PrivateRoute>
+                          <POS />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/customers"
+                      element={
+                        <PrivateRoute>
+                          <Customers />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/bills"
+                      element={
+                        <PrivateRoute>
+                          <Bills />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/credits"
+                      element={
+                        <PrivateRoute>
+                          <Credits />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/users"
+                      element={
+                        <PrivateRoute>
+                          <Users />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/settings"
+                      element={
+                        <PrivateRoute>
+                          <Settings />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/expenses"
+                      element={
+                        <PrivateRoute>
+                          <Expenses />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </DataSyncProvider>
               </AuthProvider>
             </BrowserRouter>
           </TooltipProvider>

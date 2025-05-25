@@ -11,9 +11,11 @@ import { GridViewControls } from "@/components/dashboard/GridViewControls";
 import { LowStockAlert } from "@/components/dashboard/LowStockAlert";
 import { TotalStockValue } from "@/components/dashboard/TotalStockValue";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useDataSync } from "@/context/DataSyncContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Dashboard = () => {
+  const { refreshTrigger } = useDataSync();
   const [startDate, setStartDate] = useState<Date | null>(new Date());
   const [endDate, setEndDate] = useState<Date | null>(new Date());
   const [selectedShops, setSelectedShops] = useState<string[]>([]);
@@ -36,7 +38,7 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="w-full max-w-7xl mx-auto">
+      <div className="w-full max-w-7xl mx-auto" key={refreshTrigger}>
         {/* Header Section */}
         <DashboardHeader 
           title="Dashboard" 

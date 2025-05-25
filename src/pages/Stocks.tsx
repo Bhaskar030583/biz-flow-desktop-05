@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { subDays } from "date-fns";
 import { DateRange } from "react-day-picker";
+import { useDataSync } from "@/context/DataSyncContext";
+import { useDataSyncActions } from "@/hooks/useDataSyncActions";
 import StockImport from "@/components/stock/StockImport";
 import StockHeader from "@/components/stock/StockHeader";
 import StockExportProgress from "@/components/stock/StockExportProgress";
@@ -13,10 +15,12 @@ import StockTabsContainer from "@/components/stock/StockTabsContainer";
 import { exportStockData } from "@/components/stock/StockExportService";
 
 const Stocks = () => {
+  const { refreshTrigger } = useDataSync();
+  const { syncAfterStockChange } = useDataSyncActions();
   const [showForm, setShowForm] = useState(false);
   const [showBatchEntry, setShowBatchEntry] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [refreshStockTrigger, setRefreshStockTrigger] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [activeTab, setActiveTab] = useState("list");
@@ -43,25 +47,25 @@ const Stocks = () => {
     };
     
     countStockEntries();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, refreshStockTrigger]);
 
-  const handleStockAdded = () => {
+  const handleStockAdded = async () => {
     setShowForm(false);
     setShowBatchEntry(false);
-    setRefreshTrigger(prev => prev + 1);
-    toast.success("Stock entry added successfully");
+    setRefreshStockTrigger(prev => prev + 1);
+    await syncAfterStockChange('create');
   };
 
-  const handleImportComplete = () => {
+  const handleImportComplete = async () => {
     setShowImport(false);
-    setRefreshTrigger(prev => prev + 1);
-    toast.success("Stock data imported successfully");
+    setRefreshStockTrigger(prev => prev + 1);
+    await syncAfterStockChange('import');
   };
   
-  const handleCollectionAdded = () => {
+  const handleCollectionAdded = async () => {
     setShowCollectionForm(false);
-    setRefreshTrigger(prev => prev + 1);
-    toast.success("Collection data added successfully");
+    setRefreshStockTrigger(prev => prev + 1);
+    await syncAfterStockChange('collection');
   };
 
   const handleExport = async () => {
@@ -72,6 +76,8 @@ const Stocks = () => {
     
     await exportStockData(setExporting, setExportProgress);
   };
+
+  const combinedRefreshTrigger = refreshTrigger + refreshStockTrigger;
 
   return (
     <DashboardLayout>
@@ -105,7 +111,7 @@ const Stocks = () => {
           showForm={showForm}
           showBatchEntry={showBatchEntry}
           showCollectionForm={showCollectionForm}
-          refreshTrigger={refreshTrigger}
+          refreshTrigger={combinedRefreshTrigger}
           dateRange={dateRange}
           handleStockAdded={handleStockAdded}
           handleCollectionAdded={handleCollectionAdded}

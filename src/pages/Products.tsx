@@ -4,14 +4,20 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { ProductForm } from "@/components/product/ProductForm";
 import { ProductList } from "@/components/product/ProductList";
 import { useAuth } from "@/context/AuthContext";
+import { useDataSync } from "@/context/DataSyncContext";
 
 const Products = () => {
   const { user } = useAuth();
+  const { refreshTrigger } = useDataSync();
   const [refreshList, setRefreshList] = useState(0);
 
   if (!user) {
     return null;
   }
+
+  const handleProductSuccess = () => {
+    setRefreshList(prev => prev + 1);
+  };
 
   return (
     <DashboardLayout>
@@ -19,10 +25,10 @@ const Products = () => {
         <h1 className="text-2xl font-bold mb-6">Manage Products</h1>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div>
-            <ProductForm onSuccess={() => setRefreshList(prev => prev + 1)} />
+            <ProductForm onSuccess={handleProductSuccess} />
           </div>
           <div className="lg:col-span-2">
-            <ProductList key={refreshList} />
+            <ProductList key={`${refreshList}-${refreshTrigger}`} />
           </div>
         </div>
       </div>
