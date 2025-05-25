@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { 
@@ -92,6 +91,7 @@ const StockTable = ({
   }, [user]);
 
   const handleEditClick = (entry: StockEntry) => {
+    console.log('Editing entry with stock_added:', entry.stock_added); // Debug log
     setEditingEntry(entry);
     setEditedValues({
       opening_stock: entry.opening_stock,
@@ -132,6 +132,8 @@ const StockTable = ({
       if (isAdmin) {
         updateData.opening_stock = editedValues.opening_stock;
       }
+      
+      console.log('Updating stock with data:', updateData); // Debug log
       
       const { error } = await supabase
         .from('stocks')
@@ -241,6 +243,8 @@ const StockTable = ({
               const sold = entry.opening_stock - entry.closing_stock;
               const salesAmount = sold * Number(entry.products?.price || 0);
               const profit = calculateProfit(entry);
+              
+              console.log(`Entry ${entry.id} stock_added:`, entry.stock_added); // Debug log
 
               return (
                 <TableRow 
@@ -255,7 +259,7 @@ const StockTable = ({
                   <TableCell>{entry.products?.name}</TableCell>
                   <TableCell className="text-right">{entry.opening_stock}</TableCell>
                   <TableCell className="text-right font-medium text-blue-600">
-                    {entry.stock_added || 0}
+                    {entry.stock_added !== null && entry.stock_added !== undefined ? entry.stock_added : 0}
                   </TableCell>
                   <TableCell className="text-right">{entry.closing_stock}</TableCell>
                   <TableCell className="text-right">{entry.actual_stock}</TableCell>
@@ -346,7 +350,7 @@ const StockTable = ({
                 <div className="responsive-table-cell" data-label="Stock">
                   <span className="text-sm">
                     Opening: {entry.opening_stock} 
-                    {entry.stock_added ? (
+                    {(entry.stock_added !== null && entry.stock_added !== undefined && entry.stock_added > 0) ? (
                       <span className="text-blue-600 font-medium"> (+{entry.stock_added} added)</span>
                     ) : ''} 
                     → Closing: {entry.closing_stock}
