@@ -83,8 +83,19 @@ export const CreditPaymentModal: React.FC<CreditPaymentModalProps> = ({
 
     setIsProcessing(true);
     try {
-      // Here you would typically save the credit transaction to a credits table
-      // For now, we'll just show a success message
+      // Create the credit transaction
+      const { error } = await supabase
+        .from('credit_transactions')
+        .insert({
+          user_id: user.id,
+          customer_id: selectedCustomerId,
+          amount: totalAmount,
+          description: `Credit sale - ${cartItems.length} items`,
+          status: 'pending'
+        });
+
+      if (error) throw error;
+
       const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
       
       toast.success(`Credit sale of ₹${totalAmount.toFixed(2)} recorded for ${selectedCustomer?.name}`);

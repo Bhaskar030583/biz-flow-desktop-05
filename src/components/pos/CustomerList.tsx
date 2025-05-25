@@ -12,7 +12,8 @@ import {
   MapPin, 
   Edit, 
   Trash2,
-  Calendar
+  Calendar,
+  CreditCard
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +27,7 @@ interface Customer {
   email: string | null;
   address: string | null;
   created_at: string;
+  total_credit?: number;
 }
 
 interface CustomerListProps {
@@ -42,14 +44,39 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // Fetch customers
+      const { data: customersData, error: customersError } = await supabase
         .from('customers')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setCustomers(data || []);
+      if (customersError) throw customersError;
+
+      // Fetch credit totals for each customer
+      const customersWithCredit = await Promise.all(
+        (customersData || []).map(async (customer) => {
+          const { data: creditData, error: creditError } = await supabase
+            .from('credit_transactions')
+            .select('amount, status')
+            .eq('customer_id', customer.id)
+            .eq('user_id', user.id);
+
+          if (creditError) {
+            console.error("Error fetching credit data:", creditError);
+            return { ...customer, total_credit: 0 };
+          }
+
+          // Calculate total pending credit amount
+          const totalCredit = creditData
+            ?.filter(transaction => transaction.status === 'pending')
+            ?.reduce((sum, transaction) => sum + Number(transaction.amount), 0) || 0;
+
+          return { ...customer, total_credit: totalCredit };
+        })
+      );
+
+      setCustomers(customersWithCredit);
     } catch (error) {
       console.error("Error fetching customers:", error);
       toast.error("Failed to load customers");
@@ -141,12 +168,18 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-medium text-lg">{customer.name}</h3>
                         <Badge variant="outline" className="text-xs">
                           <Calendar className="h-3 w-3 mr-1" />
                           {format(new Date(customer.created_at), 'MMM dd')}
                         </Badge>
+                        {customer.total_credit && customer.total_credit > 0 && (
+                          <Badge variant="destructive" className="text-xs">
+                            <CreditCard className="h-3 w-3 mr-1" />
+                            ₹{customer.total_credit.toFixed(2)} Credit
+                          </Badge>
+                        )}
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
