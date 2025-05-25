@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 import { format } from "date-fns";
 import { Save, RefreshCw, Plus, Package2, Store, Lock } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import StockTemplate from "./StockTemplate";
 
 interface Product {
   id: string;
@@ -257,6 +257,44 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
     }
   };
 
+  const applyTemplate = async (template: any) => {
+    if (!selectedShop) {
+      toast.error('Please select a shop first');
+      return;
+    }
+
+    try {
+      // Get products data to merge with template
+      const { data: productsData, error } = await supabase
+        .from('products')
+        .select('id, name, category')
+        .eq('user_id', user?.id)
+        .in('id', template.products.map((p: any) => p.product_id));
+
+      if (error) throw error;
+
+      const templateStockItems = template.products.map((templateProduct: any) => {
+        const product = productsData?.find(p => p.id === templateProduct.product_id);
+        if (!product) return null;
+
+        return {
+          productId: product.id,
+          productName: product.name,
+          category: product.category,
+          openingStock: templateProduct.opening_stock,
+          actualStock: templateProduct.actual_stock,
+          availableStock: templateProduct.closing_stock,
+          stockAdded: templateProduct.stock_added,
+        };
+      }).filter(Boolean);
+
+      setStockItems(templateStockItems);
+    } catch (error) {
+      console.error('Error applying template:', error);
+      toast.error('Failed to apply template');
+    }
+  };
+
   if (!user) {
     return (
       <Card className="border-red-200">
@@ -342,7 +380,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
       </Card>
 
       {selectedShop && (
-        <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'lg:grid-cols-2'}`}>
+        <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'lg:grid-cols-3'}`}>
           <Card className="h-fit">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
@@ -383,6 +421,12 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
               </div>
             </CardContent>
           </Card>
+
+          <StockTemplate
+            onApplyTemplate={applyTemplate}
+            currentShopId={selectedShop}
+            currentStockItems={stockItems}
+          />
 
           <Card className="h-fit">
             <CardHeader className="pb-2">
