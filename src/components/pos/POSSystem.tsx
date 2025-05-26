@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -316,6 +316,13 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
     }
   };
 
+  // Apply theme to the document when component mounts or theme changes
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute('data-color-theme', colorTheme);
+    console.log('Applied theme to POS:', colorTheme);
+  }, [colorTheme]);
+
   const themeOptions = [
     { value: 'default', label: 'Default', color: 'bg-blue-500' },
     { value: 'professional', label: 'Professional', color: 'bg-gray-700' },
@@ -323,12 +330,44 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
     { value: 'vibrant', label: 'Vibrant', color: 'bg-green-500' }
   ];
 
+  // Get theme-specific colors
+  const getThemeColors = () => {
+    switch (colorTheme) {
+      case 'professional':
+        return {
+          gradient: 'from-gray-600 to-gray-800',
+          hover: 'hover:from-gray-700 hover:to-gray-900',
+          accent: 'bg-gray-600 hover:bg-gray-700'
+        };
+      case 'modern':
+        return {
+          gradient: 'from-purple-500 to-purple-700',
+          hover: 'hover:from-purple-600 hover:to-purple-800',
+          accent: 'bg-purple-600 hover:bg-purple-700'
+        };
+      case 'vibrant':
+        return {
+          gradient: 'from-green-500 to-green-700',
+          hover: 'hover:from-green-600 hover:to-green-800',
+          accent: 'bg-green-600 hover:bg-green-700'
+        };
+      default:
+        return {
+          gradient: 'from-orange-500 to-red-500',
+          hover: 'hover:from-orange-600 hover:to-red-600',
+          accent: 'bg-orange-500 hover:bg-orange-600'
+        };
+    }
+  };
+
+  const themeColors = getThemeColors();
+
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50" data-color-theme={colorTheme}>
       {/* Left Sidebar */}
       <div className="w-64 bg-white shadow-lg flex flex-col border-r">
         {/* Logo Section with Exit and Theme buttons */}
-        <div className="p-6 border-b bg-gradient-to-r from-orange-500 to-red-500">
+        <div className={`p-6 border-b bg-gradient-to-r ${themeColors.gradient}`}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md">
@@ -356,7 +395,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                     <Palette className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-xl z-50">
                   {themeOptions.map((theme) => (
                     <DropdownMenuItem
                       key={theme.value}
@@ -398,8 +437,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                   variant={selectedCategory === category ? "default" : "ghost"}
                   className={`w-full justify-start gap-3 h-12 text-left ${
                     selectedCategory === category 
-                      ? "bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 shadow-md" 
-                      : "text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+                      ? `bg-gradient-to-r ${themeColors.gradient} text-white ${themeColors.hover} shadow-md` 
+                      : `text-gray-700 hover:bg-gray-50 hover:text-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-600`
                   }`}
                   onClick={() => setSelectedCategory(category)}
                 >
@@ -444,7 +483,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                     variant={gridSize === 'small' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setGridSize('small')}
-                    className={gridSize === 'small' ? 'bg-orange-500 hover:bg-orange-600' : ''}
+                    className={gridSize === 'small' ? `${themeColors.accent}` : ''}
                   >
                     <Grid3X3 className="h-4 w-4" />
                   </Button>
@@ -452,7 +491,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                     variant={gridSize === 'medium' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setGridSize('medium')}
-                    className={gridSize === 'medium' ? 'bg-orange-500 hover:bg-orange-600' : ''}
+                    className={gridSize === 'medium' ? `${themeColors.accent}` : ''}
                   >
                     <Grid2X2 className="h-4 w-4" />
                   </Button>
@@ -460,7 +499,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                     variant={gridSize === 'large' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setGridSize('large')}
-                    className={gridSize === 'large' ? 'bg-orange-500 hover:bg-orange-600' : ''}
+                    className={gridSize === 'large' ? `${themeColors.accent}` : ''}
                   >
                     <LayoutGrid className="h-4 w-4" />
                   </Button>
@@ -474,7 +513,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                 placeholder="Search products..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-10 text-base border-gray-200 focus:border-orange-300 focus:ring-orange-200"
+                className={`pl-10 h-10 text-base border-gray-200 focus:border-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-300 focus:ring-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-200`}
               />
             </div>
           </div>
@@ -484,12 +523,12 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
             {filteredProducts.map(product => (
               <Card
                 key={product.id}
-                className={`cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-orange-300 hover:scale-102 bg-white ${cardConfig.cardClass}`}
+                className={`cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-300 hover:scale-102 bg-white ${cardConfig.cardClass}`}
                 onClick={() => addToCart(product)}
               >
                 <CardContent className="p-2">
-                  <div className="aspect-square bg-gradient-to-br from-orange-100 to-red-100 rounded-lg mb-2 flex items-center justify-center">
-                    <UtensilsCrossed className={cardConfig.iconSize + " text-orange-500"} />
+                  <div className={`aspect-square bg-gradient-to-br from-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-100 to-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'red'}-100 rounded-lg mb-2 flex items-center justify-center`}>
+                    <UtensilsCrossed className={`${cardConfig.iconSize} text-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-500`} />
                   </div>
                   
                   <h3 className={`font-semibold text-gray-800 ${cardConfig.titleSize} mb-1 line-clamp-2 min-h-[2rem]`}>
@@ -502,7 +541,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                     </span>
                     <Button
                       size="sm"
-                      className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white h-6 w-6 p-0 shadow-md"
+                      className={`bg-gradient-to-r ${themeColors.gradient} ${themeColors.hover} text-white h-6 w-6 p-0 shadow-md`}
                       onClick={(e) => {
                         e.stopPropagation();
                         addToCart(product);
@@ -521,10 +560,10 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
         <div className="w-72 bg-white shadow-lg border-l">
           <div className="h-full flex flex-col">
             {/* Header */}
-            <div className="p-4 border-b bg-gradient-to-r from-orange-500 to-red-500">
+            <div className={`p-4 border-b bg-gradient-to-r ${themeColors.gradient}`}>
               <div className="flex items-center justify-between text-white">
                 <h2 className="text-lg font-bold">Current Order</h2>
-                <Badge variant="secondary" className="bg-white text-orange-600 font-semibold text-xs">
+                <Badge variant="secondary" className={`bg-white text-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-600 font-semibold text-xs`}>
                   {cart.length} items
                 </Badge>
               </div>
@@ -545,7 +584,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                       {/* Left side: Number, Name, Price */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start gap-2">
-                          <Badge variant="outline" className="text-xs font-bold text-orange-600 border-orange-200 px-1 py-0 flex-shrink-0">
+                          <Badge variant="outline" className={`text-xs font-bold text-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-600 border-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-200 px-1 py-0 flex-shrink-0`}>
                             #{index + 1}
                           </Badge>
                           <div className="min-w-0 flex-1">
@@ -564,7 +603,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                             const newQuantity = parseInt(e.target.value) || 1;
                             updateQuantity(item.id, newQuantity);
                           }}
-                          className="w-12 h-6 text-xs text-center p-1 border-orange-200"
+                          className={`w-12 h-6 text-xs text-center p-1 border-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-200`}
                           min="1"
                         />
                       </div>
@@ -594,7 +633,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                   {!discount && !showDiscountInput && (
                     <Button
                       variant="outline"
-                      className="w-full flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50 h-8 text-xs"
+                      className={`w-full flex items-center gap-2 border-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-200 text-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-600 hover:bg-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-50 h-8 text-xs`}
                       onClick={() => setShowDiscountInput(true)}
                     >
                       <Percent className="h-3 w-3" />
@@ -609,7 +648,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                           variant={discountType === 'percentage' ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => setDiscountType('percentage')}
-                          className={`h-7 px-2 ${discountType === 'percentage' ? 'bg-orange-500 hover:bg-orange-600' : ''}`}
+                          className={discountType === 'percentage' ? `${themeColors.accent} h-7 px-2` : 'h-7 px-2'}
                         >
                           <Percent className="h-3 w-3" />
                         </Button>
@@ -617,7 +656,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                           variant={discountType === 'value' ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => setDiscountType('value')}
-                          className={`h-7 px-2 ${discountType === 'value' ? 'bg-orange-500 hover:bg-orange-600' : ''}`}
+                          className={discountType === 'value' ? `${themeColors.accent} h-7 px-2` : 'h-7 px-2'}
                         >
                           <DollarSign className="h-3 w-3" />
                         </Button>
@@ -724,7 +763,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50 h-8 text-xs"
+                      className={`flex items-center gap-2 border-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-200 text-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-600 hover:bg-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-50 h-8 text-xs`}
                       onClick={handleCashPayment}
                     >
                       <Banknote className="h-3 w-3" />
