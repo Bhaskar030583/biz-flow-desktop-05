@@ -1,10 +1,13 @@
 
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import StockList from "./StockList";
 import StockChart from "./StockChart";
 import StockRealtimeView from "./StockRealtimeView";
 import ProductStockManagement from "./ProductStockManagement";
+import StockCreationForm from "./StockCreationForm";
+import BatchStockEntry from "./BatchStockEntry";
 
 interface StockTabsContainerProps {
   activeTab: string;
@@ -21,8 +24,11 @@ interface StockTabsContainerProps {
 const StockTabsContainer = ({
   activeTab,
   setActiveTab,
+  showForm,
+  showBatchEntry,
   refreshTrigger,
   handleStockAdded,
+  handleBatchAdded,
 }: StockTabsContainerProps) => {
   console.log("StockTabsContainer rendered with activeTab:", activeTab);
   
@@ -60,6 +66,32 @@ const StockTabsContainer = ({
           <ProductStockManagement onStockUpdated={handleStockAdded} />
         </TabsContent>
       </Tabs>
+
+      {/* Stock Creation Form Modal */}
+      <Dialog open={showForm} onOpenChange={() => {}}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Stock Entry</DialogTitle>
+          </DialogHeader>
+          <StockCreationForm 
+            onSuccess={handleStockAdded}
+            onCancel={() => setActiveTab("list")}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Batch Entry Modal */}
+      <Dialog open={showBatchEntry} onOpenChange={() => {}}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Batch Stock Entry</DialogTitle>
+          </DialogHeader>
+          <BatchStockEntry 
+            onSuccess={handleBatchAdded}
+            onCancel={() => setActiveTab("list")}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
