@@ -15,6 +15,7 @@ interface StoreInfo {
 const POS = () => {
   const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(null);
   const [showStoreModal, setShowStoreModal] = useState(true);
+  const [isPopupWindow, setIsPopupWindow] = useState(false);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['pos-products'],
@@ -29,11 +30,12 @@ const POS = () => {
     }
   });
 
-  // Open browser popup when POS page loads (only if not already in a popup)
+  // Check if this is a popup window and open popup if not
   useEffect(() => {
-    const isPopupWindow = window.opener !== null || window.name === 'POSWindow';
+    const checkIfPopup = window.opener !== null || window.name === 'POSWindow';
+    setIsPopupWindow(checkIfPopup);
     
-    if (!isPopupWindow) {
+    if (!checkIfPopup) {
       const openPOSPopup = () => {
         const popupUrl = window.location.href;
         const popupFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
@@ -54,7 +56,7 @@ const POS = () => {
       
       return () => clearTimeout(timer);
     } else {
-      console.log('Already in popup window, not opening another popup');
+      console.log('Already in popup window, showing clean POS interface');
     }
   }, []);
 
@@ -67,6 +69,37 @@ const POS = () => {
     setShowStoreModal(false);
   };
 
+  // If this is a popup window, render without DashboardLayout
+  if (isPopupWindow) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <StoreInfoModal
+          isOpen={showStoreModal}
+          onComplete={handleStoreInfoComplete}
+          onClose={handleStoreModalClose}
+        />
+        
+        {!showStoreModal && (
+          <div className="container mx-auto px-4 py-6 h-screen">
+            {isLoading ? (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2 space-y-4">
+                  <Skeleton className="h-64 w-full" />
+                </div>
+                <div className="space-y-4">
+                  <Skeleton className="h-96 w-full" />
+                </div>
+              </div>
+            ) : (
+              <POSSystem products={products} storeInfo={storeInfo} />
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Regular view with DashboardLayout for non-popup
   return (
     <DashboardLayout>
       <StoreInfoModal
