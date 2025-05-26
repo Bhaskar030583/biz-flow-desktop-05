@@ -1,10 +1,11 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { 
   ShoppingCart, 
   Plus, 
@@ -29,7 +30,8 @@ import {
   Users,
   Percent,
   DollarSign,
-  X
+  X,
+  CreditCard
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CashPaymentModal } from "./CashPaymentModal";
@@ -79,6 +81,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
   const [discountInput, setDiscountInput] = useState("");
   const [discountType, setDiscountType] = useState<'percentage' | 'value'>('percentage');
   const [showDiscountInput, setShowDiscountInput] = useState(false);
+  const [includeTax, setIncludeTax] = useState(true);
   const isMobile = useIsMobile();
 
   // Category icons mapping
@@ -143,8 +146,13 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
     return Math.min(discount.amount, subtotal);
   };
 
+  const getTaxAmount = () => {
+    if (!includeTax) return 0;
+    return (getSubtotal() - getDiscountAmount()) * 0.18;
+  };
+
   const getTotalAmount = () => {
-    return getSubtotal() - getDiscountAmount();
+    return getSubtotal() - getDiscountAmount() + getTaxAmount();
   };
 
   const applyDiscount = () => {
@@ -502,6 +510,11 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                           value={discountInput}
                           onChange={(e) => setDiscountInput(e.target.value)}
                           className="flex-1"
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              applyDiscount();
+                            }
+                          }}
                         />
                         <Button
                           size="sm"
@@ -539,6 +552,20 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                   )}
                 </div>
 
+                {/* Tax Toggle */}
+                <div className="p-4 border-t bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="tax-toggle" className="text-sm font-medium">
+                      Include Tax (18%)
+                    </Label>
+                    <Switch
+                      id="tax-toggle"
+                      checked={includeTax}
+                      onCheckedChange={setIncludeTax}
+                    />
+                  </div>
+                </div>
+
                 <Separator />
                 
                 {/* Order Summary */}
@@ -555,16 +582,18 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                     </div>
                   )}
                   
-                  <div className="flex justify-between text-gray-600">
-                    <span>Tax (18%)</span>
-                    <span>₹{(getTotalAmount() * 0.18).toFixed(2)}</span>
-                  </div>
+                  {includeTax && (
+                    <div className="flex justify-between text-gray-600">
+                      <span>Tax (18%)</span>
+                      <span>₹{getTaxAmount().toFixed(2)}</span>
+                    </div>
+                  )}
                   
                   <Separator />
                   
                   <div className="flex justify-between text-xl font-bold text-gray-900">
                     <span>Payable Amount</span>
-                    <span>₹{(getTotalAmount() * 1.18).toFixed(2)}</span>
+                    <span>₹{getTotalAmount().toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -589,14 +618,32 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                       <Smartphone className="h-4 w-4" />
                       UPI
                     </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center gap-2 border-purple-200 text-purple-600 hover:bg-purple-50"
+                      onClick={handleCreditPayment}
+                    >
+                      <UserCheck className="h-4 w-4" />
+                      Credit
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center gap-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                      onClick={handleSplitPayment}
+                    >
+                      <Split className="h-4 w-4" />
+                      Split
+                    </Button>
                   </div>
                   
                   <Button 
                     className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 h-12 text-lg font-semibold shadow-lg"
                     onClick={handleCardPayment}
                   >
-                    <Calculator className="h-5 w-5 mr-2" />
-                    Proceed to Payment
+                    <CreditCard className="h-5 w-5 mr-2" />
+                    Card Payment
                   </Button>
                 </div>
               </>
