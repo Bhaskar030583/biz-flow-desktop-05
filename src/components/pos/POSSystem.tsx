@@ -82,6 +82,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
   const [discountType, setDiscountType] = useState<'percentage' | 'value'>('percentage');
   const [showDiscountInput, setShowDiscountInput] = useState(false);
   const [includeTax, setIncludeTax] = useState(true);
+  const [gridSize, setGridSize] = useState<'small' | 'medium' | 'large'>('medium');
   const isMobile = useIsMobile();
 
   // Category icons mapping
@@ -267,6 +268,27 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
     return matchesSearch && matchesCategory;
   });
 
+  // Grid configuration
+  const getGridCols = () => {
+    switch (gridSize) {
+      case 'small': return 'grid-cols-6';
+      case 'medium': return 'grid-cols-4';
+      case 'large': return 'grid-cols-3';
+      default: return 'grid-cols-4';
+    }
+  };
+
+  const getCardSize = () => {
+    switch (gridSize) {
+      case 'small': return { cardClass: 'h-24', iconSize: 'h-8 w-8', titleSize: 'text-xs', priceSize: 'text-sm' };
+      case 'medium': return { cardClass: 'h-32', iconSize: 'h-10 w-10', titleSize: 'text-sm', priceSize: 'text-base' };
+      case 'large': return { cardClass: 'h-40', iconSize: 'h-12 w-12', titleSize: 'text-base', priceSize: 'text-lg' };
+      default: return { cardClass: 'h-32', iconSize: 'h-10 w-10', titleSize: 'text-sm', priceSize: 'text-base' };
+    }
+  };
+
+  const cardConfig = getCardSize();
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Left Sidebar */}
@@ -334,18 +356,48 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
       {/* Main Content Area */}
       <div className="flex-1 flex">
         {/* Products Section */}
-        <div className="flex-1 p-6 overflow-hidden">
-          {/* Header with Search */}
-          <div className="mb-6">
+        <div className="flex-1 p-4 overflow-hidden">
+          {/* Header with Search and Grid Controls */}
+          <div className="mb-4">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-2xl font-bold text-gray-800">Menu Items</h1>
-              <Button
-                variant="outline"
-                className="flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
-              >
-                <Users className="h-4 w-4" />
-                Add Customer
-              </Button>
+              <div className="flex items-center gap-4">
+                {/* Grid Size Controls */}
+                <div className="flex items-center gap-2 bg-white rounded-lg p-1 border">
+                  <Button
+                    variant={gridSize === 'small' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setGridSize('small')}
+                    className={gridSize === 'small' ? 'bg-orange-500 hover:bg-orange-600' : ''}
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={gridSize === 'medium' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setGridSize('medium')}
+                    className={gridSize === 'medium' ? 'bg-orange-500 hover:bg-orange-600' : ''}
+                  >
+                    <Grid2X2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={gridSize === 'large' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setGridSize('large')}
+                    className={gridSize === 'large' ? 'bg-orange-500 hover:bg-orange-600' : ''}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
+                >
+                  <Users className="h-4 w-4" />
+                  Add Customer
+                </Button>
+              </div>
             </div>
             
             <div className="relative">
@@ -354,41 +406,41 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                 placeholder="Search products..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-12 text-lg border-gray-200 focus:border-orange-300 focus:ring-orange-200"
+                className="pl-10 h-10 text-base border-gray-200 focus:border-orange-300 focus:ring-orange-200"
               />
             </div>
           </div>
 
           {/* Products Grid */}
-          <div className="grid grid-cols-4 gap-4 overflow-y-auto h-[calc(100vh-200px)]">
+          <div className={`grid ${getGridCols()} gap-3 overflow-y-auto h-[calc(100vh-180px)]`}>
             {filteredProducts.map(product => (
               <Card
                 key={product.id}
-                className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-orange-300 hover:scale-102 bg-white"
+                className={`cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-orange-300 hover:scale-102 bg-white ${cardConfig.cardClass}`}
                 onClick={() => addToCart(product)}
               >
-                <CardContent className="p-4">
-                  <div className="aspect-square bg-gradient-to-br from-orange-100 to-red-100 rounded-lg mb-3 flex items-center justify-center">
-                    <UtensilsCrossed className="h-12 w-12 text-orange-500" />
+                <CardContent className="p-2">
+                  <div className="aspect-square bg-gradient-to-br from-orange-100 to-red-100 rounded-lg mb-2 flex items-center justify-center">
+                    <UtensilsCrossed className={cardConfig.iconSize + " text-orange-500"} />
                   </div>
                   
-                  <h3 className="font-semibold text-gray-800 text-sm mb-2 line-clamp-2 min-h-[2.5rem]">
+                  <h3 className={`font-semibold text-gray-800 ${cardConfig.titleSize} mb-1 line-clamp-2 min-h-[2rem]`}>
                     {product.name}
                   </h3>
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold text-gray-900">
+                    <span className={`font-bold text-gray-900 ${cardConfig.priceSize}`}>
                       ₹{product.price}
                     </span>
                     <Button
                       size="sm"
-                      className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white h-8 w-8 p-0 shadow-md"
+                      className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white h-6 w-6 p-0 shadow-md"
                       onClick={(e) => {
                         e.stopPropagation();
                         addToCart(product);
                       }}
                     >
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-3 w-3" />
                     </Button>
                   </div>
                 </CardContent>
@@ -397,69 +449,69 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
           </div>
         </div>
 
-        {/* Order Summary Section */}
-        <div className="w-80 bg-white shadow-lg border-l">
+        {/* Order Summary Section - Reduced width and compact items */}
+        <div className="w-72 bg-white shadow-lg border-l">
           <div className="h-full flex flex-col">
             {/* Header */}
-            <div className="p-6 border-b bg-gradient-to-r from-orange-500 to-red-500">
+            <div className="p-4 border-b bg-gradient-to-r from-orange-500 to-red-500">
               <div className="flex items-center justify-between text-white">
-                <h2 className="text-xl font-bold">Current Order</h2>
-                <Badge variant="secondary" className="bg-white text-orange-600 font-semibold">
+                <h2 className="text-lg font-bold">Current Order</h2>
+                <Badge variant="secondary" className="bg-white text-orange-600 font-semibold text-xs">
                   {cart.length} items
                 </Badge>
               </div>
             </div>
 
-            {/* Cart Items */}
-            <div className="flex-1 p-4 overflow-y-auto">
+            {/* Cart Items - Compact design */}
+            <div className="flex-1 p-3 overflow-y-auto">
               {cart.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <ShoppingCart className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                  <p className="text-lg font-medium">No items in cart</p>
-                  <p className="text-sm">Add items to get started</p>
+                <div className="text-center py-8 text-gray-500">
+                  <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p className="text-base font-medium">No items in cart</p>
+                  <p className="text-xs">Add items to get started</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {cart.map((item, index) => (
-                    <div key={item.id} className="bg-gray-50 rounded-lg p-3 border">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant="outline" className="text-xs font-bold text-orange-600 border-orange-200">
+                    <div key={item.id} className="bg-gray-50 rounded-md p-2 border text-xs">
+                      <div className="flex items-center justify-between mb-1">
+                        <Badge variant="outline" className="text-xs font-bold text-orange-600 border-orange-200 px-1 py-0">
                           #{index + 1}
                         </Badge>
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => removeFromCart(item.id)}
-                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                          className="h-4 w-4 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                       
-                      <h4 className="font-semibold text-gray-800 text-sm mb-1">{item.name}</h4>
-                      <p className="text-xs text-gray-600 mb-3">₹{item.price} each</p>
+                      <h4 className="font-semibold text-gray-800 text-xs mb-1 leading-tight">{item.name}</h4>
+                      <p className="text-xs text-gray-600 mb-2">₹{item.price} each</p>
                       
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => updateQuantity(item.id, -1)}
-                            className="h-8 w-8 p-0 border-orange-200 text-orange-600 hover:bg-orange-50"
+                            className="h-6 w-6 p-0 border-orange-200 text-orange-600 hover:bg-orange-50"
                           >
                             <Minus className="h-3 w-3" />
                           </Button>
-                          <span className="w-8 text-center font-bold text-gray-800">{item.quantity}</span>
+                          <span className="w-6 text-center font-bold text-gray-800 text-xs">{item.quantity}</span>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => updateQuantity(item.id, 1)}
-                            className="h-8 w-8 p-0 border-orange-200 text-orange-600 hover:bg-orange-50"
+                            className="h-6 w-6 p-0 border-orange-200 text-orange-600 hover:bg-orange-50"
                           >
                             <Plus className="h-3 w-3" />
                           </Button>
                         </div>
-                        <span className="font-bold text-gray-900">₹{item.total}</span>
+                        <span className="font-bold text-gray-900 text-xs">₹{item.total}</span>
                       </div>
                     </div>
                   ))}
@@ -470,46 +522,46 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
             {cart.length > 0 && (
               <>
                 {/* Discount Section */}
-                <div className="p-4 border-t bg-gray-50">
+                <div className="p-3 border-t bg-gray-50">
                   {!discount && !showDiscountInput && (
                     <Button
                       variant="outline"
-                      className="w-full flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
+                      className="w-full flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50 h-8 text-xs"
                       onClick={() => setShowDiscountInput(true)}
                     >
-                      <Percent className="h-4 w-4" />
+                      <Percent className="h-3 w-3" />
                       Add Discount
                     </Button>
                   )}
 
                   {showDiscountInput && (
-                    <div className="space-y-3">
-                      <div className="flex gap-2">
+                    <div className="space-y-2">
+                      <div className="flex gap-1">
                         <Button
                           variant={discountType === 'percentage' ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => setDiscountType('percentage')}
-                          className={discountType === 'percentage' ? 'bg-orange-500 hover:bg-orange-600' : ''}
+                          className={`h-7 px-2 ${discountType === 'percentage' ? 'bg-orange-500 hover:bg-orange-600' : ''}`}
                         >
-                          <Percent className="h-4 w-4" />
+                          <Percent className="h-3 w-3" />
                         </Button>
                         <Button
                           variant={discountType === 'value' ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => setDiscountType('value')}
-                          className={discountType === 'value' ? 'bg-orange-500 hover:bg-orange-600' : ''}
+                          className={`h-7 px-2 ${discountType === 'value' ? 'bg-orange-500 hover:bg-orange-600' : ''}`}
                         >
-                          <DollarSign className="h-4 w-4" />
+                          <DollarSign className="h-3 w-3" />
                         </Button>
                       </div>
                       
-                      <div className="flex gap-2">
+                      <div className="flex gap-1">
                         <Input
                           type="number"
                           placeholder={discountType === 'percentage' ? 'Enter %' : 'Enter ₹'}
                           value={discountInput}
                           onChange={(e) => setDiscountInput(e.target.value)}
-                          className="flex-1"
+                          className="flex-1 h-7 text-xs"
                           onKeyPress={(e) => {
                             if (e.key === 'Enter') {
                               applyDiscount();
@@ -519,7 +571,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                         <Button
                           size="sm"
                           onClick={applyDiscount}
-                          className="bg-green-600 hover:bg-green-700"
+                          className="bg-green-600 hover:bg-green-700 h-7 px-2 text-xs"
                         >
                           Apply
                         </Button>
@@ -527,8 +579,9 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                           size="sm"
                           variant="outline"
                           onClick={() => setShowDiscountInput(false)}
+                          className="h-7 px-1"
                         >
-                          <X className="h-4 w-4" />
+                          <X className="h-3 w-3" />
                         </Button>
                       </div>
                     </div>
@@ -537,14 +590,14 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                   {discount && (
                     <div className="flex items-center justify-between p-2 bg-green-50 rounded border border-green-200">
                       <div className="flex items-center gap-2">
-                        <Percent className="h-4 w-4 text-green-600" />
-                        <span className="text-sm font-medium text-green-800">{discount.description}</span>
+                        <Percent className="h-3 w-3 text-green-600" />
+                        <span className="text-xs font-medium text-green-800">{discount.description}</span>
                       </div>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={removeDiscount}
-                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                        className="h-4 w-4 p-0 text-red-500 hover:text-red-700"
                       >
                         <X className="h-3 w-3" />
                       </Button>
@@ -553,9 +606,9 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                 </div>
 
                 {/* Tax Toggle */}
-                <div className="p-4 border-t bg-gray-50">
+                <div className="p-3 border-t bg-gray-50">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="tax-toggle" className="text-sm font-medium">
+                    <Label htmlFor="tax-toggle" className="text-xs font-medium">
                       Include Tax (18%)
                     </Label>
                     <Switch
@@ -569,21 +622,21 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                 <Separator />
                 
                 {/* Order Summary */}
-                <div className="p-4 space-y-3 bg-white">
-                  <div className="flex justify-between text-gray-600">
+                <div className="p-3 space-y-2 bg-white">
+                  <div className="flex justify-between text-gray-600 text-xs">
                     <span>Subtotal</span>
                     <span>₹{getSubtotal().toFixed(2)}</span>
                   </div>
                   
                   {discount && (
-                    <div className="flex justify-between text-green-600">
+                    <div className="flex justify-between text-green-600 text-xs">
                       <span>Discount ({discount.description})</span>
                       <span>-₹{getDiscountAmount().toFixed(2)}</span>
                     </div>
                   )}
                   
                   {includeTax && (
-                    <div className="flex justify-between text-gray-600">
+                    <div className="flex justify-between text-gray-600 text-xs">
                       <span>Tax (18%)</span>
                       <span>₹{getTaxAmount().toFixed(2)}</span>
                     </div>
@@ -591,58 +644,58 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                   
                   <Separator />
                   
-                  <div className="flex justify-between text-xl font-bold text-gray-900">
+                  <div className="flex justify-between text-lg font-bold text-gray-900">
                     <span>Payable Amount</span>
                     <span>₹{getTotalAmount().toFixed(2)}</span>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="p-4 space-y-3 border-t bg-gray-50">
+                <div className="p-3 space-y-2 border-t bg-gray-50">
                   <div className="grid grid-cols-2 gap-2">
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
+                      className="flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50 h-8 text-xs"
                       onClick={handleCashPayment}
                     >
-                      <Banknote className="h-4 w-4" />
+                      <Banknote className="h-3 w-3" />
                       Cash
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50"
+                      className="flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 h-8 text-xs"
                       onClick={handleUPIPayment}
                     >
-                      <Smartphone className="h-4 w-4" />
+                      <Smartphone className="h-3 w-3" />
                       UPI
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex items-center gap-2 border-purple-200 text-purple-600 hover:bg-purple-50"
+                      className="flex items-center gap-2 border-purple-200 text-purple-600 hover:bg-purple-50 h-8 text-xs"
                       onClick={handleCreditPayment}
                     >
-                      <UserCheck className="h-4 w-4" />
+                      <UserCheck className="h-3 w-3" />
                       Credit
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex items-center gap-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                      className="flex items-center gap-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50 h-8 text-xs"
                       onClick={handleSplitPayment}
                     >
-                      <Split className="h-4 w-4" />
+                      <Split className="h-3 w-3" />
                       Split
                     </Button>
                   </div>
                   
                   <Button 
-                    className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 h-12 text-lg font-semibold shadow-lg"
+                    className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 h-10 text-sm font-semibold shadow-lg"
                     onClick={handleCardPayment}
                   >
-                    <CreditCard className="h-5 w-5 mr-2" />
+                    <CreditCard className="h-4 w-4 mr-2" />
                     Card Payment
                   </Button>
                 </div>
