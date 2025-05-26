@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -86,8 +87,10 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
         (payload) => {
           console.log('Bill change detected:', payload);
           // Reload stock data when bills change
-          const billDate = payload.new?.bill_date;
-          if (billDate && billDate.startsWith(stockDate)) {
+          const billDate = payload.new && typeof payload.new === 'object' && 'bill_date' in payload.new 
+            ? (payload.new as any).bill_date 
+            : null;
+          if (billDate && typeof billDate === 'string' && billDate.startsWith(stockDate)) {
             loadStockData();
           }
         }
