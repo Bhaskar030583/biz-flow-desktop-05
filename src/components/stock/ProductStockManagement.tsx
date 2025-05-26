@@ -27,6 +27,8 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
+  console.log("ProductStockManagement component loaded - showing products list only");
+
   useEffect(() => {
     if (user) {
       fetchProducts();
@@ -36,6 +38,8 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
   const fetchProducts = async () => {
     try {
       setLoading(true);
+      console.log("Fetching products for user:", user?.id);
+      
       const { data, error } = await supabase
         .from('products')
         .select('id, name, category, price, cost_price')
@@ -43,6 +47,8 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
         .order('category, name');
       
       if (error) throw error;
+      
+      console.log("Fetched products:", data?.length || 0, "products");
       setProducts(data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
