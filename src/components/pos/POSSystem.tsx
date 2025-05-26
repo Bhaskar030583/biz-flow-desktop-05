@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -82,7 +81,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
   const [discountInput, setDiscountInput] = useState("");
   const [discountType, setDiscountType] = useState<'percentage' | 'value'>('percentage');
   const [showDiscountInput, setShowDiscountInput] = useState(false);
-  const [includeTax, setIncludeTax] = useState(true);
+  const [includeTax, setIncludeTax] = useState(false);
   const [gridSize, setGridSize] = useState<'small' | 'medium' | 'large'>('medium');
   const isMobile = useIsMobile();
 
@@ -306,7 +305,6 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">ABC CAFE</h2>
-              <p className="text-sm text-orange-100">Restaurant POS</p>
             </div>
           </div>
         </div>
@@ -361,7 +359,6 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
           {/* Header with Search and Grid Controls */}
           <div className="mb-4">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold text-gray-800">Menu Items</h1>
               <div className="flex items-center gap-4">
                 {/* Grid Size Controls */}
                 <div className="flex items-center gap-2 bg-white rounded-lg p-1 border">
@@ -390,14 +387,6 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                     <LayoutGrid className="h-4 w-4" />
                   </Button>
                 </div>
-                
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
-                >
-                  <Users className="h-4 w-4" />
-                  Add Customer
-                </Button>
               </div>
             </div>
             
@@ -474,7 +463,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
               ) : (
                 <div className="space-y-1">
                   {cart.map((item, index) => (
-                    <div key={item.id} className="flex items-center justify-between py-2 px-2 bg-gray-50 rounded border text-sm hover:bg-gray-100">
+                    <div key={item.id} className="flex items-center justify-between py-2 px-2 bg-gray-50 rounded border hover:bg-gray-100">
                       {/* Left side: Number, Name, Price */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start gap-2">
@@ -482,7 +471,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                             #{index + 1}
                           </Badge>
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-medium text-gray-800 text-sm truncate">{item.name}</h4>
+                            <h4 className="font-medium text-gray-800 text-xs truncate">{item.name}</h4>
                             <p className="text-xs text-gray-500">₹{item.price}</p>
                           </div>
                         </div>
@@ -498,7 +487,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                         >
                           <Minus className="h-3 w-3" />
                         </Button>
-                        <span className="w-6 text-center font-bold text-gray-800 text-sm">{item.quantity}</span>
+                        <span className="w-6 text-center font-bold text-gray-800 text-xs">{item.quantity}</span>
                         <Button
                           size="sm"
                           variant="outline"
@@ -511,7 +500,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
 
                       {/* Right side: Total and Delete */}
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-gray-900 text-sm min-w-[50px] text-right">₹{item.total}</span>
+                        <span className="font-bold text-gray-900 text-xs min-w-[50px] text-right">₹{item.total}</span>
                         <Button
                           size="sm"
                           variant="ghost"
