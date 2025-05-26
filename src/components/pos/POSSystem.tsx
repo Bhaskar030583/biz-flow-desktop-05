@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,13 @@ import {
   LayoutGrid,
   UserCheck,
   Store,
-  User
+  User,
+  Coffee,
+  UtensilsCrossed,
+  Cookie,
+  Wine,
+  IceCream,
+  Users
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CashPaymentModal } from "./CashPaymentModal";
@@ -56,11 +63,21 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
   const [cart, setCart] = useState<POSItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [gridColumns, setGridColumns] = useState(3);
   const [showCashModal, setShowCashModal] = useState(false);
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [showSplitModal, setShowSplitModal] = useState(false);
   const isMobile = useIsMobile();
+
+  // Category icons mapping
+  const categoryIcons = {
+    "Starters": UtensilsCrossed,
+    "Breakfast": Coffee,
+    "Lunch": UtensilsCrossed,
+    "Supper": Wine,
+    "Desserts": Cookie,
+    "Beverages": Coffee,
+    "all": LayoutGrid
+  };
 
   const addToCart = (product: any) => {
     setCart(prev => {
@@ -180,298 +197,250 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
     return matchesSearch && matchesCategory;
   });
 
-  // Grid view options
-  const gridViewOptions = [
-    { columns: 2, icon: Grid2X2, label: '2 columns' },
-    { columns: 3, icon: Grid3X3, label: '3 columns' },
-    { columns: 4, icon: LayoutGrid, label: '4 columns' },
-    { columns: 5, icon: LayoutGrid, label: '5 columns' },
-    { columns: 6, icon: LayoutGrid, label: '6 columns' }
-  ];
-
-  // Dynamic grid class based on selected columns
-  const getGridClass = () => {
-    if (isMobile) return 'grid-cols-1 sm:grid-cols-2';
-    
-    const gridClasses = {
-      2: 'grid-cols-2',
-      3: 'grid-cols-2 lg:grid-cols-3',
-      4: 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
-      5: 'grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
-      6: 'grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'
-    };
-    
-    return gridClasses[gridColumns as keyof typeof gridClasses] || 'grid-cols-2 lg:grid-cols-3';
-  };
-
   return (
-    <>
-      {/* Store Information Header */}
-      {storeInfo && (
-        <Card className="mb-4">
-          <CardContent className="py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Store className="h-4 w-4 text-blue-600" />
-                  <span className="font-medium">{storeInfo.storeName}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-green-600" />
-                  <span className="text-sm text-gray-600">{storeInfo.salespersonName}</span>
-                </div>
-              </div>
-              <Badge variant="outline" className="text-xs">
-                POS Session Active
-              </Badge>
+    <div className="flex h-screen bg-gray-50">
+      {/* Left Sidebar */}
+      <div className="w-64 bg-white shadow-lg flex flex-col">
+        {/* Logo Section */}
+        <div className="p-6 border-b">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-amber-600 rounded-full flex items-center justify-center">
+              <img 
+                src="/lovable-uploads/528f105b-5de5-4806-a64a-99582022753b.png" 
+                alt="ABC Cafe Logo" 
+                className="w-10 h-10 rounded-full object-cover"
+              />
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className={`grid gap-4 h-full ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-4'}`}>
-        {/* Main Content Section - Products Only */}
-        <div className={`space-y-4 ${isMobile ? 'order-2' : 'lg:col-span-3'}`}>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <Grid3X3 className="h-5 w-5" />
-                Products
-              </CardTitle>
-              
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search products..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-
-              {/* Category Filter */}
-              <div className="flex flex-wrap gap-2 mt-3">
-                {categories.map(category => (
-                  <Button
-                    key={category}
-                    variant={selectedCategory === category ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedCategory(category)}
-                    className="text-xs"
-                  >
-                    {category === "all" ? "All Categories" : category}
-                  </Button>
-                ))}
-              </div>
-
-              {/* Grid View Controls */}
-              <div className="flex items-center gap-2 mt-3">
-                <span className="text-sm text-muted-foreground mr-2">Grid View:</span>
-                <div className="flex flex-wrap gap-1">
-                  {gridViewOptions.map(({ columns, icon: Icon, label }) => (
-                    <Button
-                      key={columns}
-                      variant={gridColumns === columns ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => {
-                        console.log(`Grid columns changed to: ${columns}`);
-                        setGridColumns(columns);
-                      }}
-                      className="flex items-center gap-1"
-                      title={label}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span className="hidden sm:inline text-xs">{columns}</span>
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </CardHeader>
-            
-            <CardContent>
-              <div className="max-h-96 overflow-y-auto">
-                {filteredProducts.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Grid3X3 className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No products found</p>
-                    <p className="text-sm">Try adjusting your search or category filter</p>
-                  </div>
-                ) : (
-                  <div className={`grid gap-3 ${getGridClass()}`} key={gridColumns}>
-                    {filteredProducts.map(product => (
-                      <Card
-                        key={product.id}
-                        className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-green-200"
-                        onClick={() => addToCart(product)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-start">
-                              <h3 className="font-medium text-sm line-clamp-2">{product.name}</h3>
-                              <Badge variant="outline" className="text-xs ml-2 shrink-0">
-                                {product.category}
-                              </Badge>
-                            </div>
-                            
-                            <div className="flex justify-between items-center">
-                              <div className="text-green-600 font-bold text-lg">
-                                ₹{product.price}
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 w-8 p-0 hover:bg-green-100"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  addToCart(product);
-                                }}
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            
-                            {/* Stock quantity display */}
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="text-gray-500">Stock:</span>
-                              <span className={`font-medium ${
-                                (product.quantity || 0) <= 10 
-                                  ? 'text-red-600' 
-                                  : (product.quantity || 0) <= 50 
-                                    ? 'text-orange-600' 
-                                    : 'text-green-600'
-                              }`}>
-                                {product.quantity || 0} units
-                              </span>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+            <div>
+              <h2 className="text-xl font-bold text-gray-800">ABC CAFE</h2>
+              <p className="text-sm text-gray-500">Restaurant POS</p>
+            </div>
+          </div>
         </div>
 
-        {/* Cart Section */}
-        <div className={`space-y-4 ${isMobile ? 'order-1' : ''}`}>
-          <Card className="h-fit">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center justify-between text-lg">
-                <span className="flex items-center gap-2">
-                  <Calculator className="h-4 w-4" />
-                  Cart ({cart.length})
-                </span>
-                <Badge variant="secondary" className="text-sm">
-                  ₹{getTotalAmount().toFixed(2)}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 p-4">
-              {/* Cart Items */}
-              <div className="space-y-1 max-h-48 overflow-y-auto">
-                {cart.length === 0 ? (
-                  <div className="text-center py-4 text-gray-500">
-                    <ShoppingCart className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Cart is empty</p>
-                    <p className="text-xs">Add products to get started</p>
+        {/* Category Navigation */}
+        <div className="flex-1 p-4">
+          <div className="space-y-2">
+            {categories.map(category => {
+              const IconComponent = categoryIcons[category as keyof typeof categoryIcons] || LayoutGrid;
+              return (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "ghost"}
+                  className={`w-full justify-start gap-3 h-12 ${
+                    selectedCategory === category 
+                      ? "bg-orange-500 text-white hover:bg-orange-600" 
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  <IconComponent className="h-5 w-5" />
+                  {category === "all" ? "All Items" : category}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Store Info */}
+        {storeInfo && (
+          <div className="p-4 border-t bg-gray-50">
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-2">
+                <Store className="h-4 w-4 text-blue-600" />
+                <span className="font-medium">{storeInfo.storeName}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-green-600" />
+                <span className="text-gray-600">{storeInfo.salespersonName}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex">
+        {/* Products Section */}
+        <div className="flex-1 p-6">
+          {/* Header with Search */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-2xl font-bold text-gray-800">Menu Items</h1>
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Users className="h-4 w-4" />
+                Add Customer
+              </Button>
+            </div>
+            
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Input
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-12 text-lg"
+              />
+            </div>
+          </div>
+
+          {/* Products Grid */}
+          <div className="grid grid-cols-4 gap-4 overflow-y-auto">
+            {filteredProducts.map(product => (
+              <Card
+                key={product.id}
+                className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-orange-300"
+                onClick={() => addToCart(product)}
+              >
+                <CardContent className="p-4">
+                  <div className="aspect-square bg-gray-200 rounded-lg mb-3 flex items-center justify-center">
+                    <UtensilsCrossed className="h-12 w-12 text-gray-400" />
                   </div>
-                ) : (
-                  cart.map(item => (
-                    <div key={item.id} className="flex items-center justify-between p-2 border rounded text-xs">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{item.name}</div>
-                        <div className="text-gray-500">₹{item.price} each</div>
-                      </div>
-                      <div className="flex items-center gap-1">
+                  
+                  <h3 className="font-semibold text-gray-800 text-sm mb-2 line-clamp-2">
+                    {product.name}
+                  </h3>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-bold text-gray-900">
+                      ₹{product.price}
+                    </span>
+                    <Button
+                      size="sm"
+                      className="bg-orange-500 hover:bg-orange-600 text-white h-8 w-8 p-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart(product);
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Order Summary Section */}
+        <div className="w-80 bg-white shadow-lg p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-800">Current Order</h2>
+            <Badge variant="outline" className="text-sm">
+              {cart.length} items
+            </Badge>
+          </div>
+
+          {/* Cart Items */}
+          <div className="space-y-3 mb-6 max-h-96 overflow-y-auto">
+            {cart.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No items in cart</p>
+                <p className="text-sm">Add items to get started</p>
+              </div>
+            ) : (
+              cart.map((item, index) => (
+                <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm">{index + 1}</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeFromCart(item.id)}
+                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <h4 className="font-medium text-gray-800">{item.name}</h4>
+                    <p className="text-sm text-gray-600">₹{item.price}</p>
+                    
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="flex items-center gap-2">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => updateQuantity(item.id, -1)}
-                          className="h-5 w-5 p-0"
+                          className="h-8 w-8 p-0"
                         >
-                          <Minus className="h-2 w-2" />
+                          <Minus className="h-3 w-3" />
                         </Button>
-                        <span className="w-6 text-center font-medium">
-                          {item.quantity}
-                        </span>
+                        <span className="w-8 text-center font-medium">{item.quantity}</span>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => updateQuantity(item.id, 1)}
-                          className="h-5 w-5 p-0"
+                          className="h-8 w-8 p-0"
                         >
-                          <Plus className="h-2 w-2" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => removeFromCart(item.id)}
-                          className="h-5 w-5 p-0 ml-1"
-                        >
-                          <Trash2 className="h-2 w-2" />
+                          <Plus className="h-3 w-3" />
                         </Button>
                       </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {cart.length > 0 && (
-                <>
-                  <Separator />
-                  {/* Payment Methods */}
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium">Payment Method</div>
-                    <div className="grid grid-cols-2 gap-1">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex items-center gap-1 text-xs p-2"
-                        onClick={handleCashPayment}
-                      >
-                        <Banknote className="h-3 w-3" />
-                        Cash
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex items-center gap-1 text-xs p-2"
-                        onClick={handleSplitPayment}
-                      >
-                        <Split className="h-3 w-3" />
-                        Split
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex items-center gap-1 text-xs p-2"
-                        onClick={handleUPIPayment}
-                      >
-                        <Smartphone className="h-3 w-3" />
-                        UPI
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex items-center gap-1 text-xs p-2"
-                        onClick={handleCreditPayment}
-                      >
-                        <UserCheck className="h-3 w-3" />
-                        Credit
-                      </Button>
+                      <span className="font-bold">₹{item.total}</span>
                     </div>
                   </div>
-                  
-                  <Button className="w-full bg-green-600 hover:bg-green-700 text-sm py-2">
-                    Complete Sale - ₹{getTotalAmount().toFixed(2)}
+                </div>
+              ))
+            )}
+          </div>
+
+          {cart.length > 0 && (
+            <>
+              <Separator className="my-4" />
+              
+              {/* Order Summary */}
+              <div className="space-y-3 mb-6">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>₹{getTotalAmount().toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Tax</span>
+                  <span>₹{(getTotalAmount() * 0.18).toFixed(2)}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between text-lg font-bold">
+                  <span>Payable Amount</span>
+                  <span>₹{(getTotalAmount() * 1.18).toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex items-center gap-1"
+                    onClick={handleCashPayment}
+                  >
+                    <Banknote className="h-4 w-4" />
+                    Cash
                   </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex items-center gap-1"
+                    onClick={handleUPIPayment}
+                  >
+                    <Smartphone className="h-4 w-4" />
+                    UPI
+                  </Button>
+                </div>
+                
+                <Button 
+                  className="w-full bg-green-600 hover:bg-green-700 h-12 text-lg font-semibold"
+                  onClick={handleCardPayment}
+                >
+                  Proceed
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -499,6 +468,6 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
         cartItems={cart}
         onPaymentComplete={handlePaymentComplete}
       />
-    </>
+    </div>
   );
 };
