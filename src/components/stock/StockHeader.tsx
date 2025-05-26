@@ -2,33 +2,19 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Upload, Download, BarChart3, Eye, Settings } from "lucide-react";
+import { Plus } from "lucide-react";
 
 interface StockHeaderProps {
   stockCount: number;
-  exporting: boolean;
-  handleExport: () => void;
   showForm: boolean;
   setShowForm: (show: boolean) => void;
-  showBatchEntry: boolean;
-  setShowBatchEntry: (show: boolean) => void;
-  showCollectionForm: boolean;
-  setShowCollectionForm: (show: boolean) => void;
-  setShowImport: (show: boolean) => void;
   setActiveTab: (tab: string) => void;
 }
 
 const StockHeader: React.FC<StockHeaderProps> = ({
   stockCount,
-  exporting,
-  handleExport,
   showForm,
   setShowForm,
-  showBatchEntry,
-  setShowBatchEntry,
-  showCollectionForm,
-  setShowCollectionForm,
-  setShowImport,
   setActiveTab
 }) => {
   return (
@@ -53,55 +39,6 @@ const StockHeader: React.FC<StockHeaderProps> = ({
         >
           <Plus className="h-4 w-4 mr-1" />
           New Stock
-        </Button>
-        
-        <Button
-          onClick={() => {
-            setShowBatchEntry(true);
-            setActiveTab("management");
-          }}
-          variant="outline"
-          size="sm"
-        >
-          <Settings className="h-4 w-4 mr-1" />
-          Batch Entry
-        </Button>
-        
-        <Button
-          onClick={() => setShowImport(true)}
-          variant="outline"
-          size="sm"
-        >
-          <Upload className="h-4 w-4 mr-1" />
-          Import
-        </Button>
-        
-        <Button
-          onClick={handleExport}
-          disabled={exporting}
-          variant="outline"
-          size="sm"
-        >
-          <Download className="h-4 w-4 mr-1" />
-          {exporting ? 'Exporting...' : 'Export'}
-        </Button>
-        
-        <Button
-          onClick={() => setActiveTab("chart")}
-          variant="outline"
-          size="sm"
-        >
-          <BarChart3 className="h-4 w-4 mr-1" />
-          Analytics
-        </Button>
-        
-        <Button
-          onClick={() => setActiveTab("view")}
-          variant="outline"
-          size="sm"
-        >
-          <Eye className="h-4 w-4 mr-1" />
-          Real-time
         </Button>
       </div>
     </div>
