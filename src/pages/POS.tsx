@@ -29,27 +29,33 @@ const POS = () => {
     }
   });
 
-  // Open browser popup when POS page loads
+  // Open browser popup when POS page loads (only if not already in a popup)
   useEffect(() => {
-    const openPOSPopup = () => {
-      const popupUrl = window.location.href; // Use current URL
-      const popupFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
-      
-      const popup = window.open(popupUrl, 'POSWindow', popupFeatures);
-      
-      if (popup) {
-        popup.focus();
-        console.log('POS popup window opened successfully');
-      } else {
-        console.warn('Popup was blocked by browser');
-        alert('Please allow popups for this site to use the POS system in a separate window');
-      }
-    };
-
-    // Open popup after a short delay to ensure page is loaded
-    const timer = setTimeout(openPOSPopup, 500);
+    const isPopupWindow = window.opener !== null || window.name === 'POSWindow';
     
-    return () => clearTimeout(timer);
+    if (!isPopupWindow) {
+      const openPOSPopup = () => {
+        const popupUrl = window.location.href;
+        const popupFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
+        
+        const popup = window.open(popupUrl, 'POSWindow', popupFeatures);
+        
+        if (popup) {
+          popup.focus();
+          console.log('POS popup window opened successfully');
+        } else {
+          console.warn('Popup was blocked by browser');
+          alert('Please allow popups for this site to use the POS system in a separate window');
+        }
+      };
+
+      // Open popup after a short delay to ensure page is loaded
+      const timer = setTimeout(openPOSPopup, 500);
+      
+      return () => clearTimeout(timer);
+    } else {
+      console.log('Already in popup window, not opening another popup');
+    }
   }, []);
 
   const handleStoreInfoComplete = (info: StoreInfo) => {
