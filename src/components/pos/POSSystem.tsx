@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -482,7 +483,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                           </Badge>
                           <div className="min-w-0 flex-1">
                             <h4 className="font-medium text-gray-800 text-sm truncate">{item.name}</h4>
-                            <p className="text-xs text-gray-500">₹{item.price} each</p>
+                            <p className="text-xs text-gray-500">₹{item.price}</p>
                           </div>
                         </div>
                       </div>
