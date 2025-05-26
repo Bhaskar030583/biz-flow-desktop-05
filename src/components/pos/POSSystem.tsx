@@ -31,7 +31,9 @@ import {
   Percent,
   DollarSign,
   X,
-  CreditCard
+  CreditCard,
+  LogOut,
+  Palette
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CashPaymentModal } from "./CashPaymentModal";
@@ -39,6 +41,13 @@ import { CreditPaymentModal } from "./CreditPaymentModal";
 import { SplitPaymentModal } from "./SplitPaymentModal";
 import { generateBill } from "@/services/billService";
 import { toast } from "sonner";
+import { useSettings } from "@/context/SettingsContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface POSItem {
   id: string;
@@ -84,6 +93,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
   const [includeTax, setIncludeTax] = useState(false);
   const [gridSize, setGridSize] = useState<'small' | 'medium' | 'large'>('medium');
   const isMobile = useIsMobile();
+  const { colorTheme, setColorTheme } = useSettings();
 
   // Category icons mapping
   const categoryIcons = {
@@ -291,22 +301,88 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
 
   const cardConfig = getCardSize();
 
+  const handleExit = () => {
+    if (cart.length > 0) {
+      const confirmed = window.confirm("You have items in your cart. Are you sure you want to exit?");
+      if (!confirmed) return;
+    }
+    
+    // If this is a popup window, close it
+    if (window.opener) {
+      window.close();
+    } else {
+      // Navigate back to main application
+      window.location.href = '/';
+    }
+  };
+
+  const themeOptions = [
+    { value: 'default', label: 'Default', color: 'bg-blue-500' },
+    { value: 'professional', label: 'Professional', color: 'bg-gray-700' },
+    { value: 'modern', label: 'Modern', color: 'bg-purple-500' },
+    { value: 'vibrant', label: 'Vibrant', color: 'bg-green-500' }
+  ];
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Left Sidebar */}
       <div className="w-64 bg-white shadow-lg flex flex-col border-r">
-        {/* Logo Section */}
+        {/* Logo Section with Exit and Theme buttons */}
         <div className="p-6 border-b bg-gradient-to-r from-orange-500 to-red-500">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md">
-              <img 
-                src="/lovable-uploads/528f105b-5de5-4806-a64a-99582022753b.png" 
-                alt="ABC Cafe Logo" 
-                className="w-10 h-10 rounded-full object-cover"
-              />
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md">
+                <img 
+                  src="/lovable-uploads/528f105b-5de5-4806-a64a-99582022753b.png" 
+                  alt="ABC Cafe Logo" 
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">ABC CAFE</h2>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">ABC CAFE</h2>
+            
+            {/* Control buttons */}
+            <div className="flex gap-2">
+              {/* Theme Selector */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                  >
+                    <Palette className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  {themeOptions.map((theme) => (
+                    <DropdownMenuItem
+                      key={theme.value}
+                      onClick={() => setColorTheme(theme.value as any)}
+                      className={`cursor-pointer ${colorTheme === theme.value ? 'bg-gray-100' : ''}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`w-4 h-4 rounded-full ${theme.color}`} />
+                        <span>{theme.label}</span>
+                        {colorTheme === theme.value && <span className="ml-auto">✓</span>}
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Exit Button */}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleExit}
+                className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                title="Exit POS"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
