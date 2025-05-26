@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { POSSystem } from "@/components/pos/POSSystem";
 import { StoreInfoModal } from "@/components/pos/StoreInfoModal";
+import QuickActualStockButton from "@/components/stock/QuickActualStockButton";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -69,6 +70,11 @@ const POS = () => {
     setShowStoreModal(false);
   };
 
+  const handleStockAdded = () => {
+    // Refresh products query to reflect updated stock
+    window.location.reload();
+  };
+
   // If this is a popup window, render without DashboardLayout
   if (isPopupWindow) {
     return (
@@ -81,6 +87,10 @@ const POS = () => {
         
         {!showStoreModal && (
           <div className="container mx-auto px-4 py-6 h-screen">
+            <div className="mb-4 flex justify-between items-center">
+              <h1 className="text-2xl font-bold">Point of Sale</h1>
+              <QuickActualStockButton onStockAdded={handleStockAdded} />
+            </div>
             {isLoading ? (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="lg:col-span-2 space-y-4">
@@ -110,6 +120,10 @@ const POS = () => {
       
       {!showStoreModal && (
         <div className="container mx-auto px-4 py-6 h-full">
+          <div className="mb-4 flex justify-between items-center">
+            <h1 className="text-2xl font-bold">Point of Sale</h1>
+            <QuickActualStockButton onStockAdded={handleStockAdded} />
+          </div>
           {isLoading ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="lg:col-span-2 space-y-4">

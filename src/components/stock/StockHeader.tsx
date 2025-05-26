@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Download, Plus, Upload, Package2, FileSpreadsheet, Store } from "lucide-react";
-import QuickActualStockButton from "./QuickActualStockButton";
 
 interface StockHeaderProps {
   stockCount: number;
@@ -33,11 +32,6 @@ const StockHeader = ({
   setShowImport,
   setActiveTab
 }: StockHeaderProps) => {
-  
-  const handleStockAdded = () => {
-    // This will trigger a refresh in the parent component
-    window.location.reload();
-  };
 
   return (
     <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50">
@@ -104,8 +98,6 @@ const StockHeader = ({
             <Store className="h-4 w-4 mr-2" />
             Store Management
           </Button>
-
-          <QuickActualStockButton onStockAdded={handleStockAdded} />
 
           <Button
             onClick={() => setShowImport(true)}
