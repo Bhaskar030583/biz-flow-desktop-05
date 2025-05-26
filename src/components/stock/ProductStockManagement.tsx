@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,6 +33,15 @@ interface StockData {
   closingStock: number;
   actual: number;
   totalSales: number;
+}
+
+interface BillItem {
+  product_id: string;
+  quantity: number;
+  bills: {
+    bill_date: string;
+    user_id: string;
+  };
 }
 
 interface ProductStockManagementProps {
@@ -78,7 +86,8 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
         (payload) => {
           console.log('Bill change detected:', payload);
           // Reload stock data when bills change
-          if (payload.new?.bill_date?.startsWith(stockDate)) {
+          const billDate = payload.new?.bill_date;
+          if (billDate && billDate.startsWith(stockDate)) {
             loadStockData();
           }
         }
@@ -167,7 +176,7 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
         `)
         .eq('bills.user_id', user?.id)
         .gte('bills.bill_date', `${stockDate}T00:00:00.000Z`)
-        .lt('bills.bill_date', `${stockDate}T23:59:59.999Z`);
+        .lt('bills.bill_date', `${stockDate}T23:59:59.999Z`) as { data: BillItem[] | null; error: any };
 
       if (salesError) throw salesError;
 
