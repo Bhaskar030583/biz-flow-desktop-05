@@ -3,9 +3,9 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StockList from "./StockList";
 import StockChart from "./StockChart";
-import NewStockManagement from "./NewStockManagement";
-import CollectionForm from "../collection/CollectionForm";
 import StockRealtimeView from "./StockRealtimeView";
+import CollectionForm from "../collection/CollectionForm";
+import ProductStockManagement from "./ProductStockManagement";
 
 interface StockTabsContainerProps {
   activeTab: string;
@@ -46,7 +46,7 @@ const StockTabsContainer = ({
             Real-time
           </TabsTrigger>
           <TabsTrigger value="management" className="text-xs sm:text-sm px-2 py-2">
-            Management
+            Stock Management
           </TabsTrigger>
         </TabsList>
 
@@ -63,10 +63,7 @@ const StockTabsContainer = ({
         </TabsContent>
 
         <TabsContent value="management" className="space-y-4">
-          <NewStockManagement 
-            onSuccess={handleStockAdded}
-            onCancel={() => setActiveTab("list")}
-          />
+          <ProductStockManagement onStockUpdated={handleStockAdded} />
         </TabsContent>
       </Tabs>
     </div>
