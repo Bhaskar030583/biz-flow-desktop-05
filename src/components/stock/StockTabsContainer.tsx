@@ -7,13 +7,19 @@ import StockCreationForm from "./StockCreationForm";
 interface StockTabsContainerProps {
   showForm: boolean;
   handleStockAdded: () => void;
+  setShowForm: (show: boolean) => void;
 }
 
 const StockTabsContainer = ({
   showForm,
   handleStockAdded,
+  setShowForm,
 }: StockTabsContainerProps) => {
   console.log("StockTabsContainer rendered - showing only stock management");
+  
+  const handleCloseForm = () => {
+    setShowForm(false);
+  };
   
   return (
     <div className="w-full">
@@ -22,14 +28,14 @@ const StockTabsContainer = ({
       </div>
 
       {/* Stock Creation Form Modal */}
-      <Dialog open={showForm} onOpenChange={() => {}}>
+      <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Stock Entry</DialogTitle>
           </DialogHeader>
           <StockCreationForm 
             onSuccess={handleStockAdded}
-            onCancel={() => {}}
+            onCancel={handleCloseForm}
           />
         </DialogContent>
       </Dialog>

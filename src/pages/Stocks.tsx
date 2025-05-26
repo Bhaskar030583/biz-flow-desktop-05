@@ -51,6 +51,7 @@ const Stocks = () => {
         <StockTabsContainer 
           showForm={showForm}
           handleStockAdded={handleStockAdded}
+          setShowForm={setShowForm}
         />
       </div>
     </DashboardLayout>
