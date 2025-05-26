@@ -1,16 +1,10 @@
 
 import React from "react";
-import { PlusCircle, FileDown, FileUp, Layers, Calendar, ChevronDown, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { generateStockTemplate } from "@/utils/templateUtils";
-import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Download, Plus, Upload, Package2, FileSpreadsheet, Store } from "lucide-react";
+import QuickActualStockButton from "./QuickActualStockButton";
 
 interface StockHeaderProps {
   stockCount: number;
@@ -26,7 +20,7 @@ interface StockHeaderProps {
   setActiveTab: (tab: string) => void;
 }
 
-const StockHeader: React.FC<StockHeaderProps> = ({
+const StockHeader = ({
   stockCount,
   exporting,
   handleExport,
@@ -37,105 +31,105 @@ const StockHeader: React.FC<StockHeaderProps> = ({
   showCollectionForm,
   setShowCollectionForm,
   setShowImport,
-  setActiveTab,
-}) => {
-  const handleDownloadTemplate = () => {
-    try {
-      generateStockTemplate();
-      toast.success("Template downloaded successfully");
-    } catch (error) {
-      console.error("Error generating template:", error);
-      toast.error("Failed to download template");
-    }
+  setActiveTab
+}: StockHeaderProps) => {
+  
+  const handleStockAdded = () => {
+    // This will trigger a refresh in the parent component
+    window.location.reload();
   };
 
   return (
-    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-      <div>
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-700 to-purple-600 bg-clip-text text-transparent mb-1">Stock Management</h1>
-        <p className="text-muted-foreground text-sm">Track inventory, monitor sales, and analyze performance</p>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row gap-3">        
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 flex-1 sm:flex-none"
-            onClick={handleDownloadTemplate}
-            title="Download import template"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Template
-          </Button>
+    <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50">
+      <CardHeader className="pb-3">
+        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+          <div className="flex items-center space-x-3">
+            <div className="rounded-full bg-blue-100 dark:bg-blue-900 p-2">
+              <Package2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <CardTitle className="text-2xl text-blue-900 dark:text-blue-100">
+                Stock Management
+              </CardTitle>
+              <p className="text-blue-600 dark:text-blue-300 text-sm">
+                Manage your inventory and track stock levels
+              </p>
+            </div>
+          </div>
           
+          <div className="flex items-center space-x-2">
+            <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+              {stockCount} {stockCount === 1 ? 'entry' : 'entries'}
+            </Badge>
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="pt-0">
+        <div className="flex flex-wrap gap-2">
           <Button
-            variant="outline"
-            className="bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 flex-1 sm:flex-none"
-            onClick={handleExport}
-            disabled={exporting || stockCount === 0}
-            title={stockCount === 0 ? "No stock entries to export" : "Export to Excel"}
+            onClick={() => {
+              setShowForm(true);
+              setActiveTab("form");
+            }}
+            className="bg-green-600 hover:bg-green-700 text-white"
+            size="sm"
           >
-            <FileDown className="mr-2 h-4 w-4" /> 
+            <Plus className="h-4 w-4 mr-2" />
+            Add Entry
+          </Button>
+
+          <Button
+            onClick={() => {
+              setShowBatchEntry(true);
+              setActiveTab("batch");
+            }}
+            variant="outline"
+            size="sm"
+            className="border-orange-200 text-orange-700 hover:bg-orange-50"
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            Batch Entry
+          </Button>
+
+          <Button
+            onClick={() => {
+              setShowCollectionForm(true);
+              setActiveTab("collection");
+            }}
+            variant="outline"
+            size="sm"
+            className="border-purple-200 text-purple-700 hover:bg-purple-50"
+          >
+            <Store className="h-4 w-4 mr-2" />
+            Store Management
+          </Button>
+
+          <QuickActualStockButton onStockAdded={handleStockAdded} />
+
+          <Button
+            onClick={() => setShowImport(true)}
+            variant="outline"
+            size="sm"
+            className="border-blue-200 text-blue-700 hover:bg-blue-50"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Import
+          </Button>
+
+          <Button
+            onClick={handleExport}
+            disabled={exporting}
+            variant="outline"
+            size="sm"
+            className="border-gray-200 text-gray-700 hover:bg-gray-50"
+          >
+            <Download className="h-4 w-4 mr-2" />
             {exporting ? "Exporting..." : "Export"}
           </Button>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white flex-1 sm:flex-none">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-white border border-indigo-100 shadow-lg w-[220px]">
-              <DropdownMenuItem 
-                onClick={() => {
-                  setShowBatchEntry(false);
-                  setShowForm(!showForm);
-                  setShowCollectionForm(false);
-                  setActiveTab("management");
-                }}
-                className="text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer focus:bg-gradient-to-r focus:from-indigo-50 focus:to-purple-50 focus:text-indigo-700"
-              >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                {showForm ? "Cancel Entry" : "Add Single Stock Entry"}
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => {
-                  setShowForm(false);
-                  setShowBatchEntry(!showBatchEntry);
-                  setShowCollectionForm(false);
-                  setActiveTab("management");
-                }}
-                className="text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer focus:bg-gradient-to-r focus:from-indigo-50 focus:to-purple-50 focus:text-indigo-700"
-              >
-                <Layers className="mr-2 h-4 w-4" />
-                {showBatchEntry ? "Cancel Batch Entry" : "Batch Stock Entry"}
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => {
-                  setShowForm(false);
-                  setShowBatchEntry(false);
-                  setShowCollectionForm(!showCollectionForm);
-                  setActiveTab("management");
-                }}
-                className="text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer focus:bg-gradient-to-r focus:from-indigo-50 focus:to-purple-50 focus:text-indigo-700"
-              >
-                <Calendar className="mr-2 h-4 w-4" />
-                {showCollectionForm ? "Cancel Collection" : "Add Collection"}
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setShowImport(true)}
-                className="text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 cursor-pointer focus:bg-gradient-to-r focus:from-indigo-50 focus:to-purple-50 focus:text-indigo-700"
-              >
-                <FileUp className="mr-2 h-4 w-4" />
-                Import from Excel
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
