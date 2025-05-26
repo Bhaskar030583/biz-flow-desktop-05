@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { POSSystem } from "@/components/pos/POSSystem";
 import { StoreInfoModal } from "@/components/pos/StoreInfoModal";
@@ -28,6 +28,29 @@ const POS = () => {
       return data || [];
     }
   });
+
+  // Open browser popup when POS page loads
+  useEffect(() => {
+    const openPOSPopup = () => {
+      const popupUrl = window.location.href; // Use current URL
+      const popupFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
+      
+      const popup = window.open(popupUrl, 'POSWindow', popupFeatures);
+      
+      if (popup) {
+        popup.focus();
+        console.log('POS popup window opened successfully');
+      } else {
+        console.warn('Popup was blocked by browser');
+        alert('Please allow popups for this site to use the POS system in a separate window');
+      }
+    };
+
+    // Open popup after a short delay to ensure page is loaded
+    const timer = setTimeout(openPOSPopup, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleStoreInfoComplete = (info: StoreInfo) => {
     setStoreInfo(info);
