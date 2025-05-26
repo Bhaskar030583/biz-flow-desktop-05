@@ -116,17 +116,19 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
     });
   };
 
-  const updateQuantity = (id: string, change: number) => {
+  const updateQuantity = (id: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      removeFromCart(id);
+      return;
+    }
+    
     setCart(prev => 
       prev.map(item => {
         if (item.id === id) {
-          const newQuantity = Math.max(0, item.quantity + change);
-          return newQuantity === 0 
-            ? null 
-            : { ...item, quantity: newQuantity, total: newQuantity * item.price };
+          return { ...item, quantity: newQuantity, total: newQuantity * item.price };
         }
         return item;
-      }).filter(Boolean) as POSItem[]
+      })
     );
   };
 
@@ -477,25 +479,18 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                         </div>
                       </div>
 
-                      {/* Center: Quantity controls */}
+                      {/* Center: Quantity input */}
                       <div className="flex items-center gap-1 mx-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => updateQuantity(item.id, -1)}
-                          className="h-6 w-6 p-0 border-orange-200 text-orange-600 hover:bg-orange-50"
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <span className="w-6 text-center font-bold text-gray-800 text-xs">{item.quantity}</span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => updateQuantity(item.id, 1)}
-                          className="h-6 w-6 p-0 border-orange-200 text-orange-600 hover:bg-orange-50"
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
+                        <Input
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const newQuantity = parseInt(e.target.value) || 1;
+                            updateQuantity(item.id, newQuantity);
+                          }}
+                          className="w-12 h-6 text-xs text-center p-1 border-orange-200"
+                          min="1"
+                        />
                       </div>
 
                       {/* Right side: Total and Delete */}
