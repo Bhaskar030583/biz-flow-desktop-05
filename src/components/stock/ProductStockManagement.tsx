@@ -33,6 +33,7 @@ interface StockData {
   stockAdded: number;
   closingStock: number;
   actual: number;
+  totalSales: number;
 }
 
 interface ProductStockManagementProps {
@@ -97,7 +98,8 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
     if (!selectedShop) return;
     
     try {
-      const { data: existingStock, error } = await supabase
+      // Fetch existing stock data
+      const { data: existingStock, error: stockError } = await supabase
         .from('stocks')
         .select(`
           product_id,
@@ -109,19 +111,50 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
         .eq('shop_id', selectedShop)
         .eq('stock_date', stockDate);
 
-      if (error) throw error;
+      if (stockError) throw stockError;
+
+      // Fetch sales data for the selected date to calculate total sales
+      const { data: salesData, error: salesError } = await supabase
+        .from('bill_items')
+        .select(`
+          product_id,
+          quantity,
+          bills!inner(
+            bill_date,
+            user_id
+          )
+        `)
+        .eq('bills.user_id', user?.id)
+        .gte('bills.bill_date', `${stockDate}T00:00:00.000Z`)
+        .lt('bills.bill_date', `${stockDate}T23:59:59.999Z`);
+
+      if (salesError) throw salesError;
+
+      // Calculate total sales per product
+      const salesByProduct = salesData?.reduce((acc, sale) => {
+        const productId = sale.product_id;
+        acc[productId] = (acc[productId] || 0) + sale.quantity;
+        return acc;
+      }, {} as Record<string, number>) || {};
 
       const newStockData: StockData[] = products.map(product => {
         const existing = existingStock?.find(stock => stock.product_id === product.id);
+        const totalSales = salesByProduct[product.id] || 0;
+        const openingStock = existing?.opening_stock || 0;
+        const stockAdded = existing?.stock_added || 0;
+        
+        // Auto-calculate closing stock: opening + added - sales
+        const closingStock = openingStock + stockAdded - totalSales;
         
         return {
           productId: product.id,
           productName: product.name,
           category: product.category,
-          openingStock: existing?.opening_stock || 0,
-          stockAdded: existing?.stock_added || 0,
-          closingStock: existing?.closing_stock || 0,
+          openingStock,
+          stockAdded,
+          closingStock: Math.max(0, closingStock), // Ensure non-negative
           actual: existing?.actual_stock || 0,
+          totalSales,
         };
       });
 
@@ -142,7 +175,7 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
           
           // Auto-calculate closing stock when opening stock or stock added changes
           if (field === 'openingStock' || field === 'stockAdded') {
-            updated.closingStock = updated.openingStock + updated.stockAdded;
+            updated.closingStock = Math.max(0, updated.openingStock + updated.stockAdded - updated.totalSales);
           }
           
           return updated;
@@ -278,6 +311,7 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
                     <TableHead>Category</TableHead>
                     <TableHead>Opening Stock</TableHead>
                     <TableHead>Stock Added</TableHead>
+                    <TableHead>Sales</TableHead>
                     <TableHead>Closing Stock</TableHead>
                     <TableHead>Actual Stock</TableHead>
                   </TableRow>
@@ -312,14 +346,14 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
                         />
                       </TableCell>
                       <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={item.closingStock}
-                          onChange={(e) => updateStockValue(item.productId, 'closingStock', e.target.value)}
-                          className="w-20"
-                          disabled
-                        />
+                        <span className="text-sm font-medium text-red-600">
+                          {item.totalSales}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm font-medium bg-gray-100 px-2 py-1 rounded">
+                          {item.closingStock}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <Input
