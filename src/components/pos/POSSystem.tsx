@@ -449,7 +449,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
           </div>
         </div>
 
-        {/* Order Summary Section - Reduced width and compact items */}
+        {/* Order Summary Section - Compact design */}
         <div className="w-72 bg-white shadow-lg border-l">
           <div className="h-full flex flex-col">
             {/* Header */}
@@ -462,7 +462,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
               </div>
             </div>
 
-            {/* Cart Items - Compact design */}
+            {/* Cart Items - Compact line-item design */}
             <div className="flex-1 p-3 overflow-y-auto">
               {cart.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
@@ -471,47 +471,54 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                   <p className="text-xs">Add items to get started</p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {cart.map((item, index) => (
-                    <div key={item.id} className="bg-gray-50 rounded-md p-2 border text-xs">
-                      <div className="flex items-center justify-between mb-1">
-                        <Badge variant="outline" className="text-xs font-bold text-orange-600 border-orange-200 px-1 py-0">
-                          #{index + 1}
-                        </Badge>
+                    <div key={item.id} className="flex items-center justify-between py-2 px-2 bg-gray-50 rounded border text-sm hover:bg-gray-100">
+                      {/* Left side: Number, Name, Price */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start gap-2">
+                          <Badge variant="outline" className="text-xs font-bold text-orange-600 border-orange-200 px-1 py-0 flex-shrink-0">
+                            #{index + 1}
+                          </Badge>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-medium text-gray-800 text-sm truncate">{item.name}</h4>
+                            <p className="text-xs text-gray-500">₹{item.price} each</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Center: Quantity controls */}
+                      <div className="flex items-center gap-1 mx-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateQuantity(item.id, -1)}
+                          className="h-6 w-6 p-0 border-orange-200 text-orange-600 hover:bg-orange-50"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                        <span className="w-6 text-center font-bold text-gray-800 text-sm">{item.quantity}</span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateQuantity(item.id, 1)}
+                          className="h-6 w-6 p-0 border-orange-200 text-orange-600 hover:bg-orange-50"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
+
+                      {/* Right side: Total and Delete */}
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-gray-900 text-sm min-w-[50px] text-right">₹{item.total}</span>
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => removeFromCart(item.id)}
-                          className="h-4 w-4 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
-                      </div>
-                      
-                      <h4 className="font-semibold text-gray-800 text-xs mb-1 leading-tight">{item.name}</h4>
-                      <p className="text-xs text-gray-600 mb-2">₹{item.price} each</p>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateQuantity(item.id, -1)}
-                            className="h-6 w-6 p-0 border-orange-200 text-orange-600 hover:bg-orange-50"
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="w-6 text-center font-bold text-gray-800 text-xs">{item.quantity}</span>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateQuantity(item.id, 1)}
-                            className="h-6 w-6 p-0 border-orange-200 text-orange-600 hover:bg-orange-50"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        </div>
-                        <span className="font-bold text-gray-900 text-xs">₹{item.total}</span>
                       </div>
                     </div>
                   ))}
