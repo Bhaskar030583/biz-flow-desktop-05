@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StockList from "./StockList";
 import StockChart from "./StockChart";
 import StockRealtimeView from "./StockRealtimeView";
-import CollectionForm from "../collection/CollectionForm";
 import ProductStockManagement from "./ProductStockManagement";
 
 interface StockTabsContainerProps {
@@ -22,13 +21,8 @@ interface StockTabsContainerProps {
 const StockTabsContainer = ({
   activeTab,
   setActiveTab,
-  showForm,
-  showBatchEntry,
-  showCollectionForm,
   refreshTrigger,
   handleStockAdded,
-  handleBatchAdded,
-  handleCollectionAdded,
 }: StockTabsContainerProps) => {
   console.log("StockTabsContainer rendered with activeTab:", activeTab);
   

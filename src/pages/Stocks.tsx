@@ -15,15 +15,12 @@ import { exportStockData } from "@/components/stock/StockExportService";
 const Stocks = () => {
   const { refreshTrigger } = useDataSync();
   const { syncAfterStockChange } = useDataSyncActions();
-  const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const [showBatchEntry, setShowBatchEntry] = useState(false);
   const [refreshStockTrigger, setRefreshStockTrigger] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
-  const [activeTab, setActiveTab] = useState("list");
+  const [activeTab, setActiveTab] = useState("management");
   const [stockCount, setStockCount] = useState(0);
-  const [showCollectionForm, setShowCollectionForm] = useState(false);
 
   useEffect(() => {
     const countStockEntries = async () => {
@@ -43,13 +40,6 @@ const Stocks = () => {
   }, [refreshTrigger, refreshStockTrigger]);
 
   const handleStockAdded = async () => {
-    setShowForm(false);
-    setRefreshStockTrigger(prev => prev + 1);
-    await syncAfterStockChange('create');
-  };
-
-  const handleBatchAdded = async () => {
-    setShowBatchEntry(false);
     setRefreshStockTrigger(prev => prev + 1);
     await syncAfterStockChange('create');
   };
@@ -58,12 +48,6 @@ const Stocks = () => {
     setShowImport(false);
     setRefreshStockTrigger(prev => prev + 1);
     await syncAfterStockChange('import');
-  };
-  
-  const handleCollectionAdded = async () => {
-    setShowCollectionForm(false);
-    setRefreshStockTrigger(prev => prev + 1);
-    await syncAfterStockChange('collection');
   };
 
   const handleExport = async () => {
@@ -84,12 +68,12 @@ const Stocks = () => {
           stockCount={stockCount}
           exporting={exporting}
           handleExport={handleExport}
-          showForm={showForm}
-          setShowForm={setShowForm}
-          showBatchEntry={showBatchEntry}
-          setShowBatchEntry={setShowBatchEntry}
-          showCollectionForm={showCollectionForm}
-          setShowCollectionForm={setShowCollectionForm}
+          showForm={false}
+          setShowForm={() => {}}
+          showBatchEntry={false}
+          setShowBatchEntry={() => {}}
+          showCollectionForm={false}
+          setShowCollectionForm={() => {}}
           setShowImport={setShowImport}
           setActiveTab={setActiveTab}
         />
@@ -102,13 +86,13 @@ const Stocks = () => {
         <StockTabsContainer 
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          showForm={showForm}
-          showBatchEntry={showBatchEntry}
-          showCollectionForm={showCollectionForm}
+          showForm={false}
+          showBatchEntry={false}
+          showCollectionForm={false}
           refreshTrigger={combinedRefreshTrigger}
           handleStockAdded={handleStockAdded}
-          handleBatchAdded={handleBatchAdded}
-          handleCollectionAdded={handleCollectionAdded}
+          handleBatchAdded={() => {}}
+          handleCollectionAdded={() => {}}
         />
         
         <Dialog open={showImport} onOpenChange={setShowImport}>

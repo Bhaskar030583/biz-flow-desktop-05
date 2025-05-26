@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Package2, Store, Calendar, Save } from "lucide-react";
+import { Package2, Store, Calendar, Save, RefreshCw } from "lucide-react";
 
 interface Product {
   id: string;
@@ -61,6 +61,47 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
       loadStockData();
     }
   }, [selectedShop, stockDate, products]);
+
+  // Listen for real-time changes to bills to auto-update closing stock
+  useEffect(() => {
+    if (!selectedShop || !stockDate) return;
+
+    const channel = supabase
+      .channel('bills-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bills'
+        },
+        (payload) => {
+          console.log('Bill change detected:', payload);
+          // Reload stock data when bills change
+          if (payload.new?.bill_date?.startsWith(stockDate)) {
+            loadStockData();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bill_items'
+        },
+        (payload) => {
+          console.log('Bill item change detected:', payload);
+          // Reload stock data when bill items change
+          loadStockData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedShop, stockDate]);
 
   const fetchProducts = async () => {
     try {
@@ -250,7 +291,7 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="date" className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
@@ -281,6 +322,18 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="flex items-end">
+              <Button
+                onClick={loadStockData}
+                disabled={!selectedShop}
+                variant="outline"
+                className="w-full"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh Data
+              </Button>
             </div>
 
             <div className="flex items-end">
