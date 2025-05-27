@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 
 interface StoreInfo {
   storeName: string;
@@ -87,6 +87,20 @@ const POS = () => {
   if (isPopupWindow) {
     return (
       <div className="min-h-screen bg-gray-50">
+        {/* Exit button for popup */}
+        <div className="absolute top-4 right-4 z-50">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClosePopup}
+            className="flex items-center gap-2 bg-white hover:bg-gray-100"
+            title="Close POS Window"
+          >
+            <X className="h-4 w-4" />
+            Exit
+          </Button>
+        </div>
+
         <StoreInfoModal
           isOpen={shouldShowStoreModal}
           onComplete={handleStoreInfoComplete}
