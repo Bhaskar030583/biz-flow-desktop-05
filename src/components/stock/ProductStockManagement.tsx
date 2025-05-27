@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,11 @@ interface Shop {
 
 interface AssignedProduct extends Product {
   assignment_id: string;
+  opening_stock?: number;
+  stock_added?: number;
+  closing_stock?: number;
+  actual_stock?: number;
+  last_stock_date?: string;
 }
 
 interface ProductStockManagementProps {
@@ -42,6 +48,7 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
   const [searchTerm, setSearchTerm] = useState("");
   const [showAssignForm, setShowAssignForm] = useState(false);
   const [selectedProductToAssign, setSelectedProductToAssign] = useState<string>("");
+  const [initialStockQuantity, setInitialStockQuantity] = useState<string>("");
 
   console.log("ProductStockManagement component loaded - showing products list with store filter and assignment functionality");
 
@@ -123,17 +130,40 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
       
       if (directError) throw directError;
       
-      const formattedData: AssignedProduct[] = directData?.map((item: any) => ({
-        assignment_id: item.id,
-        id: item.products.id,
-        name: item.products.name,
-        category: item.products.category,
-        price: item.products.price,
-        cost_price: item.products.cost_price
-      })) || [];
+      // Get latest stock data for each assigned product
+      const assignedProductsWithStock = await Promise.all(
+        (directData || []).map(async (item: any) => {
+          const { data: stockData, error: stockError } = await supabase
+            .from('stocks')
+            .select('opening_stock, stock_added, closing_stock, actual_stock, stock_date')
+            .eq('product_id', item.products.id)
+            .eq('shop_id', selectedShop)
+            .order('stock_date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (stockError) {
+            console.error('Error fetching stock data:', stockError);
+          }
+
+          return {
+            assignment_id: item.id,
+            id: item.products.id,
+            name: item.products.name,
+            category: item.products.category,
+            price: item.products.price,
+            cost_price: item.products.cost_price,
+            opening_stock: stockData?.opening_stock || 0,
+            stock_added: stockData?.stock_added || 0,
+            closing_stock: stockData?.closing_stock || 0,
+            actual_stock: stockData?.actual_stock || 0,
+            last_stock_date: stockData?.stock_date || null
+          };
+        })
+      );
       
-      console.log("Fetched assigned products:", formattedData.length, "products");
-      setAssignedProducts(formattedData);
+      console.log("Fetched assigned products with stock:", assignedProductsWithStock.length, "products");
+      setAssignedProducts(assignedProductsWithStock);
     } catch (error) {
       console.error('Error fetching assigned products:', error);
       toast.error('Failed to fetch assigned products');
@@ -141,15 +171,22 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
   };
 
   const assignProductToShop = async () => {
-    if (!selectedProductToAssign || !selectedShop) {
-      toast.error('Please select both a product and a shop');
+    if (!selectedProductToAssign || !selectedShop || !initialStockQuantity) {
+      toast.error('Please select a product, shop, and enter initial stock quantity');
+      return;
+    }
+
+    const stockQuantity = parseInt(initialStockQuantity);
+    if (isNaN(stockQuantity) || stockQuantity < 0) {
+      toast.error('Please enter a valid stock quantity');
       return;
     }
 
     try {
-      console.log("Assigning product to shop:", selectedProductToAssign, selectedShop);
+      console.log("Assigning product to shop with initial stock:", selectedProductToAssign, selectedShop, stockQuantity);
       
-      const { error } = await supabase
+      // First, assign the product to the shop
+      const { error: assignError } = await supabase
         .from('product_shops')
         .insert({
           product_id: selectedProductToAssign,
@@ -157,19 +194,47 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
           user_id: user?.id
         });
       
-      if (error) {
-        if (error.code === '23505') {
+      if (assignError) {
+        if (assignError.code === '23505') {
           toast.error('Product is already assigned to this shop');
         } else {
-          throw error;
+          throw assignError;
         }
         return;
       }
+
+      // Then create the initial stock entry
+      const { error: stockError } = await supabase
+        .from('stocks')
+        .insert({
+          product_id: selectedProductToAssign,
+          shop_id: selectedShop,
+          stock_date: new Date().toISOString().split('T')[0],
+          opening_stock: stockQuantity,
+          closing_stock: stockQuantity,
+          actual_stock: stockQuantity,
+          stock_added: 0,
+          user_id: user?.id
+        });
+
+      if (stockError) {
+        console.error('Error creating initial stock entry:', stockError);
+        // If stock creation fails, we should remove the product assignment
+        await supabase
+          .from('product_shops')
+          .delete()
+          .eq('product_id', selectedProductToAssign)
+          .eq('shop_id', selectedShop)
+          .eq('user_id', user?.id);
+        throw stockError;
+      }
       
-      toast.success('Product assigned to shop successfully');
+      toast.success('Product assigned to shop with initial stock successfully');
       setSelectedProductToAssign("");
+      setInitialStockQuantity("");
       setShowAssignForm(false);
       fetchAssignedProducts();
+      onStockUpdated();
     } catch (error) {
       console.error('Error assigning product to shop:', error);
       toast.error('Failed to assign product to shop');
@@ -320,11 +385,11 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
             <Card className="border-green-200 bg-green-50">
               <CardContent className="pt-4">
                 <div className="space-y-4">
-                  <Label className="text-sm font-medium">Select Product to Assign</Label>
-                  <div className="flex gap-2">
+                  <Label className="text-sm font-medium">Assign Product with Initial Stock</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                     <Select value={selectedProductToAssign} onValueChange={setSelectedProductToAssign}>
-                      <SelectTrigger className="bg-white flex-1">
-                        <SelectValue placeholder="Choose a product to assign" />
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="Choose a product" />
                       </SelectTrigger>
                       <SelectContent className="bg-white z-50">
                         {getUnassignedProducts().map(product => (
@@ -339,18 +404,29 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
                         )}
                       </SelectContent>
                     </Select>
-                    <Button onClick={assignProductToShop} className="bg-green-600 hover:bg-green-700">
-                      Assign
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setShowAssignForm(false);
-                        setSelectedProductToAssign("");
-                      }}
-                    >
-                      Cancel
-                    </Button>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="Initial stock quantity"
+                      value={initialStockQuantity}
+                      onChange={(e) => setInitialStockQuantity(e.target.value)}
+                      className="bg-white"
+                    />
+                    <div className="flex gap-2">
+                      <Button onClick={assignProductToShop} className="bg-green-600 hover:bg-green-700">
+                        Assign
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setShowAssignForm(false);
+                          setSelectedProductToAssign("");
+                          setInitialStockQuantity("");
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -375,6 +451,11 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
                     <TableHead>Category</TableHead>
                     <TableHead>Cost Price</TableHead>
                     <TableHead>Selling Price</TableHead>
+                    <TableHead>Opening Stock</TableHead>
+                    <TableHead>Stock Added</TableHead>
+                    <TableHead>Closing Stock</TableHead>
+                    <TableHead>Actual Stock</TableHead>
+                    <TableHead>Last Updated</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -397,6 +478,23 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
                       <TableCell>
                         <span className="text-sm font-medium">
                           ₹{product.price.toFixed(2)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="font-medium">{product.opening_stock || 0}</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="text-blue-600 font-medium">{product.stock_added || 0}</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="font-medium">{product.closing_stock || 0}</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="font-medium">{product.actual_stock || 0}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground">
+                          {product.last_stock_date ? new Date(product.last_stock_date).toLocaleDateString() : 'Never'}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -424,7 +522,7 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
             ) : (
               <div className="space-y-2">
                 <p className="text-gray-600">No products assigned to this store yet.</p>
-                <p className="text-sm text-gray-500">Click "Assign Product" to add products to this store.</p>
+                <p className="text-sm text-gray-500">Click "Assign Product" to add products to this store with initial stock.</p>
               </div>
             )}
           </CardContent>
