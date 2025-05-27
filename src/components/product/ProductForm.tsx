@@ -10,11 +10,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { IndianRupee } from "lucide-react";
+import { IndianRupee, Package } from "lucide-react";
 
 const productSchema = z.object({
   name: z.string().min(2, { message: "Product name must be at least 2 characters" }),
   category: z.string().min(2, { message: "Category name must be at least 2 characters" }),
+  quantity: z.string().refine(
+    (val) => !isNaN(parseInt(val)) && parseInt(val) >= 0,
+    { message: "Quantity must be a non-negative integer" }
+  ),
   costPrice: z.string().refine(
     (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
     { message: "Cost price must be a positive number" }
@@ -40,6 +44,7 @@ export function ProductForm({ onSuccess }: ProductFormProps) {
     defaultValues: {
       name: "",
       category: "",
+      quantity: "",
       costPrice: "",
       price: "",
     },
@@ -55,6 +60,7 @@ export function ProductForm({ onSuccess }: ProductFormProps) {
         .insert({
           name: data.name,
           category: data.category,
+          quantity: parseInt(data.quantity),
           cost_price: parseFloat(data.costPrice),
           price: parseFloat(data.price),
           user_id: user.id,
@@ -110,6 +116,31 @@ export function ProductForm({ onSuccess }: ProductFormProps) {
                   <FormLabel>Category</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter product category" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="quantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quantity</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <Package className="h-4 w-4 text-gray-500" />
+                      </div>
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        placeholder="0" 
+                        className="pl-10"
+                        {...field} 
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
