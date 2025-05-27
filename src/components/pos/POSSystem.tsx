@@ -304,19 +304,19 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
 
   const getGridCols = () => {
     switch (gridSize) {
-      case 'small': return 'grid-cols-5';
-      case 'medium': return 'grid-cols-4';
-      case 'large': return 'grid-cols-3';
-      default: return 'grid-cols-4';
+      case 'small': return 'grid-cols-6';
+      case 'medium': return 'grid-cols-5';
+      case 'large': return 'grid-cols-4';
+      default: return 'grid-cols-5';
     }
   };
 
   const getCardSize = () => {
     switch (gridSize) {
-      case 'small': return { cardClass: 'h-28', iconSize: 'h-8 w-8', titleSize: 'text-xs', priceSize: 'text-sm' };
-      case 'medium': return { cardClass: 'h-36', iconSize: 'h-12 w-12', titleSize: 'text-sm', priceSize: 'text-lg' };
-      case 'large': return { cardClass: 'h-44', iconSize: 'h-16 w-16', titleSize: 'text-base', priceSize: 'text-xl' };
-      default: return { cardClass: 'h-36', iconSize: 'h-12 w-12', titleSize: 'text-sm', priceSize: 'text-lg' };
+      case 'small': return { cardClass: 'h-20', titleSize: 'text-xs', priceSize: 'text-sm' };
+      case 'medium': return { cardClass: 'h-24', titleSize: 'text-sm', priceSize: 'text-base' };
+      case 'large': return { cardClass: 'h-28', titleSize: 'text-base', priceSize: 'text-lg' };
+      default: return { cardClass: 'h-24', titleSize: 'text-sm', priceSize: 'text-base' };
     }
   };
 
@@ -395,19 +395,19 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
 
   const getMobileGridCols = () => {
     if (isMobile) {
-      return 'grid-cols-2 sm:grid-cols-3';
+      return 'grid-cols-3 sm:grid-cols-4';
     }
     switch (gridSize) {
-      case 'small': return 'grid-cols-5 lg:grid-cols-6';
-      case 'medium': return 'grid-cols-3 lg:grid-cols-4';
-      case 'large': return 'grid-cols-2 lg:grid-cols-3';
-      default: return 'grid-cols-3 lg:grid-cols-4';
+      case 'small': return 'grid-cols-6 lg:grid-cols-7';
+      case 'medium': return 'grid-cols-4 lg:grid-cols-5';
+      case 'large': return 'grid-cols-3 lg:grid-cols-4';
+      default: return 'grid-cols-4 lg:grid-cols-5';
     }
   };
 
   const getMobileCardSize = () => {
     if (isMobile) {
-      return { cardClass: 'h-32', iconSize: 'h-8 w-8', titleSize: 'text-xs', priceSize: 'text-sm' };
+      return { cardClass: 'h-20', titleSize: 'text-xs', priceSize: 'text-sm' };
     }
     return getCardSize();
   };
@@ -656,7 +656,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
           </div>
 
           {/* Mobile Products Grid */}
-          <div className={`grid ${getMobileGridCols()} gap-3 overflow-y-auto h-[calc(100vh-160px)]`}>
+          <div className={`grid ${getMobileGridCols()} gap-2 overflow-y-auto h-[calc(100vh-160px)]`}>
             {filteredProducts.map(product => {
               const cardConfig = getMobileCardSize();
               return (
@@ -665,31 +665,28 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                   className={`cursor-pointer hover:shadow-lg transition-all duration-200 border hover:border-orange-300 ${cardConfig.cardClass}`}
                   onClick={() => addToCart(product)}
                 >
-                  <CardContent className="p-3 h-full flex flex-col">
-                    <div className="aspect-square bg-orange-50 rounded-lg mb-2 flex items-center justify-center">
-                      <UtensilsCrossed className={`${cardConfig.iconSize} text-orange-600`} />
-                    </div>
-                    
-                    <div className="flex-1 flex flex-col justify-between">
+                  <CardContent className="p-2 h-full flex flex-col justify-between">
+                    <div className="text-center">
                       <h3 className={`font-bold text-gray-700 ${cardConfig.titleSize} mb-1 line-clamp-2 leading-tight`}>
                         {product.name}
                       </h3>
-                      
-                      <div className="flex items-center justify-between">
-                        <span className={`font-bold text-gray-900 ${cardConfig.priceSize}`}>
-                          ₹{product.price}
-                        </span>
-                        <Button
-                          size="sm"
-                          className="bg-orange-500 hover:bg-orange-600 text-white h-6 w-6 p-0 shadow-sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addToCart(product);
-                          }}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                      </div>
+                      <span className={`font-bold text-gray-900 ${cardConfig.priceSize}`}>
+                        ₹{product.price}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs text-gray-500">Qty: {product.quantity || 0}</span>
+                      <Button
+                        size="sm"
+                        className="bg-orange-500 hover:bg-orange-600 text-white h-5 w-5 p-0 shadow-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart(product);
+                        }}
+                      >
+                        <Plus className="h-2 w-2" />
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -938,14 +935,14 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
           </div>
 
           {/* Enhanced Products Grid - Now takes more space */}
-          <div className={`grid ${getGridCols()} gap-4 overflow-y-auto h-[calc(100vh-320px)] pr-2`}>
+          <div className={`grid ${getGridCols()} gap-3 overflow-y-auto h-[calc(100vh-320px)] pr-2`}>
             {filteredProducts.map(product => (
               <Card
                 key={product.id}
                 className={`cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-${themeColors.text.split('-')[1]}-300 hover:scale-105 bg-white ${cardConfig.cardClass} group`}
                 onClick={() => addToCart(product)}
               >
-                <CardContent className="p-4 h-full flex flex-col">
+                <CardContent className="p-3 h-full flex flex-col justify-between">
                   <div className={`aspect-square bg-gradient-to-br ${themeColors.light} rounded-xl mb-3 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
                     <UtensilsCrossed className={`${cardConfig.iconSize} ${themeColors.text} group-hover:animate-pulse`} />
                   </div>
