@@ -43,6 +43,15 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
+                    {/* POS route outside of DashboardLayout to avoid sidebar */}
+                    <Route 
+                      path="/pos" 
+                      element={
+                        <PrivateRoute>
+                          <POS />
+                        </PrivateRoute>
+                      } 
+                    />
                     <Route
                       path="/*"
                       element={
@@ -52,7 +61,6 @@ function App() {
                               <Route path="/dashboard" element={<Dashboard />} />
                               <Route path="/products" element={<Products />} />
                               <Route path="/stocks" element={<Stocks />} />
-                              <Route path="/pos" element={<POS />} />
                               <Route path="/customers" element={<Customers />} />
                               <Route path="/bills" element={<Bills />} />
                               <Route path="/expenses" element={<Expenses />} />
