@@ -1,4 +1,5 @@
 
+
 import React, { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -76,7 +77,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
               <img 
                 src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
                 alt="ABC Cafe Logo" 
-                className="h-8 w-8 rounded-lg shadow-md flex-shrink-0"
+                className="h-10 w-10 rounded-lg shadow-md flex-shrink-0"
               />
               {!isCollapsed && (
                 <div>
@@ -162,3 +163,4 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default DashboardLayout;
+
