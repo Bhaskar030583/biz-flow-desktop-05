@@ -467,21 +467,44 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete all stock entries for "${productName}"? This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to delete all stock entries for "${productName}"? This will also remove the product assignment from this store.`)) {
       return;
     }
 
     try {
-      const { error } = await supabase
+      console.log("Starting delete stock process for product:", productId, "in shop:", selectedShop);
+      
+      // First, delete all stock entries for this product-shop combination
+      const { error: stockError } = await supabase
         .from('stocks')
         .delete()
         .eq('product_id', productId)
         .eq('shop_id', selectedShop)
         .eq('user_id', user?.id);
 
-      if (error) throw error;
+      if (stockError) {
+        console.error('Error deleting stock entries:', stockError);
+        throw stockError;
+      }
 
-      toast.success(`Stock entries for "${productName}" deleted successfully`);
+      console.log("Stock entries deleted, now removing product assignment");
+
+      // Then remove the product assignment from the shop
+      const { error: assignmentError } = await supabase
+        .from('product_shops')
+        .delete()
+        .eq('product_id', productId)
+        .eq('shop_id', selectedShop)
+        .eq('user_id', user?.id);
+
+      if (assignmentError) {
+        console.error('Error removing product assignment:', assignmentError);
+        toast.warning('Stock deleted but product assignment could not be removed');
+      } else {
+        console.log("Product assignment removed successfully");
+      }
+
+      toast.success(`"${productName}" removed from store completely`);
       
       // Refresh the assigned products list to reflect the changes
       await fetchAssignedProducts();
