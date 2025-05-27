@@ -32,7 +32,6 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
   const { user } = useAuth();
   const [requests, setRequests] = useState<StockRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processingRequests, setProcessingRequests] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (user) {
@@ -42,15 +41,15 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
 
   const fetchIncomingRequests = async () => {
     try {
-      // Get all requests where user owns the fulfilling store
-      const { data: shopData, error: shopError } = await supabase
+      // Get user's shops first
+      const { data: userShops, error: shopsError } = await supabase
         .from('shops')
         .select('id')
         .eq('user_id', user?.id);
 
-      if (shopError) throw shopError;
+      if (shopsError) throw shopsError;
 
-      const shopIds = shopData.map(shop => shop.id);
+      const shopIds = userShops?.map(shop => shop.id) || [];
 
       if (shopIds.length === 0) {
         setRequests([]);
@@ -58,6 +57,7 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
         return;
       }
 
+      // Get requests where user's shops are the fulfilling store
       const { data, error } = await supabase
         .from('stock_requests')
         .select(`
@@ -70,7 +70,22 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRequests(data || []);
+      
+      // Transform the data to match our interface
+      const transformedData = (data || []).map(item => ({
+        ...item,
+        requesting_store: Array.isArray(item.requesting_store) 
+          ? item.requesting_store[0] 
+          : item.requesting_store || { name: 'Unknown Store' },
+        fulfilling_store: Array.isArray(item.fulfilling_store) 
+          ? item.fulfilling_store[0] 
+          : item.fulfilling_store || { name: 'Unknown Store' },
+        product: Array.isArray(item.product) 
+          ? item.product[0] 
+          : item.product || { name: 'Unknown Product', category: 'Unknown' }
+      }));
+      
+      setRequests(transformedData);
     } catch (error) {
       console.error('Error fetching incoming requests:', error);
       toast.error('Failed to fetch incoming requests');
@@ -80,11 +95,8 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
   };
 
   const handleApproveRequest = async (requestId: string) => {
-    setProcessingRequests(prev => ({ ...prev, [requestId]: true }));
-
     try {
-      // Call the database function to handle stock movement
-      const { data, error } = await supabase.rpc('handle_stock_movement', {
+      const { error } = await supabase.rpc('handle_stock_movement', {
         request_id: requestId,
         approving_user_id: user?.id
       });
@@ -94,21 +106,13 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
       toast.success('Request approved and stock transferred successfully');
       fetchIncomingRequests();
       onRequestUpdated();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error approving request:', error);
-      if (error.message.includes('Insufficient stock')) {
-        toast.error('Insufficient stock available in the fulfilling store');
-      } else {
-        toast.error('Failed to approve request');
-      }
-    } finally {
-      setProcessingRequests(prev => ({ ...prev, [requestId]: false }));
+      toast.error('Failed to approve request: ' + (error as Error).message);
     }
   };
 
   const handleRejectRequest = async (requestId: string) => {
-    setProcessingRequests(prev => ({ ...prev, [requestId]: true }));
-
     try {
       const { error } = await supabase
         .from('stock_requests')
@@ -120,14 +124,12 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
 
       if (error) throw error;
 
-      toast.success('Request rejected successfully');
+      toast.success('Request rejected');
       fetchIncomingRequests();
       onRequestUpdated();
     } catch (error) {
       console.error('Error rejecting request:', error);
       toast.error('Failed to reject request');
-    } finally {
-      setProcessingRequests(prev => ({ ...prev, [requestId]: false }));
     }
   };
 
@@ -163,7 +165,7 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
   return (
     <div className="space-y-4">
       {requests.map(request => (
-        <Card key={request.id} className="border-l-4 border-l-green-500">
+        <Card key={request.id} className="border-l-4 border-l-orange-500">
           <CardContent className="p-4">
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center gap-2">
@@ -178,8 +180,7 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
                   <Button
                     size="sm"
                     onClick={() => handleApproveRequest(request.id)}
-                    disabled={processingRequests[request.id]}
-                    className="bg-green-600 hover:bg-green-700"
+                    className="bg-green-600 hover:bg-green-700 text-white"
                   >
                     <Check className="h-4 w-4" />
                     Approve
@@ -188,7 +189,6 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
                     size="sm"
                     variant="outline"
                     onClick={() => handleRejectRequest(request.id)}
-                    disabled={processingRequests[request.id]}
                     className="text-red-600 hover:bg-red-50"
                   >
                     <X className="h-4 w-4" />
@@ -202,12 +202,12 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm">
                   <Store className="h-4 w-4 text-blue-600" />
-                  <span className="text-gray-600">From:</span>
+                  <span className="text-gray-600">Requested by:</span>
                   <span className="font-medium">{request.requesting_store.name}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Store className="h-4 w-4 text-green-600" />
-                  <span className="text-gray-600">To:</span>
+                  <span className="text-gray-600">From store:</span>
                   <span className="font-medium">{request.fulfilling_store.name}</span>
                 </div>
               </div>

@@ -29,13 +29,13 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <DataSyncProvider>
-          <SettingsProvider>
-            <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-              <TooltipProvider>
-                <Toaster />
-                <BrowserRouter>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <TooltipProvider>
+          <Toaster />
+          <BrowserRouter>
+            <AuthProvider>
+              <DataSyncProvider>
+                <SettingsProvider>
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
@@ -138,12 +138,12 @@ function App() {
                     <Route path="/404" element={<NotFound />} />
                     <Route path="*" element={<Navigate to="/404" replace />} />
                   </Routes>
-                </BrowserRouter>
-              </TooltipProvider>
-            </ThemeProvider>
-          </SettingsProvider>
-        </DataSyncProvider>
-      </AuthProvider>
+                </SettingsProvider>
+              </DataSyncProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

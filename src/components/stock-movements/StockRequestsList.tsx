@@ -53,7 +53,22 @@ export const StockRequestsList = ({ onRequestUpdated }: StockRequestsListProps) 
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRequests(data || []);
+      
+      // Transform the data to match our interface
+      const transformedData = (data || []).map(item => ({
+        ...item,
+        requesting_store: Array.isArray(item.requesting_store) 
+          ? item.requesting_store[0] 
+          : item.requesting_store || { name: 'Unknown Store' },
+        fulfilling_store: Array.isArray(item.fulfilling_store) 
+          ? item.fulfilling_store[0] 
+          : item.fulfilling_store || { name: 'Unknown Store' },
+        product: Array.isArray(item.product) 
+          ? item.product[0] 
+          : item.product || { name: 'Unknown Product', category: 'Unknown' }
+      }));
+      
+      setRequests(transformedData);
     } catch (error) {
       console.error('Error fetching stock requests:', error);
       toast.error('Failed to fetch stock requests');
