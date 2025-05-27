@@ -17,6 +17,7 @@ const POS = () => {
   const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(null);
   const [showStoreModal, setShowStoreModal] = useState(true);
   const [isPopupWindow, setIsPopupWindow] = useState(false);
+  const [storeInfoCompleted, setStoreInfoCompleted] = useState(false);
 
   const { data: products, isLoading, refetch: refetchProducts } = useQuery({
     queryKey: ['pos-products'],
@@ -64,10 +65,12 @@ const POS = () => {
   const handleStoreInfoComplete = (info: StoreInfo) => {
     setStoreInfo(info);
     setShowStoreModal(false);
+    setStoreInfoCompleted(true);
   };
 
   const handleStoreModalClose = () => {
     setShowStoreModal(false);
+    setStoreInfoCompleted(true);
   };
 
   const handleStockAdded = () => {
@@ -75,17 +78,20 @@ const POS = () => {
     refetchProducts();
   };
 
+  // Only show store modal if store info hasn't been completed yet
+  const shouldShowStoreModal = showStoreModal && !storeInfoCompleted;
+
   // If this is a popup window, render without DashboardLayout
   if (isPopupWindow) {
     return (
       <div className="min-h-screen bg-gray-50">
         <StoreInfoModal
-          isOpen={showStoreModal}
+          isOpen={shouldShowStoreModal}
           onComplete={handleStoreInfoComplete}
           onClose={handleStoreModalClose}
         />
         
-        {!showStoreModal && (
+        {storeInfoCompleted && (
           <div className="container mx-auto px-4 py-6 h-screen">
             <div className="mb-4 flex justify-between items-center">
               <h1 className="text-2xl font-bold">Point of Sale</h1>
@@ -113,12 +119,12 @@ const POS = () => {
   return (
     <DashboardLayout>
       <StoreInfoModal
-        isOpen={showStoreModal}
+        isOpen={shouldShowStoreModal}
         onComplete={handleStoreInfoComplete}
         onClose={handleStoreModalClose}
       />
       
-      {!showStoreModal && (
+      {storeInfoCompleted && (
         <div className="container mx-auto px-4 py-6 h-full">
           <div className="mb-4 flex justify-between items-center">
             <h1 className="text-2xl font-bold">Point of Sale</h1>
