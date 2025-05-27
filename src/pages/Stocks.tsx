@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from "react";
-import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useDataSync } from "@/context/DataSyncContext";
 import { useDataSyncActions } from "@/hooks/useDataSyncActions";
@@ -39,22 +38,20 @@ const Stocks = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="container mx-auto px-4 py-8">
-        <StockHeader 
-          stockCount={stockCount}
-          showForm={showForm}
-          setShowForm={setShowForm}
-          setActiveTab={setActiveTab}
-        />
+    <div className="container mx-auto px-4 py-8">
+      <StockHeader 
+        stockCount={stockCount}
+        showForm={showForm}
+        setShowForm={setShowForm}
+        setActiveTab={setActiveTab}
+      />
 
-        <StockTabsContainer 
-          showForm={showForm}
-          handleStockAdded={handleStockAdded}
-          setShowForm={setShowForm}
-        />
-      </div>
-    </DashboardLayout>
+      <StockTabsContainer 
+        showForm={showForm}
+        handleStockAdded={handleStockAdded}
+        setShowForm={setShowForm}
+      />
+    </div>
   );
 };
 
