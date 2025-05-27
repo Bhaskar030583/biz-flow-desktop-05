@@ -91,13 +91,9 @@ const POS = () => {
         />
         
         {storeInfoCompleted && (
-          <div className="container mx-auto px-4 py-6 h-screen">
-            <div className="mb-4 flex justify-between items-center">
-              <h1 className="text-2xl font-bold">Point of Sale</h1>
-              <QuickActualStockButton onStockAdded={handleStockAdded} />
-            </div>
+          <>
             {isLoading ? (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-6">
                 <div className="lg:col-span-2 space-y-4">
                   <Skeleton className="h-64 w-full" />
                 </div>
@@ -108,13 +104,13 @@ const POS = () => {
             ) : (
               <POSSystem products={products} storeInfo={storeInfo} />
             )}
-          </div>
+          </>
         )}
       </div>
     );
   }
 
-  // Regular view without additional DashboardLayout wrapper since it's already applied in App.tsx
+  // Regular view with DashboardLayout for non-popup
   return (
     <>
       <StoreInfoModal
