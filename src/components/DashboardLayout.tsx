@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   BarChart3,
@@ -10,13 +11,23 @@ import {
   CreditCard,
   DollarSign,
   Store,
-  Settings,
-  Menu,
   ArrowRightLeft,
   Building2,
+  Settings,
 } from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ModeToggle } from "@/components/ModeToggle";
 import { useAuth } from "@/context/AuthContext";
 
@@ -40,40 +51,48 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+const AppSidebar = () => {
   const location = useLocation();
   const { signOut, user } = useAuth();
 
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 border-b">
-        <h2 className="text-lg font-semibold">Business Management</h2>
-      </div>
-      <nav className="flex-1 p-4 space-y-2">
-        {sidebarItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = location.pathname === item.href || 
-            (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
-          
-          return (
-            <Link
-              key={item.name}
-              to={item.href}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              }`}
-              onClick={() => setSidebarOpen(false)}
-            >
-              <Icon className="h-4 w-4" />
-              {item.name}
-            </Link>
-          );
-        })}
-      </nav>
-      <div className="p-4 border-t">
+  return (
+    <Sidebar>
+      <SidebarHeader className="p-4 border-b">
+        <div className="flex items-center gap-3">
+          <img 
+            src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
+            alt="ABC Cafe Logo" 
+            className="h-8 w-8 rounded-lg shadow-md"
+          />
+          <div>
+            <h2 className="text-lg font-semibold">ABC CAFE</h2>
+            <p className="text-xs text-muted-foreground">Management System</p>
+          </div>
+        </div>
+      </SidebarHeader>
+      
+      <SidebarContent>
+        <SidebarMenu className="p-2">
+          {sidebarItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.href || 
+              (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
+            
+            return (
+              <SidebarMenuItem key={item.name}>
+                <SidebarMenuButton asChild isActive={isActive}>
+                  <Link to={item.href} className="flex items-center gap-2">
+                    <Icon className="h-4 w-4" />
+                    <span>{item.name}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarContent>
+      
+      <SidebarFooter className="p-4 border-t">
         <div className="flex items-center justify-between">
           <div className="text-sm">
             <p className="font-medium">{user?.email}</p>
@@ -83,42 +102,37 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             Sign Out
           </Button>
         </div>
-      </div>
-    </div>
+      </SidebarFooter>
+    </Sidebar>
   );
+};
 
+const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
-    <div className="flex h-screen bg-background">
-      {/* Desktop Sidebar - Hidden on mobile */}
-      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 z-30">
-        <div className="flex flex-col flex-grow bg-card border-r">
-          <SidebarContent />
-        </div>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        <SidebarInset>
+          <header className="flex items-center justify-between p-4 border-b bg-card sticky top-0 z-10">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger />
+              <div className="flex items-center gap-2">
+                <img 
+                  src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
+                  alt="ABC Cafe Logo" 
+                  className="h-6 w-6 rounded lg:hidden"
+                />
+                <h1 className="text-xl font-semibold lg:hidden">ABC CAFE</h1>
+              </div>
+            </div>
+            <ModeToggle />
+          </header>
+          <main className="flex-1 overflow-auto p-6">
+            {children}
+          </main>
+        </SidebarInset>
       </div>
-
-      {/* Mobile Menu */}
-      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="lg:hidden fixed top-4 left-4 z-50"
-          >
-            <Menu className="h-4 w-4" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-64">
-          <SidebarContent />
-        </SheetContent>
-      </Sheet>
-
-      {/* Main Content */}
-      <div className="flex flex-col flex-1 lg:ml-64">
-        <main className="flex-1 overflow-auto p-6">
-          {children}
-        </main>
-      </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
