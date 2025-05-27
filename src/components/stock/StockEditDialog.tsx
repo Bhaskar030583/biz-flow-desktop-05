@@ -32,7 +32,7 @@ interface StockEditDialogProps {
     stock_added: number;
     actual_stock: number;
   };
-  setEditStockValues: (values: { stock_added: number; actual_stock: number }) => void;
+  setEditStockValues: (values: { stock_added: number; actual_stock: number } | ((prev: { stock_added: number; actual_stock: number }) => { stock_added: number; actual_stock: number })) => void;
   selectedShop: string;
   shops: Shop[];
   onUpdateStock: () => void;
@@ -69,10 +69,10 @@ const StockEditDialog = ({
                   type="number" 
                   min="0" 
                   value={editStockValues.stock_added} 
-                  onChange={(e) => setEditStockValues(prev => ({
-                    ...prev,
+                  onChange={(e) => setEditStockValues({
+                    ...editStockValues,
                     stock_added: Number(e.target.value)
-                  }))}
+                  })}
                 />
               </div>
               
@@ -82,10 +82,10 @@ const StockEditDialog = ({
                   type="number" 
                   min="0" 
                   value={editStockValues.actual_stock} 
-                  onChange={(e) => setEditStockValues(prev => ({
-                    ...prev,
+                  onChange={(e) => setEditStockValues({
+                    ...editStockValues,
                     actual_stock: Number(e.target.value)
-                  }))}
+                  })}
                 />
               </div>
             </div>

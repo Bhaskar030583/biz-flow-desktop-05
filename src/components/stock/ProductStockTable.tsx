@@ -25,7 +25,7 @@ interface ProductStockTableProps {
   filteredProducts: AssignedProduct[];
   isAdmin: boolean;
   addStockQuantities: Record<string, string>;
-  setAddStockQuantities: (quantities: Record<string, string>) => void;
+  setAddStockQuantities: (quantities: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void;
   updatingStock: Record<string, boolean>;
   onAddStock: (productId: string) => void;
   onEditStock: (product: AssignedProduct) => void;
@@ -134,10 +134,10 @@ const ProductStockTable = ({
                         min="1"
                         placeholder="Qty"
                         value={addStockQuantities[product.id] || ""}
-                        onChange={(e) => setAddStockQuantities(prev => ({
-                          ...prev,
+                        onChange={(e) => setAddStockQuantities({
+                          ...addStockQuantities,
                           [product.id]: e.target.value
-                        }))}
+                        })}
                         className="w-16 h-8 text-sm"
                       />
                       <Button
