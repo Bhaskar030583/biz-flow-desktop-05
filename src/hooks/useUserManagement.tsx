@@ -18,6 +18,8 @@ export const useUserManagement = () => {
     fullName, setFullName,
     code, setCode,
     role, setRole,
+    selectedPages, setSelectedPages,
+    handlePageToggle,
     isSubmitting, setIsSubmitting
   } = useUserFormState();
   
@@ -73,6 +75,7 @@ export const useUserManagement = () => {
             full_name: fullName,
             code: code,
             role: role,
+            page_access: selectedPages,
           },
         },
       });
@@ -84,7 +87,7 @@ export const useUserManagement = () => {
         throw error;
       }
       
-      toast.success(`User added successfully`);
+      toast.success(`User added successfully with access to ${selectedPages.length} pages`);
       
       // Reset form
       setEmail('');
@@ -92,6 +95,7 @@ export const useUserManagement = () => {
       setFullName('');
       setCode('');
       setRole('user' as UserRole);
+      setSelectedPages(['dashboard']);
       
       // Refresh users list
       fetchUsers();
@@ -122,6 +126,8 @@ export const useUserManagement = () => {
     setCode,
     role,
     setRole,
+    selectedPages,
+    handlePageToggle,
     isSubmitting,
     handleAddUser,
     updateUserRole

@@ -8,7 +8,16 @@ export const useUserFormState = () => {
   const [fullName, setFullName] = useState('');
   const [code, setCode] = useState('');
   const [role, setRole] = useState<UserRole>('user');
+  const [selectedPages, setSelectedPages] = useState<string[]>(['dashboard']);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handlePageToggle = (page: string) => {
+    setSelectedPages(prev => 
+      prev.includes(page) 
+        ? prev.filter(p => p !== page)
+        : [...prev, page]
+    );
+  };
 
   return {
     email,
@@ -21,6 +30,9 @@ export const useUserFormState = () => {
     setCode,
     role,
     setRole,
+    selectedPages,
+    setSelectedPages,
+    handlePageToggle,
     isSubmitting,
     setIsSubmitting
   };

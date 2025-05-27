@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Loader2, UserPlus, ShieldCheck } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { PageAccessControl } from "./PageAccessControl";
 
 interface AddUserFormProps {
   handleAddUser: (e: React.FormEvent) => Promise<void>;
@@ -26,6 +27,8 @@ interface AddUserFormProps {
   setCode: (value: string) => void;
   role: UserRole;
   setRole: (value: UserRole) => void;
+  selectedPages: string[];
+  handlePageToggle: (page: string) => void;
   isSubmitting: boolean;
 }
 
@@ -41,6 +44,8 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({
   setCode,
   role,
   setRole,
+  selectedPages,
+  handlePageToggle,
   isSubmitting,
 }) => {
   return (
@@ -137,6 +142,12 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({
           </RadioGroup>
         </div>
       </div>
+      
+      {/* Page Access Control */}
+      <PageAccessControl 
+        selectedPages={selectedPages}
+        onPageToggle={handlePageToggle}
+      />
       
       <Button 
         type="submit" 
