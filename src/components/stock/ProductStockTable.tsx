@@ -4,6 +4,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, UserMinus, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface AssignedProduct {
   assignment_id: string;
@@ -53,6 +65,57 @@ const ProductStockTable = ({
     ];
     const index = category.length % colors.length;
     return colors[index];
+  };
+
+  const handleEditClick = (product: AssignedProduct) => {
+    try {
+      if (!product.id || !product.assignment_id) {
+        toast.error("Cannot edit stock: Product data is incomplete");
+        return;
+      }
+      onEditStock(product);
+    } catch (error) {
+      console.error('Error editing stock:', error);
+      toast.error("Failed to open edit dialog. Please try again.");
+    }
+  };
+
+  const handleDeleteClick = (productId: string, productName: string) => {
+    try {
+      if (!isAdmin) {
+        toast.error("Access denied: Only administrators can delete stock entries");
+        return;
+      }
+      if (!onDeleteStock) {
+        toast.error("Delete functionality is not available");
+        return;
+      }
+      if (!productId) {
+        toast.error("Cannot delete: Product ID is missing");
+        return;
+      }
+      onDeleteStock(productId, productName);
+    } catch (error) {
+      console.error('Error deleting stock:', error);
+      toast.error("Failed to delete stock entry. Please try again.");
+    }
+  };
+
+  const handleDeassignClick = (assignmentId: string, productName: string) => {
+    try {
+      if (!assignmentId) {
+        toast.error("Cannot deassign: Assignment ID is missing");
+        return;
+      }
+      if (!productName) {
+        toast.error("Cannot deassign: Product name is missing");
+        return;
+      }
+      onRemoveProduct(assignmentId, productName);
+    } catch (error) {
+      console.error('Error deassigning product:', error);
+      toast.error("Failed to deassign product. Please try again.");
+    }
   };
 
   return (
@@ -131,32 +194,74 @@ const ProductStockTable = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => onEditStock(product)}
+                      onClick={() => handleEditClick(product)}
                       className="h-8 px-2"
                       title="Edit stock values"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     {isAdmin && onDeleteStock && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onDeleteStock(product.id, product.name)}
-                        className="h-8 px-2 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50"
-                        title="Delete stock entry"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50"
+                            title="Delete stock entry"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Stock Entry</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete all stock entries for "{product.name}"? 
+                              This action cannot be undone and will permanently remove all stock data for this product.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteClick(product.id, product.name)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     )}
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => onRemoveProduct(product.assignment_id, product.name)}
-                      className="h-8 px-2"
-                      title="Deassign product from store"
-                    >
-                      <UserMinus className="h-4 w-4" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="h-8 px-2"
+                          title="Deassign product from store"
+                        >
+                          <UserMinus className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Deassign Product</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to deassign "{product.name}" from this store? 
+                            This will remove the product from this store and delete all associated stock data.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeassignClick(product.assignment_id, product.name)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Deassign
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </TableCell>
               </TableRow>
