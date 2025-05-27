@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { DollarSign, User, Download, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Payslip } from '@/types/hrms';
+import { Payslip, PayslipRaw, isValidJoinedData } from '@/types/hrms';
 
 const PayrollManagement = () => {
   const [payslips, setPayslips] = useState<Payslip[]>([]);
@@ -37,14 +37,19 @@ const PayrollManagement = () => {
 
       if (error) throw error;
       
-      // Filter out invalid payslip records and properly type the response
-      const validPayslips = (data || []).filter((payslip: any) => 
-        payslip.hr_employees && 
-        payslip.hr_employees.first_name &&
-        payslip.hr_employees.last_name &&
-        payslip.hr_employees.employee_code &&
-        typeof payslip.hr_employees.hourly_rate === 'number'
-      ) as Payslip[];
+      // Convert raw data to proper type with validation
+      const validPayslips: Payslip[] = (data as PayslipRaw[] || [])
+        .filter((payslip) => 
+          isValidJoinedData(payslip.hr_employees) && 
+          payslip.hr_employees.first_name &&
+          payslip.hr_employees.last_name &&
+          payslip.hr_employees.employee_code &&
+          typeof payslip.hr_employees.hourly_rate === 'number'
+        )
+        .map((payslip) => ({
+          ...payslip,
+          hr_employees: isValidJoinedData(payslip.hr_employees) ? payslip.hr_employees : null,
+        }));
 
       setPayslips(validPayslips);
     } catch (error) {

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, MapPin, Camera, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { AttendanceRecord } from '@/types/hrms';
+import { AttendanceRecord, AttendanceRecordRaw, isValidJoinedData } from '@/types/hrms';
 
 const AttendanceManagement = () => {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
@@ -39,13 +39,20 @@ const AttendanceManagement = () => {
 
       if (error) throw error;
 
-      // Filter out records with invalid employee data and properly type the response
-      const validRecords = (data || []).filter((record: any) => 
-        record.hr_employees && 
-        record.hr_employees.first_name &&
-        record.hr_employees.last_name &&
-        record.hr_employees.employee_code
-      ) as AttendanceRecord[];
+      // Convert raw data to proper type with validation
+      const validRecords: AttendanceRecord[] = (data as AttendanceRecordRaw[] || [])
+        .filter((record) => 
+          isValidJoinedData(record.hr_employees) && 
+          record.hr_employees.first_name &&
+          record.hr_employees.last_name &&
+          record.hr_employees.employee_code
+        )
+        .map((record) => ({
+          ...record,
+          hr_employees: isValidJoinedData(record.hr_employees) ? record.hr_employees : null,
+          hr_stores: isValidJoinedData(record.hr_stores) ? record.hr_stores : null,
+          hr_shifts: isValidJoinedData(record.hr_shifts) ? record.hr_shifts : null,
+        }));
 
       setAttendanceRecords(validRecords);
     } catch (error: any) {

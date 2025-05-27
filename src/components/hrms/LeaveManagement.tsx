@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Calendar, Plus, Check, X, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { LeaveRequest, Employee } from '@/types/hrms';
+import { LeaveRequest, LeaveRequestRaw, Employee, isValidJoinedData } from '@/types/hrms';
 
 const LeaveManagement = () => {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
@@ -62,13 +62,18 @@ const LeaveManagement = () => {
       if (leaveRes.error) throw leaveRes.error;
       if (employeeRes.error) throw employeeRes.error;
 
-      // Filter out invalid leave records and properly type the response
-      const validLeaves = (leaveRes.data || []).filter((leave: any) => 
-        leave.hr_employees && 
-        leave.hr_employees.first_name &&
-        leave.hr_employees.last_name &&
-        leave.hr_employees.employee_code
-      ) as LeaveRequest[];
+      // Convert raw data to proper type with validation
+      const validLeaves: LeaveRequest[] = (leaveRes.data as LeaveRequestRaw[] || [])
+        .filter((leave) => 
+          isValidJoinedData(leave.hr_employees) && 
+          leave.hr_employees.first_name &&
+          leave.hr_employees.last_name &&
+          leave.hr_employees.employee_code
+        )
+        .map((leave) => ({
+          ...leave,
+          hr_employees: isValidJoinedData(leave.hr_employees) ? leave.hr_employees : null,
+        }));
 
       setLeaveRequests(validLeaves);
       setEmployees(employeeRes.data || []);
