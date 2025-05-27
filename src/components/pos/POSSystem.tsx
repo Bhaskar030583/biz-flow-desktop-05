@@ -313,10 +313,10 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
 
   const getCardSize = () => {
     switch (gridSize) {
-      case 'small': return { cardClass: 'h-20', titleSize: 'text-xs', priceSize: 'text-sm' };
-      case 'medium': return { cardClass: 'h-24', titleSize: 'text-sm', priceSize: 'text-base' };
-      case 'large': return { cardClass: 'h-28', titleSize: 'text-base', priceSize: 'text-lg' };
-      default: return { cardClass: 'h-24', titleSize: 'text-sm', priceSize: 'text-base' };
+      case 'small': return { cardClass: 'h-16', titleSize: 'text-xs', priceSize: 'text-sm' };
+      case 'medium': return { cardClass: 'h-20', titleSize: 'text-sm', priceSize: 'text-base' };
+      case 'large': return { cardClass: 'h-24', titleSize: 'text-base', priceSize: 'text-lg' };
+      default: return { cardClass: 'h-20', titleSize: 'text-sm', priceSize: 'text-base' };
     }
   };
 
@@ -407,7 +407,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
 
   const getMobileCardSize = () => {
     if (isMobile) {
-      return { cardClass: 'h-20', titleSize: 'text-xs', priceSize: 'text-sm' };
+      return { cardClass: 'h-16', titleSize: 'text-xs', priceSize: 'text-sm' };
     }
     return getCardSize();
   };
@@ -943,19 +943,18 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                 onClick={() => addToCart(product)}
               >
                 <CardContent className="p-3 h-full flex flex-col justify-between">
-                  <div className={`aspect-square bg-gradient-to-br ${themeColors.light} rounded-xl mb-3 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                    <UtensilsCrossed className={`${cardConfig.iconSize} ${themeColors.text} group-hover:animate-pulse`} />
-                  </div>
-                  
                   <div className="flex-1 flex flex-col justify-between">
-                    <h3 className={`font-bold ${themeColors.text} ${cardConfig.titleSize} mb-2 line-clamp-2 min-h-[2.5rem] leading-tight`}>
+                    <h3 className={`font-bold ${themeColors.text} ${cardConfig.titleSize} mb-2 line-clamp-2 leading-tight`}>
                       {product.name}
                     </h3>
                     
                     <div className="flex items-center justify-between">
-                      <span className={`font-bold text-gray-900 ${cardConfig.priceSize}`}>
-                        ₹{product.price}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className={`font-bold text-gray-900 ${cardConfig.priceSize}`}>
+                          ₹{product.price}
+                        </span>
+                        <span className="text-xs text-gray-500">Qty: {product.quantity || 0}</span>
+                      </div>
                       <Button
                         size="sm"
                         className={`bg-gradient-to-r ${themeColors.gradient} ${themeColors.hover} text-white h-8 w-8 p-0 shadow-lg rounded-full group-hover:scale-110 transition-transform duration-200`}
