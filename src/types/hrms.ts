@@ -82,13 +82,13 @@ export interface AttendanceRecord {
     first_name: string;
     last_name: string;
     employee_code: string;
-  };
+  } | null;
   hr_stores?: {
     store_name: string;
-  };
+  } | null;
   hr_shifts?: {
     shift_name: string;
-  };
+  } | null;
 }
 
 export interface LeaveRequest {
@@ -111,7 +111,7 @@ export interface LeaveRequest {
     first_name: string;
     last_name: string;
     employee_code: string;
-  };
+  } | null;
 }
 
 export interface Payslip {
@@ -138,5 +138,5 @@ export interface Payslip {
     last_name: string;
     employee_code: string;
     hourly_rate: number;
-  };
+  } | null;
 }

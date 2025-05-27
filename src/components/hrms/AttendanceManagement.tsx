@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,16 +39,15 @@ const AttendanceManagement = () => {
 
       if (error) throw error;
 
-      // Filter out records with invalid employee data
-      const validRecords = data?.filter(record => 
+      // Filter out records with invalid employee data and properly type the response
+      const validRecords = (data || []).filter((record: any) => 
         record.hr_employees && 
-        typeof record.hr_employees === 'object' && 
-        'first_name' in record.hr_employees &&
-        'last_name' in record.hr_employees &&
-        'employee_code' in record.hr_employees
-      ) || [];
+        record.hr_employees.first_name &&
+        record.hr_employees.last_name &&
+        record.hr_employees.employee_code
+      ) as AttendanceRecord[];
 
-      setAttendanceRecords(validRecords as AttendanceRecord[]);
+      setAttendanceRecords(validRecords);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -179,13 +177,13 @@ const AttendanceManagement = () => {
                 <div className="flex items-center space-x-4">
                   <div>
                     <p className="font-medium">
-                      {record.hr_employees?.first_name} {record.hr_employees?.last_name}
+                      {record.hr_employees?.first_name || 'Unknown'} {record.hr_employees?.last_name || ''}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {record.hr_employees?.employee_code} • {record.hr_stores?.store_name}
+                      {record.hr_employees?.employee_code || 'N/A'} • {record.hr_stores?.store_name || 'Unknown Store'}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {record.hr_shifts?.shift_name}
+                      {record.hr_shifts?.shift_name || 'Unknown Shift'}
                     </p>
                   </div>
                 </div>

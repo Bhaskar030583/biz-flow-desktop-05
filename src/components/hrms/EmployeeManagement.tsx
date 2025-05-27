@@ -18,7 +18,25 @@ const EmployeeManagement = () => {
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    employee_code: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+    address: string;
+    date_of_birth: string;
+    date_of_joining: string;
+    employment_status: 'active' | 'inactive' | 'terminated' | 'on_leave';
+    department: string;
+    designation: string;
+    hourly_rate: number;
+    bank_account_number: string;
+    bank_name: string;
+    bank_ifsc: string;
+    emergency_contact_name: string;
+    emergency_contact_phone: string;
+  }>({
     employee_code: '',
     first_name: '',
     last_name: '',
@@ -27,7 +45,7 @@ const EmployeeManagement = () => {
     address: '',
     date_of_birth: '',
     date_of_joining: new Date().toISOString().split('T')[0],
-    employment_status: 'active' as const,
+    employment_status: 'active',
     department: '',
     designation: '',
     hourly_rate: 0,
@@ -420,34 +438,54 @@ const EmployeeManagement = () => {
                       {employee.first_name} {employee.last_name}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {employee.employee_code} • {employee.designation || 'No designation'} • {employee.department || 'No department'}
+                      {employee.employee_code} • {employee.email}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {employee.email} • ₹{employee.hourly_rate}/hour
+                      {employee.department || 'No Department'} • {employee.designation || 'No Designation'}
                     </p>
                   </div>
                 </div>
-                
-                <div className="flex items-center space-x-2">
-                  {getStatusBadge(employee.employment_status)}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(employee)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDelete(employee.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+
+                <div className="flex items-center space-x-4">
+                  <div className="text-center">
+                    <p className="text-sm font-medium">Hourly Rate</p>
+                    <p className="text-sm text-muted-foreground">
+                      ₹{employee.hourly_rate}
+                    </p>
+                  </div>
+
+                  <div className="text-center">
+                    <p className="text-sm font-medium">Joining Date</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(employee.date_of_joining).toLocaleDateString()}
+                    </p>
+                  </div>
+
+                  <div className="text-center">
+                    <p className="text-sm font-medium">Status</p>
+                    {getStatusBadge(employee.employment_status)}
+                  </div>
+
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(employee)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(employee.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
-            
+
             {employees.length === 0 && (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">No employees found</p>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,17 +11,32 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Shift, Store } from '@/types/hrms';
 
+interface StoreBasic {
+  id: string;
+  store_name: string;
+  store_code: string;
+}
+
 const ShiftManagement = () => {
   const [shifts, setShifts] = useState<Shift[]>([]);
-  const [stores, setStores] = useState<Store[]>([]);
+  const [stores, setStores] = useState<StoreBasic[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingShift, setEditingShift] = useState<Shift | null>(null);
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    shift_name: string;
+    shift_type: 'regular' | 'rotational' | 'split' | 'flexible';
+    start_time: string;
+    end_time: string;
+    break_duration: number;
+    grace_period: number;
+    store_id: string;
+    is_active: boolean;
+  }>({
     shift_name: '',
-    shift_type: 'regular' as const,
+    shift_type: 'regular',
     start_time: '',
     end_time: '',
     break_duration: 60,

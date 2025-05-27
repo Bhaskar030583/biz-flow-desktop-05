@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,7 +53,11 @@ const StoreManagement = () => {
       setStores(data || []);
     } catch (error) {
       console.error('Error fetching stores:', error);
-      toast.error('Failed to load stores');
+      toast({
+        title: "Error",
+        description: "Failed to load stores",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -80,14 +83,20 @@ const StoreManagement = () => {
           .eq('id', editingStore.id);
 
         if (error) throw error;
-        toast.success('Store updated successfully');
+        toast({
+          title: "Success",
+          description: "Store updated successfully",
+        });
       } else {
         const { error } = await supabase
           .from('hr_stores')
           .insert([storeData]);
 
         if (error) throw error;
-        toast.success('Store created successfully');
+        toast({
+          title: "Success",
+          description: "Store created successfully",
+        });
       }
 
       setDialogOpen(false);
@@ -96,7 +105,11 @@ const StoreManagement = () => {
       fetchStores();
     } catch (error) {
       console.error('Error saving store:', error);
-      toast.error('Failed to save store');
+      toast({
+        title: "Error",
+        description: "Failed to save store",
+        variant: "destructive",
+      });
     }
   };
 
@@ -123,11 +136,18 @@ const StoreManagement = () => {
         .eq('id', id);
 
       if (error) throw error;
-      toast.success('Store deleted successfully');
+      toast({
+        title: "Success",
+        description: "Store deleted successfully",
+      });
       fetchStores();
     } catch (error) {
       console.error('Error deleting store:', error);
-      toast.error('Failed to delete store');
+      toast({
+        title: "Error",
+        description: "Failed to delete store",
+        variant: "destructive",
+      });
     }
   };
 
@@ -151,14 +171,25 @@ const StoreManagement = () => {
             latitude: position.coords.latitude.toString(),
             longitude: position.coords.longitude.toString(),
           }));
-          toast.success('Location captured successfully');
+          toast({
+            title: "Success",
+            description: "Location captured successfully",
+          });
         },
         (error) => {
-          toast.error('Failed to get current location');
+          toast({
+            title: "Error",
+            description: "Failed to get current location",
+            variant: "destructive",
+          });
         }
       );
     } else {
-      toast.error('Geolocation is not supported by this browser');
+      toast({
+        title: "Error",
+        description: "Geolocation is not supported by this browser",
+        variant: "destructive",
+      });
     }
   };
 

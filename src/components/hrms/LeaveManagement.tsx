@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,9 +19,16 @@ const LeaveManagement = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    employee_id: string;
+    leave_type: 'sick' | 'casual' | 'paid' | 'unpaid' | 'maternity' | 'paternity';
+    start_date: string;
+    end_date: string;
+    is_half_day: boolean;
+    reason: string;
+  }>({
     employee_id: '',
-    leave_type: 'casual' as const,
+    leave_type: 'casual',
     start_date: '',
     end_date: '',
     is_half_day: false,
@@ -56,16 +62,15 @@ const LeaveManagement = () => {
       if (leaveRes.error) throw leaveRes.error;
       if (employeeRes.error) throw employeeRes.error;
 
-      // Filter out invalid leave records
-      const validLeaves = leaveRes.data?.filter(leave => 
+      // Filter out invalid leave records and properly type the response
+      const validLeaves = (leaveRes.data || []).filter((leave: any) => 
         leave.hr_employees && 
-        typeof leave.hr_employees === 'object' && 
-        'first_name' in leave.hr_employees &&
-        'last_name' in leave.hr_employees &&
-        'employee_code' in leave.hr_employees
-      ) || [];
+        leave.hr_employees.first_name &&
+        leave.hr_employees.last_name &&
+        leave.hr_employees.employee_code
+      ) as LeaveRequest[];
 
-      setLeaveRequests(validLeaves as LeaveRequest[]);
+      setLeaveRequests(validLeaves);
       setEmployees(employeeRes.data || []);
     } catch (error: any) {
       toast({
@@ -381,10 +386,10 @@ const LeaveManagement = () => {
                 <div className="flex items-center space-x-4">
                   <div>
                     <p className="font-medium">
-                      {request.hr_employees?.first_name} {request.hr_employees?.last_name}
+                      {request.hr_employees?.first_name || 'Unknown'} {request.hr_employees?.last_name || ''}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {request.hr_employees?.employee_code}
+                      {request.hr_employees?.employee_code || 'N/A'}
                     </p>
                     <div className="flex items-center space-x-2 mt-1">
                       {getLeaveTypeBadge(request.leave_type)}

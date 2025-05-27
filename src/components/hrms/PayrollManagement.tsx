@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,17 +37,16 @@ const PayrollManagement = () => {
 
       if (error) throw error;
       
-      // Filter out invalid payslip records
-      const validPayslips = data?.filter(payslip => 
+      // Filter out invalid payslip records and properly type the response
+      const validPayslips = (data || []).filter((payslip: any) => 
         payslip.hr_employees && 
-        typeof payslip.hr_employees === 'object' && 
-        'first_name' in payslip.hr_employees &&
-        'last_name' in payslip.hr_employees &&
-        'employee_code' in payslip.hr_employees &&
-        'hourly_rate' in payslip.hr_employees
-      ) || [];
+        payslip.hr_employees.first_name &&
+        payslip.hr_employees.last_name &&
+        payslip.hr_employees.employee_code &&
+        typeof payslip.hr_employees.hourly_rate === 'number'
+      ) as Payslip[];
 
-      setPayslips(validPayslips as Payslip[]);
+      setPayslips(validPayslips);
     } catch (error) {
       console.error('Error fetching payslips:', error);
       toast({
@@ -204,9 +202,9 @@ const PayrollManagement = () => {
                   <div>
                     <CardTitle className="flex items-center gap-3">
                       <User className="h-5 w-5" />
-                      {payslip.hr_employees?.first_name} {payslip.hr_employees?.last_name}
+                      {payslip.hr_employees?.first_name || 'Unknown'} {payslip.hr_employees?.last_name || ''}
                       <Badge variant="secondary">
-                        {payslip.hr_employees?.employee_code}
+                        {payslip.hr_employees?.employee_code || 'N/A'}
                       </Badge>
                       {payslip.is_final ? (
                         <Badge className="bg-green-500">Final</Badge>
