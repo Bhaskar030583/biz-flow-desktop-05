@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -202,11 +201,56 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
     toast.success("Discount removed");
   };
 
+  // Fixed payment handlers with proper cart validation
   const handleCashPayment = () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+    console.log("Opening cash payment modal");
     setShowCashModal(true);
   };
 
+  const handleUPIPayment = async () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+
+    console.log("Processing UPI payment");
+    try {
+      await generateBill({
+        totalAmount: getTotalAmount(),
+        paymentMethod: 'upi',
+        cartItems: cart,
+        storeName: storeInfo?.storeName,
+        salespersonName: storeInfo?.salespersonName
+      });
+
+      toast.success("UPI payment completed and bill generated!");
+      setCart([]);
+      setDiscount(null);
+    } catch (error) {
+      console.error("Error processing UPI payment:", error);
+      toast.error("Failed to process UPI payment");
+    }
+  };
+
+  const handleCreditPayment = () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+    console.log("Opening credit payment modal");
+    setShowCreditModal(true);
+  };
+
   const handleSplitPayment = () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+    console.log("Opening split payment modal");
     setShowSplitModal(true);
   };
 
@@ -232,34 +276,6 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
       console.error("Error processing card payment:", error);
       toast.error("Failed to process card payment");
     }
-  };
-
-  const handleUPIPayment = async () => {
-    if (cart.length === 0) {
-      toast.error("Cart is empty");
-      return;
-    }
-
-    try {
-      await generateBill({
-        totalAmount: getTotalAmount(),
-        paymentMethod: 'upi',
-        cartItems: cart,
-        storeName: storeInfo?.storeName,
-        salespersonName: storeInfo?.salespersonName
-      });
-
-      toast.success("UPI payment completed and bill generated!");
-      setCart([]);
-      setDiscount(null);
-    } catch (error) {
-      console.error("Error processing UPI payment:", error);
-      toast.error("Failed to process UPI payment");
-    }
-  };
-
-  const handleCreditPayment = () => {
-    setShowCreditModal(true);
   };
 
   const handlePaymentComplete = () => {
