@@ -10,6 +10,7 @@ import { PaymentMethodsDisplay } from "@/components/dashboard/PaymentMethodsDisp
 import { GridViewControls } from "@/components/dashboard/GridViewControls";
 import { LowStockAlert } from "@/components/dashboard/LowStockAlert";
 import { TotalStockValue } from "@/components/dashboard/TotalStockValue";
+import { DenominationManagement } from "@/components/dashboard/DenominationManagement";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useDataSync } from "@/context/DataSyncContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -44,6 +45,11 @@ const Dashboard = () => {
           title="Dashboard" 
           subtitle="View your business analytics and performance" 
         />
+        
+        {/* Morning Denomination Setup */}
+        <div className="mb-6">
+          <DenominationManagement />
+        </div>
         
         {/* Quick Actions Bar */}
         <div className={`mb-6 flex ${isMobile ? 'flex-col gap-3' : 'flex-wrap items-center gap-3'} p-4 bg-white rounded-lg border border-blue-100 shadow-sm`}>
