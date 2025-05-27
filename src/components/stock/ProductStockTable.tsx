@@ -55,6 +55,15 @@ const ProductStockTable = ({
   onRemoveProduct,
   onDeleteStock,
 }: ProductStockTableProps) => {
+  console.log('=== ProductStockTable RENDER ===');
+  console.log('Props received:', {
+    filteredProductsCount: filteredProducts.length,
+    isAdmin,
+    onEditStock: typeof onEditStock,
+    onRemoveProduct: typeof onRemoveProduct,
+    onDeleteStock: typeof onDeleteStock
+  });
+
   const getCategoryColor = (category: string) => {
     const colors = [
       'bg-blue-100 text-blue-800',
@@ -65,66 +74,6 @@ const ProductStockTable = ({
     ];
     const index = category.length % colors.length;
     return colors[index];
-  };
-
-  const handleEditClick = (product: AssignedProduct) => {
-    console.log('=== EDIT BUTTON CLICKED ===');
-    console.log('Product:', product);
-    console.log('onEditStock function:', typeof onEditStock);
-    console.log('About to call onEditStock...');
-    
-    try {
-      onEditStock(product);
-      console.log('onEditStock called successfully');
-    } catch (error) {
-      console.error('Error calling onEditStock:', error);
-      toast.error('Error opening edit dialog');
-    }
-  };
-
-  const handleDeleteConfirm = (productId: string, productName: string) => {
-    console.log('=== DELETE CONFIRMED ===');
-    console.log('Product ID:', productId);
-    console.log('Product Name:', productName);
-    console.log('isAdmin:', isAdmin);
-    console.log('onDeleteStock function:', typeof onDeleteStock);
-    
-    if (!isAdmin) {
-      console.log('User is not admin, showing error');
-      toast.error("Only administrators can delete stock entries");
-      return;
-    }
-    
-    if (!onDeleteStock) {
-      console.log('onDeleteStock function not available');
-      toast.error("Delete functionality is not available");
-      return;
-    }
-    
-    console.log('About to call onDeleteStock...');
-    try {
-      onDeleteStock(productId, productName);
-      console.log('onDeleteStock called successfully');
-    } catch (error) {
-      console.error('Error calling onDeleteStock:', error);
-      toast.error('Error deleting stock');
-    }
-  };
-
-  const handleDeassignConfirm = (assignmentId: string, productName: string) => {
-    console.log('=== DEASSIGN CONFIRMED ===');
-    console.log('Assignment ID:', assignmentId);
-    console.log('Product Name:', productName);
-    console.log('onRemoveProduct function:', typeof onRemoveProduct);
-    
-    console.log('About to call onRemoveProduct...');
-    try {
-      onRemoveProduct(assignmentId, productName);
-      console.log('onRemoveProduct called successfully');
-    } catch (error) {
-      console.error('Error calling onRemoveProduct:', error);
-      toast.error('Error removing product assignment');
-    }
   };
 
   return (
@@ -148,6 +97,7 @@ const ProductStockTable = ({
         </TableHeader>
         <TableBody>
           {filteredProducts.map((product) => {
+            console.log('=== RENDERING PRODUCT ROW ===', product.name);
             const variance = (product.actual_stock || 0) - (product.closing_stock || 0);
             return (
               <TableRow key={product.id}>
@@ -203,9 +153,23 @@ const ProductStockTable = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        console.log('Edit button clicked, product:', product.name);
-                        handleEditClick(product);
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('=== EDIT BUTTON CLICKED ===');
+                        console.log('Product:', product.name, product.id);
+                        console.log('Event:', e);
+                        console.log('onEditStock function type:', typeof onEditStock);
+                        console.log('About to call onEditStock with product:', product);
+                        
+                        if (typeof onEditStock === 'function') {
+                          console.log('Calling onEditStock...');
+                          onEditStock(product);
+                          console.log('onEditStock called successfully');
+                        } else {
+                          console.error('onEditStock is not a function!', onEditStock);
+                          toast.error('Edit function is not available');
+                        }
                       }}
                       className="h-8 px-2"
                       title="Edit stock values"
@@ -221,7 +185,12 @@ const ProductStockTable = ({
                             size="sm"
                             className="h-8 px-2 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50"
                             title="Delete stock entry"
-                            onClick={() => console.log('Delete trigger clicked for:', product.name)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log('=== DELETE TRIGGER CLICKED ===');
+                              console.log('Product:', product.name, product.id);
+                            }}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -237,9 +206,22 @@ const ProductStockTable = ({
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => {
-                                console.log('Delete action clicked for:', product.name);
-                                handleDeleteConfirm(product.id, product.name);
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log('=== DELETE ACTION CLICKED ===');
+                                console.log('Product ID:', product.id);
+                                console.log('Product Name:', product.name);
+                                console.log('onDeleteStock function type:', typeof onDeleteStock);
+                                
+                                if (typeof onDeleteStock === 'function') {
+                                  console.log('Calling onDeleteStock...');
+                                  onDeleteStock(product.id, product.name);
+                                  console.log('onDeleteStock called successfully');
+                                } else {
+                                  console.error('onDeleteStock is not a function!', onDeleteStock);
+                                  toast.error('Delete function is not available');
+                                }
                               }}
                               className="bg-red-600 hover:bg-red-700"
                             >
@@ -257,7 +239,12 @@ const ProductStockTable = ({
                           size="sm"
                           className="h-8 px-2"
                           title="Deassign product from store"
-                          onClick={() => console.log('Deassign trigger clicked for:', product.name)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('=== DEASSIGN TRIGGER CLICKED ===');
+                            console.log('Product:', product.name, product.assignment_id);
+                          }}
                         >
                           <UserMinus className="h-4 w-4" />
                         </Button>
@@ -273,9 +260,22 @@ const ProductStockTable = ({
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => {
-                              console.log('Deassign action clicked for:', product.name);
-                              handleDeassignConfirm(product.assignment_id, product.name);
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log('=== DEASSIGN ACTION CLICKED ===');
+                              console.log('Assignment ID:', product.assignment_id);
+                              console.log('Product Name:', product.name);
+                              console.log('onRemoveProduct function type:', typeof onRemoveProduct);
+                              
+                              if (typeof onRemoveProduct === 'function') {
+                                console.log('Calling onRemoveProduct...');
+                                onRemoveProduct(product.assignment_id, product.name);
+                                console.log('onRemoveProduct called successfully');
+                              } else {
+                                console.error('onRemoveProduct is not a function!', onRemoveProduct);
+                                toast.error('Remove function is not available');
+                              }
                             }}
                             className="bg-red-600 hover:bg-red-700"
                           >
