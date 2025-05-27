@@ -202,7 +202,7 @@ const ProductStockTable = ({
                           toast.error('Edit function is not available');
                         }
                       }}
-                      className="h-8 px-2"
+                      className="h-8 px-2 hover:bg-accent hover:text-accent-foreground transition-colors"
                       title="Edit stock values"
                     >
                       <Edit className="h-4 w-4" />
@@ -214,7 +214,7 @@ const ProductStockTable = ({
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 px-2 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50"
+                            className="h-8 px-2 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50 transition-colors"
                             title="Delete stock entry"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -232,7 +232,7 @@ const ProductStockTable = ({
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => handleDeleteStock(product.id, product.name)}
-                              className="bg-red-600 hover:bg-red-700"
+                              className="bg-red-600 hover:bg-red-700 transition-colors"
                             >
                               Delete
                             </AlertDialogAction>
@@ -246,7 +246,7 @@ const ProductStockTable = ({
                         <Button
                           variant="destructive"
                           size="sm"
-                          className="h-8 px-2"
+                          className="h-8 px-2 hover:bg-destructive/90 transition-colors"
                           title="Deassign product from store"
                         >
                           <UserMinus className="h-4 w-4" />
@@ -264,7 +264,7 @@ const ProductStockTable = ({
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => handleRemoveProduct(product.assignment_id, product.name)}
-                            className="bg-red-600 hover:bg-red-700"
+                            className="bg-red-600 hover:bg-red-700 transition-colors"
                           >
                             Deassign
                           </AlertDialogAction>
