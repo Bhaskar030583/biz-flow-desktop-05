@@ -84,16 +84,27 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
 
   const checkUserRole = async () => {
     try {
+      // Handle the specific user with hardcoded admin role
+      if (user?.id === 'a364aeaa-69e6-46c7-b72b-4c84ff863ef2') {
+        console.log('Setting admin role for protected user');
+        setIsAdmin(true);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user?.id)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+      
       setIsAdmin(data?.role === 'admin');
     } catch (error) {
       console.error('Error checking user role:', error);
+      setIsAdmin(false);
     }
   };
 
@@ -309,6 +320,20 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
     try {
       console.log("Removing product assignment:", assignmentId);
       
+      // First, delete all stock entries for this product-shop combination
+      const { error: stockError } = await supabase
+        .from('stocks')
+        .delete()
+        .eq('product_id', assignedProducts.find(p => p.assignment_id === assignmentId)?.id)
+        .eq('shop_id', selectedShop)
+        .eq('user_id', user?.id);
+
+      if (stockError) {
+        console.error('Error deleting stock entries:', stockError);
+        // Continue with assignment deletion even if stock deletion fails
+      }
+
+      // Then delete the product assignment
       const { error } = await supabase
         .from('product_shops')
         .delete()
@@ -319,6 +344,7 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
       
       toast.success(`${productName} deassigned from store successfully`);
       fetchAssignedProducts();
+      onStockUpdated();
     } catch (error) {
       console.error('Error removing product from shop:', error);
       toast.error('Failed to deassign product from store');
