@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -472,9 +473,40 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
     }
 
     try {
-      console.log("Starting delete stock process for product:", productId, "in shop:", selectedShop);
+      console.log("=== STARTING DELETE STOCK PROCESS ===");
+      console.log("Product ID:", productId);
+      console.log("Product Name:", productName);
+      console.log("Selected Shop:", selectedShop);
+      console.log("User ID:", user?.id);
       
-      // First, delete all stock entries for this product-shop combination
+      // Step 1: Find the product assignment first
+      console.log("Step 1: Finding product assignment...");
+      const { data: assignmentData, error: assignmentFetchError } = await supabase
+        .from('product_shops')
+        .select('id, product_id, shop_id')
+        .eq('product_id', productId)
+        .eq('shop_id', selectedShop)
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      console.log("Assignment query result:", { assignmentData, assignmentFetchError });
+
+      if (assignmentFetchError) {
+        console.error('Error finding product assignment:', assignmentFetchError);
+        toast.error('Failed to find product assignment');
+        return;
+      }
+
+      if (!assignmentData) {
+        console.log("No assignment found for this product-shop combination");
+        toast.error('Product assignment not found');
+        return;
+      }
+
+      console.log("Found assignment:", assignmentData);
+
+      // Step 2: Delete all stock entries for this product-shop combination
+      console.log("Step 2: Deleting stock entries...");
       const { error: stockError } = await supabase
         .from('stocks')
         .delete()
@@ -484,33 +516,39 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
 
       if (stockError) {
         console.error('Error deleting stock entries:', stockError);
-        throw stockError;
+        toast.error('Failed to delete stock entries');
+        return;
       }
 
-      console.log("Stock entries deleted, now removing product assignment");
+      console.log("Stock entries deleted successfully");
 
-      // Then remove the product assignment from the shop
-      const { error: assignmentError } = await supabase
+      // Step 3: Delete the product assignment
+      console.log("Step 3: Deleting product assignment...");
+      const { error: assignmentDeleteError } = await supabase
         .from('product_shops')
         .delete()
-        .eq('product_id', productId)
-        .eq('shop_id', selectedShop)
+        .eq('id', assignmentData.id)
         .eq('user_id', user?.id);
 
-      if (assignmentError) {
-        console.error('Error removing product assignment:', assignmentError);
-        toast.warning('Stock deleted but product assignment could not be removed');
-      } else {
-        console.log("Product assignment removed successfully");
+      if (assignmentDeleteError) {
+        console.error('Error deleting product assignment:', assignmentDeleteError);
+        toast.error('Stock deleted but failed to remove product assignment');
+        return;
       }
+
+      console.log("Product assignment deleted successfully");
+      console.log("=== DELETE STOCK PROCESS COMPLETED ===");
 
       toast.success(`"${productName}" removed from store completely`);
       
-      // Refresh the assigned products list to reflect the changes
+      // Step 4: Refresh the data to update the UI
+      console.log("Step 4: Refreshing data...");
       await fetchAssignedProducts();
       onStockUpdated();
+      console.log("Data refresh completed");
+      
     } catch (error) {
-      console.error('Error deleting stock entries:', error);
+      console.error('Unexpected error during delete process:', error);
       toast.error('Failed to delete stock entries');
     }
   };
