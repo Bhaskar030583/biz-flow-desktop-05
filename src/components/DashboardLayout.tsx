@@ -1,166 +1,143 @@
 
 import React, { useState } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { Link, useLocation } from "react-router-dom";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-  SidebarHeader,
-  SidebarFooter,
-} from "@/components/ui/sidebar";
-import {
-  Home,
-  Package,
-  Store,
   BarChart3,
-  CreditCard,
+  Package,
+  Warehouse,
+  ShoppingCart,
   Users,
-  Settings,
-  LogOut,
   Receipt,
-  Calculator,
+  CreditCard,
+  DollarSign,
+  Store,
+  Settings,
   Menu,
-  UserCheck,
+  X,
   ArrowRightLeft,
+  Building2,
 } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ModeToggle } from "@/components/ModeToggle";
+import { useAuth } from "@/context/AuthContext";
 
-const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
-  const { user, signOut, userRole } = useAuth();
-  const navigate = useNavigate();
+const sidebarItems = [
+  { name: "Dashboard", href: "/dashboard", icon: BarChart3 },
+  { name: "Products", href: "/products", icon: Package },
+  { name: "Stocks", href: "/stocks", icon: Warehouse },
+  { name: "POS", href: "/pos", icon: ShoppingCart },
+  { name: "Customers", href: "/customers", icon: Users },
+  { name: "Bills", href: "/bills", icon: Receipt },
+  { name: "Expenses", href: "/expenses", icon: CreditCard },
+  { name: "Credits", href: "/credits", icon: DollarSign },
+  { name: "Shops", href: "/shops", icon: Store },
+  { name: "Stock Movements", href: "/stock-movements", icon: ArrowRightLeft },
+  { name: "HRMS", href: "/hrms", icon: Building2 },
+  { name: "Users", href: "/users", icon: Users },
+  { name: "Settings", href: "/settings", icon: Settings },
+];
+
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+}
+
+const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const isMobile = useIsMobile();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { signOut, user } = useAuth();
 
-  const menuItems = [
-    { icon: Home, label: "Dashboard", path: "/dashboard" },
-    { icon: Package, label: "Products", path: "/products" },
-    { icon: Store, label: "Stores", path: "/shops" },
-    { icon: BarChart3, label: "Stocks", path: "/stocks" },
-    { icon: ArrowRightLeft, label: "Stock Movements", path: "/stock-movements" },
-    { icon: Calculator, label: "POS", path: "/pos" },
-    { icon: UserCheck, label: "Customers", path: "/customers" },
-    { icon: Receipt, label: "Bills", path: "/bills" },
-    { icon: CreditCard, label: "Credits", path: "/credits" },
-    { icon: Receipt, label: "Expenses", path: "/expenses" },
-    { icon: Users, label: "Users", path: "/users" },
-    { icon: Settings, label: "Settings", path: "/settings" },
-  ];
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/auth");
-  };
-
-  return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
-        <Sidebar 
-          variant="sidebar" 
-          collapsible="icon"
-          className="border-r border-blue-200 dark:border-gray-700"
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between p-4 border-b">
+        <h2 className="text-lg font-semibold">Business Management</h2>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={() => setSidebarOpen(false)}
         >
-          <SidebarHeader className="border-b border-blue-200 dark:border-gray-700 p-4">
-            <div className="flex items-center gap-2">
-              <img 
-                src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
-                alt="ABC Cafe Logo" 
-                className="h-10 w-10 rounded-lg shadow-md flex-shrink-0"
-              />
-              {!isCollapsed && (
-                <div>
-                  <h2 className="font-semibold text-blue-900 dark:text-blue-100">ABC Business</h2>
-                  <p className="text-xs text-blue-600 dark:text-blue-300 capitalize">
-                    {userRole}
-                  </p>
-                </div>
-              )}
-            </div>
-          </SidebarHeader>
-
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-blue-700 dark:text-blue-300">
-                Navigation
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {menuItems.map((item) => (
-                    <SidebarMenuItem key={item.path}>
-                      <SidebarMenuButton
-                        onClick={() => navigate(item.path)}
-                        isActive={location.pathname === item.path}
-                        className="w-full justify-start hover:bg-blue-100 dark:hover:bg-blue-900 data-[state=active]:bg-blue-200 dark:data-[state=active]:bg-blue-800 data-[state=active]:text-blue-900 dark:data-[state=active]:text-blue-100"
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-
-          <SidebarFooter className="border-t border-blue-200 dark:border-gray-700 p-4">
-            <div className="space-y-2">
-              {!isCollapsed && (
-                <div className="text-xs text-blue-600 dark:text-blue-300">
-                  {user?.email}
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                onClick={handleSignOut}
-                className="w-full justify-start text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                size="sm"
-              >
-                <LogOut className="h-4 w-4" />
-                {!isCollapsed && <span>Sign Out</span>}
-              </Button>
-            </div>
-          </SidebarFooter>
-        </Sidebar>
-
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white dark:bg-gray-800 border-b border-blue-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger 
-                className="text-blue-600 dark:text-blue-400"
-                onClick={() => setIsCollapsed(!isCollapsed)}
-              />
-              <div className="flex items-center gap-3">
-                <img 
-                  src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
-                  alt="ABC Cafe Logo" 
-                  className="h-8 w-8 rounded-lg shadow-md"
-                />
-                <h1 className="text-xl font-bold text-blue-900 dark:text-blue-100">
-                  ABC CAFE
-                </h1>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <ThemeSwitcher />
-            </div>
-          </header>
-
-          <main className="flex-1 overflow-auto p-4 lg:p-6">
-            {children}
-          </main>
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+      <nav className="flex-1 p-4 space-y-2">
+        {sidebarItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.href || 
+            (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
+          
+          return (
+            <Link
+              key={item.name}
+              to={item.href}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              }`}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <Icon className="h-4 w-4" />
+              {item.name}
+            </Link>
+          );
+        })}
+      </nav>
+      <div className="p-4 border-t">
+        <div className="flex items-center justify-between">
+          <div className="text-sm">
+            <p className="font-medium">{user?.email}</p>
+            <p className="text-muted-foreground">Admin</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={signOut}>
+            Sign Out
+          </Button>
         </div>
       </div>
-    </SidebarProvider>
+    </div>
+  );
+
+  return (
+    <div className="flex h-screen bg-background">
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
+        <div className="flex flex-col flex-grow bg-card border-r">
+          <SidebarContent />
+        </div>
+      </div>
+
+      {/* Mobile Sidebar */}
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent side="left" className="p-0 w-64">
+          <SidebarContent />
+        </SheetContent>
+      </Sheet>
+
+      {/* Main Content */}
+      <div className="flex flex-col flex-1 md:ml-64">
+        <header className="flex items-center justify-between p-4 border-b bg-card">
+          <div className="flex items-center gap-4">
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="md:hidden">
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+            </Sheet>
+            <h1 className="text-xl font-semibold">
+              {sidebarItems.find(item => location.pathname === item.href || 
+                (item.href !== '/dashboard' && location.pathname.startsWith(item.href)))?.name || 'Dashboard'}
+            </h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <ModeToggle />
+          </div>
+        </header>
+        <main className="flex-1 overflow-auto p-6">
+          {children}
+        </main>
+      </div>
+    </div>
   );
 };
 
