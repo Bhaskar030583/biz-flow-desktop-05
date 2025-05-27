@@ -99,23 +99,23 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Desktop Sidebar */}
-      <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
+      {/* Desktop Sidebar - only render once */}
+      <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-30">
         <div className="flex flex-col flex-grow bg-card border-r">
           <SidebarContent />
         </div>
       </div>
 
-      {/* Mobile Sidebar */}
+      {/* Mobile Sidebar - separate sheet component */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="p-0 w-64">
+        <SheetContent side="left" className="p-0 w-64 z-50">
           <SidebarContent />
         </SheetContent>
       </Sheet>
 
       {/* Main Content */}
       <div className="flex flex-col flex-1 md:ml-64">
-        <header className="flex items-center justify-between p-4 border-b bg-card">
+        <header className="flex items-center justify-between p-4 border-b bg-card z-20">
           <div className="flex items-center gap-4">
             <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
               <SheetTrigger asChild>
