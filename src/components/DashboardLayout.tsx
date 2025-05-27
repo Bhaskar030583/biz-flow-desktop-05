@@ -106,22 +106,22 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
       </div>
 
-      {/* Mobile Sidebar */}
-      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="md:hidden fixed top-4 left-4 z-40">
-            <Menu className="h-4 w-4" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-64 z-50">
-          <SidebarContent />
-        </SheetContent>
-      </Sheet>
-
       {/* Main Content */}
       <div className="flex flex-col flex-1 md:ml-64">
         <header className="flex items-center justify-between p-4 border-b bg-card z-20">
           <div className="flex items-center gap-4">
+            {/* Mobile Menu Trigger */}
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="md:hidden">
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 w-64 z-50">
+                <SidebarContent />
+              </SheetContent>
+            </Sheet>
+            
             <h1 className="text-xl font-semibold">
               {sidebarItems.find(item => location.pathname === item.href || 
                 (item.href !== '/dashboard' && location.pathname.startsWith(item.href)))?.name || 'Dashboard'}
