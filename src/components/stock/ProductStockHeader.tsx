@@ -56,22 +56,22 @@ const ProductStockHeader = ({
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="shop-filter" className="flex items-center gap-2 text-sm font-medium">
+            <Label htmlFor="shop-filter" className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
               <Store className="h-4 w-4" />
               Select Store
             </Label>
             <Select value={selectedShop} onValueChange={setSelectedShop}>
-              <SelectTrigger className="bg-white">
+              <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100">
                 <SelectValue placeholder="Select a store to manage products" />
               </SelectTrigger>
-              <SelectContent className="bg-white z-50">
+              <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 z-50">
                 {shops.map(shop => (
-                  <SelectItem key={shop.id} value={shop.id}>
+                  <SelectItem key={shop.id} value={shop.id} className="text-gray-900 dark:text-gray-100">
                     {shop.name}
                   </SelectItem>
                 ))}
                 {shops.length === 0 && (
-                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                  <div className="px-2 py-1.5 text-sm text-gray-600 dark:text-gray-400">
                     No stores available
                   </div>
                 )}
