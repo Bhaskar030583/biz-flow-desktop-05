@@ -6,10 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Package2, Search, Store, Plus, X, Package } from "lucide-react";
+import { Package2, Search, Store, Plus, X, Package, Edit } from "lucide-react";
 
 interface Product {
   id: string;
@@ -52,6 +59,12 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
   const [isAdmin, setIsAdmin] = useState(false);
   const [addStockQuantities, setAddStockQuantities] = useState<Record<string, string>>({});
   const [updatingStock, setUpdatingStock] = useState<Record<string, boolean>>({});
+  const [editingProduct, setEditingProduct] = useState<AssignedProduct | null>(null);
+  const [editStockValues, setEditStockValues] = useState({
+    stock_added: 0,
+    actual_stock: 0
+  });
+  const [isUpdatingStock, setIsUpdatingStock] = useState(false);
 
   console.log("ProductStockManagement component loaded - showing products list with store filter and assignment functionality");
 
@@ -374,6 +387,74 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
     }
   };
 
+  const handleEditStock = (product: AssignedProduct) => {
+    setEditingProduct(product);
+    setEditStockValues({
+      stock_added: product.stock_added || 0,
+      actual_stock: product.actual_stock || 0
+    });
+  };
+
+  const handleUpdateStock = async () => {
+    if (!editingProduct) return;
+
+    setIsUpdatingStock(true);
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      // Get current stock data
+      const { data: currentStock, error: fetchError } = await supabase
+        .from('stocks')
+        .select('*')
+        .eq('product_id', editingProduct.id)
+        .eq('shop_id', selectedShop)
+        .eq('stock_date', today)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+
+      if (currentStock) {
+        // Update existing stock entry
+        const { error: updateError } = await supabase
+          .from('stocks')
+          .update({
+            stock_added: editStockValues.stock_added,
+            actual_stock: editStockValues.actual_stock
+          })
+          .eq('id', currentStock.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // Create new stock entry
+        const { error: insertError } = await supabase
+          .from('stocks')
+          .insert({
+            product_id: editingProduct.id,
+            shop_id: selectedShop,
+            stock_date: today,
+            opening_stock: editingProduct.opening_stock || 0,
+            closing_stock: editingProduct.closing_stock || 0,
+            actual_stock: editStockValues.actual_stock,
+            stock_added: editStockValues.stock_added,
+            user_id: user?.id
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      toast.success('Stock updated successfully');
+      setEditingProduct(null);
+      fetchAssignedProducts();
+      onStockUpdated();
+    } catch (error) {
+      console.error('Error updating stock:', error);
+      toast.error('Failed to update stock');
+    } finally {
+      setIsUpdatingStock(false);
+    }
+  };
+
   const getCategoryColor = (category: string) => {
     const colors = [
       'bg-blue-100 text-blue-800',
@@ -659,13 +740,23 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
                           </TableCell>
                         )}
                         <TableCell>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => removeProductFromShop(product.assignment_id)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditStock(product)}
+                              className="h-8 px-2"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => removeProductFromShop(product.assignment_id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -690,6 +781,57 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
           </CardContent>
         </Card>
       ) : null}
+
+      {/* Edit Stock Dialog */}
+      <Dialog open={editingProduct !== null} onOpenChange={(open) => !open && setEditingProduct(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Stock for {editingProduct?.name}</DialogTitle>
+          </DialogHeader>
+          {editingProduct && (
+            <div className="space-y-4 py-4">
+              <div className="grid gap-2">
+                <div className="text-sm text-muted-foreground">Store: {shops.find(shop => shop.id === selectedShop)?.name}</div>
+                <div className="text-sm text-muted-foreground">Category: {editingProduct.category}</div>
+              </div>
+              
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label className="text-sm font-medium">Stock Added</Label>
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    value={editStockValues.stock_added} 
+                    onChange={(e) => setEditStockValues(prev => ({
+                      ...prev,
+                      stock_added: Number(e.target.value)
+                    }))}
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label className="text-sm font-medium">Actual Stock</Label>
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    value={editStockValues.actual_stock} 
+                    onChange={(e) => setEditStockValues(prev => ({
+                      ...prev,
+                      actual_stock: Number(e.target.value)
+                    }))}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingProduct(null)}>Cancel</Button>
+            <Button onClick={handleUpdateStock} disabled={isUpdatingStock}>
+              {isUpdatingStock ? "Updating..." : "Update Stock"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
