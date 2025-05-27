@@ -455,6 +455,51 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_requests: {
+        Row: {
+          created_at: string
+          fulfilling_store_id: string
+          id: string
+          notes: string | null
+          product_id: string
+          request_date: string
+          requested_quantity: number
+          requesting_store_id: string
+          response_date: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fulfilling_store_id: string
+          id?: string
+          notes?: string | null
+          product_id: string
+          request_date?: string
+          requested_quantity: number
+          requesting_store_id: string
+          response_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fulfilling_store_id?: string
+          id?: string
+          notes?: string | null
+          product_id?: string
+          request_date?: string
+          requested_quantity?: number
+          requesting_store_id?: string
+          response_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       stock_templates: {
         Row: {
           created_at: string
@@ -567,6 +612,10 @@ export type Database = {
       generate_bill_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      handle_stock_movement: {
+        Args: { request_id: string; approving_user_id: string }
+        Returns: boolean
       }
     }
     Enums: {

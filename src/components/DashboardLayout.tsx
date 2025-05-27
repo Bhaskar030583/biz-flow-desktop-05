@@ -31,6 +31,7 @@ import {
   Calculator,
   Menu,
   UserCheck,
+  ArrowRightLeft,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -46,6 +47,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     { icon: Package, label: "Products", path: "/products" },
     { icon: Store, label: "Stores", path: "/shops" },
     { icon: BarChart3, label: "Stocks", path: "/stocks" },
+    { icon: ArrowRightLeft, label: "Stock Movements", path: "/stock-movements" },
     { icon: Calculator, label: "POS", path: "/pos" },
     { icon: UserCheck, label: "Customers", path: "/customers" },
     { icon: Receipt, label: "Bills", path: "/bills" },
