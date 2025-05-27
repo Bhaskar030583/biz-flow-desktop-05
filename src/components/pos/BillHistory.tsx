@@ -120,10 +120,24 @@ export const BillHistory: React.FC = () => {
     }
   };
 
-  const handleEditBill = (billId: string) => {
-    console.log("Edit bill:", billId);
-    setSelectedBillId(billId);
-    setEditModalOpen(true);
+  const handleEditBill = async (billId: string) => {
+    try {
+      console.log("Edit bill clicked for ID:", billId);
+      
+      if (!billId) {
+        console.error("No bill ID provided");
+        toast.error("Invalid bill ID");
+        return;
+      }
+
+      // Set the selected bill ID and open the modal
+      setSelectedBillId(billId);
+      setEditModalOpen(true);
+      console.log("Edit modal should be opening with bill ID:", billId);
+    } catch (error) {
+      console.error("Error opening edit modal:", error);
+      toast.error("Failed to open edit modal");
+    }
   };
 
   const handleDownloadBill = async (billId: string) => {
@@ -162,7 +176,16 @@ export const BillHistory: React.FC = () => {
   };
 
   const handleBillUpdated = () => {
+    console.log("Bill updated callback called");
     fetchBills(); // Refresh the bills list
+    setEditModalOpen(false); // Close the edit modal
+    setSelectedBillId(""); // Clear selected bill ID
+  };
+
+  const handleEditModalClose = () => {
+    console.log("Edit modal closing");
+    setEditModalOpen(false);
+    setSelectedBillId("");
   };
 
   const handleDownloadFromModal = async () => {
@@ -291,7 +314,10 @@ export const BillHistory: React.FC = () => {
                           variant="outline"
                           className="h-8 w-8 p-0"
                           title="Edit bill"
-                          onClick={() => handleEditBill(bill.id)}
+                          onClick={() => {
+                            console.log("Edit button clicked for bill:", bill.id, bill.bill_number);
+                            handleEditBill(bill.id);
+                          }}
                           disabled={bill.payment_status === 'cancelled'}
                         >
                           <Edit className="h-4 w-4" />
@@ -337,7 +363,7 @@ export const BillHistory: React.FC = () => {
 
       <BillEditModal
         isOpen={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
+        onClose={handleEditModalClose}
         billId={selectedBillId}
         onBillUpdated={handleBillUpdated}
       />
