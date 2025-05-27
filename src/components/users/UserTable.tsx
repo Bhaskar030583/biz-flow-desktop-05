@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, UserX, Shield } from "lucide-react";
+import { Loader2, UserX, Shield, Eye } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { UserPageAccessModal } from "./UserPageAccessModal";
 
 interface UserData {
   id: string;
@@ -27,6 +28,7 @@ interface UserData {
   role: UserRole;
   created_at: string;
   full_name: string | null;
+  page_access?: string[];
 }
 
 interface UserTableProps {
@@ -79,6 +81,7 @@ export const UserTable: React.FC<UserTableProps> = ({ users, isLoading, updateUs
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Role</TableHead>
+            <TableHead>Page Access</TableHead>
             <TableHead>Created At</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -86,7 +89,7 @@ export const UserTable: React.FC<UserTableProps> = ({ users, isLoading, updateUs
         <TableBody>
           {users.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+              <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
                 No users found
               </TableCell>
             </TableRow>
@@ -159,18 +162,35 @@ export const UserTable: React.FC<UserTableProps> = ({ users, isLoading, updateUs
                   )}
                 </TableCell>
                 <TableCell>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {user.page_access?.length || 0} pages
+                    </span>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                      <Eye size={12} className="text-gray-400" />
+                    </Button>
+                  </div>
+                </TableCell>
+                <TableCell>
                   {new Date(user.created_at).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    disabled={isProtectedAdmin(user.email)}
-                    onClick={() => handleRemoveClick(user.email)}
-                  >
-                    <UserX size={16} className="mr-1 text-red-500" />
-                    Remove
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <UserPageAccessModal
+                      userId={user.id}
+                      userName={user.full_name || user.email}
+                      currentAccess={user.page_access || ['dashboard']}
+                    />
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      disabled={isProtectedAdmin(user.email)}
+                      onClick={() => handleRemoveClick(user.email)}
+                    >
+                      <UserX size={16} className="mr-1 text-red-500" />
+                      Remove
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))
