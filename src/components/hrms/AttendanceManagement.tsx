@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, MapPin, Camera, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { AttendanceRecord, AttendanceRecordRaw, isValidJoinedData } from '@/types/hrms';
+import { AttendanceRecord } from '@/types/hrms';
 
 const AttendanceManagement = () => {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
@@ -39,22 +39,33 @@ const AttendanceManagement = () => {
 
       if (error) throw error;
 
-      // Convert raw data to proper type with validation
-      const validRecords: AttendanceRecord[] = (data as AttendanceRecordRaw[] || [])
-        .filter((record) => 
-          isValidJoinedData(record.hr_employees) && 
-          record.hr_employees.first_name &&
-          record.hr_employees.last_name &&
-          record.hr_employees.employee_code
-        )
-        .map((record) => ({
+      // Process the data without strict type casting
+      const processedRecords: AttendanceRecord[] = (data || [])
+        .filter((record: any) => {
+          // Only include records with valid employee data
+          return record.hr_employees && 
+                 typeof record.hr_employees === 'object' && 
+                 !('error' in record.hr_employees) &&
+                 record.hr_employees.first_name &&
+                 record.hr_employees.last_name &&
+                 record.hr_employees.employee_code;
+        })
+        .map((record: any) => ({
           ...record,
-          hr_employees: isValidJoinedData(record.hr_employees) ? record.hr_employees : null,
-          hr_stores: isValidJoinedData(record.hr_stores) ? record.hr_stores : null,
-          hr_shifts: isValidJoinedData(record.hr_shifts) ? record.hr_shifts : null,
+          hr_employees: record.hr_employees && !('error' in record.hr_employees) ? {
+            first_name: record.hr_employees.first_name,
+            last_name: record.hr_employees.last_name,
+            employee_code: record.hr_employees.employee_code,
+          } : null,
+          hr_stores: record.hr_stores && !('error' in record.hr_stores) ? {
+            store_name: record.hr_stores.store_name,
+          } : null,
+          hr_shifts: record.hr_shifts && !('error' in record.hr_shifts) ? {
+            shift_name: record.hr_shifts.shift_name,
+          } : null,
         }));
 
-      setAttendanceRecords(validRecords);
+      setAttendanceRecords(processedRecords);
     } catch (error: any) {
       toast({
         title: "Error",

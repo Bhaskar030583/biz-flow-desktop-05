@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Calendar, Plus, Check, X, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { LeaveRequest, LeaveRequestRaw, Employee, isValidJoinedData } from '@/types/hrms';
+import { LeaveRequest, Employee } from '@/types/hrms';
 
 const LeaveManagement = () => {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
@@ -62,20 +62,27 @@ const LeaveManagement = () => {
       if (leaveRes.error) throw leaveRes.error;
       if (employeeRes.error) throw employeeRes.error;
 
-      // Convert raw data to proper type with validation
-      const validLeaves: LeaveRequest[] = (leaveRes.data as LeaveRequestRaw[] || [])
-        .filter((leave) => 
-          isValidJoinedData(leave.hr_employees) && 
-          leave.hr_employees.first_name &&
-          leave.hr_employees.last_name &&
-          leave.hr_employees.employee_code
-        )
-        .map((leave) => ({
+      // Process the leave requests data without strict type casting
+      const processedLeaves: LeaveRequest[] = (leaveRes.data || [])
+        .filter((leave: any) => {
+          // Only include records with valid employee data
+          return leave.hr_employees && 
+                 typeof leave.hr_employees === 'object' && 
+                 !('error' in leave.hr_employees) &&
+                 leave.hr_employees.first_name &&
+                 leave.hr_employees.last_name &&
+                 leave.hr_employees.employee_code;
+        })
+        .map((leave: any) => ({
           ...leave,
-          hr_employees: isValidJoinedData(leave.hr_employees) ? leave.hr_employees : null,
+          hr_employees: leave.hr_employees && !('error' in leave.hr_employees) ? {
+            first_name: leave.hr_employees.first_name,
+            last_name: leave.hr_employees.last_name,
+            employee_code: leave.hr_employees.employee_code,
+          } : null,
         }));
 
-      setLeaveRequests(validLeaves);
+      setLeaveRequests(processedLeaves);
       setEmployees(employeeRes.data || []);
     } catch (error: any) {
       toast({

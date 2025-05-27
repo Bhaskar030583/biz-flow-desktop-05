@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { DollarSign, User, Download, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Payslip, PayslipRaw, isValidJoinedData } from '@/types/hrms';
+import { Payslip } from '@/types/hrms';
 
 const PayrollManagement = () => {
   const [payslips, setPayslips] = useState<Payslip[]>([]);
@@ -37,21 +37,29 @@ const PayrollManagement = () => {
 
       if (error) throw error;
       
-      // Convert raw data to proper type with validation
-      const validPayslips: Payslip[] = (data as PayslipRaw[] || [])
-        .filter((payslip) => 
-          isValidJoinedData(payslip.hr_employees) && 
-          payslip.hr_employees.first_name &&
-          payslip.hr_employees.last_name &&
-          payslip.hr_employees.employee_code &&
-          typeof payslip.hr_employees.hourly_rate === 'number'
-        )
-        .map((payslip) => ({
+      // Process the payslips data without strict type casting
+      const processedPayslips: Payslip[] = (data || [])
+        .filter((payslip: any) => {
+          // Only include records with valid employee data
+          return payslip.hr_employees && 
+                 typeof payslip.hr_employees === 'object' && 
+                 !('error' in payslip.hr_employees) &&
+                 payslip.hr_employees.first_name &&
+                 payslip.hr_employees.last_name &&
+                 payslip.hr_employees.employee_code &&
+                 typeof payslip.hr_employees.hourly_rate === 'number';
+        })
+        .map((payslip: any) => ({
           ...payslip,
-          hr_employees: isValidJoinedData(payslip.hr_employees) ? payslip.hr_employees : null,
+          hr_employees: payslip.hr_employees && !('error' in payslip.hr_employees) ? {
+            first_name: payslip.hr_employees.first_name,
+            last_name: payslip.hr_employees.last_name,
+            employee_code: payslip.hr_employees.employee_code,
+            hourly_rate: payslip.hr_employees.hourly_rate,
+          } : null,
         }));
 
-      setPayslips(validPayslips);
+      setPayslips(processedPayslips);
     } catch (error) {
       console.error('Error fetching payslips:', error);
       toast({
