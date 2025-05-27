@@ -48,7 +48,11 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({
   isSubmitting,
 }) => {
   const getTotalPermissions = () => {
+    if (!selectedPermissions || typeof selectedPermissions !== 'object') {
+      return 0;
+    }
     return Object.values(selectedPermissions).reduce((total, permissions) => {
+      if (!permissions || typeof permissions !== 'object') return total;
       return total + Object.values(permissions).filter(Boolean).length;
     }, 0);
   };
@@ -150,7 +154,7 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({
       
       {/* Granular Page Access Control */}
       <GranularPageAccessControl 
-        selectedPermissions={selectedPermissions}
+        selectedPermissions={selectedPermissions || {}}
         onPermissionToggle={handlePermissionToggle}
       />
       

@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { UserRole } from '@/context/AuthContext';
+import { useGranularPermissions } from './useGranularPermissions';
 
 export const useUserFormState = () => {
   const [email, setEmail] = useState('');
@@ -10,6 +11,16 @@ export const useUserFormState = () => {
   const [role, setRole] = useState<UserRole>('user');
   const [selectedPages, setSelectedPages] = useState<string[]>(['dashboard']);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Use granular permissions hook
+  const {
+    selectedPermissions,
+    handlePermissionToggle,
+    resetPermissions,
+    setPermissions
+  } = useGranularPermissions({
+    dashboard: { view: true, edit: false, delete: false }
+  });
 
   const handlePageToggle = (page: string) => {
     setSelectedPages(prev => 
@@ -22,7 +33,7 @@ export const useUserFormState = () => {
   return {
     email,
     setEmail,
-    password, 
+    password,
     setPassword,
     fullName,
     setFullName,
@@ -34,6 +45,10 @@ export const useUserFormState = () => {
     setSelectedPages,
     handlePageToggle,
     isSubmitting,
-    setIsSubmitting
+    setIsSubmitting,
+    selectedPermissions,
+    handlePermissionToggle,
+    resetPermissions,
+    setPermissions
   };
 };

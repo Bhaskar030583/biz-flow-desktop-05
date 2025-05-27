@@ -51,6 +51,7 @@ export const useUserManagement = () => {
       // Try to get auth users but handle errors gracefully
       let authUsers: any[] = [];
       try {
+        // Note: This RPC function might not exist, so we'll handle it gracefully
         const { data, error } = await supabase.rpc('get_auth_users_view');
         if (!error && data) {
           authUsers = Array.isArray(data) ? data : [];
@@ -91,8 +92,8 @@ export const useUserManagement = () => {
     
     try {
       // Convert granular permissions to a simple array format for storage
-      const pageAccessArray = Object.entries(selectedPermissions)
-        .filter(([, permissions]) => Object.values(permissions).some(Boolean))
+      const pageAccessArray = Object.entries(selectedPermissions || {})
+        .filter(([, permissions]) => permissions && Object.values(permissions).some(Boolean))
         .map(([pageId]) => pageId);
 
       // Call signup from auth context
@@ -117,7 +118,8 @@ export const useUserManagement = () => {
         throw error;
       }
       
-      const totalPermissions = Object.values(selectedPermissions).reduce((total, permissions) => {
+      const totalPermissions = Object.values(selectedPermissions || {}).reduce((total, permissions) => {
+        if (!permissions || typeof permissions !== 'object') return total;
         return total + Object.values(permissions).filter(Boolean).length;
       }, 0);
       
