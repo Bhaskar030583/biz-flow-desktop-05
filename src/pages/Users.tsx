@@ -14,6 +14,7 @@ const Users = () => {
   const {
     users,
     loading,
+    fetchUsers,
     email,
     setEmail,
     password,
@@ -64,9 +65,10 @@ const Users = () => {
             </CardHeader>
             <CardContent>
               <UserTable 
-                users={users as any[]} 
+                users={users} 
                 isLoading={loading} 
-                updateUserRole={updateUserRole} 
+                updateUserRole={updateUserRole}
+                onUserUpdated={fetchUsers}
               />
             </CardContent>
           </Card>

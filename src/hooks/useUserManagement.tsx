@@ -1,14 +1,22 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User, UserRole } from '@/types/user';
-import { useAuth } from '@/context/AuthContext';
+import { UserRole } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { useUserRoleManagement } from './useUserRoleManagement';
 import { useUserFormState } from './useUserFormState';
 
+interface UserData {
+  id: string;
+  email: string;
+  role: UserRole;
+  created_at: string;
+  full_name: string | null;
+  page_access?: string[];
+}
+
 export const useUserManagement = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Get the form state management
@@ -28,23 +36,32 @@ export const useUserManagement = () => {
       setLoading(true);
       
       // Get profiles with user data
-      const { data: profiles, error } = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*');
       
-      if (error) {
-        throw error;
+      if (profilesError) {
+        throw profilesError;
       }
       
-      // Map the profiles to User type ensuring correct typings
-      const formattedUsers: User[] = profiles?.map((profile) => {
+      // Get auth users to get email addresses
+      const { data: authUsers, error: authError } = await supabase
+        .rpc('get_auth_users_view');
+      
+      if (authError) {
+        console.warn('Could not fetch auth users:', authError);
+      }
+      
+      // Map the profiles to UserData type with email information
+      const formattedUsers: UserData[] = profiles?.map((profile) => {
+        const authUser = authUsers?.find((user: any) => user.id === profile.id);
         return {
           id: profile.id,
           full_name: profile.full_name || '',
-          email: 'user@example.com', // Placeholder since auth.users is not directly accessible
-          avatar_url: profile.avatar_url || '',
+          email: authUser?.email || 'user@example.com',
           role: (profile.role as UserRole) || 'user',
-          created_at: profile.created_at || new Date().toISOString()
+          created_at: profile.created_at || new Date().toISOString(),
+          page_access: profile.page_access || ['dashboard']
         };
       }) || [];
       

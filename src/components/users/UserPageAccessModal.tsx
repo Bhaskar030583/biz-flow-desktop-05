@@ -11,12 +11,14 @@ interface UserPageAccessModalProps {
   userId: string;
   userName: string;
   currentAccess?: string[];
+  onAccessUpdated?: () => void;
 }
 
 export const UserPageAccessModal: React.FC<UserPageAccessModalProps> = ({
   userId,
   userName,
-  currentAccess = ['dashboard']
+  currentAccess = ['dashboard'],
+  onAccessUpdated
 }) => {
   const [selectedPages, setSelectedPages] = useState<string[]>(currentAccess);
   const [isOpen, setIsOpen] = useState(false);
@@ -50,6 +52,11 @@ export const UserPageAccessModal: React.FC<UserPageAccessModalProps> = ({
 
       toast.success(`Page access updated for ${userName}`);
       setIsOpen(false);
+      
+      // Call the callback to refresh parent data
+      if (onAccessUpdated) {
+        onAccessUpdated();
+      }
     } catch (error: any) {
       console.error('Error updating page access:', error);
       toast.error(`Failed to update page access: ${error.message}`);

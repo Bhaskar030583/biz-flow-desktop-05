@@ -3,11 +3,17 @@
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, full_name, role)
+  INSERT INTO public.profiles (id, full_name, role, code, page_access)
   VALUES (
     new.id, 
     new.raw_user_meta_data->>'full_name', 
-    COALESCE(new.raw_user_meta_data->>'role', 'user')
+    COALESCE(new.raw_user_meta_data->>'role', 'user'),
+    new.raw_user_meta_data->>'code',
+    CASE 
+      WHEN new.raw_user_meta_data->>'page_access' IS NOT NULL 
+      THEN string_to_array(replace(replace(new.raw_user_meta_data->>'page_access', '[', ''), ']', ''), ',')
+      ELSE ARRAY['dashboard']
+    END
   );
   RETURN new;
 END;

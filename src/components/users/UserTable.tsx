@@ -35,9 +35,15 @@ interface UserTableProps {
   users: UserData[];
   isLoading: boolean;
   updateUserRole: (userId: string, newRole: UserRole) => Promise<void>;
+  onUserUpdated?: () => void;
 }
 
-export const UserTable: React.FC<UserTableProps> = ({ users, isLoading, updateUserRole }) => {
+export const UserTable: React.FC<UserTableProps> = ({ 
+  users, 
+  isLoading, 
+  updateUserRole,
+  onUserUpdated 
+}) => {
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
@@ -180,6 +186,7 @@ export const UserTable: React.FC<UserTableProps> = ({ users, isLoading, updateUs
                       userId={user.id}
                       userName={user.full_name || user.email}
                       currentAccess={user.page_access || ['dashboard']}
+                      onAccessUpdated={onUserUpdated}
                     />
                     <Button 
                       variant="ghost" 
