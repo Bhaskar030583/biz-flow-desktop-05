@@ -110,36 +110,22 @@ const POS = () => {
     );
   }
 
-  // Regular view with DashboardLayout for non-popup
+  // For non-popup (main app), show a simple message and handle popup opening
   return (
-    <>
-      <StoreInfoModal
-        isOpen={shouldShowStoreModal}
-        onComplete={handleStoreInfoComplete}
-        onClose={handleStoreModalClose}
-      />
+    <div className="container mx-auto px-4 py-6 h-full">
+      <div className="mb-4 flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Point of Sale</h1>
+        <QuickActualStockButton onStockAdded={handleStockAdded} />
+      </div>
       
-      {storeInfoCompleted && (
-        <div className="container mx-auto px-4 py-6 h-full">
-          <div className="mb-4 flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Point of Sale</h1>
-            <QuickActualStockButton onStockAdded={handleStockAdded} />
-          </div>
-          {isLoading ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2 space-y-4">
-                <Skeleton className="h-64 w-full" />
-              </div>
-              <div className="space-y-4">
-                <Skeleton className="h-96 w-full" />
-              </div>
-            </div>
-          ) : (
-            <POSSystem products={products} storeInfo={storeInfo} />
-          )}
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-4">POS System</h2>
+          <p className="text-gray-600 mb-4">The POS system will open in a separate window for better usability.</p>
+          <p className="text-sm text-gray-500">If the popup was blocked, please allow popups for this site and refresh the page.</p>
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 };
 
