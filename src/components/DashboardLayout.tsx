@@ -94,13 +94,20 @@ const AppSidebar = () => {
       </SidebarContent>
       
       <SidebarFooter className="p-4 border-t">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3">
           <div className="text-sm">
-            <p className="font-medium">{user?.email}</p>
-            <p className="text-muted-foreground">Admin</p>
+            <p className="font-medium truncate">{user?.email}</p>
+            <p className="text-muted-foreground text-xs">Admin</p>
           </div>
-          <Button variant="outline" size="icon" onClick={signOut} title="Sign Out">
-            <LogOut className="h-4 w-4" />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={signOut} 
+            title="Sign Out"
+            className="w-full justify-center"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
           </Button>
         </div>
       </SidebarFooter>
@@ -117,13 +124,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <header className="flex items-center justify-between p-4 border-b bg-card sticky top-0 z-10">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 lg:hidden">
                 <img 
                   src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
                   alt="ABC Cafe Logo" 
-                  className="h-6 w-6 rounded lg:hidden"
+                  className="h-6 w-6 rounded"
                 />
-                <h1 className="text-xl font-semibold lg:hidden">ABC CAFE</h1>
+                <h1 className="text-xl font-semibold">ABC CAFE</h1>
               </div>
             </div>
             <ModeToggle />
