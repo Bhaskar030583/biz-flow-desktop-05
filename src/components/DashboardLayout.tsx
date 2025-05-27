@@ -14,6 +14,7 @@ import {
   ArrowRightLeft,
   Building2,
   Settings,
+  LogOut,
 } from "lucide-react";
 import {
   Sidebar,
@@ -98,8 +99,8 @@ const AppSidebar = () => {
             <p className="font-medium">{user?.email}</p>
             <p className="text-muted-foreground">Admin</p>
           </div>
-          <Button variant="outline" size="sm" onClick={signOut}>
-            Sign Out
+          <Button variant="outline" size="icon" onClick={signOut} title="Sign Out">
+            <LogOut className="h-4 w-4" />
           </Button>
         </div>
       </SidebarFooter>
