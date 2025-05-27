@@ -33,7 +33,10 @@ import {
   X,
   CreditCard,
   LogOut,
-  Palette
+  Palette,
+  Receipt,
+  CheckCircle,
+  AlertCircle
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CashPaymentModal } from "./CashPaymentModal";
@@ -201,7 +204,6 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
     toast.success("Discount removed");
   };
 
-  // Fixed payment handlers with proper cart validation
   const handleCashPayment = () => {
     if (cart.length === 0) {
       toast.error("Cart is empty");
@@ -286,10 +288,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
     setShowSplitModal(false);
   };
 
-  // Get unique categories
   const categories = ["all", ...Array.from(new Set(products.map(p => p.category)))];
 
-  // Filter products by search and category
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.category.toLowerCase().includes(searchTerm.toLowerCase());
@@ -297,10 +297,9 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
     return matchesSearch && matchesCategory;
   });
 
-  // Grid configuration
   const getGridCols = () => {
     switch (gridSize) {
-      case 'small': return 'grid-cols-6';
+      case 'small': return 'grid-cols-5';
       case 'medium': return 'grid-cols-4';
       case 'large': return 'grid-cols-3';
       default: return 'grid-cols-4';
@@ -309,10 +308,10 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
 
   const getCardSize = () => {
     switch (gridSize) {
-      case 'small': return { cardClass: 'h-24', iconSize: 'h-8 w-8', titleSize: 'text-xs', priceSize: 'text-sm' };
-      case 'medium': return { cardClass: 'h-32', iconSize: 'h-10 w-10', titleSize: 'text-sm', priceSize: 'text-base' };
-      case 'large': return { cardClass: 'h-40', iconSize: 'h-12 w-12', titleSize: 'text-base', priceSize: 'text-lg' };
-      default: return { cardClass: 'h-32', iconSize: 'h-10 w-10', titleSize: 'text-sm', priceSize: 'text-base' };
+      case 'small': return { cardClass: 'h-28', iconSize: 'h-8 w-8', titleSize: 'text-xs', priceSize: 'text-sm' };
+      case 'medium': return { cardClass: 'h-36', iconSize: 'h-12 w-12', titleSize: 'text-sm', priceSize: 'text-lg' };
+      case 'large': return { cardClass: 'h-44', iconSize: 'h-16 w-16', titleSize: 'text-base', priceSize: 'text-xl' };
+      default: return { cardClass: 'h-36', iconSize: 'h-12 w-12', titleSize: 'text-sm', priceSize: 'text-lg' };
     }
   };
 
@@ -324,16 +323,13 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
       if (!confirmed) return;
     }
     
-    // If this is a popup window, close it
     if (window.opener) {
       window.close();
     } else {
-      // Navigate back to main application
       window.location.href = '/';
     }
   };
 
-  // Apply theme to the document when component mounts or theme changes
   useEffect(() => {
     const root = document.documentElement;
     root.setAttribute('data-color-theme', colorTheme);
@@ -347,32 +343,39 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
     { value: 'vibrant', label: 'Vibrant', color: 'bg-green-500' }
   ];
 
-  // Get theme-specific colors
   const getThemeColors = () => {
     switch (colorTheme) {
       case 'professional':
         return {
           gradient: 'from-gray-600 to-gray-800',
           hover: 'hover:from-gray-700 hover:to-gray-900',
-          accent: 'bg-gray-600 hover:bg-gray-700'
+          accent: 'bg-gray-600 hover:bg-gray-700',
+          light: 'bg-gray-100',
+          text: 'text-gray-700'
         };
       case 'modern':
         return {
           gradient: 'from-purple-500 to-purple-700',
           hover: 'hover:from-purple-600 hover:to-purple-800',
-          accent: 'bg-purple-600 hover:bg-purple-700'
+          accent: 'bg-purple-600 hover:bg-purple-700',
+          light: 'bg-purple-50',
+          text: 'text-purple-700'
         };
       case 'vibrant':
         return {
           gradient: 'from-green-500 to-green-700',
           hover: 'hover:from-green-600 hover:to-green-800',
-          accent: 'bg-green-600 hover:bg-green-700'
+          accent: 'bg-green-600 hover:bg-green-700',
+          light: 'bg-green-50',
+          text: 'text-green-700'
         };
       default:
         return {
           gradient: 'from-orange-500 to-red-500',
           hover: 'hover:from-orange-600 hover:to-red-600',
-          accent: 'bg-orange-500 hover:bg-orange-600'
+          accent: 'bg-orange-500 hover:bg-orange-600',
+          light: 'bg-orange-50',
+          text: 'text-orange-700'
         };
     }
   };
@@ -380,22 +383,23 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
   const themeColors = getThemeColors();
 
   return (
-    <div className="flex h-screen bg-gray-50" data-color-theme={colorTheme}>
-      {/* Left Sidebar */}
-      <div className="w-64 bg-white shadow-lg flex flex-col border-r">
-        {/* Logo Section with Exit and Theme buttons */}
-        <div className={`p-6 border-b bg-gradient-to-r ${themeColors.gradient}`}>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md">
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100" data-color-theme={colorTheme}>
+      {/* Enhanced Left Sidebar */}
+      <div className="w-80 bg-white shadow-xl flex flex-col border-r border-gray-200">
+        {/* Enhanced Logo Section */}
+        <div className={`p-6 border-b bg-gradient-to-r ${themeColors.gradient} shadow-lg`}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg ring-4 ring-white/20">
                 <img 
                   src="/lovable-uploads/528f105b-5de5-4806-a64a-99582022753b.png" 
                   alt="ABC Cafe Logo" 
-                  className="w-10 h-10 rounded-full object-cover"
+                  className="w-12 h-12 rounded-full object-cover"
                 />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">ABC CAFE</h2>
+                <h2 className="text-2xl font-bold text-white">ABC CAFE</h2>
+                <p className="text-white/80 text-sm">Point of Sale System</p>
               </div>
             </div>
             
@@ -407,22 +411,23 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                    className="text-white hover:bg-white/20 h-9 w-9 p-0 rounded-full"
+                    title="Change Theme"
                   >
                     <Palette className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-xl z-50">
+                <DropdownMenuContent align="end" className="w-52 bg-white border border-gray-200 shadow-xl z-50">
                   {themeOptions.map((theme) => (
                     <DropdownMenuItem
                       key={theme.value}
                       onClick={() => setColorTheme(theme.value as any)}
-                      className={`cursor-pointer ${colorTheme === theme.value ? 'bg-gray-100' : ''}`}
+                      className={`cursor-pointer p-3 ${colorTheme === theme.value ? 'bg-gray-100' : ''}`}
                     >
-                      <div className="flex items-center gap-2">
-                        <div className={`w-4 h-4 rounded-full ${theme.color}`} />
-                        <span>{theme.label}</span>
-                        {colorTheme === theme.value && <span className="ml-auto">✓</span>}
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded-full ${theme.color} shadow-sm`} />
+                        <span className="font-medium">{theme.label}</span>
+                        {colorTheme === theme.value && <CheckCircle className="ml-auto h-4 w-4 text-green-600" />}
                       </div>
                     </DropdownMenuItem>
                   ))}
@@ -434,7 +439,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                 size="sm"
                 variant="ghost"
                 onClick={handleExit}
-                className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                className="text-white hover:bg-white/20 h-9 w-9 p-0 rounded-full"
                 title="Exit POS"
               >
                 <LogOut className="h-4 w-4" />
@@ -443,64 +448,87 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
           </div>
         </div>
 
-        {/* Category Navigation */}
-        <div className="flex-1 p-4 overflow-y-auto">
+        {/* Enhanced Category Navigation */}
+        <div className="flex-1 p-6 overflow-y-auto">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <LayoutGrid className="h-5 w-5" />
+            Categories
+          </h3>
           <div className="space-y-2">
             {categories.map(category => {
               const IconComponent = categoryIcons[category as keyof typeof categoryIcons] || LayoutGrid;
+              const isActive = selectedCategory === category;
               return (
                 <Button
                   key={category}
-                  variant={selectedCategory === category ? "default" : "ghost"}
-                  className={`w-full justify-start gap-3 h-12 text-left ${
-                    selectedCategory === category 
-                      ? `bg-gradient-to-r ${themeColors.gradient} text-white ${themeColors.hover} shadow-md` 
-                      : `text-gray-700 hover:bg-gray-50 hover:text-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-600`
+                  variant={isActive ? "default" : "ghost"}
+                  className={`w-full justify-start gap-3 h-14 text-left rounded-xl transition-all duration-200 ${
+                    isActive 
+                      ? `bg-gradient-to-r ${themeColors.gradient} text-white ${themeColors.hover} shadow-lg transform scale-[1.02]` 
+                      : `text-gray-700 hover:bg-gray-100 hover:${themeColors.text} hover:shadow-md`
                   }`}
                   onClick={() => setSelectedCategory(category)}
                 >
-                  <IconComponent className="h-5 w-5" />
-                  <span className="font-medium">
+                  <IconComponent className={`h-6 w-6 ${isActive ? 'text-white' : themeColors.text}`} />
+                  <span className="font-semibold text-base">
                     {category === "all" ? "All Items" : category}
                   </span>
+                  {isActive && <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>}
                 </Button>
               );
             })}
           </div>
         </div>
 
-        {/* Store Info */}
+        {/* Enhanced Store Info */}
         {storeInfo && (
-          <div className="p-4 border-t bg-gray-50">
+          <div className="p-6 border-t bg-gradient-to-r from-gray-50 to-gray-100">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              Session Info
+            </h3>
             <div className="space-y-3 text-sm">
-              <div className="flex items-center gap-2">
-                <Store className="h-4 w-4 text-blue-600" />
-                <span className="font-medium text-gray-800">{storeInfo.storeName}</span>
+              <div className="flex items-center gap-3 p-2 bg-white rounded-lg shadow-sm">
+                <Store className="h-5 w-5 text-blue-600" />
+                <div>
+                  <p className="font-medium text-gray-800">{storeInfo.storeName}</p>
+                  <p className="text-xs text-gray-500">Store Location</p>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-green-600" />
-                <span className="text-gray-600">{storeInfo.salespersonName}</span>
+              <div className="flex items-center gap-3 p-2 bg-white rounded-lg shadow-sm">
+                <User className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="font-medium text-gray-800">{storeInfo.salespersonName}</p>
+                  <p className="text-xs text-gray-500">Cashier</p>
+                </div>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Main Content Area */}
+      {/* Enhanced Main Content Area */}
       <div className="flex-1 flex">
-        {/* Products Section */}
-        <div className="flex-1 p-4 overflow-hidden">
-          {/* Header with Search and Grid Controls */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-4">
-                {/* Grid Size Controls */}
-                <div className="flex items-center gap-2 bg-white rounded-lg p-1 border">
+        {/* Enhanced Products Section */}
+        <div className="flex-1 p-6 overflow-hidden">
+          {/* Enhanced Header */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-800">Products</h1>
+                <p className="text-gray-600">Select items to add to cart</p>
+              </div>
+              
+              {/* Grid Size Controls */}
+              <div className="flex items-center gap-3">
+                <Label className="text-sm font-medium text-gray-700">View:</Label>
+                <div className="flex items-center gap-1 bg-white rounded-lg p-1 border shadow-sm">
                   <Button
                     variant={gridSize === 'small' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setGridSize('small')}
-                    className={gridSize === 'small' ? `${themeColors.accent}` : ''}
+                    className={`h-8 w-8 p-0 ${gridSize === 'small' ? `${themeColors.accent}` : ''}`}
+                    title="Small Grid"
                   >
                     <Grid3X3 className="h-4 w-4" />
                   </Button>
@@ -508,7 +536,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                     variant={gridSize === 'medium' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setGridSize('medium')}
-                    className={gridSize === 'medium' ? `${themeColors.accent}` : ''}
+                    className={`h-8 w-8 p-0 ${gridSize === 'medium' ? `${themeColors.accent}` : ''}`}
+                    title="Medium Grid"
                   >
                     <Grid2X2 className="h-4 w-4" />
                   </Button>
@@ -516,7 +545,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                     variant={gridSize === 'large' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setGridSize('large')}
-                    className={gridSize === 'large' ? `${themeColors.accent}` : ''}
+                    className={`h-8 w-8 p-0 ${gridSize === 'large' ? `${themeColors.accent}` : ''}`}
+                    title="Large Grid"
                   >
                     <LayoutGrid className="h-4 w-4" />
                   </Button>
@@ -524,120 +554,156 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
               </div>
             </div>
             
+            {/* Enhanced Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <Input
-                placeholder="Search products..."
+                placeholder="Search products by name or category..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`pl-10 h-10 text-base border-gray-200 focus:border-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-300 focus:ring-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-200`}
+                className={`pl-12 h-12 text-base border-gray-300 focus:border-${themeColors.text.split('-')[1]}-400 focus:ring-${themeColors.text.split('-')[1]}-200 rounded-xl shadow-sm`}
               />
+              {searchTerm && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+                  onClick={() => setSearchTerm("")}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
 
-          {/* Products Grid */}
-          <div className={`grid ${getGridCols()} gap-3 overflow-y-auto h-[calc(100vh-180px)]`}>
+          {/* Enhanced Products Grid */}
+          <div className={`grid ${getGridCols()} gap-4 overflow-y-auto h-[calc(100vh-240px)] pr-2`}>
             {filteredProducts.map(product => (
               <Card
                 key={product.id}
-                className={`cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-300 hover:scale-102 bg-white ${cardConfig.cardClass}`}
+                className={`cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-${themeColors.text.split('-')[1]}-300 hover:scale-105 bg-white ${cardConfig.cardClass} group`}
                 onClick={() => addToCart(product)}
               >
-                <CardContent className="p-2">
-                  <div className={`aspect-square bg-gradient-to-br from-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-100 to-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'red'}-100 rounded-lg mb-2 flex items-center justify-center`}>
-                    <UtensilsCrossed className={`${cardConfig.iconSize} text-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-500`} />
+                <CardContent className="p-4 h-full flex flex-col">
+                  <div className={`aspect-square bg-gradient-to-br ${themeColors.light} rounded-xl mb-3 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                    <UtensilsCrossed className={`${cardConfig.iconSize} ${themeColors.text} group-hover:animate-pulse`} />
                   </div>
                   
-                  <h3 className={`font-semibold text-gray-800 ${cardConfig.titleSize} mb-1 line-clamp-2 min-h-[2rem]`}>
-                    {product.name}
-                  </h3>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className={`font-bold text-gray-900 ${cardConfig.priceSize}`}>
-                      ₹{product.price}
-                    </span>
-                    <Button
-                      size="sm"
-                      className={`bg-gradient-to-r ${themeColors.gradient} ${themeColors.hover} text-white h-6 w-6 p-0 shadow-md`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addToCart(product);
-                      }}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
+                  <div className="flex-1 flex flex-col justify-between">
+                    <h3 className={`font-bold ${themeColors.text} ${cardConfig.titleSize} mb-2 line-clamp-2 min-h-[2.5rem] leading-tight`}>
+                      {product.name}
+                    </h3>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className={`font-bold text-gray-900 ${cardConfig.priceSize}`}>
+                        ₹{product.price}
+                      </span>
+                      <Button
+                        size="sm"
+                        className={`bg-gradient-to-r ${themeColors.gradient} ${themeColors.hover} text-white h-8 w-8 p-0 shadow-lg rounded-full group-hover:scale-110 transition-transform duration-200`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart(product);
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
+            
+            {filteredProducts.length === 0 && (
+              <div className="col-span-full flex flex-col items-center justify-center py-12 text-gray-500">
+                <Search className="h-16 w-16 mb-4 opacity-30" />
+                <h3 className="text-xl font-semibold mb-2">No products found</h3>
+                <p className="text-center">Try adjusting your search or category filter</p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Order Summary Section - Compact design */}
-        <div className="w-72 bg-white shadow-lg border-l">
+        {/* Enhanced Order Summary Section */}
+        <div className="w-80 bg-white shadow-xl border-l border-gray-200">
           <div className="h-full flex flex-col">
-            {/* Header */}
-            <div className={`p-4 border-b bg-gradient-to-r ${themeColors.gradient}`}>
+            {/* Enhanced Header */}
+            <div className={`p-6 border-b bg-gradient-to-r ${themeColors.gradient} shadow-lg`}>
               <div className="flex items-center justify-between text-white">
-                <h2 className="text-lg font-bold">Current Order</h2>
-                <Badge variant="secondary" className={`bg-white text-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-600 font-semibold text-xs`}>
+                <div>
+                  <h2 className="text-xl font-bold">Current Order</h2>
+                  <p className="text-white/80 text-sm">Review your items</p>
+                </div>
+                <Badge variant="secondary" className={`bg-white ${themeColors.text} font-bold text-sm px-3 py-1`}>
                   {cart.length} items
                 </Badge>
               </div>
             </div>
 
-            {/* Cart Items - Compact line-item design */}
-            <div className="flex-1 p-3 overflow-y-auto">
+            {/* Enhanced Cart Items */}
+            <div className="flex-1 p-4 overflow-y-auto">
               {cart.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p className="text-base font-medium">No items in cart</p>
-                  <p className="text-xs">Add items to get started</p>
+                <div className="text-center py-12 text-gray-500">
+                  <ShoppingCart className="h-16 w-16 mx-auto mb-4 opacity-30" />
+                  <h3 className="text-lg font-semibold mb-2">Empty Cart</h3>
+                  <p className="text-sm">Add items from the menu to get started</p>
                 </div>
               ) : (
-                <div className="space-y-1">
+                <div className="space-y-3">
                   {cart.map((item, index) => (
-                    <div key={item.id} className="flex items-center justify-between py-2 px-2 bg-gray-50 rounded border hover:bg-gray-100">
-                      {/* Left side: Number, Name, Price */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start gap-2">
-                          <Badge variant="outline" className={`text-xs font-bold text-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-600 border-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-200 px-1 py-0 flex-shrink-0`}>
-                            #{index + 1}
-                          </Badge>
-                          <div className="min-w-0 flex-1">
-                            <h4 className="font-medium text-gray-800 text-xs truncate">{item.name}</h4>
-                            <p className="text-xs text-gray-500">₹{item.price}</p>
+                    <Card key={item.id} className="p-4 hover:shadow-md transition-shadow duration-200">
+                      <div className="flex items-center justify-between">
+                        {/* Left side: Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start gap-3">
+                            <Badge variant="outline" className={`${themeColors.text} border-${themeColors.text.split('-')[1]}-200 px-2 py-1 text-xs font-bold flex-shrink-0`}>
+                              #{index + 1}
+                            </Badge>
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-semibold text-gray-800 text-sm truncate">{item.name}</h4>
+                              <p className="text-xs text-gray-500">₹{item.price} each</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Center: Quantity input */}
-                      <div className="flex items-center gap-1 mx-2">
-                        <Input
-                          type="number"
-                          value={item.quantity}
-                          onChange={(e) => {
-                            const newQuantity = parseInt(e.target.value) || 1;
-                            updateQuantity(item.id, newQuantity);
-                          }}
-                          className={`w-12 h-6 text-xs text-center p-1 border-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-200`}
-                          min="1"
-                        />
-                      </div>
+                        {/* Center: Quantity controls */}
+                        <div className="flex items-center gap-2 mx-3">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 w-7 p-0 rounded-full"
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="font-bold text-base min-w-[2rem] text-center">
+                            {item.quantity}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 w-7 p-0 rounded-full"
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
 
-                      {/* Right side: Total and Delete */}
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-gray-900 text-xs min-w-[50px] text-right">₹{item.total}</span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => removeFromCart(item.id)}
-                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                        {/* Right side: Total and Delete */}
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-gray-900 text-sm min-w-[60px] text-right">₹{item.total}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => removeFromCart(item.id)}
+                            className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
+                    </Card>
                   ))}
                 </div>
               )}
@@ -645,15 +711,15 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
 
             {cart.length > 0 && (
               <>
-                {/* Discount Section */}
-                <div className="p-3 border-t bg-gray-50">
+                {/* Enhanced Discount Section */}
+                <div className="p-4 border-t bg-gray-50">
                   {!discount && !showDiscountInput && (
                     <Button
                       variant="outline"
-                      className={`w-full flex items-center gap-2 border-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-200 text-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-600 hover:bg-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-50 h-8 text-xs`}
+                      className={`w-full flex items-center gap-2 border-${themeColors.text.split('-')[1]}-200 ${themeColors.text} hover:bg-${themeColors.text.split('-')[1]}-50 h-10 text-sm font-medium rounded-lg`}
                       onClick={() => setShowDiscountInput(true)}
                     >
-                      <Percent className="h-3 w-3" />
+                      <Percent className="h-4 w-4" />
                       Add Discount
                     </Button>
                   )}
@@ -712,27 +778,29 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                   )}
 
                   {discount && (
-                    <div className="flex items-center justify-between p-2 bg-green-50 rounded border border-green-200">
-                      <div className="flex items-center gap-2">
-                        <Percent className="h-3 w-3 text-green-600" />
-                        <span className="text-xs font-medium text-green-800">{discount.description}</span>
+                    <Card className="p-3 bg-green-50 border border-green-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Percent className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-semibold text-green-800">{discount.description}</span>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={removeDiscount}
+                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={removeDiscount}
-                        className="h-4 w-4 p-0 text-red-500 hover:text-red-700"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
+                    </Card>
                   )}
                 </div>
 
-                {/* Tax Toggle */}
-                <div className="p-3 border-t bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="tax-toggle" className="text-xs font-medium">
+                {/* Enhanced Tax Toggle */}
+                <div className="p-4 border-t bg-gray-50">
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                    <Label htmlFor="tax-toggle" className="text-sm font-semibold text-gray-700">
                       Include Tax (18%)
                     </Label>
                     <Switch
@@ -745,82 +813,82 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
 
                 <Separator />
                 
-                {/* Order Summary */}
-                <div className="p-3 space-y-2 bg-white">
-                  <div className="flex justify-between text-gray-600 text-xs">
+                {/* Enhanced Order Summary */}
+                <div className="p-4 space-y-3 bg-white">
+                  <div className="flex justify-between text-gray-600 text-sm">
                     <span>Subtotal</span>
-                    <span>₹{getSubtotal().toFixed(2)}</span>
+                    <span className="font-semibold">₹{getSubtotal().toFixed(2)}</span>
                   </div>
                   
                   {discount && (
-                    <div className="flex justify-between text-green-600 text-xs">
+                    <div className="flex justify-between text-green-600 text-sm">
                       <span>Discount ({discount.description})</span>
-                      <span>-₹{getDiscountAmount().toFixed(2)}</span>
+                      <span className="font-semibold">-₹{getDiscountAmount().toFixed(2)}</span>
                     </div>
                   )}
                   
                   {includeTax && (
-                    <div className="flex justify-between text-gray-600 text-xs">
+                    <div className="flex justify-between text-gray-600 text-sm">
                       <span>Tax (18%)</span>
-                      <span>₹{getTaxAmount().toFixed(2)}</span>
+                      <span className="font-semibold">₹{getTaxAmount().toFixed(2)}</span>
                     </div>
                   )}
                   
                   <Separator />
                   
-                  <div className="flex justify-between text-lg font-bold text-gray-900">
+                  <div className="flex justify-between text-xl font-bold text-gray-900 p-2 bg-gray-50 rounded-lg">
                     <span>Total Amount</span>
                     <span>₹{getTotalAmount().toFixed(2)}</span>
                   </div>
                 </div>
 
-                {/* Payment Buttons */}
-                <div className="p-3 space-y-2 border-t bg-gray-50">
+                {/* Enhanced Payment Buttons */}
+                <div className="p-4 space-y-3 border-t bg-gray-50">
                   <div className="grid grid-cols-2 gap-2">
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className={`flex items-center gap-2 border-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-200 text-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-600 hover:bg-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-50 h-10 text-sm font-medium`}
+                      className={`flex items-center gap-2 border-${themeColors.text.split('-')[1]}-200 ${themeColors.text} hover:bg-${themeColors.text.split('-')[1]}-50 h-12 text-sm font-semibold rounded-lg`}
                       onClick={handleCashPayment}
                     >
-                      <Banknote className="h-4 w-4" />
+                      <Banknote className="h-5 w-5" />
                       Cash
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 h-10 text-sm font-medium"
+                      className="flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 h-12 text-sm font-semibold rounded-lg"
                       onClick={handleUPIPayment}
                     >
-                      <Smartphone className="h-4 w-4" />
+                      <Smartphone className="h-5 w-5" />
                       UPI
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex items-center gap-2 border-purple-200 text-purple-600 hover:bg-purple-50 h-10 text-sm font-medium"
+                      className="flex items-center gap-2 border-purple-200 text-purple-600 hover:bg-purple-50 h-12 text-sm font-semibold rounded-lg"
                       onClick={handleCreditPayment}
                     >
-                      <UserCheck className="h-4 w-4" />
+                      <UserCheck className="h-5 w-5" />
                       Credit
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex items-center gap-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50 h-10 text-sm font-medium"
+                      className="flex items-center gap-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50 h-12 text-sm font-semibold rounded-lg"
                       onClick={handleSplitPayment}
                     >
-                      <Split className="h-4 w-4" />
+                      <Split className="h-5 w-5" />
                       Split
                     </Button>
                   </div>
                   
                   <Button 
-                    className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 h-12 text-sm font-semibold shadow-lg"
+                    className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 h-14 text-base font-bold shadow-lg rounded-lg"
                     onClick={handleCardPayment}
                   >
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Card Payment
+                    <CreditCard className="h-5 w-5 mr-2" />
+                    Complete Card Payment
                   </Button>
                 </div>
               </>
