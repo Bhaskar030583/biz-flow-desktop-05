@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -107,48 +106,34 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
     try {
       console.log("Fetching assigned products for shop:", selectedShop);
       
-      // Use raw SQL query with rpc to handle the junction table
-      const { data, error } = await supabase.rpc('get_assigned_products', {
-        shop_id_param: selectedShop,
-        user_id_param: user?.id
-      });
-      
-      if (error) {
-        // Fallback to direct query if RPC doesn't exist
-        console.log("RPC not found, using direct query");
-        const { data: directData, error: directError } = await supabase
-          .from('product_shops' as any)
-          .select(`
+      const { data: directData, error: directError } = await supabase
+        .from('product_shops' as any)
+        .select(`
+          id,
+          products (
             id,
-            products (
-              id,
-              name,
-              category,
-              price,
-              cost_price
-            )
-          `)
-          .eq('shop_id', selectedShop)
-          .eq('user_id', user?.id);
-        
-        if (directError) throw directError;
-        
-        const formattedData = directData?.map((item: any) => ({
-          assignment_id: item.id,
-          id: item.products.id,
-          name: item.products.name,
-          category: item.products.category,
-          price: item.products.price,
-          cost_price: item.products.cost_price
-        })) || [];
-        
-        console.log("Fetched assigned products:", formattedData.length, "products");
-        setAssignedProducts(formattedData);
-        return;
-      }
+            name,
+            category,
+            price,
+            cost_price
+          )
+        `)
+        .eq('shop_id', selectedShop)
+        .eq('user_id', user?.id);
       
-      console.log("Fetched assigned products via RPC:", data?.length || 0, "products");
-      setAssignedProducts(data || []);
+      if (directError) throw directError;
+      
+      const formattedData: AssignedProduct[] = directData?.map((item: any) => ({
+        assignment_id: item.id,
+        id: item.products.id,
+        name: item.products.name,
+        category: item.products.category,
+        price: item.products.price,
+        cost_price: item.products.cost_price
+      })) || [];
+      
+      console.log("Fetched assigned products:", formattedData.length, "products");
+      setAssignedProducts(formattedData);
     } catch (error) {
       console.error('Error fetching assigned products:', error);
       toast.error('Failed to fetch assigned products');
