@@ -107,7 +107,7 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
       console.log("Fetching assigned products for shop:", selectedShop);
       
       const { data: directData, error: directError } = await supabase
-        .from('product_shops' as any)
+        .from('product_shops')
         .select(`
           id,
           products (
@@ -150,7 +150,7 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
       console.log("Assigning product to shop:", selectedProductToAssign, selectedShop);
       
       const { error } = await supabase
-        .from('product_shops' as any)
+        .from('product_shops')
         .insert({
           product_id: selectedProductToAssign,
           shop_id: selectedShop,
@@ -181,7 +181,7 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
       console.log("Removing product assignment:", assignmentId);
       
       const { error } = await supabase
-        .from('product_shops' as any)
+        .from('product_shops')
         .delete()
         .eq('id', assignmentId)
         .eq('user_id', user?.id);
