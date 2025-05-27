@@ -121,20 +121,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <SidebarInset>
-          <header className="flex items-center justify-between p-4 border-b bg-card sticky top-0 z-10">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger />
-              <div className="flex items-center gap-2 lg:hidden">
-                <img 
-                  src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
-                  alt="ABC Cafe Logo" 
-                  className="h-6 w-6 rounded"
-                />
-                <h1 className="text-xl font-semibold">ABC CAFE</h1>
-              </div>
-            </div>
+          <div className="flex items-center justify-between p-4 border-b bg-card">
+            <SidebarTrigger />
             <ModeToggle />
-          </header>
+          </div>
           <main className="flex-1 overflow-auto p-6">
             {children}
           </main>
