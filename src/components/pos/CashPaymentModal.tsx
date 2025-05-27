@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { Banknote, Calculator } from "lucide-react";
 import { generateBill } from "@/services/billService";
 import { toast } from "sonner";
@@ -41,6 +42,7 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
 }) => {
   const [cashReceived, setCashReceived] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [useDenominations, setUseDenominations] = useState(false);
   const [denominations, setDenominations] = useState<Denominations>({
     500: 0,
     200: 0,
@@ -93,7 +95,20 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
     setCashReceived(total.toString());
   };
 
-  const cashAmount = parseFloat(cashReceived) || 0;
+  const handleSwitchChange = (checked: boolean) => {
+    setUseDenominations(checked);
+    if (!checked) {
+      // Reset denominations when switching off
+      setDenominations({
+        500: 0, 200: 0, 100: 0, 50: 0, 20: 0, 10: 0, 5: 0, 2: 0, 1: 0
+      });
+    } else {
+      // Clear simple cash input when switching to denominations
+      setCashReceived("");
+    }
+  };
+
+  const cashAmount = useDenominations ? calculateTotalFromDenominations() : (parseFloat(cashReceived) || 0);
   const changeAmount = cashAmount - totalAmount;
   const changeDenominations = changeAmount > 0 ? calculateChangeDenominations(changeAmount) : {};
 
@@ -113,13 +128,18 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
         salespersonName: storeInfo?.salespersonName
       });
 
-      // Create denomination summary for toast
-      const denominationSummary = denominationValues
-        .filter(value => denominations[value] > 0)
-        .map(value => `₹${value} x ${denominations[value]}`)
-        .join(', ');
+      let toastMessage = "Cash payment completed!";
+      
+      if (useDenominations) {
+        // Create denomination summary for toast
+        const denominationSummary = denominationValues
+          .filter(value => denominations[value] > 0)
+          .map(value => `₹${value} x ${denominations[value]}`)
+          .join(', ');
+        toastMessage += ` Denominations: ${denominationSummary}`;
+      }
 
-      toast.success(`Cash payment completed! Denominations: ${denominationSummary}`);
+      toast.success(toastMessage);
       onPaymentComplete();
       setCashReceived("");
       setDenominations({
@@ -138,6 +158,7 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
     setDenominations({
       500: 0, 200: 0, 100: 0, 50: 0, 20: 0, 10: 0, 5: 0, 2: 0, 1: 0
     });
+    setUseDenominations(false);
     onClose();
   };
 
@@ -147,7 +168,7 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Banknote className="h-5 w-5" />
-            Cash Payment with Denominations
+            Cash Payment
           </DialogTitle>
         </DialogHeader>
 
@@ -161,79 +182,130 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
 
           <Separator />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Cash Received Section */}
-            <div className="space-y-3">
-              <Label className="text-lg font-semibold">Cash Denominations Received</Label>
-              <div className="grid grid-cols-3 gap-3">
-                {denominationValues.map(value => (
-                  <div key={value} className="space-y-1">
-                    <Label htmlFor={`denom-${value}`} className="text-sm font-medium">
-                      ₹{value} notes
-                    </Label>
-                    <Input
-                      id={`denom-${value}`}
-                      type="number"
-                      min="0"
-                      value={denominations[value]}
-                      onChange={(e) => handleDenominationChange(value, e.target.value)}
-                      placeholder="0"
-                      className="text-center"
-                    />
-                    <div className="text-xs text-gray-500 text-center">
-                      = ₹{(value * (denominations[value] || 0)).toFixed(0)}
+          {/* Denomination Toggle Switch */}
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="denomination-mode"
+              checked={useDenominations}
+              onCheckedChange={handleSwitchChange}
+            />
+            <Label htmlFor="denomination-mode" className="text-sm font-medium">
+              Use denomination breakdown
+            </Label>
+          </div>
+
+          <Separator />
+
+          {useDenominations ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Cash Received Section */}
+              <div className="space-y-3">
+                <Label className="text-lg font-semibold">Cash Denominations Received</Label>
+                <div className="grid grid-cols-3 gap-3">
+                  {denominationValues.map(value => (
+                    <div key={value} className="space-y-1">
+                      <Label htmlFor={`denom-${value}`} className="text-sm font-medium">
+                        ₹{value} notes
+                      </Label>
+                      <Input
+                        id={`denom-${value}`}
+                        type="number"
+                        min="0"
+                        value={denominations[value]}
+                        onChange={(e) => handleDenominationChange(value, e.target.value)}
+                        placeholder="0"
+                        className="text-center"
+                      />
+                      <div className="text-xs text-gray-500 text-center">
+                        = ₹{(value * (denominations[value] || 0)).toFixed(0)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="total-cash">Total Cash Received</Label>
+                  <div className="text-xl font-bold text-blue-600">
+                    ₹{calculateTotalFromDenominations().toFixed(2)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Change to Return Section */}
+              {changeAmount > 0 && (
+                <div className="space-y-3">
+                  <Label className="text-lg font-semibold">Change to Return</Label>
+                  <div className="text-xl font-bold text-blue-600 mb-3">
+                    ₹{changeAmount.toFixed(2)}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium">Denomination Breakdown:</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {denominationValues.map(value => {
+                        const count = changeDenominations[value] || 0;
+                        if (count === 0) return null;
+                        
+                        return (
+                          <div key={value} className="bg-gray-50 p-2 rounded border text-center">
+                            <div className="text-sm font-medium">₹{value}</div>
+                            <div className="text-lg font-bold text-blue-600">{count}</div>
+                            <div className="text-xs text-gray-500">
+                              = ₹{(value * count).toFixed(0)}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                ))}
-              </div>
-
-              <div className="space-y-2 mt-4">
-                <Label htmlFor="total-cash">Total Cash Received</Label>
-                <div className="text-xl font-bold text-blue-600">
-                  ₹{calculateTotalFromDenominations().toFixed(2)}
                 </div>
-              </div>
-            </div>
+              )}
 
-            {/* Change to Return Section */}
-            {changeAmount > 0 && (
-              <div className="space-y-3">
-                <Label className="text-lg font-semibold">Change to Return</Label>
-                <div className="text-xl font-bold text-blue-600 mb-3">
-                  ₹{changeAmount.toFixed(2)}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-base font-medium">Denomination Breakdown:</Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {denominationValues.map(value => {
-                      const count = changeDenominations[value] || 0;
-                      if (count === 0) return null;
-                      
-                      return (
-                        <div key={value} className="bg-gray-50 p-2 rounded border text-center">
-                          <div className="text-sm font-medium">₹{value}</div>
-                          <div className="text-lg font-bold text-blue-600">{count}</div>
-                          <div className="text-xs text-gray-500">
-                            = ₹{(value * count).toFixed(0)}
-                          </div>
-                        </div>
-                      );
-                    })}
+              {changeAmount < 0 && cashAmount > 0 && (
+                <div className="space-y-3">
+                  <Label className="text-lg font-semibold text-red-600">Insufficient Cash</Label>
+                  <div className="text-xl font-bold text-red-600">
+                    Short by: ₹{Math.abs(changeAmount).toFixed(2)}
                   </div>
                 </div>
+              )}
+            </div>
+          ) : (
+            /* Simple Cash Input Mode */
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="cash-received">Cash Received</Label>
+                <Input
+                  id="cash-received"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={cashReceived}
+                  onChange={(e) => setCashReceived(e.target.value)}
+                  placeholder="Enter cash amount"
+                  className="text-lg"
+                />
               </div>
-            )}
 
-            {changeAmount < 0 && cashAmount > 0 && (
-              <div className="space-y-3">
-                <Label className="text-lg font-semibold text-red-600">Insufficient Cash</Label>
-                <div className="text-xl font-bold text-red-600">
-                  Short by: ₹{Math.abs(changeAmount).toFixed(2)}
+              {changeAmount > 0 && (
+                <div className="space-y-2">
+                  <Label>Change to Return</Label>
+                  <div className="text-xl font-bold text-blue-600">
+                    ₹{changeAmount.toFixed(2)}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+
+              {changeAmount < 0 && cashAmount > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-red-600">Insufficient Cash</Label>
+                  <div className="text-xl font-bold text-red-600">
+                    Short by: ₹{Math.abs(changeAmount).toFixed(2)}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="flex gap-2 pt-4">
             <Button variant="outline" onClick={handleClose} className="flex-1">
