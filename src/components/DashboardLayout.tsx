@@ -13,7 +13,6 @@ import {
   Store,
   Settings,
   Menu,
-  X,
   ArrowRightLeft,
   Building2,
 } from "lucide-react";
@@ -91,21 +90,21 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Desktop Sidebar */}
-      <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-30">
+      {/* Desktop Sidebar - Hidden on mobile */}
+      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 z-30">
         <div className="flex flex-col flex-grow bg-card border-r">
           <SidebarContent />
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col flex-1 md:ml-64">
+      <div className="flex flex-col flex-1 lg:ml-64">
         <header className="flex items-center justify-between p-4 border-b bg-card z-20">
           <div className="flex items-center gap-4">
-            {/* Mobile Menu Trigger */}
+            {/* Mobile Menu Trigger - Only visible on mobile */}
             <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="md:hidden">
+                <Button variant="outline" size="icon" className="lg:hidden">
                   <Menu className="h-4 w-4" />
                 </Button>
               </SheetTrigger>
