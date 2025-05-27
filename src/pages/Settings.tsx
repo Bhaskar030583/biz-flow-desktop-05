@@ -1,6 +1,4 @@
-
 import React from "react";
-import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,19 +22,18 @@ const Settings = () => {
   ];
 
   return (
-    <DashboardLayout>
-      <div className="container mx-auto px-6 py-8 max-w-6xl">
-        {/* Header Section */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent mb-3">
-            Settings
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl">
-            Customize your dashboard experience with personalized preferences and appearance settings.
-          </p>
-        </div>
-        
-        <div className="grid gap-8 lg:grid-cols-2">
+    <div className="container mx-auto px-6 py-8 max-w-6xl">
+      {/* Header Section */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent mb-3">
+          Settings
+        </h1>
+        <p className="text-lg text-muted-foreground max-w-2xl">
+          Customize your dashboard experience with personalized preferences and appearance settings.
+        </p>
+      </div>
+      
+      <div className="grid gap-8 lg:grid-cols-2">
           {/* Color Theme Settings */}
           <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-900 dark:to-blue-950/30 backdrop-blur-sm">
             <CardHeader className="pb-6">
@@ -265,8 +262,7 @@ const Settings = () => {
             </div>
           </div>
         </div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 };
 
