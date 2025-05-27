@@ -1,10 +1,8 @@
 
-
 import React, { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { ModeToggle } from "@/components/ModeToggle";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import {
   Sidebar,
@@ -149,7 +147,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             </div>
             <div className="flex items-center gap-2">
               <ThemeSwitcher />
-              <ModeToggle />
             </div>
           </header>
 
@@ -163,4 +160,3 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default DashboardLayout;
-
