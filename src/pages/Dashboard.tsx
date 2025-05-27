@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import StockChart from "@/components/stock/StockChart";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardMetrics } from "@/components/dashboard/DashboardMetrics";
 import { ChartsOverview } from "@/components/dashboard/ChartsOverview";
 import { PaymentMethodsDisplay } from "@/components/dashboard/PaymentMethodsDisplay";
@@ -40,11 +39,6 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="w-full max-w-7xl mx-auto" key={refreshTrigger}>
-        {/* Header Section */}
-        <DashboardHeader 
-          title="Dashboard" 
-          subtitle="View your business analytics and performance" 
-        />
         
         {/* Morning Denomination Setup */}
         <div className="mb-6">
