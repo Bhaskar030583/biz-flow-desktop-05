@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Package2, Search, Store, Plus, X } from "lucide-react";
+import { Package2, Search, Store, Plus, X, Package } from "lucide-react";
 
 interface Product {
   id: string;
@@ -50,6 +49,9 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
   const [showAssignForm, setShowAssignForm] = useState(false);
   const [selectedProductToAssign, setSelectedProductToAssign] = useState<string>("");
   const [initialStockQuantity, setInitialStockQuantity] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [addStockQuantities, setAddStockQuantities] = useState<Record<string, string>>({});
+  const [updatingStock, setUpdatingStock] = useState<Record<string, boolean>>({});
 
   console.log("ProductStockManagement component loaded - showing products list with store filter and assignment functionality");
 
@@ -57,6 +59,7 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
     if (user) {
       fetchProducts();
       fetchShops();
+      checkUserRole();
     }
   }, [user]);
 
@@ -65,6 +68,21 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
       fetchAssignedProducts();
     }
   }, [selectedShop]);
+
+  const checkUserRole = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user?.id)
+        .single();
+      
+      if (error) throw error;
+      setIsAdmin(data?.role === 'admin');
+    } catch (error) {
+      console.error('Error checking user role:', error);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -290,6 +308,72 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
     }
   };
 
+  const handleAddStock = async (productId: string) => {
+    const quantity = addStockQuantities[productId];
+    if (!quantity || parseInt(quantity) <= 0) {
+      toast.error('Please enter a valid quantity');
+      return;
+    }
+
+    setUpdatingStock(prev => ({ ...prev, [productId]: true }));
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const stockToAdd = parseInt(quantity);
+
+      // Get current stock data
+      const { data: currentStock, error: fetchError } = await supabase
+        .from('stocks')
+        .select('*')
+        .eq('product_id', productId)
+        .eq('shop_id', selectedShop)
+        .eq('stock_date', today)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+
+      if (currentStock) {
+        // Update existing stock entry
+        const { error: updateError } = await supabase
+          .from('stocks')
+          .update({
+            stock_added: (currentStock.stock_added || 0) + stockToAdd,
+            closing_stock: currentStock.closing_stock + stockToAdd,
+            actual_stock: currentStock.actual_stock + stockToAdd
+          })
+          .eq('id', currentStock.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // Create new stock entry
+        const { error: insertError } = await supabase
+          .from('stocks')
+          .insert({
+            product_id: productId,
+            shop_id: selectedShop,
+            stock_date: today,
+            opening_stock: 0,
+            closing_stock: stockToAdd,
+            actual_stock: stockToAdd,
+            stock_added: stockToAdd,
+            user_id: user?.id
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      toast.success(`Added ${stockToAdd} units to stock`);
+      setAddStockQuantities(prev => ({ ...prev, [productId]: "" }));
+      fetchAssignedProducts();
+      onStockUpdated();
+    } catch (error) {
+      console.error('Error adding stock:', error);
+      toast.error('Failed to add stock');
+    } finally {
+      setUpdatingStock(prev => ({ ...prev, [productId]: false }));
+    }
+  };
+
   const getCategoryColor = (category: string) => {
     const colors = [
       'bg-blue-100 text-blue-800',
@@ -337,6 +421,11 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
             {selectedShop && assignedProducts.length > 0 && (
               <Badge variant="secondary" className="ml-2">
                 {assignedProducts.length} assigned products
+              </Badge>
+            )}
+            {isAdmin && (
+              <Badge variant="outline" className="ml-2 text-green-600 border-green-600">
+                Admin
               </Badge>
             )}
           </CardTitle>
@@ -481,11 +570,13 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
                     <TableHead>Cost Price</TableHead>
                     <TableHead>Selling Price</TableHead>
                     <TableHead>Opening Stock</TableHead>
+                    <TableHead>Stock Added</TableHead>
                     <TableHead>Sold Today</TableHead>
                     <TableHead>Expected Closing</TableHead>
                     <TableHead>Actual Stock</TableHead>
                     <TableHead>Variance</TableHead>
                     <TableHead>Last Updated</TableHead>
+                    {isAdmin && <TableHead>Add Stock</TableHead>}
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -516,6 +607,9 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
                           <span className="font-medium">{product.opening_stock || 0}</span>
                         </TableCell>
                         <TableCell className="text-center">
+                          <span className="text-green-600 font-medium">{product.stock_added || 0}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
                           <span className="text-red-600 font-medium">{product.sold_quantity || 0}</span>
                         </TableCell>
                         <TableCell className="text-center">
@@ -538,6 +632,32 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
                             {product.last_stock_date ? new Date(product.last_stock_date).toLocaleDateString() : 'Never'}
                           </span>
                         </TableCell>
+                        {isAdmin && (
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Input
+                                type="number"
+                                min="1"
+                                placeholder="Qty"
+                                value={addStockQuantities[product.id] || ""}
+                                onChange={(e) => setAddStockQuantities(prev => ({
+                                  ...prev,
+                                  [product.id]: e.target.value
+                                }))}
+                                className="w-16 h-8 text-sm"
+                              />
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleAddStock(product.id)}
+                                disabled={updatingStock[product.id] || !addStockQuantities[product.id]}
+                                className="h-8 px-2"
+                              >
+                                <Package className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                         <TableCell>
                           <Button
                             variant="destructive"
