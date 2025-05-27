@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -36,7 +37,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, userRole } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -72,13 +73,17 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         >
           <SidebarHeader className="border-b border-blue-200 dark:border-gray-700 p-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">ABC</span>
-              </div>
+              <img 
+                src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
+                alt="ABC Cafe Logo" 
+                className="h-8 w-8 rounded-lg shadow-md flex-shrink-0"
+              />
               {!isCollapsed && (
                 <div>
                   <h2 className="font-semibold text-blue-900 dark:text-blue-100">ABC Business</h2>
-                  <p className="text-xs text-blue-600 dark:text-blue-300">Metrics Dashboard</p>
+                  <p className="text-xs text-blue-600 dark:text-blue-300 capitalize">
+                    {userRole}
+                  </p>
                 </div>
               )}
             </div>
