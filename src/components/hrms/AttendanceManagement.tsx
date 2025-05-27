@@ -44,7 +44,9 @@ const AttendanceManagement = () => {
       const validRecords = data?.filter(record => 
         record.hr_employees && 
         typeof record.hr_employees === 'object' && 
-        !('error' in record.hr_employees)
+        'first_name' in record.hr_employees &&
+        'last_name' in record.hr_employees &&
+        'employee_code' in record.hr_employees
       ) || [];
 
       setAttendanceRecords(validRecords as AttendanceRecord[]);
@@ -177,13 +179,13 @@ const AttendanceManagement = () => {
                 <div className="flex items-center space-x-4">
                   <div>
                     <p className="font-medium">
-                      {record.hr_employees.first_name} {record.hr_employees.last_name}
+                      {record.hr_employees?.first_name} {record.hr_employees?.last_name}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {record.hr_employees.employee_code} • {record.hr_stores.store_name}
+                      {record.hr_employees?.employee_code} • {record.hr_stores?.store_name}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {record.hr_shifts.shift_name}
+                      {record.hr_shifts?.shift_name}
                     </p>
                   </div>
                 </div>

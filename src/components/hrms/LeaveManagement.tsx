@@ -60,7 +60,9 @@ const LeaveManagement = () => {
       const validLeaves = leaveRes.data?.filter(leave => 
         leave.hr_employees && 
         typeof leave.hr_employees === 'object' && 
-        !('error' in leave.hr_employees)
+        'first_name' in leave.hr_employees &&
+        'last_name' in leave.hr_employees &&
+        'employee_code' in leave.hr_employees
       ) || [];
 
       setLeaveRequests(validLeaves as LeaveRequest[]);
@@ -379,10 +381,10 @@ const LeaveManagement = () => {
                 <div className="flex items-center space-x-4">
                   <div>
                     <p className="font-medium">
-                      {request.hr_employees.first_name} {request.hr_employees.last_name}
+                      {request.hr_employees?.first_name} {request.hr_employees?.last_name}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {request.hr_employees.employee_code}
+                      {request.hr_employees?.employee_code}
                     </p>
                     <div className="flex items-center space-x-2 mt-1">
                       {getLeaveTypeBadge(request.leave_type)}

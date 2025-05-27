@@ -10,29 +10,7 @@ import { Clock, Plus, Edit, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-
-interface Shift {
-  id: string;
-  shift_name: string;
-  shift_type: string;
-  start_time: string;
-  end_time: string;
-  break_duration: number;
-  grace_period: number;
-  store_id: string;
-  is_active: boolean;
-  created_at: string;
-  hr_stores?: {
-    store_name: string;
-    store_code: string;
-  };
-}
-
-interface Store {
-  id: string;
-  store_name: string;
-  store_code: string;
-}
+import { Shift, Store } from '@/types/hrms';
 
 const ShiftManagement = () => {
   const [shifts, setShifts] = useState<Shift[]>([]);
@@ -44,7 +22,7 @@ const ShiftManagement = () => {
 
   const [formData, setFormData] = useState({
     shift_name: '',
-    shift_type: 'regular',
+    shift_type: 'regular' as const,
     start_time: '',
     end_time: '',
     break_duration: 60,
@@ -75,7 +53,11 @@ const ShiftManagement = () => {
       setShifts(data || []);
     } catch (error) {
       console.error('Error fetching shifts:', error);
-      toast.error('Failed to load shifts');
+      toast({
+        title: "Error",
+        description: "Failed to load shifts",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -117,14 +99,20 @@ const ShiftManagement = () => {
           .eq('id', editingShift.id);
 
         if (error) throw error;
-        toast.success('Shift updated successfully');
+        toast({
+          title: "Success",
+          description: "Shift updated successfully",
+        });
       } else {
         const { error } = await supabase
           .from('hr_shifts')
           .insert([shiftData]);
 
         if (error) throw error;
-        toast.success('Shift created successfully');
+        toast({
+          title: "Success",
+          description: "Shift created successfully",
+        });
       }
 
       setDialogOpen(false);
@@ -133,7 +121,11 @@ const ShiftManagement = () => {
       fetchShifts();
     } catch (error) {
       console.error('Error saving shift:', error);
-      toast.error('Failed to save shift');
+      toast({
+        title: "Error",
+        description: "Failed to save shift",
+        variant: "destructive",
+      });
     }
   };
 
@@ -144,10 +136,10 @@ const ShiftManagement = () => {
       shift_type: shift.shift_type,
       start_time: shift.start_time,
       end_time: shift.end_time,
-      break_duration: shift.break_duration,
-      grace_period: shift.grace_period,
+      break_duration: shift.break_duration || 60,
+      grace_period: shift.grace_period || 15,
       store_id: shift.store_id,
-      is_active: shift.is_active,
+      is_active: shift.is_active || true,
     });
     setDialogOpen(true);
   };
@@ -162,11 +154,18 @@ const ShiftManagement = () => {
         .eq('id', id);
 
       if (error) throw error;
-      toast.success('Shift deleted successfully');
+      toast({
+        title: "Success",
+        description: "Shift deleted successfully",
+      });
       fetchShifts();
     } catch (error) {
       console.error('Error deleting shift:', error);
-      toast.error('Failed to delete shift');
+      toast({
+        title: "Error",
+        description: "Failed to delete shift",
+        variant: "destructive",
+      });
     }
   };
 
@@ -243,7 +242,9 @@ const ShiftManagement = () => {
                   <Label htmlFor="shift_type">Shift Type</Label>
                   <Select 
                     value={formData.shift_type} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, shift_type: value }))}
+                    onValueChange={(value: 'regular' | 'rotational' | 'split' | 'flexible') => 
+                      setFormData(prev => ({ ...prev, shift_type: value }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -390,7 +391,7 @@ const ShiftManagement = () => {
                       )}
                     </CardTitle>
                     <CardDescription>
-                      {shift.hr_stores?.store_name} • {formatTime(shift.start_time)} - {formatTime(shift.end_time)}
+                      {(shift as any).hr_stores?.store_name} • {formatTime(shift.start_time)} - {formatTime(shift.end_time)}
                     </CardDescription>
                   </div>
                   <div className="flex space-x-2">
@@ -435,7 +436,7 @@ const ShiftManagement = () => {
                   <div>
                     <p className="font-medium">Store</p>
                     <p className="text-muted-foreground">
-                      {shift.hr_stores?.store_code}
+                      {(shift as any).hr_stores?.store_code}
                     </p>
                   </div>
                 </div>

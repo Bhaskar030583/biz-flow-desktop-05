@@ -6,33 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { DollarSign, User, Download, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-interface Payslip {
-  id: string;
-  employee_id: string;
-  month: number;
-  year: number;
-  total_working_days: number;
-  days_worked: number;
-  total_hours: number;
-  regular_hours: number;
-  overtime_hours: number;
-  gross_salary: number;
-  advance_deductions: number;
-  penalty_deductions: number;
-  unpaid_leave_deductions: number;
-  other_deductions: number;
-  bonuses: number;
-  net_salary: number;
-  generated_on: string;
-  is_final: boolean;
-  hr_employees?: {
-    first_name: string;
-    last_name: string;
-    employee_code: string;
-    hourly_rate: number;
-  };
-}
+import { Payslip } from '@/types/hrms';
 
 const PayrollManagement = () => {
   const [payslips, setPayslips] = useState<Payslip[]>([]);
@@ -63,10 +37,25 @@ const PayrollManagement = () => {
         .order('generated_on', { ascending: false });
 
       if (error) throw error;
-      setPayslips(data || []);
+      
+      // Filter out invalid payslip records
+      const validPayslips = data?.filter(payslip => 
+        payslip.hr_employees && 
+        typeof payslip.hr_employees === 'object' && 
+        'first_name' in payslip.hr_employees &&
+        'last_name' in payslip.hr_employees &&
+        'employee_code' in payslip.hr_employees &&
+        'hourly_rate' in payslip.hr_employees
+      ) || [];
+
+      setPayslips(validPayslips as Payslip[]);
     } catch (error) {
       console.error('Error fetching payslips:', error);
-      toast.error('Failed to load payslips');
+      toast({
+        title: "Error",
+        description: "Failed to load payslips",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

@@ -60,19 +60,8 @@ const EmployeeLogin = () => {
           const { latitude, longitude } = position.coords;
           setCurrentLocation({ lat: latitude, lng: longitude });
           
-          // Reverse geocoding to get address
-          fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=YOUR_API_KEY`)
-            .then(response => response.json())
-            .then(data => {
-              if (data.results && data.results[0]) {
-                setAddress(data.results[0].formatted);
-              } else {
-                setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
-              }
-            })
-            .catch(() => {
-              setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
-            });
+          // Simple address format (replace with actual geocoding service)
+          setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
         },
         (error) => {
           toast({
@@ -142,7 +131,7 @@ const EmployeeLogin = () => {
         check_in_latitude: currentLocation.lat,
         check_in_longitude: currentLocation.lng,
         check_in_address: address,
-        status: 'present'
+        status: 'present' as const
       };
 
       const { error } = await supabase

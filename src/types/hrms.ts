@@ -78,15 +78,15 @@ export interface AttendanceRecord {
   approved_at?: string;
   created_at?: string;
   updated_at?: string;
-  hr_employees: {
+  hr_employees?: {
     first_name: string;
     last_name: string;
     employee_code: string;
   };
-  hr_stores: {
+  hr_stores?: {
     store_name: string;
   };
-  hr_shifts: {
+  hr_shifts?: {
     shift_name: string;
   };
 }
@@ -107,9 +107,36 @@ export interface LeaveRequest {
   rejection_reason?: string;
   created_at?: string;
   updated_at?: string;
-  hr_employees: {
+  hr_employees?: {
     first_name: string;
     last_name: string;
     employee_code: string;
+  };
+}
+
+export interface Payslip {
+  id: string;
+  employee_id: string;
+  month: number;
+  year: number;
+  total_working_days: number;
+  days_worked: number;
+  total_hours: number;
+  regular_hours: number;
+  overtime_hours: number;
+  gross_salary: number;
+  advance_deductions: number;
+  penalty_deductions: number;
+  unpaid_leave_deductions: number;
+  other_deductions: number;
+  bonuses: number;
+  net_salary: number;
+  generated_on: string;
+  is_final: boolean;
+  hr_employees?: {
+    first_name: string;
+    last_name: string;
+    employee_code: string;
+    hourly_rate: number;
   };
 }
