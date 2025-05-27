@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { POSSystem } from "@/components/pos/POSSystem";
 import { StoreInfoModal } from "@/components/pos/StoreInfoModal";
@@ -78,6 +79,13 @@ const POS = () => {
   const handleStockAdded = () => {
     // Refresh products query to reflect updated stock without page reload
     refetchProducts();
+  };
+
+  const handleClosePopup = () => {
+    if (window.opener) {
+      window.opener.focus();
+    }
+    window.close();
   };
 
   // Only show store modal if store info hasn't been completed yet
