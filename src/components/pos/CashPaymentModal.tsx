@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Banknote, Calculator } from "lucide-react";
 import { generateBill } from "@/services/billService";
 import { toast } from "sonner";
@@ -26,6 +27,10 @@ interface CashPaymentModalProps {
   } | null;
 }
 
+interface Denominations {
+  [key: number]: number;
+}
+
 export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
   isOpen,
   onClose,
@@ -36,6 +41,40 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
 }) => {
   const [cashReceived, setCashReceived] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [denominations, setDenominations] = useState<Denominations>({
+    500: 0,
+    200: 0,
+    100: 0,
+    50: 0,
+    20: 0,
+    10: 0,
+    5: 0,
+    2: 0,
+    1: 0
+  });
+
+  const denominationValues = [500, 200, 100, 50, 20, 10, 5, 2, 1];
+
+  const calculateTotalFromDenominations = () => {
+    return denominationValues.reduce((total, value) => {
+      return total + (value * (denominations[value] || 0));
+    }, 0);
+  };
+
+  const handleDenominationChange = (value: number, count: string) => {
+    const numCount = parseInt(count) || 0;
+    setDenominations(prev => ({
+      ...prev,
+      [value]: numCount
+    }));
+    
+    // Update total cash received
+    const newDenominations = { ...denominations, [value]: numCount };
+    const total = denominationValues.reduce((sum, val) => {
+      return sum + (val * (newDenominations[val] || 0));
+    }, 0);
+    setCashReceived(total.toString());
+  };
 
   const cashAmount = parseFloat(cashReceived) || 0;
   const changeAmount = cashAmount - totalAmount;
@@ -56,9 +95,18 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
         salespersonName: storeInfo?.salespersonName
       });
 
-      toast.success("Cash payment completed and bill generated!");
+      // Create denomination summary for toast
+      const denominationSummary = denominationValues
+        .filter(value => denominations[value] > 0)
+        .map(value => `₹${value} x ${denominations[value]}`)
+        .join(', ');
+
+      toast.success(`Cash payment completed! Denominations: ${denominationSummary}`);
       onPaymentComplete();
       setCashReceived("");
+      setDenominations({
+        500: 0, 200: 0, 100: 0, 50: 0, 20: 0, 10: 0, 5: 0, 2: 0, 1: 0
+      });
     } catch (error) {
       console.error("Error processing cash payment:", error);
       toast.error("Failed to process cash payment");
@@ -69,16 +117,19 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
 
   const handleClose = () => {
     setCashReceived("");
+    setDenominations({
+      500: 0, 200: 0, 100: 0, 50: 0, 20: 0, 10: 0, 5: 0, 2: 0, 1: 0
+    });
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Banknote className="h-5 w-5" />
-            Cash Payment
+            Cash Payment with Denominations
           </DialogTitle>
         </DialogHeader>
 
@@ -90,17 +141,40 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
             </div>
           </div>
 
+          <Separator />
+
+          <div className="space-y-3">
+            <Label className="text-lg font-semibold">Cash Denominations Received</Label>
+            <div className="grid grid-cols-3 gap-3">
+              {denominationValues.map(value => (
+                <div key={value} className="space-y-1">
+                  <Label htmlFor={`denom-${value}`} className="text-sm font-medium">
+                    ₹{value} notes
+                  </Label>
+                  <Input
+                    id={`denom-${value}`}
+                    type="number"
+                    min="0"
+                    value={denominations[value]}
+                    onChange={(e) => handleDenominationChange(value, e.target.value)}
+                    placeholder="0"
+                    className="text-center"
+                  />
+                  <div className="text-xs text-gray-500 text-center">
+                    = ₹{(value * (denominations[value] || 0)).toFixed(0)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <Separator />
+
           <div className="space-y-2">
-            <Label htmlFor="cash-received">Cash Received</Label>
-            <Input
-              id="cash-received"
-              type="number"
-              step="0.01"
-              value={cashReceived}
-              onChange={(e) => setCashReceived(e.target.value)}
-              placeholder="Enter cash amount"
-              className="text-lg"
-            />
+            <Label htmlFor="total-cash">Total Cash Received</Label>
+            <div className="text-xl font-bold text-blue-600">
+              ₹{calculateTotalFromDenominations().toFixed(2)}
+            </div>
           </div>
 
           {cashAmount > 0 && (
@@ -112,7 +186,7 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
             </div>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-4">
             <Button variant="outline" onClick={handleClose} className="flex-1">
               Cancel
             </Button>
