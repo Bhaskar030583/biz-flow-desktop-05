@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -752,54 +753,54 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                   <Separator />
                   
                   <div className="flex justify-between text-lg font-bold text-gray-900">
-                    <span>Payable Amount</span>
+                    <span>Total Amount</span>
                     <span>₹{getTotalAmount().toFixed(2)}</span>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
+                {/* Payment Buttons */}
                 <div className="p-3 space-y-2 border-t bg-gray-50">
                   <div className="grid grid-cols-2 gap-2">
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className={`flex items-center gap-2 border-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-200 text-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-600 hover:bg-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-50 h-8 text-xs`}
+                      className={`flex items-center gap-2 border-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-200 text-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-600 hover:bg-${colorTheme === 'professional' ? 'gray' : colorTheme === 'modern' ? 'purple' : colorTheme === 'vibrant' ? 'green' : 'orange'}-50 h-10 text-sm font-medium`}
                       onClick={handleCashPayment}
                     >
-                      <Banknote className="h-3 w-3" />
+                      <Banknote className="h-4 w-4" />
                       Cash
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 h-8 text-xs"
+                      className="flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 h-10 text-sm font-medium"
                       onClick={handleUPIPayment}
                     >
-                      <Smartphone className="h-3 w-3" />
+                      <Smartphone className="h-4 w-4" />
                       UPI
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex items-center gap-2 border-purple-200 text-purple-600 hover:bg-purple-50 h-8 text-xs"
+                      className="flex items-center gap-2 border-purple-200 text-purple-600 hover:bg-purple-50 h-10 text-sm font-medium"
                       onClick={handleCreditPayment}
                     >
-                      <UserCheck className="h-3 w-3" />
+                      <UserCheck className="h-4 w-4" />
                       Credit
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex items-center gap-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50 h-8 text-xs"
+                      className="flex items-center gap-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50 h-10 text-sm font-medium"
                       onClick={handleSplitPayment}
                     >
-                      <Split className="h-3 w-3" />
+                      <Split className="h-4 w-4" />
                       Split
                     </Button>
                   </div>
                   
                   <Button 
-                    className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 h-10 text-sm font-semibold shadow-lg"
+                    className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 h-12 text-sm font-semibold shadow-lg"
                     onClick={handleCardPayment}
                   >
                     <CreditCard className="h-4 w-4 mr-2" />
