@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -307,20 +306,32 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
   };
 
   const removeProductFromShop = async (assignmentId: string, productName: string) => {
+    console.log("removeProductFromShop called with:", { assignmentId, productName });
+    
+    if (!assignmentId || !productName) {
+      console.error("Missing required parameters:", { assignmentId, productName });
+      toast.error('Invalid parameters for deassignment');
+      return;
+    }
+
     if (!confirm(`Are you sure you want to deassign "${productName}" from this store? This will remove all stock data for this product.`)) {
+      console.log("User cancelled deassignment");
       return;
     }
 
     try {
-      console.log("Removing product assignment:", assignmentId, "for product:", productName);
+      console.log("Starting deassignment process for:", assignmentId);
       
-      // First, get the product assignment details
+      // First, get the product assignment details with more detailed logging
+      console.log("Fetching assignment details from product_shops table...");
       const { data: assignmentData, error: fetchError } = await supabase
         .from('product_shops')
-        .select('product_id')
+        .select('product_id, shop_id')
         .eq('id', assignmentId)
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle();
+
+      console.log("Assignment fetch result:", { assignmentData, fetchError });
 
       if (fetchError) {
         console.error('Error fetching assignment details:', fetchError);
@@ -329,41 +340,51 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
       }
 
       if (!assignmentData) {
+        console.log("No assignment data found for ID:", assignmentId);
         toast.error('Product assignment not found');
         return;
       }
 
+      console.log("Found assignment data:", assignmentData);
+
       // Delete all stock entries for this product-shop combination first
+      console.log("Deleting stock entries for product:", assignmentData.product_id, "in shop:", assignmentData.shop_id);
       const { error: stockError } = await supabase
         .from('stocks')
         .delete()
         .eq('product_id', assignmentData.product_id)
-        .eq('shop_id', selectedShop)
+        .eq('shop_id', assignmentData.shop_id)
         .eq('user_id', user?.id);
 
       if (stockError) {
         console.error('Error deleting stock entries:', stockError);
         toast.warning('Some stock entries could not be deleted, but proceeding with deassignment');
+      } else {
+        console.log("Successfully deleted stock entries");
       }
 
       // Then delete the product assignment
+      console.log("Deleting product assignment with ID:", assignmentId);
       const { error: assignmentError } = await supabase
         .from('product_shops')
         .delete()
         .eq('id', assignmentId)
         .eq('user_id', user?.id);
       
+      console.log("Assignment deletion result:", { assignmentError });
+
       if (assignmentError) {
         console.error('Error deleting product assignment:', assignmentError);
         toast.error('Failed to deassign product from store');
         return;
       }
       
+      console.log("Successfully completed deassignment");
       toast.success(`${productName} deassigned from store successfully`);
       fetchAssignedProducts();
       onStockUpdated();
     } catch (error) {
-      console.error('Error removing product from shop:', error);
+      console.error('Unexpected error during deassignment:', error);
       toast.error('Failed to deassign product from store');
     }
   };
