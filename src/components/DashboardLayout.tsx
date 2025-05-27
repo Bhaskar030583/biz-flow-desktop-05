@@ -134,16 +134,21 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white dark:bg-gray-800 border-b border-blue-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
               <SidebarTrigger 
                 className="text-blue-600 dark:text-blue-400"
                 onClick={() => setIsCollapsed(!isCollapsed)}
               />
-              {isMobile && (
-                <h1 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
-                  ABC Business
+              <div className="flex items-center gap-3">
+                <img 
+                  src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
+                  alt="ABC Cafe Logo" 
+                  className="h-8 w-8 rounded-lg shadow-md"
+                />
+                <h1 className="text-xl font-bold text-blue-900 dark:text-blue-100">
+                  ABC CAFE
                 </h1>
-              )}
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <ThemeSwitcher />
