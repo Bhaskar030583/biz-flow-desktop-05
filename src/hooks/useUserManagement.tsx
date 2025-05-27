@@ -48,25 +48,12 @@ export const useUserManagement = () => {
         throw profilesError;
       }
       
-      // Try to get auth users but handle errors gracefully
-      let authUsers: any[] = [];
-      try {
-        // Note: This RPC function might not exist, so we'll handle it gracefully
-        const { data, error } = await supabase.rpc('get_auth_users_view');
-        if (!error && data) {
-          authUsers = Array.isArray(data) ? data : [];
-        }
-      } catch (error) {
-        console.warn('Could not fetch auth users, using profile data only:', error);
-      }
-      
-      // Map the profiles to UserData type with email information
+      // Map the profiles to UserData type with default email information
       const formattedUsers: UserData[] = profiles?.map((profile) => {
-        const authUser = authUsers.find((user: any) => user.id === profile.id);
         return {
           id: profile.id,
           full_name: profile.full_name || '',
-          email: authUser?.email || 'user@example.com',
+          email: 'user@example.com', // Default email since we can't access auth.users directly
           role: (profile.role as UserRole) || 'user',
           created_at: profile.created_at || new Date().toISOString(),
           page_access: profile.page_access || ['dashboard']
