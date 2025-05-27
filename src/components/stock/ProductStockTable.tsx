@@ -68,54 +68,59 @@ const ProductStockTable = ({
   };
 
   const handleEditClick = (product: AssignedProduct) => {
-    try {
-      if (!product.id || !product.assignment_id) {
-        toast.error("Cannot edit stock: Product data is incomplete");
-        return;
-      }
-      onEditStock(product);
-    } catch (error) {
-      console.error('Error editing stock:', error);
-      toast.error("Failed to open edit dialog. Please try again.");
+    console.log('Edit button clicked for product:', product.name);
+    
+    if (!product.id) {
+      toast.error("Cannot edit stock: Product ID is missing");
+      return;
     }
+    
+    if (!product.assignment_id) {
+      toast.error("Cannot edit stock: Assignment ID is missing");
+      return;
+    }
+    
+    console.log('Calling onEditStock with product:', product);
+    onEditStock(product);
   };
 
-  const handleDeleteClick = (productId: string, productName: string) => {
-    try {
-      if (!isAdmin) {
-        toast.error("Access denied: Only administrators can delete stock entries");
-        return;
-      }
-      if (!onDeleteStock) {
-        toast.error("Delete functionality is not available");
-        return;
-      }
-      if (!productId) {
-        toast.error("Cannot delete: Product ID is missing");
-        return;
-      }
-      onDeleteStock(productId, productName);
-    } catch (error) {
-      console.error('Error deleting stock:', error);
-      toast.error("Failed to delete stock entry. Please try again.");
+  const handleDeleteStock = (productId: string, productName: string) => {
+    console.log('Delete stock called for:', productName, 'ID:', productId);
+    
+    if (!isAdmin) {
+      toast.error("Access denied: Only administrators can delete stock entries");
+      return;
     }
+    
+    if (!onDeleteStock) {
+      toast.error("Delete functionality is not available");
+      return;
+    }
+    
+    if (!productId) {
+      toast.error("Cannot delete: Product ID is missing");
+      return;
+    }
+    
+    console.log('Executing delete stock operation');
+    onDeleteStock(productId, productName);
   };
 
-  const handleDeassignClick = (assignmentId: string, productName: string) => {
-    try {
-      if (!assignmentId) {
-        toast.error("Cannot deassign: Assignment ID is missing");
-        return;
-      }
-      if (!productName) {
-        toast.error("Cannot deassign: Product name is missing");
-        return;
-      }
-      onRemoveProduct(assignmentId, productName);
-    } catch (error) {
-      console.error('Error deassigning product:', error);
-      toast.error("Failed to deassign product. Please try again.");
+  const handleDeassign = (assignmentId: string, productName: string) => {
+    console.log('Deassign called for:', productName, 'Assignment ID:', assignmentId);
+    
+    if (!assignmentId) {
+      toast.error("Cannot deassign: Assignment ID is missing");
+      return;
     }
+    
+    if (!productName) {
+      toast.error("Cannot deassign: Product name is missing");
+      return;
+    }
+    
+    console.log('Executing deassign operation');
+    onRemoveProduct(assignmentId, productName);
   };
 
   return (
@@ -223,7 +228,7 @@ const ProductStockTable = ({
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => handleDeleteClick(product.id, product.name)}
+                              onClick={() => handleDeleteStock(product.id, product.name)}
                               className="bg-red-600 hover:bg-red-700"
                             >
                               Delete
@@ -254,7 +259,7 @@ const ProductStockTable = ({
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => handleDeassignClick(product.assignment_id, product.name)}
+                            onClick={() => handleDeassign(product.assignment_id, product.name)}
                             className="bg-red-600 hover:bg-red-700"
                           >
                             Deassign
