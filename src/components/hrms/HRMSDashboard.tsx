@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Clock, Calendar, DollarSign, MapPin, CheckCircle } from 'lucide-react';
+import { Users, Clock, Calendar, DollarSign, MapPin, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const HRMSDashboard = () => {
@@ -108,9 +108,11 @@ const HRMSDashboard = () => {
             return (
               <Card key={index} className="cursor-pointer hover:shadow-lg transition-shadow">
                 <CardHeader>
-                  <div className="flex items-center space-x-2">
-                    <Icon className="h-6 w-6 text-primary" />
-                    <CardTitle className="text-lg">{module.title}</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Icon className="h-6 w-6 text-primary" />
+                      <CardTitle className="text-lg">{module.title}</CardTitle>
+                    </div>
                   </div>
                   <CardDescription>{module.description}</CardDescription>
                 </CardHeader>

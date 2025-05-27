@@ -1,11 +1,13 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Calendar, DollarSign, User, LogOut, FileText } from 'lucide-react';
+import { Clock, Calendar, DollarSign, User, LogOut, FileText, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const EmployeeDashboard = () => {
+  const navigate = useNavigate();
+  
   // Mock employee data - replace with actual data from context/API
   const employee = {
     name: 'John Doe',
@@ -40,11 +42,22 @@ const EmployeeDashboard = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Welcome, {employee.name}</h1>
-          <p className="text-muted-foreground">
-            {employee.designation} • {employee.store}
-          </p>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate('/hrms')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to HRMS
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Welcome, {employee.name}</h1>
+            <p className="text-muted-foreground">
+              {employee.designation} • {employee.store}
+            </p>
+          </div>
         </div>
         <div className="flex space-x-2">
           <Button variant="outline">

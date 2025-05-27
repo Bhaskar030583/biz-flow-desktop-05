@@ -2,15 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, MapPin, Camera, CheckCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, Camera, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { AttendanceRecord } from '@/types/hrms';
+import { useNavigate } from 'react-router-dom';
 
 const AttendanceManagement = () => {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchAttendanceRecords();
@@ -107,11 +109,22 @@ const AttendanceManagement = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Attendance Management</h1>
-          <p className="text-muted-foreground">
-            Track and manage employee attendance records
-          </p>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate('/hrms')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to HRMS
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Attendance Management</h1>
+            <p className="text-muted-foreground">
+              Track and manage employee attendance records
+            </p>
+          </div>
         </div>
         <Button>
           <Calendar className="h-4 w-4 mr-2" />
