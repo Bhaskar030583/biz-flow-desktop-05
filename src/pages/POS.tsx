@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from "react";
-import DashboardLayout from "@/components/DashboardLayout";
 import { POSSystem } from "@/components/pos/POSSystem";
 import { StoreInfoModal } from "@/components/pos/StoreInfoModal";
 import QuickActualStockButton from "@/components/stock/QuickActualStockButton";
@@ -115,9 +114,9 @@ const POS = () => {
     );
   }
 
-  // Regular view with DashboardLayout for non-popup
+  // Regular view without additional DashboardLayout wrapper since it's already applied in App.tsx
   return (
-    <DashboardLayout>
+    <>
       <StoreInfoModal
         isOpen={shouldShowStoreModal}
         onComplete={handleStoreInfoComplete}
@@ -144,7 +143,7 @@ const POS = () => {
           )}
         </div>
       )}
-    </DashboardLayout>
+    </>
   );
 };
 
