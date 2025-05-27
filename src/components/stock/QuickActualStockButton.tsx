@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -67,6 +66,12 @@ const QuickActualStockButton = ({ onStockAdded }: QuickActualStockButtonProps) =
     }
   };
 
+  const resetForm = () => {
+    setSelectedProduct("");
+    setActualStock("");
+    // Keep selectedShop and stockDate for convenience
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -122,11 +127,8 @@ const QuickActualStockButton = ({ onStockAdded }: QuickActualStockButtonProps) =
         toast.success('Actual stock added successfully');
       }
 
-      // Reset form
-      setSelectedProduct("");
-      setSelectedShop("");
-      setActualStock("");
-      setOpen(false);
+      // Reset only product and stock fields, keep shop and date
+      resetForm();
       onStockAdded();
 
     } catch (error: any) {
@@ -135,6 +137,15 @@ const QuickActualStockButton = ({ onStockAdded }: QuickActualStockButtonProps) =
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    // Reset all form fields when closing
+    setSelectedProduct("");
+    setSelectedShop("");
+    setActualStock("");
+    setStockDate(new Date().toISOString().split('T')[0]);
   };
 
   return (
@@ -207,8 +218,8 @@ const QuickActualStockButton = ({ onStockAdded }: QuickActualStockButtonProps) =
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+            <Button type="button" variant="outline" onClick={handleClose}>
+              Close
             </Button>
             <Button type="submit" disabled={loading}>
               {loading ? "Adding..." : "Add Stock"}
