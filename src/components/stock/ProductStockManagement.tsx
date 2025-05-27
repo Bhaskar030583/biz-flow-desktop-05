@@ -482,7 +482,9 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
       if (error) throw error;
 
       toast.success(`Stock entries for "${productName}" deleted successfully`);
-      fetchAssignedProducts();
+      
+      // Refresh the assigned products list to reflect the changes
+      await fetchAssignedProducts();
       onStockUpdated();
     } catch (error) {
       console.error('Error deleting stock entries:', error);
