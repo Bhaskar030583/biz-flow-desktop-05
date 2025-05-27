@@ -304,10 +304,10 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
 
   const getGridCols = () => {
     switch (gridSize) {
-      case 'small': return 'grid-cols-6';
-      case 'medium': return 'grid-cols-5';
-      case 'large': return 'grid-cols-4';
-      default: return 'grid-cols-5';
+      case 'small': return 'grid-cols-7 lg:grid-cols-8';
+      case 'medium': return 'grid-cols-6 lg:grid-cols-7';
+      case 'large': return 'grid-cols-5 lg:grid-cols-6';
+      default: return 'grid-cols-6 lg:grid-cols-7';
     }
   };
 
@@ -739,24 +739,24 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
     );
   }
 
-  // Desktop layout with adjusted sidebar width and order summary position
+  // Desktop layout with narrower sidebar and larger grid
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100" data-color-theme={colorTheme}>
-      {/* Narrower Desktop Left Sidebar */}
-      <div className="w-64 bg-white shadow-xl flex flex-col border-r border-gray-200">
+      {/* Narrower Desktop Left Sidebar - reduced from w-64 to w-48 */}
+      <div className="w-48 bg-white shadow-xl flex flex-col border-r border-gray-200">
         {/* Enhanced Logo Section */}
-        <div className={`p-4 border-b bg-gradient-to-r ${themeColors.gradient} shadow-lg`}>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg ring-2 ring-white/20">
+        <div className={`p-3 border-b bg-gradient-to-r ${themeColors.gradient} shadow-lg`}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg ring-2 ring-white/20">
                 <img 
                   src="/lovable-uploads/528f105b-5de5-4806-a64a-99582022753b.png" 
                   alt="ABC Cafe Logo" 
-                  className="w-8 h-8 rounded-full object-cover"
+                  className="w-6 h-6 rounded-full object-cover"
                 />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">ABC CAFE</h2>
+                <h2 className="text-base font-bold text-white">ABC CAFE</h2>
                 <p className="text-white/80 text-xs">POS System</p>
               </div>
             </div>
@@ -769,7 +769,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-white hover:bg-white/20 h-8 w-8 p-0 rounded-full"
+                    className="text-white hover:bg-white/20 h-7 w-7 p-0 rounded-full"
                     title="Change Theme"
                   >
                     <Palette className="h-3 w-3" />
@@ -797,7 +797,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                 size="sm"
                 variant="ghost"
                 onClick={handleExit}
-                className="text-white hover:bg-white/20 h-8 w-8 p-0 rounded-full"
+                className="text-white hover:bg-white/20 h-7 w-7 p-0 rounded-full"
                 title="Exit POS"
               >
                 <LogOut className="h-3 w-3" />
@@ -807,9 +807,9 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
         </div>
 
         {/* Enhanced Category Navigation */}
-        <div className="flex-1 p-4 overflow-y-auto">
-          <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
-            <LayoutGrid className="h-4 w-4" />
+        <div className="flex-1 p-3 overflow-y-auto">
+          <h3 className="text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
+            <LayoutGrid className="h-3 w-3" />
             Categories
           </h3>
           <div className="space-y-1">
@@ -820,18 +820,18 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                 <Button
                   key={category}
                   variant={isActive ? "default" : "ghost"}
-                  className={`w-full justify-start gap-2 h-10 text-left rounded-lg transition-all duration-200 ${
+                  className={`w-full justify-start gap-2 h-8 text-left rounded-lg transition-all duration-200 text-xs ${
                     isActive 
                       ? `bg-gradient-to-r ${themeColors.gradient} text-white ${themeColors.hover} shadow-md` 
                       : `text-gray-700 hover:bg-gray-100 hover:${themeColors.text} hover:shadow-sm`
                   }`}
                   onClick={() => setSelectedCategory(category)}
                 >
-                  <IconComponent className={`h-4 w-4 ${isActive ? 'text-white' : themeColors.text}`} />
-                  <span className="font-medium text-sm">
+                  <IconComponent className={`h-3 w-3 ${isActive ? 'text-white' : themeColors.text}`} />
+                  <span className="font-medium">
                     {category === "all" ? "All Items" : category}
                   </span>
-                  {isActive && <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full"></div>}
+                  {isActive && <div className="ml-auto w-1 h-1 bg-white rounded-full"></div>}
                 </Button>
               );
             })}
@@ -840,24 +840,22 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
 
         {/* Enhanced Store Info */}
         {storeInfo && (
-          <div className="p-4 border-t bg-gradient-to-r from-gray-50 to-gray-100">
-            <h3 className="text-xs font-semibold text-gray-800 mb-2 flex items-center gap-2">
+          <div className="p-3 border-t bg-gradient-to-r from-gray-50 to-gray-100">
+            <h3 className="text-xs font-semibold text-gray-800 mb-2 flex items-center gap-1">
               <AlertCircle className="h-3 w-3" />
-              Session Info
+              Session
             </h3>
-            <div className="space-y-2 text-xs">
-              <div className="flex items-center gap-2 p-2 bg-white rounded-md shadow-sm">
+            <div className="space-y-1 text-xs">
+              <div className="flex items-center gap-1 p-1 bg-white rounded-md shadow-sm">
                 <Store className="h-3 w-3 text-blue-600" />
-                <div>
-                  <p className="font-medium text-gray-800 text-xs">{storeInfo.storeName}</p>
-                  <p className="text-xs text-gray-500">Store</p>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-gray-800 text-xs truncate">{storeInfo.storeName}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 p-2 bg-white rounded-md shadow-sm">
+              <div className="flex items-center gap-1 p-1 bg-white rounded-md shadow-sm">
                 <User className="h-3 w-3 text-green-600" />
-                <div>
-                  <p className="font-medium text-gray-800 text-xs">{storeInfo.salespersonName}</p>
-                  <p className="text-xs text-gray-500">Cashier</p>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-gray-800 text-xs truncate">{storeInfo.salespersonName}</p>
                 </div>
               </div>
             </div>
@@ -865,7 +863,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
         )}
       </div>
 
-      {/* Main Content Area - Now Full Width */}
+      {/* Main Content Area - Now with more space */}
       <div className="flex-1 flex flex-col">
         {/* Enhanced Products Section */}
         <div className="flex-1 p-6 overflow-hidden">
@@ -934,7 +932,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
             </div>
           </div>
 
-          {/* Enhanced Products Grid - Now takes more space */}
+          {/* Enhanced Products Grid - Now with larger grid taking advantage of more space */}
           <div className={`grid ${getGridCols()} gap-3 overflow-y-auto h-[calc(100vh-320px)] pr-2`}>
             {filteredProducts.map(product => (
               <Card
