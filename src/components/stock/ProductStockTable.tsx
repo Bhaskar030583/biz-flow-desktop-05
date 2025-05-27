@@ -2,9 +2,8 @@
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Package, Edit, UserMinus } from "lucide-react";
+import { Edit, UserMinus, Trash2 } from "lucide-react";
 
 interface AssignedProduct {
   assignment_id: string;
@@ -30,6 +29,7 @@ interface ProductStockTableProps {
   onAddStock: (productId: string) => void;
   onEditStock: (product: AssignedProduct) => void;
   onRemoveProduct: (assignmentId: string, productName: string) => void;
+  onDeleteStock?: (productId: string, productName: string) => void;
 }
 
 const ProductStockTable = ({
@@ -41,6 +41,7 @@ const ProductStockTable = ({
   onAddStock,
   onEditStock,
   onRemoveProduct,
+  onDeleteStock,
 }: ProductStockTableProps) => {
   const getCategoryColor = (category: string) => {
     const colors = [
@@ -70,7 +71,6 @@ const ProductStockTable = ({
             <TableHead>Actual Stock</TableHead>
             <TableHead>Variance</TableHead>
             <TableHead>Last Updated</TableHead>
-            {isAdmin && <TableHead>Add Stock</TableHead>}
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -126,32 +126,6 @@ const ProductStockTable = ({
                     {product.last_stock_date ? new Date(product.last_stock_date).toLocaleDateString() : 'Never'}
                   </span>
                 </TableCell>
-                {isAdmin && (
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Input
-                        type="number"
-                        min="1"
-                        placeholder="Qty"
-                        value={addStockQuantities[product.id] || ""}
-                        onChange={(e) => setAddStockQuantities({
-                          ...addStockQuantities,
-                          [product.id]: e.target.value
-                        })}
-                        className="w-16 h-8 text-sm"
-                      />
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onAddStock(product.id)}
-                        disabled={updatingStock[product.id] || !addStockQuantities[product.id]}
-                        className="h-8 px-2"
-                      >
-                        <Package className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                )}
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Button
@@ -163,6 +137,17 @@ const ProductStockTable = ({
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
+                    {isAdmin && onDeleteStock && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onDeleteStock(product.id, product.name)}
+                        className="h-8 px-2 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50"
+                        title="Delete stock entry"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="destructive"
                       size="sm"

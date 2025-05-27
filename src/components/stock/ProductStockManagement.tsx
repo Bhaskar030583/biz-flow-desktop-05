@@ -390,6 +390,12 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
   };
 
   const handleAddStock = async (productId: string) => {
+    // This function is kept for non-admin users only
+    if (isAdmin) {
+      toast.error('Admins cannot add stock through this interface');
+      return;
+    }
+
     const quantity = addStockQuantities[productId];
     if (!quantity || parseInt(quantity) <= 0) {
       toast.error('Please enter a valid quantity');
@@ -452,6 +458,35 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
       toast.error('Failed to add stock');
     } finally {
       setUpdatingStock(prev => ({ ...prev, [productId]: false }));
+    }
+  };
+
+  const handleDeleteStock = async (productId: string, productName: string) => {
+    if (!isAdmin) {
+      toast.error('Only admins can delete stock entries');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete all stock entries for "${productName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('stocks')
+        .delete()
+        .eq('product_id', productId)
+        .eq('shop_id', selectedShop)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      toast.success(`Stock entries for "${productName}" deleted successfully`);
+      fetchAssignedProducts();
+      onStockUpdated();
+    } catch (error) {
+      console.error('Error deleting stock entries:', error);
+      toast.error('Failed to delete stock entries');
     }
   };
 
@@ -606,6 +641,7 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
               onAddStock={handleAddStock}
               onEditStock={handleEditStock}
               onRemoveProduct={removeProductFromShop}
+              onDeleteStock={handleDeleteStock}
             />
           </CardContent>
         </Card>
