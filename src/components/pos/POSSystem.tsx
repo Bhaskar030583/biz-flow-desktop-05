@@ -36,7 +36,10 @@ import {
   Palette,
   Receipt,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Menu,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CashPaymentModal } from "./CashPaymentModal";
@@ -95,6 +98,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
   const [showDiscountInput, setShowDiscountInput] = useState(false);
   const [includeTax, setIncludeTax] = useState(false);
   const [gridSize, setGridSize] = useState<'small' | 'medium' | 'large'>('medium');
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [showCart, setShowCart] = useState(false);
   const isMobile = useIsMobile();
   const { colorTheme, setColorTheme } = useSettings();
 
@@ -382,9 +387,365 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
 
   const themeColors = getThemeColors();
 
+  useEffect(() => {
+    if (isMobile) {
+      setGridSize('small');
+    }
+  }, [isMobile]);
+
+  const getMobileGridCols = () => {
+    if (isMobile) {
+      return 'grid-cols-2 sm:grid-cols-3';
+    }
+    switch (gridSize) {
+      case 'small': return 'grid-cols-5 lg:grid-cols-6';
+      case 'medium': return 'grid-cols-3 lg:grid-cols-4';
+      case 'large': return 'grid-cols-2 lg:grid-cols-3';
+      default: return 'grid-cols-3 lg:grid-cols-4';
+    }
+  };
+
+  const getMobileCardSize = () => {
+    if (isMobile) {
+      return { cardClass: 'h-32', iconSize: 'h-8 w-8', titleSize: 'text-xs', priceSize: 'text-sm' };
+    }
+    return getCardSize();
+  };
+
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-screen bg-gradient-to-br from-gray-50 to-gray-100" data-color-theme={colorTheme}>
+        {/* Mobile Header */}
+        <div className={`flex items-center justify-between p-4 bg-gradient-to-r ${themeColors.gradient} shadow-lg`}>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSidebar(!showSidebar)}
+              className="text-white hover:bg-white/20 h-9 w-9 p-0"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <div className="flex items-center gap-2">
+              <img 
+                src="/lovable-uploads/528f105b-5de5-4806-a64a-99582022753b.png" 
+                alt="ABC Cafe Logo" 
+                className="w-8 h-8 rounded-full object-cover"
+              />
+              <div>
+                <h2 className="text-lg font-bold text-white">ABC CAFE</h2>
+                <p className="text-white/80 text-xs">POS System</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowCart(!showCart)}
+              className="text-white hover:bg-white/20 h-9 w-9 p-0 relative"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {cart.length > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 bg-red-500 text-white text-xs flex items-center justify-center">
+                  {cart.length}
+                </Badge>
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleExit}
+              className="text-white hover:bg-white/20 h-9 w-9 p-0"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Mobile Sidebar Overlay */}
+        {showSidebar && (
+          <div className="fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setShowSidebar(false)}>
+            <div className="absolute left-0 top-0 h-full w-80 bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+              <div className="p-4 border-b">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Categories</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowSidebar(false)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="p-4 space-y-2 overflow-y-auto h-[calc(100vh-120px)]">
+                {categories.map(category => {
+                  const IconComponent = categoryIcons[category as keyof typeof categoryIcons] || LayoutGrid;
+                  const isActive = selectedCategory === category;
+                  return (
+                    <Button
+                      key={category}
+                      variant={isActive ? "default" : "ghost"}
+                      className={`w-full justify-start gap-3 h-12 text-left ${
+                        isActive 
+                          ? `bg-gradient-to-r ${themeColors.gradient} text-white` 
+                          : `text-gray-700 hover:bg-gray-100`
+                      }`}
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        setShowSidebar(false);
+                      }}
+                    >
+                      <IconComponent className="h-5 w-5" />
+                      <span className="font-medium">
+                        {category === "all" ? "All Items" : category}
+                      </span>
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Cart Overlay */}
+        {showCart && (
+          <div className="fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setShowCart(false)}>
+            <div className="absolute right-0 top-0 h-full w-80 bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+              {/* Mobile Cart Content - same as desktop but in overlay */}
+              <div className="h-full flex flex-col">
+                <div className={`p-4 border-b bg-gradient-to-r ${themeColors.gradient}`}>
+                  <div className="flex items-center justify-between text-white">
+                    <div>
+                      <h2 className="text-lg font-bold">Current Order</h2>
+                      <p className="text-white/80 text-sm">Review your items</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowCart(false)}
+                      className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Cart Items - Mobile optimized */}
+                <div className="flex-1 p-4 overflow-y-auto">
+                  {cart.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">
+                      <ShoppingCart className="h-16 w-16 mx-auto mb-4 opacity-30" />
+                      <h3 className="text-lg font-semibold mb-2">Empty Cart</h3>
+                      <p className="text-sm">Add items from the menu</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {cart.map((item, index) => (
+                        <Card key={item.id} className="p-3">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-semibold text-sm">{item.name}</h4>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => removeFromCart(item.id)}
+                                className="h-6 w-6 p-0 text-red-500"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 w-8 p-0"
+                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                                <span className="font-bold text-base w-8 text-center">
+                                  {item.quantity}
+                                </span>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 w-8 p-0"
+                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
+                              <span className="font-bold text-gray-900">₹{item.total}</span>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {cart.length > 0 && (
+                  <>
+                    {/* Mobile Payment Summary */}
+                    <div className="p-4 border-t bg-gray-50">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>Subtotal</span>
+                          <span className="font-semibold">₹{getSubtotal().toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-lg font-bold">
+                          <span>Total</span>
+                          <span>₹{getTotalAmount().toFixed(2)}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 mt-4">
+                        <Button 
+                          size="sm" 
+                          className={`${themeColors.accent} h-12 text-xs`}
+                          onClick={handleCashPayment}
+                        >
+                          <Banknote className="h-4 w-4 mr-1" />
+                          Cash
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="bg-blue-600 hover:bg-blue-700 h-12 text-xs"
+                          onClick={handleUPIPayment}
+                        >
+                          <Smartphone className="h-4 w-4 mr-1" />
+                          UPI
+                        </Button>
+                      </div>
+                      
+                      <Button 
+                        className="w-full bg-green-600 hover:bg-green-700 h-12 mt-2 text-sm font-bold"
+                        onClick={handleCardPayment}
+                      >
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Pay with Card
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Main Content */}
+        <div className="flex-1 p-4 overflow-hidden">
+          {/* Mobile Search */}
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-10 text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Mobile Products Grid */}
+          <div className={`grid ${getMobileGridCols()} gap-3 overflow-y-auto h-[calc(100vh-160px)]`}>
+            {filteredProducts.map(product => {
+              const cardConfig = getMobileCardSize();
+              return (
+                <Card
+                  key={product.id}
+                  className={`cursor-pointer hover:shadow-lg transition-all duration-200 border hover:border-orange-300 ${cardConfig.cardClass}`}
+                  onClick={() => addToCart(product)}
+                >
+                  <CardContent className="p-3 h-full flex flex-col">
+                    <div className="aspect-square bg-orange-50 rounded-lg mb-2 flex items-center justify-center">
+                      <UtensilsCrossed className={`${cardConfig.iconSize} text-orange-600`} />
+                    </div>
+                    
+                    <div className="flex-1 flex flex-col justify-between">
+                      <h3 className={`font-bold text-gray-700 ${cardConfig.titleSize} mb-1 line-clamp-2 leading-tight`}>
+                        {product.name}
+                      </h3>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className={`font-bold text-gray-900 ${cardConfig.priceSize}`}>
+                          ₹{product.price}
+                        </span>
+                        <Button
+                          size="sm"
+                          className="bg-orange-500 hover:bg-orange-600 text-white h-6 w-6 p-0 shadow-sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart(product);
+                          }}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Floating Cart Summary for Mobile */}
+        {cart.length > 0 && !showCart && (
+          <div className="fixed bottom-4 right-4 z-40">
+            <Button
+              className={`bg-gradient-to-r ${themeColors.gradient} text-white shadow-lg rounded-full h-14 w-14 p-0`}
+              onClick={() => setShowCart(true)}
+            >
+              <div className="text-center">
+                <ShoppingCart className="h-5 w-5 mx-auto" />
+                <span className="text-xs font-bold">{cart.length}</span>
+              </div>
+            </Button>
+          </div>
+        )}
+
+        {/* Mobile Modals */}
+        <CashPaymentModal
+          isOpen={showCashModal}
+          onClose={() => setShowCashModal(false)}
+          totalAmount={getTotalAmount()}
+          onPaymentComplete={handlePaymentComplete}
+          cartItems={cart}
+          storeInfo={storeInfo}
+        />
+
+        <SplitPaymentModal
+          isOpen={showSplitModal}
+          onClose={() => setShowSplitModal(false)}
+          totalAmount={getTotalAmount()}
+          cartItems={cart}
+          onPaymentComplete={handlePaymentComplete}
+        />
+
+        <CreditPaymentModal
+          isOpen={showCreditModal}
+          onClose={() => setShowCreditModal(false)}
+          totalAmount={getTotalAmount()}
+          cartItems={cart}
+          onPaymentComplete={handlePaymentComplete}
+        />
+      </div>
+    );
+  }
+
+  // Desktop layout (existing code with minor improvements)
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100" data-color-theme={colorTheme}>
-      {/* Enhanced Left Sidebar */}
+      {/* Desktop Left Sidebar */}
       <div className="w-80 bg-white shadow-xl flex flex-col border-r border-gray-200">
         {/* Enhanced Logo Section */}
         <div className={`p-6 border-b bg-gradient-to-r ${themeColors.gradient} shadow-lg`}>
