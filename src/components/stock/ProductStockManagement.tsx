@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -311,11 +312,23 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
     }
 
     try {
-      console.log("Removing product assignment:", assignmentId);
+      console.log("Removing product assignment:", assignmentId, "for product:", productName);
       
-      // First, get the product ID from the assignment
-      const assignment = assignedProducts.find(p => p.assignment_id === assignmentId);
-      if (!assignment) {
+      // First, get the product assignment details
+      const { data: assignmentData, error: fetchError } = await supabase
+        .from('product_shops')
+        .select('product_id')
+        .eq('id', assignmentId)
+        .eq('user_id', user?.id)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching assignment details:', fetchError);
+        toast.error('Failed to find product assignment');
+        return;
+      }
+
+      if (!assignmentData) {
         toast.error('Product assignment not found');
         return;
       }
@@ -324,13 +337,12 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
       const { error: stockError } = await supabase
         .from('stocks')
         .delete()
-        .eq('product_id', assignment.id)
+        .eq('product_id', assignmentData.product_id)
         .eq('shop_id', selectedShop)
         .eq('user_id', user?.id);
 
       if (stockError) {
         console.error('Error deleting stock entries:', stockError);
-        // Continue with assignment deletion even if stock deletion fails
         toast.warning('Some stock entries could not be deleted, but proceeding with deassignment');
       }
 
