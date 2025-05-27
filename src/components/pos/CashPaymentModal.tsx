@@ -61,6 +61,23 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
     }, 0);
   };
 
+  const calculateChangeDenominations = (changeAmount: number) => {
+    const changeDenominations: Denominations = {
+      500: 0, 200: 0, 100: 0, 50: 0, 20: 0, 10: 0, 5: 0, 2: 0, 1: 0
+    };
+    
+    let remainingAmount = Math.round(changeAmount);
+    
+    for (const value of denominationValues) {
+      if (remainingAmount >= value) {
+        changeDenominations[value] = Math.floor(remainingAmount / value);
+        remainingAmount = remainingAmount % value;
+      }
+    }
+    
+    return changeDenominations;
+  };
+
   const handleDenominationChange = (value: number, count: string) => {
     const numCount = parseInt(count) || 0;
     setDenominations(prev => ({
@@ -78,6 +95,7 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
 
   const cashAmount = parseFloat(cashReceived) || 0;
   const changeAmount = cashAmount - totalAmount;
+  const changeDenominations = changeAmount > 0 ? calculateChangeDenominations(changeAmount) : {};
 
   const handlePayment = async () => {
     if (cashAmount < totalAmount) {
@@ -125,7 +143,7 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Banknote className="h-5 w-5" />
@@ -143,48 +161,79 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
 
           <Separator />
 
-          <div className="space-y-3">
-            <Label className="text-lg font-semibold">Cash Denominations Received</Label>
-            <div className="grid grid-cols-3 gap-3">
-              {denominationValues.map(value => (
-                <div key={value} className="space-y-1">
-                  <Label htmlFor={`denom-${value}`} className="text-sm font-medium">
-                    ₹{value} notes
-                  </Label>
-                  <Input
-                    id={`denom-${value}`}
-                    type="number"
-                    min="0"
-                    value={denominations[value]}
-                    onChange={(e) => handleDenominationChange(value, e.target.value)}
-                    placeholder="0"
-                    className="text-center"
-                  />
-                  <div className="text-xs text-gray-500 text-center">
-                    = ₹{(value * (denominations[value] || 0)).toFixed(0)}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Cash Received Section */}
+            <div className="space-y-3">
+              <Label className="text-lg font-semibold">Cash Denominations Received</Label>
+              <div className="grid grid-cols-3 gap-3">
+                {denominationValues.map(value => (
+                  <div key={value} className="space-y-1">
+                    <Label htmlFor={`denom-${value}`} className="text-sm font-medium">
+                      ₹{value} notes
+                    </Label>
+                    <Input
+                      id={`denom-${value}`}
+                      type="number"
+                      min="0"
+                      value={denominations[value]}
+                      onChange={(e) => handleDenominationChange(value, e.target.value)}
+                      placeholder="0"
+                      className="text-center"
+                    />
+                    <div className="text-xs text-gray-500 text-center">
+                      = ₹{(value * (denominations[value] || 0)).toFixed(0)}
+                    </div>
                   </div>
+                ))}
+              </div>
+
+              <div className="space-y-2 mt-4">
+                <Label htmlFor="total-cash">Total Cash Received</Label>
+                <div className="text-xl font-bold text-blue-600">
+                  ₹{calculateTotalFromDenominations().toFixed(2)}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-2">
-            <Label htmlFor="total-cash">Total Cash Received</Label>
-            <div className="text-xl font-bold text-blue-600">
-              ₹{calculateTotalFromDenominations().toFixed(2)}
-            </div>
-          </div>
-
-          {cashAmount > 0 && (
-            <div className="space-y-2">
-              <Label>Change to Return</Label>
-              <div className={`text-xl font-bold ${changeAmount >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                ₹{changeAmount.toFixed(2)}
               </div>
             </div>
-          )}
+
+            {/* Change to Return Section */}
+            {changeAmount > 0 && (
+              <div className="space-y-3">
+                <Label className="text-lg font-semibold">Change to Return</Label>
+                <div className="text-xl font-bold text-blue-600 mb-3">
+                  ₹{changeAmount.toFixed(2)}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-base font-medium">Denomination Breakdown:</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {denominationValues.map(value => {
+                      const count = changeDenominations[value] || 0;
+                      if (count === 0) return null;
+                      
+                      return (
+                        <div key={value} className="bg-gray-50 p-2 rounded border text-center">
+                          <div className="text-sm font-medium">₹{value}</div>
+                          <div className="text-lg font-bold text-blue-600">{count}</div>
+                          <div className="text-xs text-gray-500">
+                            = ₹{(value * count).toFixed(0)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {changeAmount < 0 && cashAmount > 0 && (
+              <div className="space-y-3">
+                <Label className="text-lg font-semibold text-red-600">Insufficient Cash</Label>
+                <div className="text-xl font-bold text-red-600">
+                  Short by: ₹{Math.abs(changeAmount).toFixed(2)}
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="flex gap-2 pt-4">
             <Button variant="outline" onClick={handleClose} className="flex-1">
