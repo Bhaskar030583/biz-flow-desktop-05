@@ -25,8 +25,8 @@ const Users = () => {
     setCode,
     role,
     setRole,
-    selectedPages,
-    handlePageToggle,
+    selectedPermissions,
+    handlePermissionToggle,
     isSubmitting,
     handleAddUser,
     updateUserRole
@@ -78,7 +78,7 @@ const Users = () => {
           <Card>
             <CardHeader>
               <CardTitle>Add New User</CardTitle>
-              <CardDescription>Create a new user account with specific role and page access</CardDescription>
+              <CardDescription>Create a new user account with specific role and granular page permissions</CardDescription>
             </CardHeader>
             <CardContent>
               <AddUserForm 
@@ -93,8 +93,8 @@ const Users = () => {
                 setCode={setCode}
                 role={role}
                 setRole={setRole}
-                selectedPages={selectedPages}
-                handlePageToggle={handlePageToggle}
+                selectedPermissions={selectedPermissions}
+                handlePermissionToggle={handlePermissionToggle}
                 isSubmitting={isSubmitting}
               />
             </CardContent>

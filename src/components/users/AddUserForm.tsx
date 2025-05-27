@@ -1,19 +1,18 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { UserRole } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Loader2, UserPlus, ShieldCheck } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { PageAccessControl } from "./PageAccessControl";
+import { GranularPageAccessControl } from "./GranularPageAccessControl";
+
+interface PagePermission {
+  view: boolean;
+  edit: boolean;
+  delete: boolean;
+}
 
 interface AddUserFormProps {
   handleAddUser: (e: React.FormEvent) => Promise<void>;
@@ -27,8 +26,8 @@ interface AddUserFormProps {
   setCode: (value: string) => void;
   role: UserRole;
   setRole: (value: UserRole) => void;
-  selectedPages: string[];
-  handlePageToggle: (page: string) => void;
+  selectedPermissions: Record<string, PagePermission>;
+  handlePermissionToggle: (pageId: string, action: keyof PagePermission) => void;
   isSubmitting: boolean;
 }
 
@@ -44,10 +43,16 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({
   setCode,
   role,
   setRole,
-  selectedPages,
-  handlePageToggle,
+  selectedPermissions,
+  handlePermissionToggle,
   isSubmitting,
 }) => {
+  const getTotalPermissions = () => {
+    return Object.values(selectedPermissions).reduce((total, permissions) => {
+      return total + Object.values(permissions).filter(Boolean).length;
+    }, 0);
+  };
+
   return (
     <form onSubmit={handleAddUser} className="space-y-6">
       <div className="grid gap-4">
@@ -143,10 +148,10 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({
         </div>
       </div>
       
-      {/* Page Access Control */}
-      <PageAccessControl 
-        selectedPages={selectedPages}
-        onPageToggle={handlePageToggle}
+      {/* Granular Page Access Control */}
+      <GranularPageAccessControl 
+        selectedPermissions={selectedPermissions}
+        onPermissionToggle={handlePermissionToggle}
       />
       
       <Button 
@@ -162,7 +167,7 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({
         ) : (
           <>
             <UserPlus className="mr-2 h-4 w-4" />
-            Add User with {role.charAt(0).toUpperCase() + role.slice(1)} Role
+            Add User with {role.charAt(0).toUpperCase() + role.slice(1)} Role ({getTotalPermissions()} permissions)
           </>
         )}
       </Button>

@@ -28,7 +28,11 @@ export const useUserManagement = () => {
     role, setRole,
     selectedPages, setSelectedPages,
     handlePageToggle,
-    isSubmitting, setIsSubmitting
+    isSubmitting, setIsSubmitting,
+    selectedPermissions,
+    handlePermissionToggle,
+    resetPermissions,
+    setPermissions
   } = useUserFormState();
   
   const fetchUsers = async () => {
@@ -44,17 +48,20 @@ export const useUserManagement = () => {
         throw profilesError;
       }
       
-      // Get auth users to get email addresses
-      const { data: authUsers, error: authError } = await supabase
-        .rpc('get_auth_users_view');
-      
-      if (authError) {
-        console.warn('Could not fetch auth users:', authError);
+      // Try to get auth users but handle errors gracefully
+      let authUsers: any[] = [];
+      try {
+        const { data, error } = await supabase.rpc('get_auth_users_view');
+        if (!error && data) {
+          authUsers = Array.isArray(data) ? data : [];
+        }
+      } catch (error) {
+        console.warn('Could not fetch auth users, using profile data only:', error);
       }
       
       // Map the profiles to UserData type with email information
       const formattedUsers: UserData[] = profiles?.map((profile) => {
-        const authUser = authUsers?.find((user: any) => user.id === profile.id);
+        const authUser = authUsers.find((user: any) => user.id === profile.id);
         return {
           id: profile.id,
           full_name: profile.full_name || '',
@@ -83,6 +90,11 @@ export const useUserManagement = () => {
     setIsSubmitting(true);
     
     try {
+      // Convert granular permissions to a simple array format for storage
+      const pageAccessArray = Object.entries(selectedPermissions)
+        .filter(([, permissions]) => Object.values(permissions).some(Boolean))
+        .map(([pageId]) => pageId);
+
       // Call signup from auth context
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -92,7 +104,8 @@ export const useUserManagement = () => {
             full_name: fullName,
             code: code,
             role: role,
-            page_access: selectedPages,
+            page_access: pageAccessArray,
+            permissions: selectedPermissions, // Store granular permissions
           },
         },
       });
@@ -104,7 +117,11 @@ export const useUserManagement = () => {
         throw error;
       }
       
-      toast.success(`User added successfully with access to ${selectedPages.length} pages`);
+      const totalPermissions = Object.values(selectedPermissions).reduce((total, permissions) => {
+        return total + Object.values(permissions).filter(Boolean).length;
+      }, 0);
+      
+      toast.success(`User added successfully with ${totalPermissions} permissions across ${pageAccessArray.length} pages`);
       
       // Reset form
       setEmail('');
@@ -113,6 +130,7 @@ export const useUserManagement = () => {
       setCode('');
       setRole('user' as UserRole);
       setSelectedPages(['dashboard']);
+      resetPermissions();
       
       // Refresh users list
       fetchUsers();
@@ -147,6 +165,10 @@ export const useUserManagement = () => {
     handlePageToggle,
     isSubmitting,
     handleAddUser,
-    updateUserRole
+    updateUserRole,
+    selectedPermissions,
+    handlePermissionToggle,
+    resetPermissions,
+    setPermissions
   };
 };
