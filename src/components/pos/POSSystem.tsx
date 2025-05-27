@@ -742,40 +742,40 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
     );
   }
 
-  // Desktop layout (existing code with minor improvements)
+  // Desktop layout with adjusted sidebar width and order summary position
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100" data-color-theme={colorTheme}>
-      {/* Desktop Left Sidebar */}
-      <div className="w-80 bg-white shadow-xl flex flex-col border-r border-gray-200">
+      {/* Narrower Desktop Left Sidebar */}
+      <div className="w-64 bg-white shadow-xl flex flex-col border-r border-gray-200">
         {/* Enhanced Logo Section */}
-        <div className={`p-6 border-b bg-gradient-to-r ${themeColors.gradient} shadow-lg`}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg ring-4 ring-white/20">
+        <div className={`p-4 border-b bg-gradient-to-r ${themeColors.gradient} shadow-lg`}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg ring-2 ring-white/20">
                 <img 
                   src="/lovable-uploads/528f105b-5de5-4806-a64a-99582022753b.png" 
                   alt="ABC Cafe Logo" 
-                  className="w-12 h-12 rounded-full object-cover"
+                  className="w-8 h-8 rounded-full object-cover"
                 />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">ABC CAFE</h2>
-                <p className="text-white/80 text-sm">Point of Sale System</p>
+                <h2 className="text-lg font-bold text-white">ABC CAFE</h2>
+                <p className="text-white/80 text-xs">POS System</p>
               </div>
             </div>
             
             {/* Control buttons */}
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               {/* Theme Selector */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-white hover:bg-white/20 h-9 w-9 p-0 rounded-full"
+                    className="text-white hover:bg-white/20 h-8 w-8 p-0 rounded-full"
                     title="Change Theme"
                   >
-                    <Palette className="h-4 w-4" />
+                    <Palette className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52 bg-white border border-gray-200 shadow-xl z-50">
@@ -786,9 +786,9 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                       className={`cursor-pointer p-3 ${colorTheme === theme.value ? 'bg-gray-100' : ''}`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded-full ${theme.color} shadow-sm`} />
-                        <span className="font-medium">{theme.label}</span>
-                        {colorTheme === theme.value && <CheckCircle className="ml-auto h-4 w-4 text-green-600" />}
+                        <div className={`w-4 h-4 rounded-full ${theme.color} shadow-sm`} />
+                        <span className="font-medium text-sm">{theme.label}</span>
+                        {colorTheme === theme.value && <CheckCircle className="ml-auto h-3 w-3 text-green-600" />}
                       </div>
                     </DropdownMenuItem>
                   ))}
@@ -800,22 +800,22 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                 size="sm"
                 variant="ghost"
                 onClick={handleExit}
-                className="text-white hover:bg-white/20 h-9 w-9 p-0 rounded-full"
+                className="text-white hover:bg-white/20 h-8 w-8 p-0 rounded-full"
                 title="Exit POS"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-3 w-3" />
               </Button>
             </div>
           </div>
         </div>
 
         {/* Enhanced Category Navigation */}
-        <div className="flex-1 p-6 overflow-y-auto">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <LayoutGrid className="h-5 w-5" />
+        <div className="flex-1 p-4 overflow-y-auto">
+          <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <LayoutGrid className="h-4 w-4" />
             Categories
           </h3>
-          <div className="space-y-2">
+          <div className="space-y-1">
             {categories.map(category => {
               const IconComponent = categoryIcons[category as keyof typeof categoryIcons] || LayoutGrid;
               const isActive = selectedCategory === category;
@@ -823,18 +823,18 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                 <Button
                   key={category}
                   variant={isActive ? "default" : "ghost"}
-                  className={`w-full justify-start gap-3 h-14 text-left rounded-xl transition-all duration-200 ${
+                  className={`w-full justify-start gap-2 h-10 text-left rounded-lg transition-all duration-200 ${
                     isActive 
-                      ? `bg-gradient-to-r ${themeColors.gradient} text-white ${themeColors.hover} shadow-lg transform scale-[1.02]` 
-                      : `text-gray-700 hover:bg-gray-100 hover:${themeColors.text} hover:shadow-md`
+                      ? `bg-gradient-to-r ${themeColors.gradient} text-white ${themeColors.hover} shadow-md` 
+                      : `text-gray-700 hover:bg-gray-100 hover:${themeColors.text} hover:shadow-sm`
                   }`}
                   onClick={() => setSelectedCategory(category)}
                 >
-                  <IconComponent className={`h-6 w-6 ${isActive ? 'text-white' : themeColors.text}`} />
-                  <span className="font-semibold text-base">
+                  <IconComponent className={`h-4 w-4 ${isActive ? 'text-white' : themeColors.text}`} />
+                  <span className="font-medium text-sm">
                     {category === "all" ? "All Items" : category}
                   </span>
-                  {isActive && <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>}
+                  {isActive && <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full"></div>}
                 </Button>
               );
             })}
@@ -843,23 +843,23 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
 
         {/* Enhanced Store Info */}
         {storeInfo && (
-          <div className="p-6 border-t bg-gradient-to-r from-gray-50 to-gray-100">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
+          <div className="p-4 border-t bg-gradient-to-r from-gray-50 to-gray-100">
+            <h3 className="text-xs font-semibold text-gray-800 mb-2 flex items-center gap-2">
+              <AlertCircle className="h-3 w-3" />
               Session Info
             </h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center gap-3 p-2 bg-white rounded-lg shadow-sm">
-                <Store className="h-5 w-5 text-blue-600" />
+            <div className="space-y-2 text-xs">
+              <div className="flex items-center gap-2 p-2 bg-white rounded-md shadow-sm">
+                <Store className="h-3 w-3 text-blue-600" />
                 <div>
-                  <p className="font-medium text-gray-800">{storeInfo.storeName}</p>
-                  <p className="text-xs text-gray-500">Store Location</p>
+                  <p className="font-medium text-gray-800 text-xs">{storeInfo.storeName}</p>
+                  <p className="text-xs text-gray-500">Store</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-2 bg-white rounded-lg shadow-sm">
-                <User className="h-5 w-5 text-green-600" />
+              <div className="flex items-center gap-2 p-2 bg-white rounded-md shadow-sm">
+                <User className="h-3 w-3 text-green-600" />
                 <div>
-                  <p className="font-medium text-gray-800">{storeInfo.salespersonName}</p>
+                  <p className="font-medium text-gray-800 text-xs">{storeInfo.salespersonName}</p>
                   <p className="text-xs text-gray-500">Cashier</p>
                 </div>
               </div>
@@ -868,13 +868,13 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
         )}
       </div>
 
-      {/* Enhanced Main Content Area */}
-      <div className="flex-1 flex">
+      {/* Main Content Area - Now Full Width */}
+      <div className="flex-1 flex flex-col">
         {/* Enhanced Products Section */}
         <div className="flex-1 p-6 overflow-hidden">
           {/* Enhanced Header */}
           <div className="mb-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <div>
                 <h1 className="text-3xl font-bold text-gray-800">Products</h1>
                 <p className="text-gray-600">Select items to add to cart</p>
@@ -937,8 +937,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
             </div>
           </div>
 
-          {/* Enhanced Products Grid */}
-          <div className={`grid ${getGridCols()} gap-4 overflow-y-auto h-[calc(100vh-240px)] pr-2`}>
+          {/* Enhanced Products Grid - Now takes more space */}
+          <div className={`grid ${getGridCols()} gap-4 overflow-y-auto h-[calc(100vh-320px)] pr-2`}>
             {filteredProducts.map(product => (
               <Card
                 key={product.id}
@@ -985,14 +985,14 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
           </div>
         </div>
 
-        {/* Enhanced Order Summary Section */}
-        <div className="w-80 bg-white shadow-xl border-l border-gray-200">
-          <div className="h-full flex flex-col">
+        {/* Order Summary Section - Now Below Products */}
+        <div className="bg-white shadow-xl border-t border-gray-200">
+          <div className="h-full flex flex-col max-h-80">
             {/* Enhanced Header */}
-            <div className={`p-6 border-b bg-gradient-to-r ${themeColors.gradient} shadow-lg`}>
+            <div className={`p-4 bg-gradient-to-r ${themeColors.gradient} shadow-lg`}>
               <div className="flex items-center justify-between text-white">
                 <div>
-                  <h2 className="text-xl font-bold">Current Order</h2>
+                  <h2 className="text-lg font-bold">Current Order</h2>
                   <p className="text-white/80 text-sm">Review your items</p>
                 </div>
                 <Badge variant="secondary" className={`bg-white ${themeColors.text} font-bold text-sm px-3 py-1`}>
@@ -1001,259 +1001,261 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
               </div>
             </div>
 
-            {/* Enhanced Cart Items */}
-            <div className="flex-1 p-4 overflow-y-auto">
-              {cart.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <ShoppingCart className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                  <h3 className="text-lg font-semibold mb-2">Empty Cart</h3>
-                  <p className="text-sm">Add items from the menu to get started</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {cart.map((item, index) => (
-                    <Card key={item.id} className="p-4 hover:shadow-md transition-shadow duration-200">
-                      <div className="flex items-center justify-between">
-                        {/* Left side: Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start gap-3">
-                            <Badge variant="outline" className={`${themeColors.text} border-${themeColors.text.split('-')[1]}-200 px-2 py-1 text-xs font-bold flex-shrink-0`}>
-                              #{index + 1}
-                            </Badge>
-                            <div className="min-w-0 flex-1">
-                              <h4 className="font-semibold text-gray-800 text-sm truncate">{item.name}</h4>
-                              <p className="text-xs text-gray-500">₹{item.price} each</p>
+            <div className="flex-1 flex">
+              {/* Cart Items - Horizontal Scroll */}
+              <div className="flex-1 p-4 overflow-x-auto">
+                {cart.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                    <h3 className="text-base font-semibold mb-1">Empty Cart</h3>
+                    <p className="text-sm">Add items from the menu to get started</p>
+                  </div>
+                ) : (
+                  <div className="flex gap-3 min-w-max">
+                    {cart.map((item, index) => (
+                      <Card key={item.id} className="p-3 hover:shadow-md transition-shadow duration-200 min-w-[250px]">
+                        <div className="flex items-center justify-between">
+                          {/* Left side: Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start gap-2">
+                              <Badge variant="outline" className={`${themeColors.text} border-${themeColors.text.split('-')[1]}-200 px-2 py-1 text-xs font-bold flex-shrink-0`}>
+                                #{index + 1}
+                              </Badge>
+                              <div className="min-w-0 flex-1">
+                                <h4 className="font-semibold text-gray-800 text-sm truncate">{item.name}</h4>
+                                <p className="text-xs text-gray-500">₹{item.price} each</p>
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Center: Quantity controls */}
-                        <div className="flex items-center gap-2 mx-3">
+                          {/* Center: Quantity controls */}
+                          <div className="flex items-center gap-2 mx-3">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 w-6 p-0 rounded-full"
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              disabled={item.quantity <= 1}
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="font-bold text-sm min-w-[1.5rem] text-center">
+                              {item.quantity}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 w-6 p-0 rounded-full"
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+
+                          {/* Right side: Total and Delete */}
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-gray-900 text-sm min-w-[50px] text-right">₹{item.total}</span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => removeFromCart(item.id)}
+                              className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {cart.length > 0 && (
+                <div className="w-80 border-l bg-gray-50">
+                  {/* Enhanced Discount Section */}
+                  <div className="p-3">
+                    {!discount && !showDiscountInput && (
+                      <Button
+                        variant="outline"
+                        className={`w-full flex items-center gap-2 border-${themeColors.text.split('-')[1]}-200 ${themeColors.text} hover:bg-${themeColors.text.split('-')[1]}-50 h-8 text-xs font-medium rounded-lg`}
+                        onClick={() => setShowDiscountInput(true)}
+                      >
+                        <Percent className="h-3 w-3" />
+                        Add Discount
+                      </Button>
+                    )}
+
+                    {showDiscountInput && (
+                      <div className="space-y-2">
+                        <div className="flex gap-1">
+                          <Button
+                            variant={discountType === 'percentage' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setDiscountType('percentage')}
+                            className={discountType === 'percentage' ? `${themeColors.accent} h-6 px-2 text-xs` : 'h-6 px-2 text-xs'}
+                          >
+                            <Percent className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant={discountType === 'value' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setDiscountType('value')}
+                            className={discountType === 'value' ? `${themeColors.accent} h-6 px-2 text-xs` : 'h-6 px-2 text-xs'}
+                          >
+                            <DollarSign className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        
+                        <div className="flex gap-1">
+                          <Input
+                            type="number"
+                            placeholder={discountType === 'percentage' ? 'Enter %' : 'Enter ₹'}
+                            value={discountInput}
+                            onChange={(e) => setDiscountInput(e.target.value)}
+                            className="flex-1 h-6 text-xs"
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                applyDiscount();
+                              }
+                            }}
+                          />
+                          <Button
+                            size="sm"
+                            onClick={applyDiscount}
+                            className="bg-green-600 hover:bg-green-700 h-6 px-2 text-xs"
+                          >
+                            Apply
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-7 w-7 p-0 rounded-full"
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            disabled={item.quantity <= 1}
+                            onClick={() => setShowDiscountInput(false)}
+                            className="h-6 px-1"
                           >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="font-bold text-base min-w-[2rem] text-center">
-                            {item.quantity}
-                          </span>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 w-7 p-0 rounded-full"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          >
-                            <Plus className="h-3 w-3" />
+                            <X className="h-3 w-3" />
                           </Button>
                         </div>
+                      </div>
+                    )}
 
-                        {/* Right side: Total and Delete */}
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-gray-900 text-sm min-w-[60px] text-right">₹{item.total}</span>
+                    {discount && (
+                      <Card className="p-2 bg-green-50 border border-green-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Percent className="h-3 w-3 text-green-600" />
+                            <span className="text-xs font-semibold text-green-800">{discount.description}</span>
+                          </div>
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => removeFromCart(item.id)}
-                            className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
+                            onClick={removeDiscount}
+                            className="h-5 w-5 p-0 text-red-500 hover:text-red-700"
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <X className="h-3 w-3" />
                           </Button>
                         </div>
+                      </Card>
+                    )}
+                  </div>
+
+                  {/* Enhanced Tax Toggle */}
+                  <div className="p-3 border-t">
+                    <div className="flex items-center justify-between p-2 bg-white rounded-lg shadow-sm">
+                      <Label htmlFor="tax-toggle" className="text-xs font-semibold text-gray-700">
+                        Include Tax (18%)
+                      </Label>
+                      <Switch
+                        id="tax-toggle"
+                        checked={includeTax}
+                        onCheckedChange={setIncludeTax}
+                      />
+                    </div>
+                  </div>
+
+                  <Separator />
+                  
+                  {/* Enhanced Order Summary */}
+                  <div className="p-3 space-y-2 bg-white">
+                    <div className="flex justify-between text-gray-600 text-xs">
+                      <span>Subtotal</span>
+                      <span className="font-semibold">₹{getSubtotal().toFixed(2)}</span>
+                    </div>
+                    
+                    {discount && (
+                      <div className="flex justify-between text-green-600 text-xs">
+                        <span>Discount ({discount.description})</span>
+                        <span className="font-semibold">-₹{getDiscountAmount().toFixed(2)}</span>
                       </div>
-                    </Card>
-                  ))}
+                    )}
+                    
+                    {includeTax && (
+                      <div className="flex justify-between text-gray-600 text-xs">
+                        <span>Tax (18%)</span>
+                        <span className="font-semibold">₹{getTaxAmount().toFixed(2)}</span>
+                      </div>
+                    )}
+                    
+                    <Separator />
+                    
+                    <div className="flex justify-between text-lg font-bold text-gray-900 p-2 bg-gray-50 rounded-lg">
+                      <span>Total</span>
+                      <span>₹{getTotalAmount().toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  {/* Enhanced Payment Buttons */}
+                  <div className="p-3 space-y-2 border-t bg-gray-50">
+                    <div className="grid grid-cols-2 gap-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className={`flex items-center gap-1 border-${themeColors.text.split('-')[1]}-200 ${themeColors.text} hover:bg-${themeColors.text.split('-')[1]}-50 h-8 text-xs font-semibold rounded-lg`}
+                        onClick={handleCashPayment}
+                      >
+                        <Banknote className="h-3 w-3" />
+                        Cash
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center gap-1 border-blue-200 text-blue-600 hover:bg-blue-50 h-8 text-xs font-semibold rounded-lg"
+                        onClick={handleUPIPayment}
+                      >
+                        <Smartphone className="h-3 w-3" />
+                        UPI
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center gap-1 border-purple-200 text-purple-600 hover:bg-purple-50 h-8 text-xs font-semibold rounded-lg"
+                        onClick={handleCreditPayment}
+                      >
+                        <UserCheck className="h-3 w-3" />
+                        Credit
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center gap-1 border-indigo-200 text-indigo-600 hover:bg-indigo-50 h-8 text-xs font-semibold rounded-lg"
+                        onClick={handleSplitPayment}
+                      >
+                        <Split className="h-3 w-3" />
+                        Split
+                      </Button>
+                    </div>
+                    
+                    <Button 
+                      className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 h-10 text-sm font-bold shadow-lg rounded-lg"
+                      onClick={handleCardPayment}
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Complete Card Payment
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
-
-            {cart.length > 0 && (
-              <>
-                {/* Enhanced Discount Section */}
-                <div className="p-4 border-t bg-gray-50">
-                  {!discount && !showDiscountInput && (
-                    <Button
-                      variant="outline"
-                      className={`w-full flex items-center gap-2 border-${themeColors.text.split('-')[1]}-200 ${themeColors.text} hover:bg-${themeColors.text.split('-')[1]}-50 h-10 text-sm font-medium rounded-lg`}
-                      onClick={() => setShowDiscountInput(true)}
-                    >
-                      <Percent className="h-4 w-4" />
-                      Add Discount
-                    </Button>
-                  )}
-
-                  {showDiscountInput && (
-                    <div className="space-y-2">
-                      <div className="flex gap-1">
-                        <Button
-                          variant={discountType === 'percentage' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setDiscountType('percentage')}
-                          className={discountType === 'percentage' ? `${themeColors.accent} h-7 px-2` : 'h-7 px-2'}
-                        >
-                          <Percent className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant={discountType === 'value' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setDiscountType('value')}
-                          className={discountType === 'value' ? `${themeColors.accent} h-7 px-2` : 'h-7 px-2'}
-                        >
-                          <DollarSign className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      
-                      <div className="flex gap-1">
-                        <Input
-                          type="number"
-                          placeholder={discountType === 'percentage' ? 'Enter %' : 'Enter ₹'}
-                          value={discountInput}
-                          onChange={(e) => setDiscountInput(e.target.value)}
-                          className="flex-1 h-7 text-xs"
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              applyDiscount();
-                            }
-                          }}
-                        />
-                        <Button
-                          size="sm"
-                          onClick={applyDiscount}
-                          className="bg-green-600 hover:bg-green-700 h-7 px-2 text-xs"
-                        >
-                          Apply
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setShowDiscountInput(false)}
-                          className="h-7 px-1"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {discount && (
-                    <Card className="p-3 bg-green-50 border border-green-200">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Percent className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-semibold text-green-800">{discount.description}</span>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={removeDiscount}
-                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </Card>
-                  )}
-                </div>
-
-                {/* Enhanced Tax Toggle */}
-                <div className="p-4 border-t bg-gray-50">
-                  <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
-                    <Label htmlFor="tax-toggle" className="text-sm font-semibold text-gray-700">
-                      Include Tax (18%)
-                    </Label>
-                    <Switch
-                      id="tax-toggle"
-                      checked={includeTax}
-                      onCheckedChange={setIncludeTax}
-                    />
-                  </div>
-                </div>
-
-                <Separator />
-                
-                {/* Enhanced Order Summary */}
-                <div className="p-4 space-y-3 bg-white">
-                  <div className="flex justify-between text-gray-600 text-sm">
-                    <span>Subtotal</span>
-                    <span className="font-semibold">₹{getSubtotal().toFixed(2)}</span>
-                  </div>
-                  
-                  {discount && (
-                    <div className="flex justify-between text-green-600 text-sm">
-                      <span>Discount ({discount.description})</span>
-                      <span className="font-semibold">-₹{getDiscountAmount().toFixed(2)}</span>
-                    </div>
-                  )}
-                  
-                  {includeTax && (
-                    <div className="flex justify-between text-gray-600 text-sm">
-                      <span>Tax (18%)</span>
-                      <span className="font-semibold">₹{getTaxAmount().toFixed(2)}</span>
-                    </div>
-                  )}
-                  
-                  <Separator />
-                  
-                  <div className="flex justify-between text-xl font-bold text-gray-900 p-2 bg-gray-50 rounded-lg">
-                    <span>Total Amount</span>
-                    <span>₹{getTotalAmount().toFixed(2)}</span>
-                  </div>
-                </div>
-
-                {/* Enhanced Payment Buttons */}
-                <div className="p-4 space-y-3 border-t bg-gray-50">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className={`flex items-center gap-2 border-${themeColors.text.split('-')[1]}-200 ${themeColors.text} hover:bg-${themeColors.text.split('-')[1]}-50 h-12 text-sm font-semibold rounded-lg`}
-                      onClick={handleCashPayment}
-                    >
-                      <Banknote className="h-5 w-5" />
-                      Cash
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 h-12 text-sm font-semibold rounded-lg"
-                      onClick={handleUPIPayment}
-                    >
-                      <Smartphone className="h-5 w-5" />
-                      UPI
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex items-center gap-2 border-purple-200 text-purple-600 hover:bg-purple-50 h-12 text-sm font-semibold rounded-lg"
-                      onClick={handleCreditPayment}
-                    >
-                      <UserCheck className="h-5 w-5" />
-                      Credit
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex items-center gap-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50 h-12 text-sm font-semibold rounded-lg"
-                      onClick={handleSplitPayment}
-                    >
-                      <Split className="h-5 w-5" />
-                      Split
-                    </Button>
-                  </div>
-                  
-                  <Button 
-                    className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 h-14 text-base font-bold shadow-lg rounded-lg"
-                    onClick={handleCardPayment}
-                  >
-                    <CreditCard className="h-5 w-5 mr-2" />
-                    Complete Card Payment
-                  </Button>
-                </div>
-              </>
-            )}
           </div>
         </div>
       </div>
