@@ -666,7 +666,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                   onClick={() => addToCart(product)}
                 >
                   <CardContent className="p-2 h-full flex flex-col justify-between">
-                    <div className="text-center">
+                    <div className="text-center flex-1">
                       <h3 className={`font-bold text-gray-700 ${cardConfig.titleSize} mb-1 line-clamp-2 leading-tight`}>
                         {product.name}
                       </h3>
@@ -948,23 +948,27 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                       {product.name}
                     </h3>
                     
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
                         <span className={`font-bold text-gray-900 ${cardConfig.priceSize}`}>
                           ₹{product.price}
                         </span>
-                        <span className="text-xs text-gray-500">Qty: {product.quantity || 0}</span>
+                        <Button
+                          size="sm"
+                          className={`bg-gradient-to-r ${themeColors.gradient} ${themeColors.hover} text-white h-6 w-6 p-0 shadow-lg rounded-full group-hover:scale-110 transition-transform duration-200`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart(product);
+                          }}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
                       </div>
-                      <Button
-                        size="sm"
-                        className={`bg-gradient-to-r ${themeColors.gradient} ${themeColors.hover} text-white h-8 w-8 p-0 shadow-lg rounded-full group-hover:scale-110 transition-transform duration-200`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart(product);
-                        }}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
+                      <div className="text-center">
+                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                          Stock: {product.quantity || 0}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
