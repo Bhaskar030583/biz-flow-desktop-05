@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Users, Plus, Edit, Trash2 } from 'lucide-react';
+import { Users, Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Employee } from '@/types/hrms';
+import { useNavigate } from 'react-router-dom';
 
 const EmployeeManagement = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -17,6 +18,7 @@ const EmployeeManagement = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState<{
     employee_code: string;
@@ -223,11 +225,22 @@ const EmployeeManagement = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Employee Management</h1>
-          <p className="text-muted-foreground">
-            Manage employee records and information
-          </p>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate('/hrms')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to HRMS
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Employee Management</h1>
+            <p className="text-muted-foreground">
+              Manage employee records and information
+            </p>
+          </div>
         </div>
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
