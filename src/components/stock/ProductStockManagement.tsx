@@ -313,27 +313,39 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
     try {
       console.log("Removing product assignment:", assignmentId);
       
-      // First, delete all stock entries for this product-shop combination
+      // First, get the product ID from the assignment
+      const assignment = assignedProducts.find(p => p.assignment_id === assignmentId);
+      if (!assignment) {
+        toast.error('Product assignment not found');
+        return;
+      }
+
+      // Delete all stock entries for this product-shop combination first
       const { error: stockError } = await supabase
         .from('stocks')
         .delete()
-        .eq('product_id', assignedProducts.find(p => p.assignment_id === assignmentId)?.id)
+        .eq('product_id', assignment.id)
         .eq('shop_id', selectedShop)
         .eq('user_id', user?.id);
 
       if (stockError) {
         console.error('Error deleting stock entries:', stockError);
         // Continue with assignment deletion even if stock deletion fails
+        toast.warning('Some stock entries could not be deleted, but proceeding with deassignment');
       }
 
       // Then delete the product assignment
-      const { error } = await supabase
+      const { error: assignmentError } = await supabase
         .from('product_shops')
         .delete()
         .eq('id', assignmentId)
         .eq('user_id', user?.id);
       
-      if (error) throw error;
+      if (assignmentError) {
+        console.error('Error deleting product assignment:', assignmentError);
+        toast.error('Failed to deassign product from store');
+        return;
+      }
       
       toast.success(`${productName} deassigned from store successfully`);
       fetchAssignedProducts();
