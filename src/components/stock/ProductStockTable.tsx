@@ -76,6 +76,38 @@ const ProductStockTable = ({
     return colors[index];
   };
 
+  const handleDeleteStock = (productId: string, productName: string) => {
+    console.log('=== HANDLE DELETE STOCK ===');
+    console.log('Product ID:', productId);
+    console.log('Product Name:', productName);
+    console.log('onDeleteStock function type:', typeof onDeleteStock);
+    
+    if (typeof onDeleteStock === 'function') {
+      console.log('Calling onDeleteStock...');
+      onDeleteStock(productId, productName);
+      console.log('onDeleteStock called successfully');
+    } else {
+      console.error('onDeleteStock is not a function!', onDeleteStock);
+      toast.error('Delete function is not available');
+    }
+  };
+
+  const handleRemoveProduct = (assignmentId: string, productName: string) => {
+    console.log('=== HANDLE REMOVE PRODUCT ===');
+    console.log('Assignment ID:', assignmentId);
+    console.log('Product Name:', productName);
+    console.log('onRemoveProduct function type:', typeof onRemoveProduct);
+    
+    if (typeof onRemoveProduct === 'function') {
+      console.log('Calling onRemoveProduct...');
+      onRemoveProduct(assignmentId, productName);
+      console.log('onRemoveProduct called successfully');
+    } else {
+      console.error('onRemoveProduct is not a function!', onRemoveProduct);
+      toast.error('Remove function is not available');
+    }
+  };
+
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -158,7 +190,6 @@ const ProductStockTable = ({
                         e.stopPropagation();
                         console.log('=== EDIT BUTTON CLICKED ===');
                         console.log('Product:', product.name, product.id);
-                        console.log('Event:', e);
                         console.log('onEditStock function type:', typeof onEditStock);
                         console.log('About to call onEditStock with product:', product);
                         
@@ -185,12 +216,6 @@ const ProductStockTable = ({
                             size="sm"
                             className="h-8 px-2 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50"
                             title="Delete stock entry"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              console.log('=== DELETE TRIGGER CLICKED ===');
-                              console.log('Product:', product.name, product.id);
-                            }}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -206,23 +231,7 @@ const ProductStockTable = ({
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                console.log('=== DELETE ACTION CLICKED ===');
-                                console.log('Product ID:', product.id);
-                                console.log('Product Name:', product.name);
-                                console.log('onDeleteStock function type:', typeof onDeleteStock);
-                                
-                                if (typeof onDeleteStock === 'function') {
-                                  console.log('Calling onDeleteStock...');
-                                  onDeleteStock(product.id, product.name);
-                                  console.log('onDeleteStock called successfully');
-                                } else {
-                                  console.error('onDeleteStock is not a function!', onDeleteStock);
-                                  toast.error('Delete function is not available');
-                                }
-                              }}
+                              onClick={() => handleDeleteStock(product.id, product.name)}
                               className="bg-red-600 hover:bg-red-700"
                             >
                               Delete
@@ -239,12 +248,6 @@ const ProductStockTable = ({
                           size="sm"
                           className="h-8 px-2"
                           title="Deassign product from store"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            console.log('=== DEASSIGN TRIGGER CLICKED ===');
-                            console.log('Product:', product.name, product.assignment_id);
-                          }}
                         >
                           <UserMinus className="h-4 w-4" />
                         </Button>
@@ -260,23 +263,7 @@ const ProductStockTable = ({
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              console.log('=== DEASSIGN ACTION CLICKED ===');
-                              console.log('Assignment ID:', product.assignment_id);
-                              console.log('Product Name:', product.name);
-                              console.log('onRemoveProduct function type:', typeof onRemoveProduct);
-                              
-                              if (typeof onRemoveProduct === 'function') {
-                                console.log('Calling onRemoveProduct...');
-                                onRemoveProduct(product.assignment_id, product.name);
-                                console.log('onRemoveProduct called successfully');
-                              } else {
-                                console.error('onRemoveProduct is not a function!', onRemoveProduct);
-                                toast.error('Remove function is not available');
-                              }
-                            }}
+                            onClick={() => handleRemoveProduct(product.assignment_id, product.name)}
                             className="bg-red-600 hover:bg-red-700"
                           >
                             Deassign
