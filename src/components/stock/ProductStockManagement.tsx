@@ -16,7 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Package2, Search, Store, Plus, X, Package, Edit } from "lucide-react";
+import { Package2, Search, Store, Plus, UserMinus, Package, Edit } from "lucide-react";
 
 interface Product {
   id: string;
@@ -301,7 +301,11 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
     }
   };
 
-  const removeProductFromShop = async (assignmentId: string) => {
+  const removeProductFromShop = async (assignmentId: string, productName: string) => {
+    if (!confirm(`Are you sure you want to deassign "${productName}" from this store? This will remove all stock data for this product.`)) {
+      return;
+    }
+
     try {
       console.log("Removing product assignment:", assignmentId);
       
@@ -313,11 +317,11 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
       
       if (error) throw error;
       
-      toast.success('Product removed from shop successfully');
+      toast.success(`${productName} deassigned from store successfully`);
       fetchAssignedProducts();
     } catch (error) {
       console.error('Error removing product from shop:', error);
-      toast.error('Failed to remove product from shop');
+      toast.error('Failed to deassign product from store');
     }
   };
 
@@ -746,15 +750,18 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
                               size="sm"
                               onClick={() => handleEditStock(product)}
                               className="h-8 px-2"
+                              title="Edit stock values"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="destructive"
                               size="sm"
-                              onClick={() => removeProductFromShop(product.assignment_id)}
+                              onClick={() => removeProductFromShop(product.assignment_id, product.name)}
+                              className="h-8 px-2"
+                              title="Deassign product from store"
                             >
-                              <X className="h-4 w-4" />
+                              <UserMinus className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
