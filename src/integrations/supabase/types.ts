@@ -316,6 +316,7 @@ export type Database = {
           id: string
           name: string
           price: number
+          quantity: number
           updated_at: string
           user_id: string
         }
@@ -326,6 +327,7 @@ export type Database = {
           id?: string
           name: string
           price: number
+          quantity?: number
           updated_at?: string
           user_id: string
         }
@@ -336,6 +338,7 @@ export type Database = {
           id?: string
           name?: string
           price?: number
+          quantity?: number
           updated_at?: string
           user_id?: string
         }

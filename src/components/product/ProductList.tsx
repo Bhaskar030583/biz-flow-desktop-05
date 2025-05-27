@@ -33,6 +33,7 @@ interface Product {
   category: string;
   price: number;
   cost_price: number | null;
+  quantity: number;
   created_at: string;
 }
 
@@ -48,6 +49,7 @@ export function ProductList() {
   const productSchema = z.object({
     name: z.string().min(2, "Name is required"),
     category: z.string().min(1, "Category is required"),
+    quantity: z.coerce.number().min(0, "Quantity must be a positive number"),
     price: z.coerce.number().min(0, "Price must be a positive number"),
     cost_price: z.coerce.number().min(0, "Cost price must be a positive number").optional(),
   });
@@ -57,6 +59,7 @@ export function ProductList() {
     defaultValues: {
       name: "",
       category: "",
+      quantity: 0,
       price: 0,
       cost_price: 0,
     },
@@ -74,10 +77,11 @@ export function ProductList() {
         
         if (error) throw error;
         
-        // Make sure to handle products with missing cost_price
+        // Make sure to handle products with missing cost_price and quantity
         const productsWithDefaults = (data || []).map(product => ({
           ...product,
-          cost_price: product.cost_price !== undefined ? product.cost_price : null
+          cost_price: product.cost_price !== undefined ? product.cost_price : null,
+          quantity: product.quantity !== undefined ? product.quantity : 0
         })) as Product[];
         
         setProducts(productsWithDefaults);
@@ -130,6 +134,7 @@ export function ProductList() {
     form.reset({
       name: product.name,
       category: product.category,
+      quantity: product.quantity,
       price: product.price,
       cost_price: product.cost_price || undefined,
     });
@@ -145,6 +150,7 @@ export function ProductList() {
         .update({
           name: values.name,
           category: values.category,
+          quantity: values.quantity,
           price: values.price,
           cost_price: values.cost_price || null,
         })
@@ -228,6 +234,7 @@ export function ProductList() {
               <TableRow>
                 <TableHead>Product Name</TableHead>
                 <TableHead>Category</TableHead>
+                <TableHead>Quantity</TableHead>
                 <TableHead>Cost Price</TableHead>
                 <TableHead>Selling Price</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -238,6 +245,12 @@ export function ProductList() {
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.category}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <Package className="h-3 w-3 mr-1" />
+                      {product.quantity}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center">
                       <IndianRupee className="h-3 w-3 mr-1" />
@@ -310,6 +323,20 @@ export function ProductList() {
                     <FormLabel>Category</FormLabel>
                     <FormControl>
                       <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quantity</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
