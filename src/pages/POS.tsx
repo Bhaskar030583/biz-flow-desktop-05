@@ -18,7 +18,7 @@ const POS = () => {
   const [showStoreModal, setShowStoreModal] = useState(true);
   const [isPopupWindow, setIsPopupWindow] = useState(false);
 
-  const { data: products, isLoading } = useQuery({
+  const { data: products, isLoading, refetch: refetchProducts } = useQuery({
     queryKey: ['pos-products'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -71,8 +71,8 @@ const POS = () => {
   };
 
   const handleStockAdded = () => {
-    // Refresh products query to reflect updated stock
-    window.location.reload();
+    // Refresh products query to reflect updated stock without page reload
+    refetchProducts();
   };
 
   // If this is a popup window, render without DashboardLayout
