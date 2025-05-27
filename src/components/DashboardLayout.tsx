@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -97,31 +96,24 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
       </div>
 
+      {/* Mobile Menu */}
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="lg:hidden fixed top-4 left-4 z-50"
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="p-0 w-64">
+          <SidebarContent />
+        </SheetContent>
+      </Sheet>
+
       {/* Main Content */}
       <div className="flex flex-col flex-1 lg:ml-64">
-        <header className="flex items-center justify-between p-4 border-b bg-card z-20">
-          <div className="flex items-center gap-4">
-            {/* Mobile Menu Trigger - Only visible on mobile */}
-            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="lg:hidden">
-                  <Menu className="h-4 w-4" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-64">
-                <SidebarContent />
-              </SheetContent>
-            </Sheet>
-            
-            <h1 className="text-xl font-semibold">
-              {sidebarItems.find(item => location.pathname === item.href || 
-                (item.href !== '/dashboard' && location.pathname.startsWith(item.href)))?.name || 'Dashboard'}
-            </h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <ModeToggle />
-          </div>
-        </header>
         <main className="flex-1 overflow-auto p-6">
           {children}
         </main>
