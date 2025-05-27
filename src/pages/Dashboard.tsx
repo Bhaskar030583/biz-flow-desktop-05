@@ -79,6 +79,8 @@ const Dashboard = () => {
             cashAmount={data.cashAmount}
             cardAmount={data.cardAmount}
             onlineAmount={data.onlineAmount}
+            creditReceived={data.creditReceived}
+            creditGiven={data.creditGiven}
           />
         </div>
         
