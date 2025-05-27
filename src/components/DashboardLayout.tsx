@@ -51,14 +51,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b">
         <h2 className="text-lg font-semibold">Business Management</h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        >
-          <X className="h-4 w-4" />
-        </Button>
       </div>
       <nav className="flex-1 p-4 space-y-2">
         {sidebarItems.map((item) => {
@@ -117,7 +109,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   <Menu className="h-4 w-4" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-64 z-50">
+              <SheetContent side="left" className="p-0 w-64">
                 <SidebarContent />
               </SheetContent>
             </Sheet>
