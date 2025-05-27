@@ -168,7 +168,7 @@ const CollectionForm: React.FC<CollectionFormProps> = ({ onSuccess, initialData 
                 </SelectTrigger>
                 <SelectContent className="bg-white">
                   <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="online">Online</SelectItem>
+                  <SelectItem value="online">UPI</SelectItem>
                   <SelectItem value="card">Card</SelectItem>
                 </SelectContent>
               </Select>

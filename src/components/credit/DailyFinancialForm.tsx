@@ -317,7 +317,7 @@ const DailyFinancialForm: React.FC<DailyFinancialFormProps> = ({ onSuccess, onCa
             name="online_amount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Online Amount</FormLabel>
+                <FormLabel>UPI Amount</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
