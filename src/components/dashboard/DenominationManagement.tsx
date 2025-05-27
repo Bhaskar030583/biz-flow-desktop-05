@@ -130,7 +130,7 @@ export const DenominationManagement: React.FC = () => {
         .upsert({
           shop_id: selectedShop,
           date: today,
-          denominations: denominations,
+          denominations: denominations as any, // Cast to any to satisfy Json type
           total_amount: calculateTotal(),
           user_id: user?.id
         }, {
