@@ -68,29 +68,63 @@ const ProductStockTable = ({
   };
 
   const handleEditClick = (product: AssignedProduct) => {
-    console.log('Edit button clicked for product:', product);
-    onEditStock(product);
+    console.log('=== EDIT BUTTON CLICKED ===');
+    console.log('Product:', product);
+    console.log('onEditStock function:', typeof onEditStock);
+    console.log('About to call onEditStock...');
+    
+    try {
+      onEditStock(product);
+      console.log('onEditStock called successfully');
+    } catch (error) {
+      console.error('Error calling onEditStock:', error);
+      toast.error('Error opening edit dialog');
+    }
   };
 
   const handleDeleteConfirm = (productId: string, productName: string) => {
-    console.log('Delete confirmed for:', productName, 'ID:', productId);
+    console.log('=== DELETE CONFIRMED ===');
+    console.log('Product ID:', productId);
+    console.log('Product Name:', productName);
+    console.log('isAdmin:', isAdmin);
+    console.log('onDeleteStock function:', typeof onDeleteStock);
     
     if (!isAdmin) {
+      console.log('User is not admin, showing error');
       toast.error("Only administrators can delete stock entries");
       return;
     }
     
     if (!onDeleteStock) {
+      console.log('onDeleteStock function not available');
       toast.error("Delete functionality is not available");
       return;
     }
     
-    onDeleteStock(productId, productName);
+    console.log('About to call onDeleteStock...');
+    try {
+      onDeleteStock(productId, productName);
+      console.log('onDeleteStock called successfully');
+    } catch (error) {
+      console.error('Error calling onDeleteStock:', error);
+      toast.error('Error deleting stock');
+    }
   };
 
   const handleDeassignConfirm = (assignmentId: string, productName: string) => {
-    console.log('Deassign confirmed for:', productName, 'Assignment ID:', assignmentId);
-    onRemoveProduct(assignmentId, productName);
+    console.log('=== DEASSIGN CONFIRMED ===');
+    console.log('Assignment ID:', assignmentId);
+    console.log('Product Name:', productName);
+    console.log('onRemoveProduct function:', typeof onRemoveProduct);
+    
+    console.log('About to call onRemoveProduct...');
+    try {
+      onRemoveProduct(assignmentId, productName);
+      console.log('onRemoveProduct called successfully');
+    } catch (error) {
+      console.error('Error calling onRemoveProduct:', error);
+      toast.error('Error removing product assignment');
+    }
   };
 
   return (
@@ -169,7 +203,10 @@ const ProductStockTable = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleEditClick(product)}
+                      onClick={() => {
+                        console.log('Edit button clicked, product:', product.name);
+                        handleEditClick(product);
+                      }}
                       className="h-8 px-2"
                       title="Edit stock values"
                     >
@@ -184,6 +221,7 @@ const ProductStockTable = ({
                             size="sm"
                             className="h-8 px-2 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50"
                             title="Delete stock entry"
+                            onClick={() => console.log('Delete trigger clicked for:', product.name)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -199,7 +237,10 @@ const ProductStockTable = ({
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => handleDeleteConfirm(product.id, product.name)}
+                              onClick={() => {
+                                console.log('Delete action clicked for:', product.name);
+                                handleDeleteConfirm(product.id, product.name);
+                              }}
                               className="bg-red-600 hover:bg-red-700"
                             >
                               Delete
@@ -216,6 +257,7 @@ const ProductStockTable = ({
                           size="sm"
                           className="h-8 px-2"
                           title="Deassign product from store"
+                          onClick={() => console.log('Deassign trigger clicked for:', product.name)}
                         >
                           <UserMinus className="h-4 w-4" />
                         </Button>
@@ -231,7 +273,10 @@ const ProductStockTable = ({
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => handleDeassignConfirm(product.assignment_id, product.name)}
+                            onClick={() => {
+                              console.log('Deassign action clicked for:', product.name);
+                              handleDeassignConfirm(product.assignment_id, product.name);
+                            }}
                             className="bg-red-600 hover:bg-red-700"
                           >
                             Deassign
