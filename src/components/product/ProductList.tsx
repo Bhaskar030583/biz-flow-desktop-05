@@ -15,6 +15,17 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Form,
   FormControl,
   FormField,
@@ -45,6 +56,8 @@ export function ProductList() {
   const [categories, setCategories] = useState<string[]>([]);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [showDeleteError, setShowDeleteError] = useState(false);
 
   const productSchema = z.object({
     name: z.string().min(2, "Name is required"),
@@ -105,8 +118,62 @@ export function ProductList() {
     fetchProducts();
   }, [user]);
 
-  async function handleDelete(id: string) {
+  async function handleDelete(id: string, productName: string) {
     try {
+      console.log("Attempting to delete product:", id, productName);
+      
+      // First, check if product is assigned to any shops
+      const { data: assignments, error: assignmentError } = await supabase
+        .from("product_shops")
+        .select("id")
+        .eq("product_id", id);
+      
+      if (assignmentError) {
+        console.error("Error checking product assignments:", assignmentError);
+        throw new Error("Failed to check product assignments");
+      }
+
+      if (assignments && assignments.length > 0) {
+        setDeleteError(`Cannot delete "${productName}" because it is assigned to one or more stores. Please remove it from all stores first.`);
+        setShowDeleteError(true);
+        return;
+      }
+
+      // Check if product has any stock entries
+      const { data: stockEntries, error: stockError } = await supabase
+        .from("stocks")
+        .select("id")
+        .eq("product_id", id);
+      
+      if (stockError) {
+        console.error("Error checking product stock:", stockError);
+        throw new Error("Failed to check product stock entries");
+      }
+
+      if (stockEntries && stockEntries.length > 0) {
+        setDeleteError(`Cannot delete "${productName}" because it has stock entries. Please remove all stock entries first.`);
+        setShowDeleteError(true);
+        return;
+      }
+
+      // Check if product is in any bills
+      const { data: billItems, error: billError } = await supabase
+        .from("bill_items")
+        .select("id")
+        .eq("product_id", id);
+      
+      if (billError) {
+        console.error("Error checking product bills:", billError);
+        throw new Error("Failed to check product sales history");
+      }
+
+      if (billItems && billItems.length > 0) {
+        setDeleteError(`Cannot delete "${productName}" because it has sales history. Products with sales records cannot be deleted.`);
+        setShowDeleteError(true);
+        return;
+      }
+
+      // If all checks pass, proceed with deletion
       const { error } = await supabase
         .from("products")
         .delete()
@@ -118,14 +185,12 @@ export function ProductList() {
       
       toast({
         title: "Product deleted",
-        description: "The product has been deleted successfully",
+        description: `"${productName}" has been deleted successfully`,
       });
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Failed to delete product",
-        description: error.message || "Something went wrong",
-      });
+      console.error("Error deleting product:", error);
+      setDeleteError(error.message || "Failed to delete product. Please try again.");
+      setShowDeleteError(true);
     }
   }
   
@@ -274,15 +339,35 @@ export function ProductList() {
                         <Edit className="h-4 w-4" />
                         <span className="sr-only">Edit</span>
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(product.id)}
-                        className="h-8 px-2 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{product.name}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(product.id, product.name)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -381,6 +466,23 @@ export function ProductList() {
               </DialogFooter>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Error Dialog */}
+      <Dialog open={showDeleteError} onOpenChange={setShowDeleteError}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cannot Delete Product</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-gray-600">{deleteError}</p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowDeleteError(false)}>
+              OK
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Card>
