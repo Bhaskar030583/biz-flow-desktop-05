@@ -32,6 +32,7 @@ interface AssignedProduct extends Product {
   closing_stock?: number;
   actual_stock?: number;
   last_stock_date?: string;
+  sold_quantity?: number;
 }
 
 interface ProductStockManagementProps {
@@ -130,9 +131,10 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
       
       if (directError) throw directError;
       
-      // Get latest stock data for each assigned product
+      // Get latest stock data and sales data for each assigned product
       const assignedProductsWithStock = await Promise.all(
         (directData || []).map(async (item: any) => {
+          // Get latest stock data
           const { data: stockData, error: stockError } = await supabase
             .from('stocks')
             .select('opening_stock, stock_added, closing_stock, actual_stock, stock_date')
@@ -146,6 +148,32 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
             console.error('Error fetching stock data:', stockError);
           }
 
+          // Get today's sales data for this product
+          const today = new Date().toISOString().split('T')[0];
+          const { data: billItems, error: billError } = await supabase
+            .from('bill_items')
+            .select(`
+              quantity,
+              bills!inner(
+                bill_date,
+                user_id
+              )
+            `)
+            .eq('product_id', item.products.id)
+            .eq('bills.user_id', user?.id)
+            .gte('bills.bill_date', today + 'T00:00:00')
+            .lte('bills.bill_date', today + 'T23:59:59');
+
+          if (billError) {
+            console.error('Error fetching sales data:', billError);
+          }
+
+          const soldQuantity = billItems?.reduce((sum, billItem) => sum + billItem.quantity, 0) || 0;
+          
+          // Calculate closing stock based on sales
+          const openingStock = stockData?.opening_stock || 0;
+          const calculatedClosingStock = openingStock - soldQuantity;
+
           return {
             assignment_id: item.id,
             id: item.products.id,
@@ -153,10 +181,11 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
             category: item.products.category,
             price: item.products.price,
             cost_price: item.products.cost_price,
-            opening_stock: stockData?.opening_stock || 0,
+            opening_stock: openingStock,
             stock_added: stockData?.stock_added || 0,
-            closing_stock: stockData?.closing_stock || 0,
+            closing_stock: calculatedClosingStock,
             actual_stock: stockData?.actual_stock || 0,
+            sold_quantity: soldQuantity,
             last_stock_date: stockData?.stock_date || null
           };
         })
@@ -452,62 +481,75 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
                     <TableHead>Cost Price</TableHead>
                     <TableHead>Selling Price</TableHead>
                     <TableHead>Opening Stock</TableHead>
-                    <TableHead>Stock Added</TableHead>
-                    <TableHead>Closing Stock</TableHead>
+                    <TableHead>Sold Today</TableHead>
+                    <TableHead>Expected Closing</TableHead>
                     <TableHead>Actual Stock</TableHead>
+                    <TableHead>Variance</TableHead>
                     <TableHead>Last Updated</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAssignedProducts.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-medium">
-                        {product.name}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className={getCategoryColor(product.category)}>
-                          {product.category}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm">
-                          ₹{product.cost_price ? product.cost_price.toFixed(2) : 'N/A'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm font-medium">
-                          ₹{product.price.toFixed(2)}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span className="font-medium">{product.opening_stock || 0}</span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span className="text-blue-600 font-medium">{product.stock_added || 0}</span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span className="font-medium">{product.closing_stock || 0}</span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span className="font-medium">{product.actual_stock || 0}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-muted-foreground">
-                          {product.last_stock_date ? new Date(product.last_stock_date).toLocaleDateString() : 'Never'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => removeProductFromShop(product.assignment_id)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredAssignedProducts.map((product) => {
+                    const variance = (product.actual_stock || 0) - (product.closing_stock || 0);
+                    return (
+                      <TableRow key={product.id}>
+                        <TableCell className="font-medium">
+                          {product.name}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className={getCategoryColor(product.category)}>
+                            {product.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm">
+                            ₹{product.cost_price ? product.cost_price.toFixed(2) : 'N/A'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm font-medium">
+                            ₹{product.price.toFixed(2)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="font-medium">{product.opening_stock || 0}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-red-600 font-medium">{product.sold_quantity || 0}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-blue-600 font-medium">{product.closing_stock || 0}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="font-medium">{product.actual_stock || 0}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className={`font-medium ${
+                            variance > 0 ? 'text-orange-600' : 
+                            variance < 0 ? 'text-red-600' : 
+                            'text-green-600'
+                          }`}>
+                            {variance > 0 ? `+${variance}` : variance}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {product.last_stock_date ? new Date(product.last_stock_date).toLocaleDateString() : 'Never'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => removeProductFromShop(product.assignment_id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
