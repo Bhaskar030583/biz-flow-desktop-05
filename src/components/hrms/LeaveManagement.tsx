@@ -7,10 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Calendar, Plus, Check, X, Clock } from 'lucide-react';
+import { Calendar, Plus, Check, X, Clock, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { LeaveRequest, Employee } from '@/types/hrms';
+import { useNavigate } from 'react-router-dom';
 
 const LeaveManagement = () => {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
@@ -18,6 +19,7 @@ const LeaveManagement = () => {
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState<{
     employee_id: string;
@@ -220,11 +222,22 @@ const LeaveManagement = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Leave Management</h1>
-          <p className="text-muted-foreground">
-            Manage employee leave requests and approvals
-          </p>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate('/hrms')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to HRMS
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Leave Management</h1>
+            <p className="text-muted-foreground">
+              Manage employee leave requests and approvals
+            </p>
+          </div>
         </div>
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>

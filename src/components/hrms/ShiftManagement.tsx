@@ -5,11 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Plus, Edit, Trash2 } from 'lucide-react';
+import { Clock, Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Shift, Store } from '@/types/hrms';
+import { useNavigate } from 'react-router-dom';
 
 interface StoreBasic {
   id: string;
@@ -24,6 +25,7 @@ const ShiftManagement = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingShift, setEditingShift] = useState<Shift | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState<{
     shift_name: string;
@@ -221,11 +223,22 @@ const ShiftManagement = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Shift Management</h1>
-          <p className="text-muted-foreground">
-            Create and manage work shifts and schedules
-          </p>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate('/hrms')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to HRMS
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Shift Management</h1>
+            <p className="text-muted-foreground">
+              Create and manage work shifts and schedules
+            </p>
+          </div>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
