@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { POSSystem } from "@/components/pos/POSSystem";
 import { StoreInfoModal } from "@/components/pos/StoreInfoModal";
@@ -6,6 +5,9 @@ import QuickActualStockButton from "@/components/stock/QuickActualStockButton";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 interface StoreInfo {
   storeName: string;
@@ -17,6 +19,7 @@ const POS = () => {
   const [showStoreModal, setShowStoreModal] = useState(true);
   const [isPopupWindow, setIsPopupWindow] = useState(false);
   const [storeInfoCompleted, setStoreInfoCompleted] = useState(false);
+  const navigate = useNavigate();
 
   const { data: products, isLoading, refetch: refetchProducts } = useQuery({
     queryKey: ['pos-products'],
@@ -114,7 +117,17 @@ const POS = () => {
   return (
     <div className="container mx-auto px-4 py-6 h-full">
       <div className="mb-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Point of Sale</h1>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+          <h1 className="text-2xl font-bold">Point of Sale</h1>
+        </div>
         <QuickActualStockButton onStockAdded={handleStockAdded} />
       </div>
       
