@@ -28,10 +28,12 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
     filteredProducts
   } = useStockFilters(assignedProducts);
 
-  // Handle entry update
-  const handleEntryUpdated = () => {
-    setLocalRefreshTrigger(prev => prev + 1);
-  };
+  console.log('StockList Debug:', {
+    assignedProducts: assignedProducts.length,
+    shops: shops.length,
+    products: products.length,
+    loading
+  });
 
   if (loading) {
     return <StockListSkeleton />;
