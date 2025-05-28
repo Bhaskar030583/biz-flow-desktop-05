@@ -16,8 +16,8 @@ export interface AssignedProduct {
   actual_stock?: number;
   last_stock_date?: string;
   sold_quantity?: number;
-  shop_id: string; // Required field for shop filtering
-  shop_name: string; // Required field for display
+  shop_id: string;
+  shop_name: string;
 }
 
 export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: string) => {
@@ -50,16 +50,16 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
     name: store.store_name
   })) || [];
 
-  // Fetch assigned products from all stores or specific store
+  // Fetch assigned products - always fetch all, filter in the UI
   const { data: assignedProductsData, isLoading: productsLoading } = useQuery({
-    queryKey: ['assigned-products-all-stores', refreshTrigger, selectedShopId],
+    queryKey: ['assigned-products-all-stores', refreshTrigger],
     queryFn: async () => {
       if (!user?.id) return [];
       
-      console.log('📦 [useAssignedProducts] Fetching assigned products, selectedShopId:', selectedShopId);
+      console.log('📦 [useAssignedProducts] Fetching all assigned products');
       
-      // Get product assignments from product_shops table
-      let query = supabase
+      // Get all product assignments from product_shops table
+      const { data: productShops, error: productShopsError } = await supabase
         .from('product_shops')
         .select(`
           id,
@@ -74,14 +74,6 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           )
         `)
         .eq('user_id', user?.id);
-
-      // If a specific shop is selected and it's not "_all", filter by that shop
-      if (selectedShopId && selectedShopId !== "_all") {
-        console.log('🎯 [useAssignedProducts] Filtering by shop ID:', selectedShopId);
-        query = query.eq('shop_id', selectedShopId);
-      }
-
-      const { data: productShops, error: productShopsError } = await query;
       
       if (productShopsError) {
         console.error('❌ [useAssignedProducts] Error fetching product assignments:', productShopsError);
@@ -91,7 +83,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
       console.log('📦 [useAssignedProducts] Product assignments:', productShops);
 
       if (!productShops || productShops.length === 0) {
-        console.log('⚠️ [useAssignedProducts] No product assignments found for shop:', selectedShopId);
+        console.log('⚠️ [useAssignedProducts] No product assignments found');
         return [];
       }
 
@@ -125,7 +117,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
 
         const soldQuantity = stockData ? (stockData.opening_stock + (stockData.stock_added || 0)) - stockData.actual_stock : 0;
 
-        assignedProducts.push({
+        const assignedProduct: AssignedProduct = {
           assignment_id: assignment.id,
           id: product.id,
           name: product.name,
@@ -140,10 +132,26 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           sold_quantity: soldQuantity,
           shop_id: assignment.shop_id,
           shop_name: hrStore?.store_name || 'Unknown Store'
+        };
+
+        console.log('📦 [useAssignedProducts] Processed product:', {
+          name: assignedProduct.name,
+          shopId: assignedProduct.shop_id,
+          shopName: assignedProduct.shop_name
         });
+
+        assignedProducts.push(assignedProduct);
       }
 
-      console.log('✅ [useAssignedProducts] Final assigned products with stock:', assignedProducts);
+      console.log('✅ [useAssignedProducts] Final assigned products with stock:', {
+        totalProducts: assignedProducts.length,
+        uniqueShops: [...new Set(assignedProducts.map(p => p.shop_id))],
+        shopBreakdown: assignedProducts.reduce((acc, p) => {
+          acc[p.shop_name] = (acc[p.shop_name] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      });
+
       return assignedProducts;
     },
     enabled: !!user?.id && !!storesData

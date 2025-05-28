@@ -9,43 +9,49 @@ export const useStockFilters = (assignedProducts: AssignedProduct[]) => {
   const [paymentModeFilter, setPaymentModeFilter] = useState("_all");
 
   const filteredProducts = useMemo(() => {
-    console.log('🔍 [useStockFilters] Filtering products with:', {
+    console.log('🔍 [useStockFilters] Starting filter with:', {
       totalProducts: assignedProducts.length,
       searchTerm,
       shopFilter,
       productFilter
     });
 
-    return assignedProducts.filter(product => {
+    const filtered = assignedProducts.filter(product => {
       const matchesSearch = !searchTerm || 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (product.shop_name && product.shop_name.toLowerCase().includes(searchTerm.toLowerCase()));
       
-      // Filter by shop - since we're already filtering at the data level, this is redundant but kept for consistency
+      // Filter by shop - this is where the main filtering happens
       const matchesShop = shopFilter === "_all" || product.shop_id === shopFilter;
       const matchesProduct = productFilter === "_all" || product.id === productFilter;
       
       const shouldInclude = matchesSearch && matchesShop && matchesProduct;
       
-      console.log('🔍 [useStockFilters] Product filter result:', {
-        productName: product.name,
-        shopName: product.shop_name,
-        shopId: product.shop_id,
-        matchesSearch,
-        matchesShop,
-        matchesProduct,
-        shouldInclude
-      });
+      if (!shouldInclude) {
+        console.log('🔍 [useStockFilters] Filtering out:', {
+          productName: product.name,
+          shopName: product.shop_name,
+          shopId: product.shop_id,
+          selectedShop: shopFilter,
+          matchesSearch,
+          matchesShop,
+          matchesProduct
+        });
+      }
       
       return shouldInclude;
     });
-  }, [assignedProducts, searchTerm, shopFilter, productFilter]);
 
-  console.log('🔍 [useStockFilters] Final filtered results:', {
-    originalCount: assignedProducts.length,
-    filteredCount: filteredProducts.length
-  });
+    console.log('🔍 [useStockFilters] Filter results:', {
+      originalCount: assignedProducts.length,
+      filteredCount: filtered.length,
+      shopFilter,
+      availableShops: [...new Set(assignedProducts.map(p => `${p.shop_id}:${p.shop_name}`))],
+    });
+
+    return filtered;
+  }, [assignedProducts, searchTerm, shopFilter, productFilter]);
 
   return {
     searchTerm,
