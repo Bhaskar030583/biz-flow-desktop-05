@@ -1027,6 +1027,87 @@ export type Database = {
           },
         ]
       }
+      losses: {
+        Row: {
+          created_at: string
+          id: string
+          loss_date: string
+          loss_type: Database["public"]["Enums"]["loss_type"]
+          operator_name: string | null
+          product_id: string
+          quantity_lost: number
+          reason: string | null
+          shift_id: string | null
+          shop_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          loss_date?: string
+          loss_type: Database["public"]["Enums"]["loss_type"]
+          operator_name?: string | null
+          product_id: string
+          quantity_lost: number
+          reason?: string | null
+          shift_id?: string | null
+          shop_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          loss_date?: string
+          loss_type?: Database["public"]["Enums"]["loss_type"]
+          operator_name?: string | null
+          product_id?: string
+          quantity_lost?: number
+          reason?: string | null
+          shift_id?: string | null
+          shop_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      low_stock_alerts: {
+        Row: {
+          alert_date: string
+          created_at: string
+          current_stock: number
+          id: string
+          is_resolved: boolean | null
+          minimum_threshold: number
+          product_id: string
+          resolved_at: string | null
+          shop_id: string
+          user_id: string
+        }
+        Insert: {
+          alert_date?: string
+          created_at?: string
+          current_stock: number
+          id?: string
+          is_resolved?: boolean | null
+          minimum_threshold: number
+          product_id: string
+          resolved_at?: string | null
+          shop_id: string
+          user_id: string
+        }
+        Update: {
+          alert_date?: string
+          created_at?: string
+          current_stock?: number
+          id?: string
+          is_resolved?: boolean | null
+          minimum_threshold?: number
+          product_id?: string
+          resolved_at?: string | null
+          shop_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       product_shops: {
         Row: {
           created_at: string
@@ -1135,6 +1216,39 @@ export type Database = {
         }
         Relationships: []
       }
+      reorder_points: {
+        Row: {
+          created_at: string
+          id: string
+          minimum_stock: number
+          product_id: string
+          reorder_quantity: number
+          shop_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          minimum_stock?: number
+          product_id: string
+          reorder_quantity?: number
+          shop_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          minimum_stock?: number
+          product_id?: string
+          reorder_quantity?: number
+          shop_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sales: {
         Row: {
           created_at: string
@@ -1183,6 +1297,57 @@ export type Database = {
           },
         ]
       }
+      shift_stock_entries: {
+        Row: {
+          actual_stock: number
+          closing_stock: number
+          created_at: string
+          id: string
+          loss_quantity: number | null
+          notes: string | null
+          opening_stock: number
+          operator_name: string | null
+          sales_quantity: number | null
+          shift_id: string | null
+          stock_added: number | null
+          stock_id: string
+          updated_at: string
+          variance: number | null
+        }
+        Insert: {
+          actual_stock?: number
+          closing_stock?: number
+          created_at?: string
+          id?: string
+          loss_quantity?: number | null
+          notes?: string | null
+          opening_stock?: number
+          operator_name?: string | null
+          sales_quantity?: number | null
+          shift_id?: string | null
+          stock_added?: number | null
+          stock_id: string
+          updated_at?: string
+          variance?: number | null
+        }
+        Update: {
+          actual_stock?: number
+          closing_stock?: number
+          created_at?: string
+          id?: string
+          loss_quantity?: number | null
+          notes?: string | null
+          opening_stock?: number
+          operator_name?: string | null
+          sales_quantity?: number | null
+          shift_id?: string | null
+          stock_added?: number | null
+          stock_id?: string
+          updated_at?: string
+          variance?: number | null
+        }
+        Relationships: []
+      }
       shops: {
         Row: {
           address: string | null
@@ -1213,6 +1378,57 @@ export type Database = {
           store_code?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      stock_movements: {
+        Row: {
+          approved_by: string | null
+          created_at: string
+          created_by: string
+          from_shop_id: string | null
+          id: string
+          movement_date: string
+          movement_type: string
+          notes: string | null
+          product_id: string
+          quantity: number
+          reference_id: string | null
+          status: Database["public"]["Enums"]["request_status"] | null
+          to_shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          approved_by?: string | null
+          created_at?: string
+          created_by: string
+          from_shop_id?: string | null
+          id?: string
+          movement_date?: string
+          movement_type?: string
+          notes?: string | null
+          product_id: string
+          quantity: number
+          reference_id?: string | null
+          status?: Database["public"]["Enums"]["request_status"] | null
+          to_shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string
+          from_shop_id?: string | null
+          id?: string
+          movement_date?: string
+          movement_type?: string
+          notes?: string | null
+          product_id?: string
+          quantity?: number
+          reference_id?: string | null
+          status?: Database["public"]["Enums"]["request_status"] | null
+          to_shop_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1430,6 +1646,15 @@ export type Database = {
           store_name: string
         }[]
       }
+      get_shift_performance: {
+        Args: { shift_id_param: string; date_param?: string }
+        Returns: {
+          total_sales: number
+          total_losses: number
+          total_variance: number
+          products_count: number
+        }[]
+      }
       handle_stock_movement: {
         Args: { request_id: string; approving_user_id: string }
         Returns: boolean
@@ -1446,6 +1671,13 @@ export type Database = {
         | "unpaid"
         | "maternity"
         | "paternity"
+      loss_type:
+        | "theft"
+        | "damage"
+        | "expiry"
+        | "spillage"
+        | "breakage"
+        | "other"
       request_status: "pending" | "approved" | "rejected"
       shift_type: "regular" | "rotational" | "split" | "flexible"
       transaction_type:
@@ -1580,6 +1812,7 @@ export const Constants = {
         "maternity",
         "paternity",
       ],
+      loss_type: ["theft", "damage", "expiry", "spillage", "breakage", "other"],
       request_status: ["pending", "approved", "rejected"],
       shift_type: ["regular", "rotational", "split", "flexible"],
       transaction_type: [

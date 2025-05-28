@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,22 +5,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Bell, Package, Settings } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Bell, Settings, AlertTriangle, Package, Check } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 const LowStockAlerts = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedStore, setSelectedStore] = useState<string>("");
-  const [alertSettings, setAlertSettings] = useState({
+  const [showReorderSettings, setShowReorderSettings] = useState(false);
+  const [newReorderPoint, setNewReorderPoint] = useState({
     product_id: "",
-    min_quantity: "",
+    shop_id: "",
+    minimum_stock: "",
     reorder_quantity: ""
   });
 
+  // Fetch stores
   const { data: stores } = useQuery({
     queryKey: ['stores'],
     queryFn: async () => {
@@ -35,8 +38,59 @@ const LowStockAlerts = () => {
     enabled: !!user?.id
   });
 
-  const { data: products } = useQuery({
-    queryKey: ['store-products', selectedStore],
+  // Fetch active alerts
+  const { data: alerts, isLoading: alertsLoading } = useQuery({
+    queryKey: ['low-stock-alerts', selectedStore],
+    queryFn: async () => {
+      let query = supabase
+        .from('low_stock_alerts')
+        .select(`
+          *,
+          products (name, category),
+          shops (name)
+        `)
+        .eq('user_id', user?.id)
+        .eq('is_resolved', false)
+        .order('alert_date', { ascending: false });
+
+      if (selectedStore) {
+        query = query.eq('shop_id', selectedStore);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id
+  });
+
+  // Fetch reorder points
+  const { data: reorderPoints } = useQuery({
+    queryKey: ['reorder-points', selectedStore],
+    queryFn: async () => {
+      let query = supabase
+        .from('reorder_points')
+        .select(`
+          *,
+          products (name, category),
+          shops (name)
+        `)
+        .eq('user_id', user?.id);
+
+      if (selectedStore) {
+        query = query.eq('shop_id', selectedStore);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id
+  });
+
+  // Fetch available products for reorder point setup
+  const { data: availableProducts } = useQuery({
+    queryKey: ['available-products', selectedStore],
     queryFn: async () => {
       if (!selectedStore) return [];
       const { data, error } = await supabase
@@ -48,51 +102,74 @@ const LowStockAlerts = () => {
         .eq('shop_id', selectedStore)
         .eq('user_id', user?.id);
       if (error) throw error;
-      return data || [];
+      return data?.map(ps => ps.products).filter(Boolean) || [];
     },
-    enabled: !!selectedStore
+    enabled: !!selectedStore && !!user?.id
   });
 
-  const { data: currentStock } = useQuery({
-    queryKey: ['current-stock', selectedStore],
-    queryFn: async () => {
-      if (!selectedStore) return [];
-      const today = new Date().toISOString().split('T')[0];
-      const { data, error } = await supabase
-        .from('stocks')
-        .select(`
-          *,
-          products (name, category)
-        `)
-        .eq('shop_id', selectedStore)
-        .eq('stock_date', today)
-        .eq('user_id', user?.id);
+  // Resolve alert mutation
+  const resolveAlertMutation = useMutation({
+    mutationFn: async (alertId: string) => {
+      const { error } = await supabase
+        .from('low_stock_alerts')
+        .update({
+          is_resolved: true,
+          resolved_at: new Date().toISOString()
+        })
+        .eq('id', alertId);
       if (error) throw error;
-      return data || [];
     },
-    enabled: !!selectedStore
+    onSuccess: () => {
+      toast.success("Alert resolved");
+      queryClient.invalidateQueries({ queryKey: ['low-stock-alerts'] });
+    },
+    onError: (error: any) => {
+      toast.error("Failed to resolve alert: " + error.message);
+    }
   });
 
-  const lowStockItems = currentStock?.filter(item => item.actual_stock < 10) || [];
+  // Create reorder point mutation
+  const createReorderPointMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const { error } = await supabase
+        .from('reorder_points')
+        .insert({
+          ...data,
+          user_id: user?.id,
+          minimum_stock: parseInt(data.minimum_stock),
+          reorder_quantity: parseInt(data.reorder_quantity)
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Reorder point set successfully");
+      setNewReorderPoint({
+        product_id: "",
+        shop_id: "",
+        minimum_stock: "",
+        reorder_quantity: ""
+      });
+      queryClient.invalidateQueries({ queryKey: ['reorder-points'] });
+    },
+    onError: (error: any) => {
+      toast.error("Failed to set reorder point: " + error.message);
+    }
+  });
 
-  const handleSetAlert = async () => {
-    if (!selectedStore || !alertSettings.product_id || !alertSettings.min_quantity) {
+  const handleCreateReorderPoint = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newReorderPoint.product_id || !newReorderPoint.shop_id || !newReorderPoint.minimum_stock) {
       toast.error("Please fill all required fields");
       return;
     }
+    createReorderPointMutation.mutate(newReorderPoint);
+  };
 
-    try {
-      // This would save alert settings to a reorder_points table once created
-      toast.success("Alert settings saved successfully");
-      setAlertSettings({
-        product_id: "",
-        min_quantity: "",
-        reorder_quantity: ""
-      });
-    } catch (error) {
-      console.error("Error setting alert:", error);
-      toast.error("Failed to save alert settings");
-    }
+  const getAlertSeverity = (currentStock: number, threshold: number) => {
+    const ratio = currentStock / threshold;
+    if (ratio <= 0.2) return { level: "critical", color: "bg-red-100 text-red-800" };
+    if (ratio <= 0.5) return { level: "high", color: "bg-orange-100 text-orange-800" };
+    return { level: "medium", color: "bg-yellow-100 text-yellow-800" };
   };
 
   return (
@@ -105,13 +182,13 @@ const LowStockAlerts = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label>Select Store</Label>
+          <div className="flex justify-between items-center">
             <Select value={selectedStore} onValueChange={setSelectedStore}>
-              <SelectTrigger>
+              <SelectTrigger className="w-48">
                 <SelectValue placeholder="Select store" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">All Stores</SelectItem>
                 {stores?.map(store => (
                   <SelectItem key={store.id} value={store.id}>
                     {store.name}
@@ -119,90 +196,170 @@ const LowStockAlerts = () => {
                 ))}
               </SelectContent>
             </Select>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowReorderSettings(!showReorderSettings)}
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Reorder Settings
+            </Button>
           </div>
 
-          {selectedStore && (
-            <div className="space-y-4">
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-3 flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-orange-500" />
-                  Current Low Stock Items ({lowStockItems.length})
-                </h4>
-                {lowStockItems.length > 0 ? (
-                  <div className="space-y-2">
-                    {lowStockItems.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-orange-50">
-                        <div>
-                          <span className="font-medium">{item.products?.name}</span>
-                          <span className="ml-2 text-sm text-gray-600">({item.products?.category})</span>
+          {/* Active Alerts */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Active Alerts</h3>
+            {alertsLoading ? (
+              <div className="text-center py-8">Loading alerts...</div>
+            ) : alerts?.length === 0 ? (
+              <Card className="border-green-200 bg-green-50">
+                <CardContent className="pt-6 text-center">
+                  <Check className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                  <p className="text-green-700">No low stock alerts! All products are well stocked.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              alerts?.map(alert => {
+                const severity = getAlertSeverity(alert.current_stock, alert.minimum_threshold);
+                return (
+                  <Card key={alert.id} className="border-l-4 border-l-orange-500">
+                    <CardContent className="pt-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-medium">{alert.products?.name}</h4>
+                            <Badge className={severity.color}>
+                              {severity.level}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">{alert.shops?.name}</p>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-600">Current Stock:</span>
+                              <span className="ml-1 font-medium text-red-600">{alert.current_stock}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Minimum:</span>
+                              <span className="ml-1">{alert.minimum_threshold}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Alert Date:</span>
+                              <span className="ml-1">{format(new Date(alert.alert_date), "MMM dd, yyyy")}</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="destructive">
-                            {item.actual_stock} remaining
-                          </Badge>
-                          <Button size="sm" variant="outline">
-                            Reorder
-                          </Button>
-                        </div>
+                        <Button 
+                          size="sm" 
+                          onClick={() => resolveAlertMutation.mutate(alert.id)}
+                          disabled={resolveAlertMutation.isPending}
+                        >
+                          <Check className="h-4 w-4 mr-1" />
+                          Resolve
+                        </Button>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 text-gray-500">
-                    <Package className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                    <p>No low stock items found</p>
-                  </div>
-                )}
-              </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
 
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-3 flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
-                  Set Alert Thresholds
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label>Product</Label>
-                    <Select 
-                      value={alertSettings.product_id} 
-                      onValueChange={(value) => setAlertSettings(prev => ({ ...prev, product_id: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select product" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {products?.map(item => (
-                          <SelectItem key={item.product_id} value={item.product_id}>
-                            {item.products?.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+          {/* Reorder Settings */}
+          {showReorderSettings && (
+            <Card className="border-blue-200 bg-blue-50">
+              <CardHeader>
+                <CardTitle className="text-lg">Reorder Point Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <form onSubmit={handleCreateReorderPoint} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Store *</Label>
+                      <Select 
+                        value={newReorderPoint.shop_id} 
+                        onValueChange={(value) => {
+                          setNewReorderPoint(prev => ({ ...prev, shop_id: value }));
+                          setSelectedStore(value);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select store" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {stores?.map(store => (
+                            <SelectItem key={store.id} value={store.id}>
+                              {store.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label>Product *</Label>
+                      <Select 
+                        value={newReorderPoint.product_id} 
+                        onValueChange={(value) => setNewReorderPoint(prev => ({ ...prev, product_id: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select product" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableProducts?.map(product => (
+                            <SelectItem key={product.id} value={product.id}>
+                              {product.name} - {product.category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label>Minimum Stock Level *</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={newReorderPoint.minimum_stock}
+                        onChange={(e) => setNewReorderPoint(prev => ({ ...prev, minimum_stock: e.target.value }))}
+                        placeholder="Enter minimum stock"
+                      />
+                    </div>
+
+                    <div>
+                      <Label>Reorder Quantity</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={newReorderPoint.reorder_quantity}
+                        onChange={(e) => setNewReorderPoint(prev => ({ ...prev, reorder_quantity: e.target.value }))}
+                        placeholder="Enter reorder quantity"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label>Minimum Quantity</Label>
-                    <Input
-                      type="number"
-                      value={alertSettings.min_quantity}
-                      onChange={(e) => setAlertSettings(prev => ({ ...prev, min_quantity: e.target.value }))}
-                      placeholder="Alert when below this quantity"
-                    />
-                  </div>
-                  <div>
-                    <Label>Reorder Quantity</Label>
-                    <Input
-                      type="number"
-                      value={alertSettings.reorder_quantity}
-                      onChange={(e) => setAlertSettings(prev => ({ ...prev, reorder_quantity: e.target.value }))}
-                      placeholder="Suggested reorder amount"
-                    />
-                  </div>
+
+                  <Button type="submit" disabled={createReorderPointMutation.isPending}>
+                    {createReorderPointMutation.isPending ? "Setting..." : "Set Reorder Point"}
+                  </Button>
+                </form>
+
+                {/* Existing Reorder Points */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Current Reorder Points</h4>
+                  {reorderPoints?.map(point => (
+                    <div key={point.id} className="flex justify-between items-center p-3 bg-white rounded border">
+                      <div>
+                        <span className="font-medium">{point.products?.name}</span>
+                        <span className="ml-2 text-sm text-gray-600">
+                          at {point.shops?.name}
+                        </span>
+                      </div>
+                      <div className="text-sm">
+                        Min: {point.minimum_stock} | Reorder: {point.reorder_quantity}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <Button onClick={handleSetAlert} className="mt-4">
-                  Save Alert Settings
-                </Button>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
         </CardContent>
       </Card>
