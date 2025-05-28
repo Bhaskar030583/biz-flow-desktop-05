@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -111,7 +112,7 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
   }, []);
 
   // Enhanced validation with stricter checks
-  const isValidShop = (shop: any): shop is { id: string; name: string } => {
+  const isValidShop = (shop: any): shop is { id: string; name: string; store_code?: string } => {
     return (
       shop &&
       typeof shop === 'object' &&
