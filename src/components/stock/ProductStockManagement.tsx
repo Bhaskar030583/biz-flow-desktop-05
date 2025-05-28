@@ -38,6 +38,13 @@ const ProductStockManagement = ({
     enabled: !!user?.id
   });
 
+  // Auto-select first shop when shops are loaded
+  useEffect(() => {
+    if (shops && shops.length > 0 && !selectedShop) {
+      setSelectedShop(shops[0].id);
+    }
+  }, [shops, selectedShop]);
+
   // Fetch assigned products for selected shop
   const { data: assignedProducts, refetch: refetchProducts } = useQuery({
     queryKey: ['assigned-products', selectedShop, refreshTrigger],
@@ -104,9 +111,7 @@ const ProductStockManagement = ({
           />
         )}
 
-        {selectedShop && (
-          <StockRealtimeView selectedShop={selectedShop} />
-        )}
+        <StockRealtimeView selectedShop={selectedShop} />
       </CardContent>
     </Card>
   );

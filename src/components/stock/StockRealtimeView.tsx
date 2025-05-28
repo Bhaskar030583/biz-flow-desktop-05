@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-import { ArrowLeftRight, AlertTriangle, RefreshCw } from "lucide-react";
+import { ArrowLeftRight, AlertTriangle, RefreshCw, Store } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 
@@ -174,8 +174,16 @@ const StockRealtimeView: React.FC<StockRealtimeViewProps> = ({ selectedShop }) =
   if (!selectedShop) {
     return (
       <Card>
+        <div className="bg-gray-50 p-4 flex justify-between items-center">
+          <h3 className="font-medium flex items-center">
+            <ArrowLeftRight className="h-4 w-4 mr-2 text-blue-500" />
+            Real-time Stock Status
+          </h3>
+        </div>
         <CardContent className="pt-6 text-center text-gray-500">
-          <p>Please select a store to view stock status</p>
+          <Store className="h-12 w-12 mx-auto mb-3 opacity-50" />
+          <p className="text-lg font-medium">No Store Selected</p>
+          <p className="text-sm">Please select a store to view real-time stock status</p>
         </CardContent>
       </Card>
     );
