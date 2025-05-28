@@ -7,35 +7,35 @@ import { Search } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 // Import our components
-import StockSummaryCards from "./StockSummaryCards";
+import ProductStockTable from "./ProductStockTable";
 import StockFilters from "./StockFilters";
-import StockTable from "./StockTable";
 import StockSummaryCardsSkeleton from "./StockSummaryCardsSkeleton";
 import StockTableSkeleton from "./StockTableSkeleton";
-import { calculateStockProfit, calculateStockSummary, sortStockEntries, filterStockEntries } from "./stockUtils";
 
 interface StockListProps {
   refreshTrigger: number;
 }
 
-interface AssignedProductStock {
+interface AssignedProduct {
+  assignment_id: string;
   id: string;
-  stock_date: string;
-  opening_stock: number;
-  closing_stock: number;
-  actual_stock: number;
+  name: string;
+  category: string;
+  price: number;
+  cost_price: number | null;
+  opening_stock?: number;
   stock_added?: number;
-  shift?: string;
-  operator_name?: string;
-  cash_received?: number;
-  online_received?: number;
-  shops: { id: string; name: string };
-  products: { id: string; name: string; price: number; cost_price: number | null };
+  closing_stock?: number;
+  actual_stock?: number;
+  last_stock_date?: string;
+  sold_quantity?: number;
+  shop_name?: string;
+  shop_id?: string;
 }
 
 const StockList = ({ refreshTrigger }: StockListProps) => {
   const { user } = useAuth();
-  const [stockEntries, setStockEntries] = useState<AssignedProductStock[]>([]);
+  const [assignedProducts, setAssignedProducts] = useState<AssignedProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [shopFilter, setShopFilter] = useState("_all");
@@ -43,12 +43,10 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
   const [paymentModeFilter, setPaymentModeFilter] = useState("_all");
   const [shops, setShops] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
-  const [sortField, setSortField] = useState<string>("stock_date");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [localRefreshTrigger, setLocalRefreshTrigger] = useState(0);
 
   useEffect(() => {
-    const fetchAssignedProductsStock = async () => {
+    const fetchAssignedProducts = async () => {
       if (!user?.id) {
         console.log('No user ID available');
         setLoading(false);
@@ -57,167 +55,142 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
 
       try {
         setLoading(true);
-        console.log('=== FETCHING ASSIGNED PRODUCTS STOCK ===');
+        console.log('=== FETCHING ASSIGNED PRODUCTS FOR STOCK LIST ===');
         
-        // First, get all HR stores for the shops filter
-        const { data: hrStores, error: hrStoresError } = await supabase
-          .from('hr_stores')
-          .select('id, store_name, store_code')
-          .order('store_name');
-
-        if (hrStoresError) {
-          console.error('Error fetching HR stores:', hrStoresError);
-        }
-
-        // Get user's shops for fallback
-        const { data: userShops, error: userShopsError } = await supabase
-          .from('shops')
-          .select('id, name')
+        // Get assigned products with their latest stock data
+        const { data: assignedProductsData, error } = await supabase
+          .from('product_shops')
+          .select(`
+            id,
+            products!inner (
+              id,
+              name,
+              category,
+              price,
+              cost_price
+            ),
+            hr_stores!inner (
+              id,
+              store_name
+            )
+          `)
           .eq('user_id', user.id);
 
-        if (userShopsError) {
-          console.error('Error fetching user shops:', userShopsError);
+        if (error) {
+          console.error('Error fetching assigned products:', error);
+          throw error;
         }
 
-        // Try to get assigned products with their latest stock data
-        // First approach: Use HR stores directly
-        let stockData: AssignedProductStock[] = [];
+        console.log('Assigned products data:', assignedProductsData);
+
+        if (!assignedProductsData || assignedProductsData.length === 0) {
+          console.log('No assigned products found');
+          setAssignedProducts([]);
+          setShops([]);
+          setProducts([]);
+          toast.info('No products assigned to stores found');
+          return;
+        }
+
+        // Get today's date for stock data
+        const today = new Date().toISOString().split('T')[0];
         
-        if (hrStores && hrStores.length > 0) {
-          for (const hrStore of hrStores) {
-            const { data: storeStockData, error: stockError } = await supabase
-              .from('stocks')
-              .select(`
-                id,
-                stock_date,
-                opening_stock,
-                closing_stock,
-                actual_stock,
-                stock_added,
-                shift,
-                operator_name,
-                cash_received,
-                online_received,
-                products!inner (id, name, price, cost_price)
-              `)
-              .eq('shop_id', hrStore.id)
-              .eq('user_id', user.id)
-              .order('stock_date', { ascending: false });
-
-            if (!stockError && storeStockData && storeStockData.length > 0) {
-              const transformedData = storeStockData.map(stock => ({
-                ...stock,
-                shops: { id: hrStore.id, name: hrStore.store_name }
-              }));
-              stockData.push(...transformedData);
-            }
-          }
-        }
-
-        // Fallback: Use user shops if no HR store data found
-        if (stockData.length === 0 && userShops && userShops.length > 0) {
-          console.log('No HR store data found, trying user shops...');
+        // Transform data and get stock information
+        const transformedProducts: AssignedProduct[] = [];
+        
+        for (const assignment of assignedProductsData) {
+          const product = assignment.products;
+          const shop = assignment.hr_stores;
           
-          for (const userShop of userShops) {
-            const { data: storeStockData, error: stockError } = await supabase
-              .from('stocks')
-              .select(`
-                id,
-                stock_date,
-                opening_stock,
-                closing_stock,
-                actual_stock,
-                stock_added,
-                shift,
-                operator_name,
-                cash_received,
-                online_received,
-                products!inner (id, name, price, cost_price)
-              `)
-              .eq('shop_id', userShop.id)
-              .eq('user_id', user.id)
-              .order('stock_date', { ascending: false });
+          // Get latest stock data for this product and shop
+          const { data: stockData, error: stockError } = await supabase
+            .from('stocks')
+            .select('*')
+            .eq('product_id', product.id)
+            .eq('shop_id', shop.id)
+            .eq('user_id', user.id)
+            .order('stock_date', { ascending: false })
+            .limit(1);
 
-            if (!stockError && storeStockData && storeStockData.length > 0) {
-              const transformedData = storeStockData.map(stock => ({
-                ...stock,
-                shops: { id: userShop.id, name: userShop.name }
-              }));
-              stockData.push(...transformedData);
-            }
+          if (stockError) {
+            console.error('Error fetching stock data:', stockError);
           }
+
+          const latestStock = stockData?.[0];
+          const soldQuantity = latestStock ? 
+            (latestStock.opening_stock + (latestStock.stock_added || 0)) - latestStock.actual_stock : 0;
+
+          transformedProducts.push({
+            assignment_id: assignment.id,
+            id: product.id,
+            name: product.name,
+            category: product.category,
+            price: product.price,
+            cost_price: product.cost_price,
+            opening_stock: latestStock?.opening_stock || 0,
+            stock_added: latestStock?.stock_added || 0,
+            closing_stock: latestStock?.closing_stock || 0,
+            actual_stock: latestStock?.actual_stock || 0,
+            last_stock_date: latestStock?.stock_date || null,
+            sold_quantity: Math.max(0, soldQuantity),
+            shop_name: shop.store_name,
+            shop_id: shop.id
+          });
         }
 
-        console.log('Final stock data:', stockData);
-        setStockEntries(stockData);
+        console.log('Transformed products:', transformedProducts);
+        setAssignedProducts(transformedProducts);
         
         // Extract unique shops and products for filters
-        const uniqueShops = Array.from(new Set(stockData.map(entry => entry.shops?.name)))
+        const uniqueShops = Array.from(new Set(transformedProducts.map(p => p.shop_name)))
           .filter(Boolean)
           .map(name => ({
             name,
-            id: stockData.find(entry => entry.shops?.name === name)?.shops?.id
+            id: transformedProducts.find(p => p.shop_name === name)?.shop_id
           }));
         
-        const uniqueProducts = Array.from(new Set(stockData.map(entry => entry.products?.name)))
+        const uniqueProducts = Array.from(new Set(transformedProducts.map(p => p.name)))
           .filter(Boolean)
           .map(name => ({
             name,
-            id: stockData.find(entry => entry.products?.name === name)?.products?.id
+            id: transformedProducts.find(p => p.name === name)?.id
           }));
         
         setShops(uniqueShops);
         setProducts(uniqueProducts);
 
-        if (stockData.length === 0) {
-          toast.info('No assigned products with stock data found');
-        } else {
-          toast.success(`Loaded ${stockData.length} stock entries for assigned products`);
-        }
+        toast.success(`Loaded ${transformedProducts.length} assigned products`);
 
       } catch (error: any) {
-        console.error("Error fetching assigned products stock:", error.message);
-        toast.error("Failed to load assigned products stock data");
+        console.error("Error fetching assigned products:", error.message);
+        toast.error("Failed to load assigned products data");
       } finally {
-        // Add a small delay to show the skeleton for better UX
         setTimeout(() => {
           setLoading(false);
         }, 300);
       }
     };
 
-    fetchAssignedProductsStock();
+    fetchAssignedProducts();
   }, [refreshTrigger, localRefreshTrigger, user?.id]);
-  
-  // Handle sorting change
-  const handleSortChange = (field: string) => {
-    if (sortField === field) {
-      // Toggle direction if same field
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      // New field, default to descending
-      setSortField(field);
-      setSortDirection("desc");
-    }
-  };
 
   // Handle entry update
   const handleEntryUpdated = () => {
     setLocalRefreshTrigger(prev => prev + 1);
   };
-  
-  // Apply filters and sorting
-  const filteredEntries = filterStockEntries(stockEntries, searchTerm, shopFilter === "_all" ? "" : shopFilter, productFilter === "_all" ? "" : productFilter).filter(entry => {
-    if (paymentModeFilter === "" || paymentModeFilter === "_all") return true;
-    if (paymentModeFilter === "cash") return (entry.cash_received || 0) > 0;
-    if (paymentModeFilter === "online") return (entry.online_received || 0) > 0;
-    return true;
+
+  // Apply filters
+  const filteredProducts = assignedProducts.filter(product => {
+    const matchesSearch = !searchTerm || 
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (product.shop_name && product.shop_name.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesShop = shopFilter === "_all" || product.shop_name === shopFilter;
+    const matchesProduct = productFilter === "_all" || product.name === productFilter;
+    
+    return matchesSearch && matchesShop && matchesProduct;
   });
-  
-  const sortedFilteredEntries = sortStockEntries(filteredEntries, sortField, sortDirection);
-  
-  // Calculate summary metrics
-  const summary = calculateStockSummary(filteredEntries);
 
   if (loading) {
     return (
@@ -235,7 +208,7 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
     );
   }
 
-  if (stockEntries.length === 0) {
+  if (assignedProducts.length === 0) {
     return (
       <Card className="animate-fade-in">
         <CardHeader>
@@ -248,7 +221,7 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
             </div>
             <h3 className="text-lg font-medium mb-2">No Assigned Products Found</h3>
             <p className="text-muted-foreground mb-6">
-              No products have been assigned to stores or no stock data exists. Please assign products to stores and add stock data to get started.
+              No products have been assigned to stores. Please assign products to stores to get started.
             </p>
           </div>
         </CardContent>
@@ -258,12 +231,9 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Summary Cards */}
-      <StockSummaryCards summary={summary} />
-      
       <Card className="transition-all duration-200 hover:shadow-md">
         <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 pb-4">
-          <CardTitle>Assigned Products Stock</CardTitle>
+          <CardTitle>Assigned Products Stock ({assignedProducts.length} products)</CardTitle>
           
           <StockFilters 
             searchTerm={searchTerm}
@@ -279,18 +249,21 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
           />
         </CardHeader>
         <CardContent>
-          <StockTable 
-            entries={sortedFilteredEntries}
-            sortField={sortField}
-            sortDirection={sortDirection}
-            handleSortChange={handleSortChange}
-            calculateProfit={calculateStockProfit}
-            onEntryUpdated={handleEntryUpdated}
+          <ProductStockTable 
+            filteredProducts={filteredProducts}
+            isAdmin={false}
+            addStockQuantities={{}}
+            setAddStockQuantities={() => {}}
+            updatingStock={{}}
+            onAddStock={() => {}}
+            onEditStock={() => {}}
+            onRemoveProduct={() => {}}
+            onDeleteStock={() => {}}
           />
           
           <div className="mt-4 text-sm text-muted-foreground text-center">
-            Showing {sortedFilteredEntries.length} of {stockEntries.length} assigned product stock entries
-            {(searchTerm || shopFilter !== "" && shopFilter !== "_all" || productFilter !== "" && productFilter !== "_all" || (paymentModeFilter && paymentModeFilter !== "" && paymentModeFilter !== "_all")) && " (filtered)"}
+            Showing {filteredProducts.length} of {assignedProducts.length} assigned products
+            {(searchTerm || shopFilter !== "_all" || productFilter !== "_all") && " (filtered)"}
           </div>
         </CardContent>
       </Card>
