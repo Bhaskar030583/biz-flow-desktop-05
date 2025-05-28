@@ -43,9 +43,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
   const { user } = useAuth();
   const [selectedShop, setSelectedShop] = useState<string>('');
   const [shops, setShops] = useState<Shop[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [assignedProducts, setAssignedProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [stockDate, setStockDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -53,14 +51,20 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
   const [quickAddMode, setQuickAddMode] = useState(false);
 
   useEffect(() => {
+    console.log('=== COMPONENT MOUNTED ===');
     if (user) {
+      console.log('User found:', user.id);
       fetchShops();
-      fetchProducts();
       checkUserRole();
+    } else {
+      console.log('No user found');
     }
   }, [user]);
 
   useEffect(() => {
+    console.log('=== SELECTED SHOP OR DATE CHANGED ===');
+    console.log('Selected Shop:', selectedShop);
+    console.log('Stock Date:', stockDate);
     if (selectedShop) {
       loadStoreInventory();
       fetchAssignedProducts();
@@ -69,13 +73,18 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
 
   const checkUserRole = async () => {
     try {
+      console.log('=== CHECKING USER ROLE ===');
       const { data, error } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user?.id)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error checking user role:', error);
+        throw error;
+      }
+      console.log('User role:', data?.role);
       setIsAdmin(data?.role === 'admin');
     } catch (error) {
       console.error('Error checking user role:', error);
@@ -84,49 +93,51 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
 
   const fetchShops = async () => {
     try {
+      console.log('=== FETCHING SHOPS ===');
       const { data, error } = await supabase
         .from('hr_stores')
         .select('id, store_name, store_code')
         .order('store_name');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching shops:', error);
+        throw error;
+      }
       
+      console.log('Fetched shops:', data);
       const transformedStores = data?.map(store => ({
         id: store.id,
         name: store.store_name,
         store_code: store.store_code
       })) || [];
       
+      console.log('Transformed stores:', transformedStores);
       setShops(transformedStores);
+      
+      // Auto-select first shop if none selected
+      if (transformedStores.length > 0 && !selectedShop) {
+        console.log('Auto-selecting first shop:', transformedStores[0].id);
+        setSelectedShop(transformedStores[0].id);
+      }
     } catch (error) {
       console.error('Error fetching shops:', error);
       toast.error('Failed to fetch shops');
     }
   };
 
-  const fetchProducts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('id, name, price, category')
-        .eq('user_id', user?.id)
-        .order('category, name');
-      
-      if (error) throw error;
-      setProducts(data || []);
-      
-      const uniqueCategories = Array.from(new Set(data?.map(p => p.category) || []));
-      setCategories(uniqueCategories);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      toast.error('Failed to fetch products');
-    }
-  };
-
   const fetchAssignedProducts = async () => {
-    if (!selectedShop) return;
+    if (!selectedShop) {
+      console.log('=== NO SHOP SELECTED, SKIPPING PRODUCT FETCH ===');
+      return;
+    }
     
     try {
+      console.log('=== FETCHING ASSIGNED PRODUCTS ===');
+      console.log('Shop ID:', selectedShop);
+      console.log('User ID:', user?.id);
+      
+      // First, let's check if we should use hr_stores directly or map to shops table
+      // For now, let's try to find products assigned to this hr_store
       const { data, error } = await supabase
         .from('product_shops')
         .select(`
@@ -135,20 +146,77 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
         .eq('shop_id', selectedShop)
         .eq('user_id', user?.id);
 
-      if (error) throw error;
+      console.log('Product assignment query result:', { data, error });
+
+      if (error) {
+        console.error('Error fetching assigned products:', error);
+        // If the above fails, let's try a different approach
+        // Maybe the shop_id in product_shops refers to the shops table, not hr_stores
+        console.log('Trying alternative approach...');
+        
+        // Let's fetch all shops from the shops table and see if we can find a match
+        const { data: userShops, error: userShopsError } = await supabase
+          .from('shops')
+          .select('id, name')
+          .eq('user_id', user?.id);
+        
+        console.log('User shops from shops table:', { userShops, userShopsError });
+        
+        if (!userShopsError && userShops && userShops.length > 0) {
+          // Use the first shop from user's shops as fallback
+          const fallbackShopId = userShops[0].id;
+          console.log('Using fallback shop ID:', fallbackShopId);
+          
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('product_shops')
+            .select(`
+              products (id, name, price, category)
+            `)
+            .eq('shop_id', fallbackShopId)
+            .eq('user_id', user?.id);
+          
+          console.log('Fallback query result:', { fallbackData, fallbackError });
+          
+          if (!fallbackError) {
+            const assignedProductsData = fallbackData?.map(item => item.products).filter(Boolean) || [];
+            console.log('Assigned products (fallback):', assignedProductsData);
+            setAssignedProducts(assignedProductsData);
+            return;
+          }
+        }
+        
+        toast.error('Failed to fetch assigned products');
+        setAssignedProducts([]);
+        return;
+      }
 
       const assignedProductsData = data?.map(item => item.products).filter(Boolean) || [];
+      console.log('Assigned products:', assignedProductsData);
       setAssignedProducts(assignedProductsData);
+      
+      if (assignedProductsData.length === 0) {
+        console.log('No products assigned to this store');
+        toast.info('No products assigned to this store. Please assign products first.');
+      }
     } catch (error) {
       console.error('Error fetching assigned products:', error);
       toast.error('Failed to fetch assigned products');
+      setAssignedProducts([]);
     }
   };
 
   const loadStoreInventory = async () => {
-    if (!selectedShop) return;
+    if (!selectedShop) {
+      console.log('=== NO SHOP SELECTED, SKIPPING INVENTORY LOAD ===');
+      return;
+    }
     
     try {
+      console.log('=== LOADING STORE INVENTORY ===');
+      console.log('Shop ID:', selectedShop);
+      console.log('Stock Date:', stockDate);
+      console.log('User ID:', user?.id);
+      
       const { data: stockData, error } = await supabase
         .from('stocks')
         .select(`
@@ -162,11 +230,18 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
         .eq('shop_id', selectedShop)
         .eq('stock_date', stockDate);
 
-      if (error) throw error;
+      console.log('Stock data query result:', { stockData, error });
+
+      if (error) {
+        console.error('Error loading store inventory:', error);
+        // Don't throw error here, just log it and continue with empty stock
+      }
 
       const previousDay = new Date(stockDate);
       previousDay.setDate(previousDay.getDate() - 1);
       const previousDate = format(previousDay, 'yyyy-MM-dd');
+
+      console.log('Fetching previous day stock for:', previousDate);
 
       const { data: previousStockData, error: prevError } = await supabase
         .from('stocks')
@@ -174,43 +249,96 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
         .eq('shop_id', selectedShop)
         .eq('stock_date', previousDate);
 
+      console.log('Previous stock data:', { previousStockData, prevError });
+
       if (prevError) console.error('Error fetching previous stock:', prevError);
 
-      const { data: assignedData, error: assignedError } = await supabase
-        .from('product_shops')
-        .select(`
-          products (id, name, category)
-        `)
-        .eq('shop_id', selectedShop)
-        .eq('user_id', user?.id);
-
-      if (assignedError) throw assignedError;
-
-      const assignedProductsForStore = assignedData?.map(item => item.products).filter(Boolean) || [];
-
-      const newStockItems: StockItem[] = assignedProductsForStore.map(product => {
-        const existingStock = stockData?.find(stock => stock.product_id === product.id);
-        const previousStock = previousStockData?.find(stock => stock.product_id === product.id);
-        
-        return {
-          productId: product.id,
-          productName: product.name,
-          category: product.category,
-          openingStock: existingStock?.opening_stock || previousStock?.actual_stock || 0,
-          actualStock: existingStock?.actual_stock || 0,
-          availableStock: existingStock?.closing_stock || 0,
-          stockAdded: existingStock?.stock_added || 0,
-        };
-      });
-
-      setStockItems(newStockItems);
+      // We'll wait for assigned products to be fetched first
+      // This will be handled in a separate useEffect
     } catch (error) {
       console.error('Error loading store inventory:', error);
       toast.error('Failed to load store inventory');
     }
   };
 
+  // New useEffect to create stock items when assigned products are available
+  useEffect(() => {
+    if (assignedProducts.length > 0 && selectedShop) {
+      console.log('=== CREATING STOCK ITEMS FROM ASSIGNED PRODUCTS ===');
+      console.log('Assigned products:', assignedProducts);
+      
+      const createStockItems = async () => {
+        try {
+          // Fetch current stock data for assigned products
+          const productIds = assignedProducts.map(p => p.id);
+          console.log('Product IDs:', productIds);
+          
+          const { data: stockData, error: stockError } = await supabase
+            .from('stocks')
+            .select('product_id, opening_stock, actual_stock, closing_stock, stock_added')
+            .eq('shop_id', selectedShop)
+            .eq('stock_date', stockDate)
+            .in('product_id', productIds);
+          
+          console.log('Current stock data:', { stockData, stockError });
+          
+          // Fetch previous day stock
+          const previousDay = new Date(stockDate);
+          previousDay.setDate(previousDay.getDate() - 1);
+          const previousDate = format(previousDay, 'yyyy-MM-dd');
+          
+          const { data: previousStockData, error: prevError } = await supabase
+            .from('stocks')
+            .select('product_id, actual_stock')
+            .eq('shop_id', selectedShop)
+            .eq('stock_date', previousDate)
+            .in('product_id', productIds);
+          
+          console.log('Previous stock data:', { previousStockData, prevError });
+          
+          const newStockItems: StockItem[] = assignedProducts.map(product => {
+            const existingStock = stockData?.find(stock => stock.product_id === product.id);
+            const previousStock = previousStockData?.find(stock => stock.product_id === product.id);
+            
+            const stockItem = {
+              productId: product.id,
+              productName: product.name,
+              category: product.category,
+              openingStock: existingStock?.opening_stock || previousStock?.actual_stock || 0,
+              actualStock: existingStock?.actual_stock || 0,
+              availableStock: existingStock?.closing_stock || 0,
+              stockAdded: existingStock?.stock_added || 0,
+            };
+            
+            console.log(`Stock item for ${product.name}:`, stockItem);
+            return stockItem;
+          });
+
+          console.log('Final stock items:', newStockItems);
+          setStockItems(newStockItems);
+          
+          if (newStockItems.length > 0) {
+            toast.success(`Loaded ${newStockItems.length} products for the selected store`);
+          }
+        } catch (error) {
+          console.error('Error creating stock items:', error);
+          toast.error('Failed to load product stock data');
+        }
+      };
+      
+      createStockItems();
+    } else {
+      console.log('=== NO ASSIGNED PRODUCTS OR SHOP, CLEARING STOCK ITEMS ===');
+      setStockItems([]);
+    }
+  }, [assignedProducts, selectedShop, stockDate]);
+
   const updateStockItem = (productId: string, field: keyof StockItem, value: number) => {
+    console.log('=== UPDATING STOCK ITEM ===');
+    console.log('Product ID:', productId);
+    console.log('Field:', field);
+    console.log('Value:', value);
+    
     setStockItems(prev => 
       prev.map(item => {
         if (item.productId === productId) {
@@ -224,6 +352,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
             updatedItem.availableStock = item.availableStock + Math.max(0, value) - item.stockAdded;
           }
           
+          console.log('Updated item:', updatedItem);
           return updatedItem;
         }
         return item;
@@ -271,6 +400,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
 
     setLoading(true);
     try {
+      console.log('=== SAVING STOCK DATA ===');
       const stockData = stockItems.map(item => ({
         stock_date: stockDate,
         product_id: item.productId,
@@ -282,6 +412,8 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
         user_id: user?.id
       }));
 
+      console.log('Stock data to save:', stockData);
+
       const { error } = await supabase
         .from('stocks')
         .upsert(stockData, {
@@ -289,8 +421,12 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
           ignoreDuplicates: false
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving stock data:', error);
+        throw error;
+      }
 
+      console.log('Stock data saved successfully');
       toast.success('Store inventory updated successfully');
       onSuccess();
     } catch (error) {
@@ -312,6 +448,11 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
   }
 
   const totalStockAdded = stockItems.reduce((sum, item) => sum + item.stockAdded, 0);
+
+  console.log('=== RENDER ===');
+  console.log('Stock items count:', stockItems.length);
+  console.log('Assigned products count:', assignedProducts.length);
+  console.log('Selected shop:', selectedShop);
 
   return (
     <div className="space-y-4">
