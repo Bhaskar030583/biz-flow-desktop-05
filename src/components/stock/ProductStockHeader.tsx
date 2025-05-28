@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Package2, Store, Search, Plus } from "lucide-react";
+import { Package2, Store, Search, Plus, Filter } from "lucide-react";
 
 interface Shop {
   id: string;
@@ -14,47 +14,48 @@ interface Shop {
 }
 
 interface ProductStockHeaderProps {
-  assignedProductsCount: number;
-  isAdmin: boolean;
   selectedShop: string;
   setSelectedShop: (shopId: string) => void;
-  shops: Shop[];
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  showAssignForm: boolean;
-  setShowAssignForm: (show: boolean) => void;
+  categoryFilter: string;
+  setCategoryFilter: (category: string) => void;
+  showAssignmentForm: boolean;
+  setShowAssignmentForm: (show: boolean) => void;
+  shops: Shop[];
+  shopsLoading: boolean;
+  categories: string[];
+  productCount: number;
 }
 
 const ProductStockHeader = ({
-  assignedProductsCount,
-  isAdmin,
   selectedShop,
   setSelectedShop,
-  shops,
   searchTerm,
   setSearchTerm,
-  showAssignForm,
-  setShowAssignForm,
+  categoryFilter,
+  setCategoryFilter,
+  showAssignmentForm,
+  setShowAssignmentForm,
+  shops,
+  shopsLoading,
+  categories,
+  productCount,
 }: ProductStockHeaderProps) => {
   return (
     <CardHeader className="pb-3">
       <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
         <Package2 className="h-5 w-5" />
         Store Product Management
-        {selectedShop && assignedProductsCount > 0 && (
+        {selectedShop && productCount > 0 && (
           <Badge variant="secondary" className="ml-2">
-            {assignedProductsCount} assigned products
-          </Badge>
-        )}
-        {isAdmin && (
-          <Badge variant="outline" className="ml-2 text-green-600 border-green-600">
-            Admin
+            {productCount} assigned products
           </Badge>
         )}
       </CardTitle>
       
       <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="shop-filter" className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
               <Store className="h-4 w-4 text-slate-700 dark:text-slate-300" />
@@ -95,6 +96,26 @@ const ProductStockHeader = ({
               />
             </div>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="category-filter" className="flex items-center gap-2 text-sm font-medium">
+              <Filter className="h-4 w-4" />
+              Filter by Category
+            </Label>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="All categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {!selectedShop && (
@@ -112,7 +133,7 @@ const ProductStockHeader = ({
               Products assigned to {shops.find(shop => shop.id === selectedShop)?.name}
             </h3>
             <Button
-              onClick={() => setShowAssignForm(!showAssignForm)}
+              onClick={() => setShowAssignmentForm(!showAssignmentForm)}
               className="bg-green-600 hover:bg-green-700 text-white font-medium"
               size="sm"
             >

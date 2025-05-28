@@ -1,59 +1,112 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  cost_price: number | null;
-}
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 interface ProductAssignmentFormProps {
-  showAssignForm: boolean;
-  unassignedProducts: Product[];
-  selectedProductToAssign: string;
-  setSelectedProductToAssign: (productId: string) => void;
-  initialStockQuantity: string;
-  setInitialStockQuantity: (quantity: string) => void;
-  onAssignProduct: () => void;
+  selectedShop: string;
+  onProductAssigned: () => void;
   onCancel: () => void;
 }
 
 const ProductAssignmentForm = ({
-  showAssignForm,
-  unassignedProducts,
-  selectedProductToAssign,
-  setSelectedProductToAssign,
-  initialStockQuantity,
-  setInitialStockQuantity,
-  onAssignProduct,
+  selectedShop,
+  onProductAssigned,
   onCancel,
 }: ProductAssignmentFormProps) => {
-  if (!showAssignForm) return null;
+  const { user } = useAuth();
+  const [selectedProductToAssign, setSelectedProductToAssign] = useState("");
+  const [initialStockQuantity, setInitialStockQuantity] = useState("");
+  const [isAssigning, setIsAssigning] = useState(false);
 
-  const handleAssignClick = () => {
-    console.log("Assign button clicked");
-    console.log("Selected product:", selectedProductToAssign);
-    console.log("Initial stock quantity:", initialStockQuantity);
-    
-    if (!selectedProductToAssign) {
-      console.log("No product selected");
+  // Query for unassigned products
+  const { data: unassignedProducts, isLoading } = useQuery({
+    queryKey: ['unassigned-products', selectedShop],
+    queryFn: async () => {
+      if (!selectedShop) return [];
+      
+      // Get all products
+      const { data: allProducts, error: productsError } = await supabase
+        .from('products')
+        .select('id, name, category, price, cost_price')
+        .eq('user_id', user?.id);
+      
+      if (productsError) throw productsError;
+      
+      // Get assigned products for this shop
+      const { data: assignedProducts, error: assignedError } = await supabase
+        .from('product_shops')
+        .select('product_id')
+        .eq('shop_id', selectedShop)
+        .eq('user_id', user?.id);
+      
+      if (assignedError) throw assignedError;
+      
+      const assignedProductIds = assignedProducts?.map(ps => ps.product_id) || [];
+      
+      // Filter out assigned products
+      return allProducts?.filter(product => !assignedProductIds.includes(product.id)) || [];
+    },
+    enabled: !!selectedShop && !!user?.id
+  });
+
+  const handleAssignProduct = async () => {
+    if (!selectedProductToAssign || !initialStockQuantity || Number(initialStockQuantity) <= 0) {
+      toast.error("Please select a product and enter a valid stock quantity");
       return;
     }
-    
-    if (!initialStockQuantity || initialStockQuantity === "0") {
-      console.log("No quantity entered or quantity is 0");
-      return;
+
+    setIsAssigning(true);
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      // Assign product to shop
+      const { error: assignError } = await supabase
+        .from('product_shops')
+        .insert({
+          product_id: selectedProductToAssign,
+          shop_id: selectedShop,
+          user_id: user?.id
+        });
+
+      if (assignError) throw assignError;
+
+      // Create initial stock entry
+      const { error: stockError } = await supabase
+        .from('stocks')
+        .insert({
+          product_id: selectedProductToAssign,
+          shop_id: selectedShop,
+          stock_date: today,
+          opening_stock: Number(initialStockQuantity),
+          closing_stock: Number(initialStockQuantity),
+          actual_stock: Number(initialStockQuantity),
+          stock_added: Number(initialStockQuantity),
+          user_id: user?.id
+        });
+
+      if (stockError) throw stockError;
+
+      const productName = unassignedProducts?.find(p => p.id === selectedProductToAssign)?.name;
+      toast.success(`Product "${productName}" assigned with ${initialStockQuantity} initial stock`);
+      
+      setSelectedProductToAssign("");
+      setInitialStockQuantity("");
+      onProductAssigned();
+    } catch (error) {
+      console.error("Error assigning product:", error);
+      toast.error("Failed to assign product");
+    } finally {
+      setIsAssigning(false);
     }
-    
-    console.log("Calling onAssignProduct");
-    onAssignProduct();
   };
 
   return (
@@ -69,7 +122,7 @@ const ProductAssignmentForm = ({
                 <SelectValue placeholder="Choose a product" />
               </SelectTrigger>
               <SelectContent className="bg-white dark:bg-slate-800 border-blue-300 dark:border-blue-600 shadow-lg z-50">
-                {unassignedProducts.map(product => (
+                {unassignedProducts?.map(product => (
                   <SelectItem 
                     key={product.id} 
                     value={product.id}
@@ -78,7 +131,7 @@ const ProductAssignmentForm = ({
                     {product.name} - {product.category}
                   </SelectItem>
                 ))}
-                {unassignedProducts.length === 0 && (
+                {unassignedProducts?.length === 0 && (
                   <div className="px-2 py-1.5 text-sm text-slate-600 dark:text-slate-400">
                     No unassigned products available
                   </div>
@@ -95,11 +148,11 @@ const ProductAssignmentForm = ({
             />
             <div className="flex gap-2">
               <Button 
-                onClick={handleAssignClick} 
-                disabled={!selectedProductToAssign || !initialStockQuantity || initialStockQuantity === "0"}
+                onClick={handleAssignProduct} 
+                disabled={!selectedProductToAssign || !initialStockQuantity || initialStockQuantity === "0" || isAssigning}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Assign
+                {isAssigning ? "Assigning..." : "Assign"}
               </Button>
               <Button 
                 variant="outline" 
