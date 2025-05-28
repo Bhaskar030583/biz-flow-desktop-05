@@ -39,7 +39,8 @@ import {
   AlertCircle,
   Menu,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Clock
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CashPaymentModal } from "./CashPaymentModal";
@@ -261,7 +262,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
     setShowSplitModal(true);
   };
 
-  const handleCardPayment = async () => {
+  const handleCompletePayment = async () => {
     if (cart.length === 0) {
       toast.error("Cart is empty");
       return;
@@ -270,18 +271,42 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
     try {
       await generateBill({
         totalAmount: getTotalAmount(),
-        paymentMethod: 'card',
+        paymentMethod: 'cash',
         cartItems: cart,
         storeName: storeInfo?.storeName,
         salespersonName: storeInfo?.salespersonName
       });
 
-      toast.success("Card payment completed and bill generated!");
+      toast.success("Payment completed and bill generated!");
       setCart([]);
       setDiscount(null);
     } catch (error) {
-      console.error("Error processing card payment:", error);
-      toast.error("Failed to process card payment");
+      console.error("Error processing complete payment:", error);
+      toast.error("Failed to process payment");
+    }
+  };
+
+  const handlePendingPayment = async () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+
+    try {
+      await generateBill({
+        totalAmount: getTotalAmount(),
+        paymentMethod: 'credit',
+        cartItems: cart,
+        storeName: storeInfo?.storeName,
+        salespersonName: storeInfo?.salespersonName
+      });
+
+      toast.success("Pending payment recorded and bill generated!");
+      setCart([]);
+      setDiscount(null);
+    } catch (error) {
+      console.error("Error processing pending payment:", error);
+      toast.error("Failed to process pending payment");
     }
   };
 
@@ -626,13 +651,22 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                         </Button>
                       </div>
                       
-                      <Button 
-                        className="w-full bg-green-600 hover:bg-green-700 h-12 mt-2 text-sm font-bold rounded-xl shadow-lg"
-                        onClick={handleCardPayment}
-                      >
-                        <CreditCard className="h-4 w-4 mr-2" />
-                        Pay with Card
-                      </Button>
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        <Button 
+                          className="bg-green-600 hover:bg-green-700 h-12 text-sm font-bold rounded-xl shadow-lg"
+                          onClick={handleCompletePayment}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Complete
+                        </Button>
+                        <Button 
+                          className="bg-orange-600 hover:bg-orange-700 h-12 text-sm font-bold rounded-xl shadow-lg"
+                          onClick={handlePendingPayment}
+                        >
+                          <Clock className="h-4 w-4 mr-2" />
+                          Pending
+                        </Button>
+                      </div>
                     </div>
                   </>
                 )}
@@ -1228,13 +1262,22 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                       </Button>
                     </div>
                     
-                    <Button 
-                      className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 h-12 text-base font-bold shadow-xl rounded-xl"
-                      onClick={handleCardPayment}
-                    >
-                      <CreditCard className="h-5 w-5 mr-2" />
-                      Complete Card Payment
-                    </Button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 h-12 text-base font-bold shadow-xl rounded-xl"
+                        onClick={handleCompletePayment}
+                      >
+                        <CheckCircle className="h-5 w-5 mr-2" />
+                        Complete
+                      </Button>
+                      <Button 
+                        className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 h-12 text-base font-bold shadow-xl rounded-xl"
+                        onClick={handlePendingPayment}
+                      >
+                        <Clock className="h-5 w-5 mr-2" />
+                        Pending
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
