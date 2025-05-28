@@ -1,12 +1,12 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store, User, Clock } from "lucide-react";
+import { Store, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,8 +34,40 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
 }) => {
   const { user } = useAuth();
   const [storeName, setStoreName] = useState("");
-  const [salespersonName, setSalespersonName] = useState("");
   const [selectedShiftId, setSelectedShiftId] = useState("");
+  const [salespersonName, setSalespersonName] = useState("");
+
+  // Query for user profile to get the full name
+  const { data: userProfile } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!user?.id
+  });
+
+  // Set salesperson name when user profile is loaded
+  useEffect(() => {
+    if (userProfile?.full_name) {
+      setSalespersonName(userProfile.full_name);
+    } else if (user?.email) {
+      // Fallback to email if full name is not available
+      setSalespersonName(user.email.split('@')[0]);
+    }
+  }, [userProfile, user]);
 
   // Query for all shifts from hr_shifts table
   const { data: shifts, isLoading: shiftsLoading } = useQuery({
@@ -59,7 +91,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     }
     
     if (!salespersonName.trim()) {
-      toast.error("Please enter salesperson name");
+      toast.error("Salesperson name not found. Please check your profile.");
       return;
     }
 
@@ -137,18 +169,14 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
               />
             </div>
             
+            {/* Display salesperson name as read-only */}
             <div className="space-y-2">
-              <Label htmlFor="salesperson-name" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Salesperson Name
+              <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                Salesperson
               </Label>
-              <Input
-                id="salesperson-name"
-                value={salespersonName}
-                onChange={(e) => setSalespersonName(e.target.value)}
-                placeholder="Enter your name"
-                className="border-blue-200 focus:border-blue-400"
-              />
+              <div className="bg-gray-50 border border-gray-200 px-3 py-2 rounded-md text-sm text-gray-800">
+                {salespersonName || "Loading..."}
+              </div>
             </div>
             
             <Button 
