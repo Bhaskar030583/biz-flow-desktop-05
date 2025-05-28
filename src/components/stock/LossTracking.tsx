@@ -77,28 +77,54 @@ const LossTracking = () => {
     enabled: !!selectedStore
   });
 
-  // Fetch losses
+  // Fetch losses with proper error handling and data enrichment
   const { data: losses, isLoading } = useQuery({
     queryKey: ['losses', selectedStore],
     queryFn: async () => {
-      let query = supabase
+      // Get losses
+      const { data: lossesData, error } = await supabase
         .from('losses')
-        .select(`
-          *,
-          products (name, category),
-          shops (name),
-          hr_shifts (shift_name)
-        `)
+        .select('*')
         .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (selectedStore) {
-        query = query.eq('shop_id', selectedStore);
-      }
-
-      const { data, error } = await query;
+        .order('created_at', { ascending: false })
+        .eq(selectedStore ? 'shop_id' : 'shop_id', selectedStore || undefined);
+      
       if (error) throw error;
-      return data || [];
+      if (!lossesData?.length) return [];
+
+      // Get products data
+      const productIds = [...new Set(lossesData.map(loss => loss.product_id))];
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('id, name, category')
+        .in('id', productIds);
+
+      // Get shops data
+      const shopIds = [...new Set(lossesData.map(loss => loss.shop_id))];
+      const { data: shopsData } = await supabase
+        .from('shops')
+        .select('id, name')
+        .in('id', shopIds);
+
+      // Get shifts data
+      const shiftIds = [...new Set(lossesData.filter(loss => loss.shift_id).map(loss => loss.shift_id))];
+      const { data: shiftsData } = shiftIds.length ? await supabase
+        .from('hr_shifts')
+        .select('id, shift_name')
+        .in('id', shiftIds) : { data: [] };
+
+      // Create lookup maps
+      const productsMap = new Map(productsData?.map(p => [p.id, p]) || []);
+      const shopsMap = new Map(shopsData?.map(s => [s.id, s]) || []);
+      const shiftsMap = new Map(shiftsData?.map(s => [s.id, s]) || []);
+
+      // Combine data
+      return lossesData.map(loss => ({
+        ...loss,
+        products: productsMap.get(loss.product_id),
+        shops: shopsMap.get(loss.shop_id),
+        hr_shifts: loss.shift_id ? shiftsMap.get(loss.shift_id) : null
+      }));
     },
     enabled: !!user?.id
   });

@@ -1067,7 +1067,29 @@ export type Database = {
           shop_id?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_losses_product"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_losses_shift"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "hr_shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_losses_shop"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       low_stock_alerts: {
         Row: {
@@ -1106,7 +1128,22 @@ export type Database = {
           shop_id?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_low_stock_alerts_product"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_low_stock_alerts_shop"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_shops: {
         Row: {
@@ -1247,7 +1284,22 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_reorder_points_product"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_reorder_points_shop"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sales: {
         Row: {
@@ -1346,7 +1398,22 @@ export type Database = {
           updated_at?: string
           variance?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_shift_stock_entries_shift"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "hr_shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_shift_stock_entries_stock"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       shops: {
         Row: {
@@ -1430,7 +1497,29 @@ export type Database = {
           to_shop_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_stock_movements_from_shop"
+            columns: ["from_shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_stock_movements_product"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_stock_movements_to_shop"
+            columns: ["to_shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stock_requests: {
         Row: {

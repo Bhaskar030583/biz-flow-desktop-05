@@ -105,7 +105,7 @@ const ProductStockManagement = ({
         )}
 
         {selectedShop && (
-          <StockRealtimeView />
+          <StockRealtimeView selectedShop={selectedShop} />
         )}
       </CardContent>
     </Card>

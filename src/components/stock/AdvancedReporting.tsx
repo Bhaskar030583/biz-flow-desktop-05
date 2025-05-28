@@ -59,40 +59,66 @@ const AdvancedReporting = () => {
     enabled: !!user?.id
   });
 
-  // Fetch losses report
+  // Fetch losses report with proper joins
   const { data: lossesReport } = useQuery({
     queryKey: ['losses-report', selectedStore, dateRange, customDateFrom, customDateTo],
     queryFn: async () => {
       const { from, to } = getDateRange();
       
-      let query = supabase
+      // Get losses with related data using separate queries
+      const { data: lossesData, error: lossesError } = await supabase
         .from('losses')
-        .select(`
-          *,
-          products (name, category, price, cost_price),
-          shops (name),
-          hr_shifts (shift_name)
-        `)
+        .select('*')
         .eq('user_id', user?.id)
         .gte('loss_date', from)
-        .lte('loss_date', to);
+        .lte('loss_date', to)
+        .eq(selectedStore ? 'shop_id' : 'shop_id', selectedStore || undefined);
 
-      if (selectedStore) {
-        query = query.eq('shop_id', selectedStore);
-      }
+      if (lossesError) throw lossesError;
 
-      const { data, error } = await query;
-      if (error) throw error;
+      // Get products data
+      const productIds = [...new Set(lossesData?.map(loss => loss.product_id) || [])];
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('id, name, category, price, cost_price')
+        .in('id', productIds);
+
+      // Get shops data
+      const shopIds = [...new Set(lossesData?.map(loss => loss.shop_id) || [])];
+      const { data: shopsData } = await supabase
+        .from('shops')
+        .select('id, name')
+        .in('id', shopIds);
+
+      // Get shifts data
+      const shiftIds = [...new Set(lossesData?.filter(loss => loss.shift_id).map(loss => loss.shift_id) || [])];
+      const { data: shiftsData } = shiftIds.length > 0 ? await supabase
+        .from('hr_shifts')
+        .select('id, shift_name')
+        .in('id', shiftIds) : { data: [] };
+
+      // Create lookup maps
+      const productsMap = new Map(productsData?.map(p => [p.id, p]) || []);
+      const shopsMap = new Map(shopsData?.map(s => [s.id, s]) || []);
+      const shiftsMap = new Map(shiftsData?.map(s => [s.id, s]) || []);
+
+      // Combine data
+      const enrichedLosses = lossesData?.map(loss => ({
+        ...loss,
+        products: productsMap.get(loss.product_id),
+        shops: shopsMap.get(loss.shop_id),
+        hr_shifts: loss.shift_id ? shiftsMap.get(loss.shift_id) : null
+      })) || [];
 
       // Calculate summary metrics
-      const totalQuantityLost = data?.reduce((sum, loss) => sum + loss.quantity_lost, 0) || 0;
-      const totalValueLost = data?.reduce((sum, loss) => {
+      const totalQuantityLost = enrichedLosses.reduce((sum, loss) => sum + loss.quantity_lost, 0);
+      const totalValueLost = enrichedLosses.reduce((sum, loss) => {
         const cost = loss.products?.cost_price || loss.products?.price || 0;
         return sum + (loss.quantity_lost * cost);
-      }, 0) || 0;
+      }, 0);
 
       // Group by loss type
-      const byLossType = data?.reduce((acc, loss) => {
+      const byLossType = enrichedLosses.reduce((acc, loss) => {
         if (!acc[loss.loss_type]) {
           acc[loss.loss_type] = { quantity: 0, value: 0, count: 0 };
         }
@@ -101,10 +127,10 @@ const AdvancedReporting = () => {
         acc[loss.loss_type].value += loss.quantity_lost * cost;
         acc[loss.loss_type].count += 1;
         return acc;
-      }, {} as Record<string, { quantity: number; value: number; count: number }>) || {};
+      }, {} as Record<string, { quantity: number; value: number; count: number }>);
 
       // Group by store
-      const byStore = data?.reduce((acc, loss) => {
+      const byStore = enrichedLosses.reduce((acc, loss) => {
         const storeName = loss.shops?.name || 'Unknown';
         if (!acc[storeName]) {
           acc[storeName] = { quantity: 0, value: 0, count: 0 };
@@ -114,14 +140,14 @@ const AdvancedReporting = () => {
         acc[storeName].value += loss.quantity_lost * cost;
         acc[storeName].count += 1;
         return acc;
-      }, {} as Record<string, { quantity: number; value: number; count: number }>) || {};
+      }, {} as Record<string, { quantity: number; value: number; count: number }>);
 
       return {
         totalQuantityLost,
         totalValueLost,
         byLossType,
         byStore,
-        losses: data || []
+        losses: enrichedLosses
       };
     },
     enabled: !!user?.id
@@ -133,43 +159,60 @@ const AdvancedReporting = () => {
     queryFn: async () => {
       const { from, to } = getDateRange();
       
-      let query = supabase
+      const { data: stocksData, error } = await supabase
         .from('stocks')
-        .select(`
-          *,
-          products (name, category, price, cost_price),
-          shops (name)
-        `)
+        .select('*')
         .eq('user_id', user?.id)
         .gte('stock_date', from)
-        .lte('stock_date', to);
+        .lte('stock_date', to)
+        .eq(selectedStore ? 'shop_id' : 'shop_id', selectedStore || undefined);
 
-      if (selectedStore) {
-        query = query.eq('shop_id', selectedStore);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
 
+      // Get products data
+      const productIds = [...new Set(stocksData?.map(stock => stock.product_id) || [])];
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('id, name, category, price, cost_price')
+        .in('id', productIds);
+
+      // Get shops data
+      const shopIds = [...new Set(stocksData?.map(stock => stock.shop_id) || [])];
+      const { data: shopsData } = await supabase
+        .from('shops')
+        .select('id, name')
+        .in('id', shopIds);
+
+      // Create lookup maps
+      const productsMap = new Map(productsData?.map(p => [p.id, p]) || []);
+      const shopsMap = new Map(shopsData?.map(s => [s.id, s]) || []);
+
+      // Combine data
+      const enrichedStocks = stocksData?.map(stock => ({
+        ...stock,
+        products: productsMap.get(stock.product_id),
+        shops: shopsMap.get(stock.shop_id)
+      })) || [];
+
       // Calculate metrics
-      const totalSales = data?.reduce((sum, stock) => {
+      const totalSales = enrichedStocks.reduce((sum, stock) => {
         const sold = stock.opening_stock + (stock.stock_added || 0) - stock.actual_stock;
         return sum + (sold * (stock.products?.price || 0));
-      }, 0) || 0;
+      }, 0);
 
-      const totalProfit = data?.reduce((sum, stock) => {
+      const totalProfit = enrichedStocks.reduce((sum, stock) => {
         const sold = stock.opening_stock + (stock.stock_added || 0) - stock.actual_stock;
         const revenue = sold * (stock.products?.price || 0);
         const cost = sold * (stock.products?.cost_price || 0);
         return sum + (revenue - cost);
-      }, 0) || 0;
+      }, 0);
 
-      const totalVariance = data?.reduce((sum, stock) => {
+      const totalVariance = enrichedStocks.reduce((sum, stock) => {
         return sum + (stock.closing_stock - stock.actual_stock);
-      }, 0) || 0;
+      }, 0);
 
       // Top performing products
-      const productPerformance = data?.reduce((acc, stock) => {
+      const productPerformance = enrichedStocks.reduce((acc, stock) => {
         const productName = stock.products?.name || 'Unknown';
         const sold = stock.opening_stock + (stock.stock_added || 0) - stock.actual_stock;
         const revenue = sold * (stock.products?.price || 0);
@@ -180,7 +223,7 @@ const AdvancedReporting = () => {
         acc[productName].sold += sold;
         acc[productName].revenue += revenue;
         return acc;
-      }, {} as Record<string, { sold: number; revenue: number }>) || {};
+      }, {} as Record<string, { sold: number; revenue: number }>);
 
       const topProducts = Object.entries(productPerformance)
         .sort((a, b) => b[1].revenue - a[1].revenue)
@@ -191,7 +234,7 @@ const AdvancedReporting = () => {
         totalProfit,
         totalVariance,
         topProducts,
-        entries: data || []
+        entries: enrichedStocks
       };
     },
     enabled: !!user?.id

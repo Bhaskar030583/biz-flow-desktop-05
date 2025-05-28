@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,17 +39,14 @@ const LowStockAlerts = () => {
     enabled: !!user?.id
   });
 
-  // Fetch active alerts
+  // Fetch active alerts with proper data joining
   const { data: alerts, isLoading: alertsLoading } = useQuery({
     queryKey: ['low-stock-alerts', selectedStore],
     queryFn: async () => {
+      // Get alerts
       let query = supabase
         .from('low_stock_alerts')
-        .select(`
-          *,
-          products (name, category),
-          shops (name)
-        `)
+        .select('*')
         .eq('user_id', user?.id)
         .eq('is_resolved', false)
         .order('alert_date', { ascending: false });
@@ -57,33 +55,80 @@ const LowStockAlerts = () => {
         query = query.eq('shop_id', selectedStore);
       }
 
-      const { data, error } = await query;
+      const { data: alertsData, error } = await query;
       if (error) throw error;
-      return data || [];
+      if (!alertsData?.length) return [];
+
+      // Get products data
+      const productIds = [...new Set(alertsData.map(alert => alert.product_id))];
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('id, name, category')
+        .in('id', productIds);
+
+      // Get shops data
+      const shopIds = [...new Set(alertsData.map(alert => alert.shop_id))];
+      const { data: shopsData } = await supabase
+        .from('shops')
+        .select('id, name')
+        .in('id', shopIds);
+
+      // Create lookup maps
+      const productsMap = new Map(productsData?.map(p => [p.id, p]) || []);
+      const shopsMap = new Map(shopsData?.map(s => [s.id, s]) || []);
+
+      // Combine data
+      return alertsData.map(alert => ({
+        ...alert,
+        products: productsMap.get(alert.product_id),
+        shops: shopsMap.get(alert.shop_id)
+      }));
     },
     enabled: !!user?.id
   });
 
-  // Fetch reorder points
+  // Fetch reorder points with proper data joining
   const { data: reorderPoints } = useQuery({
     queryKey: ['reorder-points', selectedStore],
     queryFn: async () => {
+      // Get reorder points
       let query = supabase
         .from('reorder_points')
-        .select(`
-          *,
-          products (name, category),
-          shops (name)
-        `)
+        .select('*')
         .eq('user_id', user?.id);
 
       if (selectedStore) {
         query = query.eq('shop_id', selectedStore);
       }
 
-      const { data, error } = await query;
+      const { data: reorderPointsData, error } = await query;
       if (error) throw error;
-      return data || [];
+      if (!reorderPointsData?.length) return [];
+
+      // Get products data
+      const productIds = [...new Set(reorderPointsData.map(rp => rp.product_id))];
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('id, name, category')
+        .in('id', productIds);
+
+      // Get shops data
+      const shopIds = [...new Set(reorderPointsData.map(rp => rp.shop_id))];
+      const { data: shopsData } = await supabase
+        .from('shops')
+        .select('id, name')
+        .in('id', shopIds);
+
+      // Create lookup maps
+      const productsMap = new Map(productsData?.map(p => [p.id, p]) || []);
+      const shopsMap = new Map(shopsData?.map(s => [s.id, s]) || []);
+
+      // Combine data
+      return reorderPointsData.map(rp => ({
+        ...rp,
+        products: productsMap.get(rp.product_id),
+        shops: shopsMap.get(rp.shop_id)
+      }));
     },
     enabled: !!user?.id
   });
@@ -214,7 +259,7 @@ const LowStockAlerts = () => {
               <Card className="border-green-200 bg-green-50">
                 <CardContent className="pt-6 text-center">
                   <Check className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                  <p className="text-green-700">No low stock alerts! All products are well stocked.</p>
+                  <p className="text-green-600 font-medium">No low stock alerts! All products are well stocked.</p>
                 </CardContent>
               </Card>
             ) : (
@@ -344,19 +389,25 @@ const LowStockAlerts = () => {
                 {/* Existing Reorder Points */}
                 <div className="space-y-4">
                   <h4 className="font-medium">Current Reorder Points</h4>
-                  {reorderPoints?.map(point => (
-                    <div key={point.id} className="flex justify-between items-center p-3 bg-white rounded border">
-                      <div>
-                        <span className="font-medium">{point.products?.name}</span>
-                        <span className="ml-2 text-sm text-gray-600">
-                          at {point.shops?.name}
-                        </span>
+                  {reorderPoints?.length ? (
+                    reorderPoints.map(point => (
+                      <div key={point.id} className="flex justify-between items-center p-3 bg-white rounded border">
+                        <div>
+                          <span className="font-medium">{point.products?.name}</span>
+                          <span className="ml-2 text-sm text-gray-600">
+                            at {point.shops?.name}
+                          </span>
+                        </div>
+                        <div className="text-sm">
+                          Min: {point.minimum_stock} | Reorder: {point.reorder_quantity}
+                        </div>
                       </div>
-                      <div className="text-sm">
-                        Min: {point.minimum_stock} | Reorder: {point.reorder_quantity}
-                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      <p>No reorder points set</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
