@@ -37,6 +37,25 @@ const ProductAssignmentForm = ({
 }: ProductAssignmentFormProps) => {
   if (!showAssignForm) return null;
 
+  const handleAssignClick = () => {
+    console.log("Assign button clicked");
+    console.log("Selected product:", selectedProductToAssign);
+    console.log("Initial stock quantity:", initialStockQuantity);
+    
+    if (!selectedProductToAssign) {
+      console.log("No product selected");
+      return;
+    }
+    
+    if (!initialStockQuantity || initialStockQuantity === "0") {
+      console.log("No quantity entered or quantity is 0");
+      return;
+    }
+    
+    console.log("Calling onAssignProduct");
+    onAssignProduct();
+  };
+
   return (
     <Card className="border-blue-500 bg-blue-50 dark:bg-blue-950 shadow-lg">
       <CardContent className="pt-4">
@@ -76,8 +95,9 @@ const ProductAssignmentForm = ({
             />
             <div className="flex gap-2">
               <Button 
-                onClick={onAssignProduct} 
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex-1"
+                onClick={handleAssignClick} 
+                disabled={!selectedProductToAssign || !initialStockQuantity || initialStockQuantity === "0"}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Assign
               </Button>
