@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
   const [selectedShop, setSelectedShop] = useState<string>('');
   const [shops, setShops] = useState<Shop[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [assignedProducts, setAssignedProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -67,6 +69,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
   useEffect(() => {
     if (selectedShop) {
       loadStoreInventory();
+      fetchAssignedProducts();
     }
   }, [selectedShop, stockDate]);
 
@@ -128,6 +131,28 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
     }
   };
 
+  const fetchAssignedProducts = async () => {
+    if (!selectedShop) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('product_shops')
+        .select(`
+          products (id, name, price, category)
+        `)
+        .eq('shop_id', selectedShop)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      const assignedProductsData = data?.map(item => item.products).filter(Boolean) || [];
+      setAssignedProducts(assignedProductsData);
+    } catch (error) {
+      console.error('Error fetching assigned products:', error);
+      toast.error('Failed to fetch assigned products');
+    }
+  };
+
   const loadStoreInventory = async () => {
     if (!selectedShop) return;
     
@@ -159,7 +184,20 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
 
       if (prevError) console.error('Error fetching previous stock:', prevError);
 
-      const newStockItems: StockItem[] = products.map(product => {
+      // Get assigned products for this store
+      const { data: assignedData, error: assignedError } = await supabase
+        .from('product_shops')
+        .select(`
+          products (id, name, category)
+        `)
+        .eq('shop_id', selectedShop)
+        .eq('user_id', user?.id);
+
+      if (assignedError) throw assignedError;
+
+      const assignedProductsForStore = assignedData?.map(item => item.products).filter(Boolean) || [];
+
+      const newStockItems: StockItem[] = assignedProductsForStore.map(product => {
         const existingStock = stockData?.find(stock => stock.product_id === product.id);
         const previousStock = previousStockData?.find(stock => stock.product_id === product.id);
         
@@ -355,6 +393,13 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
     );
   }
 
+  // In Quick Mode, show only assigned products grouped by category
+  const groupedAssignedProducts = categories.reduce((acc, category) => {
+    acc[category] = assignedProducts.filter(p => p.category === category);
+    return acc;
+  }, {} as Record<string, Product[]>);
+
+  // In Regular Mode, show all products grouped by category
   const groupedProducts = categories.reduce((acc, category) => {
     acc[category] = products.filter(p => p.category === category);
     return acc;
@@ -443,55 +488,59 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
       )}
 
       {selectedShop && (
-        <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'lg:grid-cols-3'}`}>
-          <Card className="h-fit">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Plus className="h-4 w-4" />
-                Add Products
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3">
-              <div className="space-y-3 max-h-80 overflow-y-auto">
-                {categories.map(category => (
-                  <div key={category} className="space-y-2">
-                    <h4 className="font-medium text-xs text-gray-700 uppercase tracking-wide">
-                      {category}
-                    </h4>
-                    <div className="grid gap-1">
-                      {groupedProducts[category]?.map(product => (
-                        <Button
-                          key={product.id}
-                          variant="outline"
-                          className="justify-between h-auto p-2 text-sm"
-                          onClick={() => addProductToStore(product)}
-                          disabled={stockItems.some(item => item.productId === product.id)}
-                        >
-                          <div className="text-left">
-                            <div className="font-medium text-sm">{product.name}</div>
-                          </div>
-                          <Badge variant="secondary" className="text-xs">₹{product.price}</Badge>
-                        </Button>
-                      ))}
-                    </div>
+        <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : quickAddMode ? 'lg:grid-cols-1' : 'lg:grid-cols-3'}`}>
+          {!quickAddMode && (
+            <>
+              <Card className="h-fit">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Plus className="h-4 w-4" />
+                    Add Products
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-3">
+                  <div className="space-y-3 max-h-80 overflow-y-auto">
+                    {categories.map(category => (
+                      <div key={category} className="space-y-2">
+                        <h4 className="font-medium text-xs text-gray-700 uppercase tracking-wide">
+                          {category}
+                        </h4>
+                        <div className="grid gap-1">
+                          {groupedProducts[category]?.map(product => (
+                            <Button
+                              key={product.id}
+                              variant="outline"
+                              className="justify-between h-auto p-2 text-sm"
+                              onClick={() => addProductToStore(product)}
+                              disabled={stockItems.some(item => item.productId === product.id)}
+                            >
+                              <div className="text-left">
+                                <div className="font-medium text-sm">{product.name}</div>
+                              </div>
+                              <Badge variant="secondary" className="text-xs">₹{product.price}</Badge>
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    {categories.length === 0 && (
+                      <div className="text-center py-3 text-muted-foreground text-sm">
+                        No products available
+                      </div>
+                    )}
                   </div>
-                ))}
-                {categories.length === 0 && (
-                  <div className="text-center py-3 text-muted-foreground text-sm">
-                    No products available
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
 
-          <StockTemplate
-            onApplyTemplate={applyTemplate}
-            currentShopId={selectedShop}
-            currentStockItems={stockItems}
-          />
+              <StockTemplate
+                onApplyTemplate={applyTemplate}
+                currentShopId={selectedShop}
+                currentStockItems={stockItems}
+              />
+            </>
+          )}
 
-          <Card className="h-fit">
+          <Card className={`h-fit ${quickAddMode ? 'col-span-full' : ''}`}>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Package2 className="h-4 w-4" />
@@ -504,7 +553,7 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3">
-              <div className="space-y-3 max-h-80 overflow-y-auto">
+              <div className={`space-y-3 ${quickAddMode ? 'max-h-96' : 'max-h-80'} overflow-y-auto`}>
                 {stockItems.map(item => (
                   <StockItemCard
                     key={item.productId}
@@ -517,8 +566,13 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
                 {stockItems.length === 0 && (
                   <div className="text-center py-6 text-muted-foreground">
                     <Package2 className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                    <p className="text-sm">No products in store inventory</p>
-                    <p className="text-xs">Add products from the left panel</p>
+                    <p className="text-sm">No products assigned to this store</p>
+                    {!quickAddMode && (
+                      <p className="text-xs">Add products from the left panel</p>
+                    )}
+                    {quickAddMode && (
+                      <p className="text-xs">Exit Quick Mode to assign products to this store</p>
+                    )}
                   </div>
                 )}
               </div>
