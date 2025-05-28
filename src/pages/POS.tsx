@@ -56,38 +56,8 @@ const POS = () => {
       
       const today = new Date().toISOString().split('T')[0];
       
-      // Get products with their current stock quantities
-      const { data, error } = await supabase
-        .from('product_shops')
-        .select(`
-          products (
-            id,
-            name,
-            price,
-            category
-          ),
-          stocks!inner (
-            actual_stock
-          )
-        `)
-        .eq('shop_id', selectedShopId)
-        .eq('user_id', user?.id)
-        .eq('stocks.stock_date', today)
-        .eq('stocks.shop_id', selectedShopId);
-      
-      if (error) throw error;
-      
-      // Transform the data to include stock quantities
-      const productsWithStock = data?.map(item => ({
-        id: item.products.id,
-        name: item.products.name,
-        price: item.products.price,
-        category: item.products.category,
-        quantity: item.stocks?.actual_stock || 0
-      })).filter(product => product.id) || [];
-
-      // Also get products without stock entries (showing 0 quantity)
-      const { data: allProducts, error: allProductsError } = await supabase
+      // First get all products assigned to the shop
+      const { data: productShops, error: productShopsError } = await supabase
         .from('product_shops')
         .select(`
           products (
@@ -99,23 +69,48 @@ const POS = () => {
         `)
         .eq('shop_id', selectedShopId)
         .eq('user_id', user?.id);
-
-      if (allProductsError) throw allProductsError;
-
-      // Merge products with and without stock, ensuring all products are included
-      const allProductIds = new Set(productsWithStock.map(p => p.id));
-      const productsWithoutStock = allProducts
-        ?.map(item => item.products)
-        .filter(product => product && !allProductIds.has(product.id))
-        .map(product => ({
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          category: product.category,
-          quantity: 0
-        })) || [];
-
-      return [...productsWithStock, ...productsWithoutStock];
+      
+      if (productShopsError) throw productShopsError;
+      
+      if (!productShops || productShops.length === 0) return [];
+      
+      // Get product IDs
+      const productIds = productShops
+        .map(item => item.products?.id)
+        .filter(id => id) as string[];
+      
+      if (productIds.length === 0) return [];
+      
+      // Get stock data for these products
+      const { data: stockData, error: stockError } = await supabase
+        .from('stocks')
+        .select('product_id, actual_stock')
+        .eq('shop_id', selectedShopId)
+        .eq('user_id', user?.id)
+        .eq('stock_date', today)
+        .in('product_id', productIds);
+      
+      if (stockError) throw stockError;
+      
+      // Create a map for quick stock lookup
+      const stockMap = new Map();
+      stockData?.forEach(stock => {
+        stockMap.set(stock.product_id, stock.actual_stock);
+      });
+      
+      // Combine product data with stock information
+      return productShops
+        .map(item => {
+          if (!item.products) return null;
+          return {
+            id: item.products.id,
+            name: item.products.name,
+            price: item.products.price,
+            category: item.products.category,
+            quantity: stockMap.get(item.products.id) || 0
+          };
+        })
+        .filter(product => product !== null);
     },
     enabled: !!selectedShopId && !!user?.id
   });
