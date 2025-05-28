@@ -651,6 +651,33 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products = [], storeInfo }
                         </Button>
                       </div>
                       
+                      <div className="grid grid-cols-3 gap-2 mt-2">
+                        <Button 
+                          size="sm" 
+                          className="bg-purple-600 hover:bg-purple-700 h-12 text-xs font-semibold rounded-xl shadow-lg"
+                          onClick={handleCreditPayment}
+                        >
+                          <UserCheck className="h-4 w-4 mr-1" />
+                          Credit
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="bg-indigo-600 hover:bg-indigo-700 h-12 text-xs font-semibold rounded-xl shadow-lg"
+                          onClick={handleSplitPayment}
+                        >
+                          <Split className="h-4 w-4 mr-1" />
+                          Split
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="bg-orange-600 hover:bg-orange-700 h-12 text-xs font-semibold rounded-xl shadow-lg"
+                          onClick={handlePendingPayment}
+                        >
+                          <Clock className="h-4 w-4 mr-1" />
+                          Pending
+                        </Button>
+                      </div>
+                      
                       <div className="grid grid-cols-2 gap-2 mt-2">
                         <Button 
                           className="bg-green-600 hover:bg-green-700 h-12 text-sm font-bold rounded-xl shadow-lg"
