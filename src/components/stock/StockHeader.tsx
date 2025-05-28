@@ -20,7 +20,7 @@ const StockHeader: React.FC<StockHeaderProps> = ({
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Stock Management</h1>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Stock Management</h1>
         <div className="flex items-center gap-2 mt-2">
           <Badge variant="secondary" className="bg-blue-100 text-blue-800">
             {stockCount} entries
