@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from "react";
 import { AssignedProduct } from "./useAssignedProducts";
 
@@ -11,12 +12,11 @@ export const useStockFilters = (assignedProducts: AssignedProduct[]) => {
     return assignedProducts.filter(product => {
       const matchesSearch = !searchTerm || 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase());
+        product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.shop_name && product.shop_name.toLowerCase().includes(searchTerm.toLowerCase()));
       
-      // Since we're getting data from product_shops table, we need to filter by assignment_id
-      // For now, we'll keep the shop filter but it won't filter by specific shops
-      // as the current data structure doesn't include shop information per product
-      const matchesShop = shopFilter === "_all"; // Always true for now since we don't have shop info per product
+      // Now we can properly filter by shop since we have shop_id in the product data
+      const matchesShop = shopFilter === "_all" || product.shop_id === shopFilter;
       const matchesProduct = productFilter === "_all" || product.id === productFilter;
       
       return matchesSearch && matchesShop && matchesProduct;

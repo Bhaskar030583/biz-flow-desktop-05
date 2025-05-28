@@ -16,9 +16,11 @@ export interface AssignedProduct {
   actual_stock?: number;
   last_stock_date?: string;
   sold_quantity?: number;
+  shop_id?: string; // Add shop_id to track which shop this product is assigned to
+  shop_name?: string; // Add shop_name for display purposes
 }
 
-export const useAssignedProducts = (refreshTrigger: number) => {
+export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: string) => {
   const { user } = useAuth();
 
   // Fetch HRMS stores instead of shops
@@ -48,17 +50,16 @@ export const useAssignedProducts = (refreshTrigger: number) => {
     name: store.store_name
   })) || [];
 
-  // Fetch assigned products from all stores
+  // Fetch assigned products from all stores or specific store
   const { data: assignedProductsData, isLoading: productsLoading } = useQuery({
-    queryKey: ['assigned-products-all-stores', refreshTrigger],
+    queryKey: ['assigned-products-all-stores', refreshTrigger, selectedShopId],
     queryFn: async () => {
       if (!user?.id) return [];
       
-      console.log('📦 [useAssignedProducts] Fetching assigned products from all stores');
+      console.log('📦 [useAssignedProducts] Fetching assigned products, selectedShopId:', selectedShopId);
       
       // Get product assignments from product_shops table
-      // Since we're now using HR stores, we need to map them properly
-      const { data: productShops, error: productShopsError } = await supabase
+      let query = supabase
         .from('product_shops')
         .select(`
           id,
@@ -73,6 +74,13 @@ export const useAssignedProducts = (refreshTrigger: number) => {
           )
         `)
         .eq('user_id', user?.id);
+
+      // If a specific shop is selected, filter by that shop
+      if (selectedShopId && selectedShopId !== "_all") {
+        query = query.eq('shop_id', selectedShopId);
+      }
+
+      const { data: productShops, error: productShopsError } = await query;
       
       if (productShopsError) {
         console.error('❌ [useAssignedProducts] Error fetching product assignments:', productShopsError);
@@ -111,6 +119,9 @@ export const useAssignedProducts = (refreshTrigger: number) => {
           console.error('❌ [useAssignedProducts] Error fetching stock for product:', product.name, stockError);
         }
 
+        // Find the corresponding HR store name
+        const hrStore = storesData?.find(store => store.id === assignment.shop_id);
+
         const soldQuantity = stockData ? (stockData.opening_stock + (stockData.stock_added || 0)) - stockData.actual_stock : 0;
 
         assignedProducts.push({
@@ -125,14 +136,16 @@ export const useAssignedProducts = (refreshTrigger: number) => {
           closing_stock: stockData?.closing_stock || 0,
           actual_stock: stockData?.actual_stock || 0,
           last_stock_date: stockData?.stock_date || null,
-          sold_quantity: soldQuantity
+          sold_quantity: soldQuantity,
+          shop_id: assignment.shop_id,
+          shop_name: hrStore?.store_name || 'Unknown Store'
         });
       }
 
       console.log('✅ [useAssignedProducts] Final assigned products with stock:', assignedProducts);
       return assignedProducts;
     },
-    enabled: !!user?.id
+    enabled: !!user?.id && !!storesData
   });
 
   // Get unique products for filter dropdown
