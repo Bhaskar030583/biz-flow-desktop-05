@@ -12,10 +12,11 @@ export interface AssignedProduct {
   cost_price: number | null;
   opening_stock?: number;
   stock_added?: number;
-  closing_stock?: number;
-  actual_stock?: number;
-  last_stock_date?: string;
   sold_quantity?: number;
+  expected_closing?: number;
+  actual_stock?: number;
+  variance?: number;
+  last_stock_date?: string;
   shop_id: string;
   shop_name: string;
 }
@@ -45,7 +46,6 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
       }
       
       console.log('✅ [useAssignedProducts] Successfully fetched HR stores:', data?.length, 'stores');
-      console.log('🏪 [useAssignedProducts] Store details:', data?.map(s => ({ id: s.id, name: s.store_name })));
       return data || [];
     },
     enabled: !!user?.id
@@ -57,16 +57,16 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
     name: store.store_name
   })) || [];
 
-  // Fetch assigned products - always fetch all, filter in the UI
+  // Fetch assigned products with current stock data
   const { data: assignedProductsData, isLoading: productsLoading } = useQuery({
-    queryKey: ['assigned-products-all-stores', refreshTrigger],
+    queryKey: ['assigned-products-with-stock', refreshTrigger],
     queryFn: async () => {
       if (!user?.id) {
         console.log('❌ [useAssignedProducts] No user ID available');
         return [];
       }
       
-      console.log('📦 [useAssignedProducts] Fetching all assigned products for user:', user.id);
+      console.log('📦 [useAssignedProducts] Fetching assigned products with stock data for user:', user.id);
       
       // Get all product assignments from product_shops table
       const { data: productShops, error: productShopsError } = await supabase
@@ -90,14 +90,6 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
         throw productShopsError;
       }
 
-      console.log('📦 [useAssignedProducts] Raw product assignments:', productShops?.length);
-      console.log('📦 [useAssignedProducts] Assignment details:', productShops?.map(ps => ({
-        assignmentId: ps.id,
-        productId: ps.product_id,
-        shopId: ps.shop_id,
-        productName: ps.products?.name
-      })));
-
       if (!productShops || productShops.length === 0) {
         console.log('⚠️ [useAssignedProducts] No product assignments found');
         return [];
@@ -117,14 +109,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
 
         const product = assignment.products;
         
-        console.log('📦 [useAssignedProducts] Processing assignment:', {
-          assignmentId: assignment.id,
-          productId: product.id,
-          productName: product.name,
-          shopId: assignment.shop_id
-        });
-        
-        // Get stock data for this product at this store
+        // Get stock data for this product at this store for today
         const { data: stockData, error: stockError } = await supabase
           .from('stocks')
           .select('*')
@@ -140,15 +125,6 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
 
         // Find the corresponding HR store name
         const hrStore = storesData?.find(store => store.id === assignment.shop_id);
-        
-        console.log('🏪 [useAssignedProducts] Store lookup:', {
-          assignmentShopId: assignment.shop_id,
-          hrStoreFound: !!hrStore,
-          hrStoreName: hrStore?.store_name,
-          allStoreIds: storesData?.map(s => s.id)
-        });
-
-        const soldQuantity = stockData ? (stockData.opening_stock + (stockData.stock_added || 0)) - stockData.actual_stock : 0;
 
         const assignedProduct: AssignedProduct = {
           assignment_id: assignment.id,
@@ -159,33 +135,19 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           cost_price: product.cost_price,
           opening_stock: stockData?.opening_stock || 0,
           stock_added: stockData?.stock_added || 0,
-          closing_stock: stockData?.closing_stock || 0,
-          actual_stock: stockData?.actual_stock || 0,
+          sold_quantity: stockData?.sold_quantity || 0,
+          expected_closing: stockData?.expected_closing || 0,
+          actual_stock: stockData?.actual_stock,
+          variance: stockData?.variance || 0,
           last_stock_date: stockData?.stock_date || null,
-          sold_quantity: soldQuantity,
-          shop_id: assignment.shop_id, // This should be the HR store ID
+          shop_id: assignment.shop_id,
           shop_name: hrStore?.store_name || 'Unknown Store'
         };
-
-        console.log('📦 [useAssignedProducts] Created assigned product:', {
-          name: assignedProduct.name,
-          shopId: assignedProduct.shop_id,
-          shopName: assignedProduct.shop_name,
-          assignmentId: assignedProduct.assignment_id
-        });
 
         assignedProducts.push(assignedProduct);
       }
 
-      console.log('✅ [useAssignedProducts] Final assigned products:', {
-        totalProducts: assignedProducts.length,
-        uniqueShops: [...new Set(assignedProducts.map(p => p.shop_id))],
-        shopBreakdown: assignedProducts.reduce((acc, p) => {
-          acc[`${p.shop_id}:${p.shop_name}`] = (acc[`${p.shop_id}:${p.shop_name}`] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>)
-      });
-
+      console.log('✅ [useAssignedProducts] Final assigned products with stock:', assignedProducts.length);
       return assignedProducts;
     },
     enabled: !!user?.id && !!storesData
@@ -201,13 +163,6 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
   const uniqueProducts = products.filter((product, index, self) => 
     index === self.findIndex(p => p.id === product.id)
   );
-
-  console.log('📦 [useAssignedProducts] Hook returning:', {
-    assignedProductsCount: assignedProductsData?.length || 0,
-    storesCount: stores.length,
-    productsCount: uniqueProducts.length,
-    loading: storesLoading || productsLoading
-  });
 
   return {
     assignedProducts: assignedProductsData || [],

@@ -13,12 +13,7 @@ export const useStockFilters = (assignedProducts: AssignedProduct[]) => {
       totalProducts: assignedProducts.length,
       searchTerm,
       shopFilter,
-      productFilter,
-      allProducts: assignedProducts.map(p => ({
-        name: p.name,
-        shopId: p.shop_id,
-        shopName: p.shop_name
-      }))
+      productFilter
     });
 
     if (!assignedProducts || assignedProducts.length === 0) {
@@ -48,45 +43,18 @@ export const useStockFilters = (assignedProducts: AssignedProduct[]) => {
 
     // Filter by specific shop
     const filtered = assignedProducts.filter(product => {
-      console.log('🔍 [useStockFilters] Checking product:', {
-        productName: product.name,
-        productShopId: product.shop_id,
-        productShopName: product.shop_name,
-        selectedShopFilter: shopFilter,
-        shopIdMatch: product.shop_id === shopFilter,
-        shopIdType: typeof product.shop_id,
-        filterType: typeof shopFilter
-      });
-
       const matchesSearch = !searchTerm || 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (product.shop_name && product.shop_name.toLowerCase().includes(searchTerm.toLowerCase()));
       
-      // This is the key fix - ensure exact string match for shop_id
       const matchesShop = product.shop_id === shopFilter;
       const matchesProduct = productFilter === "_all" || product.id === productFilter;
       
-      const shouldInclude = matchesSearch && matchesShop && matchesProduct;
-      
-      console.log('🔍 [useStockFilters] Product filter result:', {
-        productName: product.name,
-        matchesSearch,
-        matchesShop,
-        matchesProduct,
-        shouldInclude
-      });
-      
-      return shouldInclude;
+      return matchesSearch && matchesShop && matchesProduct;
     });
 
-    console.log('🔍 [useStockFilters] Final filtered results:', {
-      originalCount: assignedProducts.length,
-      filteredCount: filtered.length,
-      shopFilter,
-      filteredProducts: filtered.map(p => ({ name: p.name, shopName: p.shop_name }))
-    });
-
+    console.log('🔍 [useStockFilters] Final filtered results:', filtered.length);
     return filtered;
   }, [assignedProducts, searchTerm, shopFilter, productFilter]);
 

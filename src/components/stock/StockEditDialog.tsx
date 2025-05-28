@@ -14,10 +14,12 @@ interface AssignedProduct {
   cost_price: number | null;
   opening_stock?: number;
   stock_added?: number;
-  closing_stock?: number;
-  actual_stock?: number;
-  last_stock_date?: string;
   sold_quantity?: number;
+  expected_closing?: number;
+  actual_stock?: number;
+  variance?: number;
+  shop_id: string;
+  shop_name: string;
 }
 
 interface Shop {
@@ -29,10 +31,11 @@ interface StockEditDialogProps {
   editingProduct: AssignedProduct | null;
   setEditingProduct: (product: AssignedProduct | null) => void;
   editStockValues: {
+    opening_stock: number;
     stock_added: number;
     actual_stock: number;
   };
-  setEditStockValues: (values: { stock_added: number; actual_stock: number } | ((prev: { stock_added: number; actual_stock: number }) => { stock_added: number; actual_stock: number })) => void;
+  setEditStockValues: (values: { opening_stock: number; stock_added: number; actual_stock: number } | ((prev: { opening_stock: number; stock_added: number; actual_stock: number }) => { opening_stock: number; stock_added: number; actual_stock: number })) => void;
   selectedShop: string;
   shops: Shop[];
   onUpdateStock: () => void;
@@ -58,13 +61,31 @@ const StockEditDialog = ({
         {editingProduct && (
           <div className="space-y-4 py-4">
             <div className="grid gap-2">
-              <div className="text-sm text-muted-foreground">Store: {shops.find(shop => shop.id === selectedShop)?.name}</div>
+              <div className="text-sm text-muted-foreground">Store: {editingProduct.shop_name}</div>
               <div className="text-sm text-muted-foreground">Category: {editingProduct.category}</div>
+              <div className="text-sm text-muted-foreground">Sold Today: {editingProduct.sold_quantity || 0}</div>
+              <div className="text-sm text-muted-foreground">Expected Closing: {editingProduct.expected_closing || 0}</div>
             </div>
             
             <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label className="text-sm font-medium">Stock Added</Label>
+                <Label className="text-sm font-medium">Opening Stock</Label>
+                <Input 
+                  type="number" 
+                  min="0" 
+                  value={editStockValues.opening_stock} 
+                  onChange={(e) => setEditStockValues({
+                    ...editStockValues,
+                    opening_stock: Number(e.target.value)
+                  })}
+                />
+                <div className="text-xs text-muted-foreground">
+                  This should be yesterday's actual stock
+                </div>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label className="text-sm font-medium">Stock Added Today</Label>
                 <Input 
                   type="number" 
                   min="0" 
@@ -77,7 +98,7 @@ const StockEditDialog = ({
               </div>
               
               <div className="grid gap-2">
-                <Label className="text-sm font-medium">Actual Stock</Label>
+                <Label className="text-sm font-medium">Actual Stock (Physical Count)</Label>
                 <Input 
                   type="number" 
                   min="0" 
@@ -87,6 +108,9 @@ const StockEditDialog = ({
                     actual_stock: Number(e.target.value)
                   })}
                 />
+                <div className="text-xs text-muted-foreground">
+                  Enter the physical count. If no difference, it equals expected closing.
+                </div>
               </div>
             </div>
           </div>
