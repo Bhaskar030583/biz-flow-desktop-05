@@ -16,14 +16,14 @@ export interface AssignedProduct {
   actual_stock?: number;
   last_stock_date?: string;
   sold_quantity?: number;
-  shop_id?: string; // Add shop_id to track which shop this product is assigned to
-  shop_name?: string; // Add shop_name for display purposes
+  shop_id: string; // Required field for shop filtering
+  shop_name: string; // Required field for display
 }
 
 export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: string) => {
   const { user } = useAuth();
 
-  // Fetch HRMS stores instead of shops
+  // Fetch HRMS stores
   const { data: storesData, isLoading: storesLoading } = useQuery({
     queryKey: ['hr-stores-for-stock'],
     queryFn: async () => {
@@ -75,8 +75,9 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
         `)
         .eq('user_id', user?.id);
 
-      // If a specific shop is selected, filter by that shop
+      // If a specific shop is selected and it's not "_all", filter by that shop
       if (selectedShopId && selectedShopId !== "_all") {
+        console.log('🎯 [useAssignedProducts] Filtering by shop ID:', selectedShopId);
         query = query.eq('shop_id', selectedShopId);
       }
 
@@ -90,7 +91,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
       console.log('📦 [useAssignedProducts] Product assignments:', productShops);
 
       if (!productShops || productShops.length === 0) {
-        console.log('⚠️ [useAssignedProducts] No product assignments found');
+        console.log('⚠️ [useAssignedProducts] No product assignments found for shop:', selectedShopId);
         return [];
       }
 
@@ -157,7 +158,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
   return {
     assignedProducts: assignedProductsData || [],
     loading: storesLoading || productsLoading,
-    shops: stores, // This is actually stores now, but keeping the prop name for compatibility
+    shops: stores,
     products
   };
 };

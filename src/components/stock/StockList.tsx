@@ -12,9 +12,15 @@ interface StockListProps {
 const StockList = ({ refreshTrigger }: StockListProps) => {
   const [localRefreshTrigger, setLocalRefreshTrigger] = useState(0);
   
-  // Create a temporary state to track shop filter for data fetching
+  // State to track the selected shop for data fetching
   const [selectedShopForData, setSelectedShopForData] = useState<string>("_all");
   
+  console.log('📋 [StockList] Current state:', {
+    selectedShopForData,
+    refreshTrigger,
+    localRefreshTrigger
+  });
+
   const { assignedProducts, loading, shops, products } = useAssignedProducts(
     refreshTrigger + localRefreshTrigger,
     selectedShopForData
@@ -34,11 +40,13 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
 
   // Update the data fetching when shop filter changes
   React.useEffect(() => {
+    console.log('📋 [StockList] Shop filter changed:', shopFilter);
     setSelectedShopForData(shopFilter);
   }, [shopFilter]);
 
-  console.log('StockList Debug:', {
+  console.log('📋 [StockList] Debug:', {
     assignedProducts: assignedProducts.length,
+    filteredProducts: filteredProducts.length,
     shops: shops.length,
     products: products.length,
     loading,
