@@ -97,8 +97,13 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
 
       // Get today's date for stock queries
       const today = new Date().toISOString().split('T')[0];
+      
+      // Get yesterday's date for opening stock calculation
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-      // For each assignment, get the current stock data
+      // For each assignment, get the current stock data and calculate values
       const assignedProducts: AssignedProduct[] = [];
 
       for (const assignment of productShops) {
@@ -109,7 +114,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
 
         const product = assignment.products;
         
-        // Get stock data for this product at this store for today
+        // Get current stock data for today
         const { data: stockData, error: stockError } = await supabase
           .from('stocks')
           .select('*')
@@ -123,6 +128,46 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           console.error('❌ [useAssignedProducts] Error fetching stock for product:', product.name, stockError);
         }
 
+        // Get yesterday's actual stock for opening stock calculation
+        const { data: yesterdayStock, error: yesterdayError } = await supabase
+          .from('stocks')
+          .select('actual_stock')
+          .eq('product_id', product.id)
+          .eq('shop_id', assignment.shop_id)
+          .eq('stock_date', yesterdayStr)
+          .eq('user_id', user?.id)
+          .maybeSingle();
+
+        if (yesterdayError) {
+          console.error('❌ [useAssignedProducts] Error fetching yesterday stock for product:', product.name, yesterdayError);
+        }
+
+        // Get sales data for today to calculate sold quantity
+        const { data: salesData, error: salesError } = await supabase
+          .from('bill_items')
+          .select(`
+            quantity,
+            bills!inner(bill_date, user_id)
+          `)
+          .eq('product_id', product.id)
+          .eq('bills.user_id', user?.id)
+          .gte('bills.bill_date', today)
+          .lt('bills.bill_date', new Date(new Date(today).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+
+        if (salesError) {
+          console.error('❌ [useAssignedProducts] Error fetching sales for product:', product.name, salesError);
+        }
+
+        // Calculate values
+        const openingStock = yesterdayStock?.actual_stock || stockData?.opening_stock || 0;
+        const stockAdded = stockData?.stock_added || 0;
+        const soldQuantity = salesData?.reduce((total, sale) => total + sale.quantity, 0) || 0;
+        const expectedClosing = openingStock + stockAdded - soldQuantity;
+        const actualStock = stockData?.actual_stock !== null && stockData?.actual_stock !== undefined 
+          ? stockData.actual_stock 
+          : expectedClosing;
+        const variance = actualStock - expectedClosing;
+
         // Find the corresponding HR store name
         const hrStore = storesData?.find(store => store.id === assignment.shop_id);
 
@@ -133,12 +178,12 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           category: product.category,
           price: product.price,
           cost_price: product.cost_price,
-          opening_stock: stockData?.opening_stock || 0,
-          stock_added: stockData?.stock_added || 0,
-          sold_quantity: stockData?.sold_quantity || 0,
-          expected_closing: stockData?.expected_closing || 0,
-          actual_stock: stockData?.actual_stock,
-          variance: stockData?.variance || 0,
+          opening_stock: openingStock,
+          stock_added: stockAdded,
+          sold_quantity: soldQuantity,
+          expected_closing: expectedClosing,
+          actual_stock: actualStock,
+          variance: variance,
           last_stock_date: stockData?.stock_date || null,
           shop_id: assignment.shop_id,
           shop_name: hrStore?.store_name || 'Unknown Store'
