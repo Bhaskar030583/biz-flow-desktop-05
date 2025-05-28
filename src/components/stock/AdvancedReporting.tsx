@@ -14,7 +14,7 @@ import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } fro
 
 const AdvancedReporting = () => {
   const { user } = useAuth();
-  const [selectedStore, setSelectedStore] = useState<string>("");
+  const [selectedStore, setSelectedStore] = useState<string>("_all");
   const [dateRange, setDateRange] = useState<"today" | "week" | "month" | "custom">("week");
   const [customDateFrom, setCustomDateFrom] = useState<Date | undefined>(subDays(new Date(), 7));
   const [customDateTo, setCustomDateTo] = useState<Date | undefined>(new Date());
@@ -72,7 +72,7 @@ const AdvancedReporting = () => {
         .eq('user_id', user?.id)
         .gte('loss_date', from)
         .lte('loss_date', to)
-        .eq(selectedStore ? 'shop_id' : 'shop_id', selectedStore || undefined);
+        .eq(selectedStore !== "_all" ? 'shop_id' : 'shop_id', selectedStore !== "_all" ? selectedStore : undefined);
 
       if (lossesError) throw lossesError;
 
@@ -98,26 +98,23 @@ const AdvancedReporting = () => {
         .in('id', shiftIds) : { data: [] };
 
       // Create lookup maps with proper type safety
-      const productsMap = new Map();
-      productsData?.forEach(p => {
-        if (p && p.id) {
-          productsMap.set(p.id, p);
-        }
-      });
+      const productsMap = new Map(
+        (productsData || [])
+          .filter(p => p && p.id)
+          .map(p => [p.id, p])
+      );
 
-      const shopsMap = new Map();
-      shopsData?.forEach(s => {
-        if (s && s.id) {
-          shopsMap.set(s.id, s);
-        }
-      });
+      const shopsMap = new Map(
+        (shopsData || [])
+          .filter(s => s && s.id)
+          .map(s => [s.id, s])
+      );
 
-      const shiftsMap = new Map();
-      shiftsData?.forEach(s => {
-        if (s && s.id) {
-          shiftsMap.set(s.id, s);
-        }
-      });
+      const shiftsMap = new Map(
+        (shiftsData || [])
+          .filter(s => s && s.id)
+          .map(s => [s.id, s])
+      );
 
       // Combine data
       const enrichedLosses = lossesData?.map(loss => ({
@@ -182,7 +179,7 @@ const AdvancedReporting = () => {
         .eq('user_id', user?.id)
         .gte('stock_date', from)
         .lte('stock_date', to)
-        .eq(selectedStore ? 'shop_id' : 'shop_id', selectedStore || undefined);
+        .eq(selectedStore !== "_all" ? 'shop_id' : 'shop_id', selectedStore !== "_all" ? selectedStore : undefined);
 
       if (error) throw error;
 
@@ -201,19 +198,17 @@ const AdvancedReporting = () => {
         .in('id', shopIds);
 
       // Create lookup maps with proper type safety
-      const productsMap = new Map();
-      productsData?.forEach(p => {
-        if (p && p.id) {
-          productsMap.set(p.id, p);
-        }
-      });
+      const productsMap = new Map(
+        (productsData || [])
+          .filter(p => p && p.id)
+          .map(p => [p.id, p])
+      );
 
-      const shopsMap = new Map();
-      shopsData?.forEach(s => {
-        if (s && s.id) {
-          shopsMap.set(s.id, s);
-        }
-      });
+      const shopsMap = new Map(
+        (shopsData || [])
+          .filter(s => s && s.id)
+          .map(s => [s.id, s])
+      );
 
       // Combine data
       const enrichedStocks = stocksData?.map(stock => ({
@@ -298,7 +293,7 @@ const AdvancedReporting = () => {
                   <SelectValue placeholder="All Stores" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Stores</SelectItem>
+                  <SelectItem value="_all">All Stores</SelectItem>
                   {stores?.map(store => (
                     <SelectItem key={store.id} value={store.id}>
                       {store.name}

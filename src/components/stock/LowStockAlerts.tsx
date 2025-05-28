@@ -16,7 +16,7 @@ import { format } from "date-fns";
 const LowStockAlerts = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [selectedStore, setSelectedStore] = useState<string>("");
+  const [selectedStore, setSelectedStore] = useState<string>("_all");
   const [showReorderSettings, setShowReorderSettings] = useState(false);
   const [newReorderPoint, setNewReorderPoint] = useState({
     product_id: "",
@@ -51,7 +51,7 @@ const LowStockAlerts = () => {
         .eq('is_resolved', false)
         .order('alert_date', { ascending: false });
 
-      if (selectedStore) {
+      if (selectedStore && selectedStore !== "_all") {
         query = query.eq('shop_id', selectedStore);
       }
 
@@ -97,7 +97,7 @@ const LowStockAlerts = () => {
         .select('*')
         .eq('user_id', user?.id);
 
-      if (selectedStore) {
+      if (selectedStore && selectedStore !== "_all") {
         query = query.eq('shop_id', selectedStore);
       }
 
@@ -137,7 +137,7 @@ const LowStockAlerts = () => {
   const { data: availableProducts } = useQuery({
     queryKey: ['available-products', selectedStore],
     queryFn: async () => {
-      if (!selectedStore) return [];
+      if (!selectedStore || selectedStore === "_all") return [];
       const { data, error } = await supabase
         .from('product_shops')
         .select(`
@@ -149,7 +149,7 @@ const LowStockAlerts = () => {
       if (error) throw error;
       return data?.map(ps => ps.products).filter(Boolean) || [];
     },
-    enabled: !!selectedStore && !!user?.id
+    enabled: !!selectedStore && selectedStore !== "_all" && !!user?.id
   });
 
   // Resolve alert mutation
@@ -233,7 +233,7 @@ const LowStockAlerts = () => {
                 <SelectValue placeholder="Select store" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Stores</SelectItem>
+                <SelectItem value="_all">All Stores</SelectItem>
                 {stores?.map(store => (
                   <SelectItem key={store.id} value={store.id}>
                     {store.name}
@@ -351,7 +351,11 @@ const LowStockAlerts = () => {
                         <SelectContent>
                           {availableProducts?.map(product => (
                             <SelectItem key={product.id} value={product.id}>
-                              {product.name} - {product.category}
+                              <div className="flex items-center gap-2">
+                                <Package className="h-4 w-4" />
+                                <span>{product.name}</span>
+                                <span className="text-sm text-gray-500">({product.category})</span>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
