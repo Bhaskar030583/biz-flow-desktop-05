@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -326,8 +327,8 @@ const ProductStockManagement = ({ onStockUpdated, refreshTrigger }: ProductStock
   return (
     <div className="space-y-6">
       <ProductStockHeader
-        selectedShopId={selectedShopId}
-        setSelectedShopId={setSelectedShopId}
+        selectedShop={selectedShopId}
+        setSelectedShop={setSelectedShopId}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         categoryFilter={categoryFilter}
@@ -344,7 +345,7 @@ const ProductStockManagement = ({ onStockUpdated, refreshTrigger }: ProductStock
         <>
           {showAssignmentForm && (
             <ProductAssignmentForm
-              selectedShopId={selectedShopId}
+              selectedShop={selectedShopId}
               onProductAssigned={handleProductAssigned}
               onCancel={() => setShowAssignmentForm(false)}
             />
@@ -366,11 +367,17 @@ const ProductStockManagement = ({ onStockUpdated, refreshTrigger }: ProductStock
 
       {editingProduct && (
         <StockEditDialog
-          product={editingProduct}
-          shopId={selectedShopId}
-          isOpen={!!editingProduct}
-          onClose={() => setEditingProduct(null)}
-          onStockUpdated={handleStockEditComplete}
+          editingProduct={editingProduct}
+          setEditingProduct={setEditingProduct}
+          editStockValues={{
+            stock_added: editingProduct.stock_added || 0,
+            actual_stock: editingProduct.actual_stock || 0
+          }}
+          setEditStockValues={() => {}}
+          selectedShop={selectedShopId}
+          shops={shops || []}
+          onUpdateStock={handleStockEditComplete}
+          isUpdatingStock={false}
         />
       )}
     </div>
