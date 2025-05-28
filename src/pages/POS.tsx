@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { POSSystem } from "@/components/pos/POSSystem";
 import { StoreInfoModal } from "@/components/pos/StoreInfoModal";
@@ -29,34 +30,32 @@ const POS = () => {
   const [selectedShiftId, setSelectedShiftId] = useState<string>("");
   const navigate = useNavigate();
 
-  // Query for shops - still needed for product queries
-  const { data: shops, isLoading: shopsLoading } = useQuery({
-    queryKey: ['shops'],
+  // Query for hr_stores - get stores from HRMS
+  const { data: stores, isLoading: storesLoading } = useQuery({
+    queryKey: ['hr-stores'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('shops')
-        .select('id, name')
-        .eq('user_id', user?.id)
-        .order('name');
+        .from('hr_stores')
+        .select('id, store_name, store_code')
+        .order('store_name');
       
       if (error) throw error;
       return data || [];
-    },
-    enabled: !!user?.id
+    }
   });
 
-  // Use the first shop for product queries since we removed shop selection
-  const defaultShopId = shops?.[0]?.id || "";
+  // Use the first store for product queries since we removed store selection
+  const defaultStoreId = stores?.[0]?.id || "";
 
-  // Query for products assigned to the default shop with current stock quantities
+  // Query for products assigned to the default store with current stock quantities
   const { data: products, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
-    queryKey: ['pos-products', defaultShopId],
+    queryKey: ['pos-products', defaultStoreId],
     queryFn: async () => {
-      if (!defaultShopId) return [];
+      if (!defaultStoreId) return [];
       
       const today = new Date().toISOString().split('T')[0];
       
-      // First get all products assigned to the shop
+      // First get all products assigned to the store
       const { data: productShops, error: productShopsError } = await supabase
         .from('product_shops')
         .select(`
@@ -67,7 +66,7 @@ const POS = () => {
             category
           )
         `)
-        .eq('shop_id', defaultShopId)
+        .eq('shop_id', defaultStoreId)
         .eq('user_id', user?.id);
       
       if (productShopsError) throw productShopsError;
@@ -85,7 +84,7 @@ const POS = () => {
       const { data: stockData, error: stockError } = await supabase
         .from('stocks')
         .select('product_id, actual_stock')
-        .eq('shop_id', defaultShopId)
+        .eq('shop_id', defaultStoreId)
         .eq('user_id', user?.id)
         .eq('stock_date', today)
         .in('product_id', productIds);
@@ -112,7 +111,7 @@ const POS = () => {
         })
         .filter(product => product !== null);
     },
-    enabled: !!defaultShopId && !!user?.id
+    enabled: !!defaultStoreId && !!user?.id
   });
 
   // Check if this is a popup window and open popup if not
@@ -200,7 +199,7 @@ const POS = () => {
           onClose={handleStoreModalClose}
         />
         
-        {storeInfoCompleted && defaultShopId && (
+        {storeInfoCompleted && defaultStoreId && (
           <div className="p-6">
             {productsLoading ? (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -215,7 +214,7 @@ const POS = () => {
               <POSSystem 
                 products={products || []} 
                 storeInfo={storeInfo} 
-                selectedShopId={defaultShopId}
+                selectedShopId={defaultStoreId}
                 selectedShiftId={selectedShiftId}
                 onStockUpdated={handleStockAdded}
               />

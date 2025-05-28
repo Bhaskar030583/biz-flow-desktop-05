@@ -33,7 +33,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
   onClose
 }) => {
   const { user } = useAuth();
-  const [storeName, setStoreName] = useState("");
+  const [selectedStoreId, setSelectedStoreId] = useState("");
   const [selectedShiftId, setSelectedShiftId] = useState("");
   const [salespersonName, setSalespersonName] = useState("");
 
@@ -59,6 +59,39 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     enabled: !!user?.id
   });
 
+  // Query for hr_stores - get stores from HRMS
+  const { data: stores, isLoading: storesLoading } = useQuery({
+    queryKey: ['hr-stores-modal'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('hr_stores')
+        .select('id, store_name, store_code')
+        .order('store_name');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Query for shifts from hr_shifts table based on selected store
+  const { data: shifts, isLoading: shiftsLoading } = useQuery({
+    queryKey: ['hr-shifts', selectedStoreId],
+    queryFn: async () => {
+      if (!selectedStoreId) return [];
+      
+      const { data, error } = await supabase
+        .from('hr_shifts')
+        .select('id, shift_name, start_time, end_time, store_id')
+        .eq('store_id', selectedStoreId)
+        .eq('is_active', true)
+        .order('start_time');
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!selectedStoreId
+  });
+
   // Set salesperson name when user profile is loaded
   useEffect(() => {
     if (userProfile?.full_name) {
@@ -69,24 +102,9 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     }
   }, [userProfile, user]);
 
-  // Query for all shifts from hr_shifts table
-  const { data: shifts, isLoading: shiftsLoading } = useQuery({
-    queryKey: ['hr-shifts'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('hr_shifts')
-        .select('id, shift_name, start_time, end_time, store_id')
-        .eq('is_active', true)
-        .order('start_time');
-      
-      if (error) throw error;
-      return data || [];
-    }
-  });
-
   const handleSubmit = () => {
-    if (!storeName.trim()) {
-      toast.error("Please enter store name");
+    if (!selectedStoreId) {
+      toast.error("Please select a store");
       return;
     }
     
@@ -100,7 +118,9 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
       return;
     }
 
+    const selectedStore = stores?.find(store => store.id === selectedStoreId);
     const selectedShift = shifts?.find(shift => shift.id === selectedShiftId);
+    const storeName = selectedStore?.store_name || "";
     const shiftName = selectedShift?.shift_name || "";
 
     onComplete(
@@ -130,6 +150,32 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
           
           <CardContent className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="store-select" className="flex items-center gap-2">
+                <Store className="h-4 w-4" />
+                Select Store
+              </Label>
+              {storesLoading ? (
+                <Skeleton className="h-10 w-full" />
+              ) : (
+                <Select 
+                  value={selectedStoreId} 
+                  onValueChange={setSelectedStoreId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a store" />
+                  </SelectTrigger>
+                  <SelectContent className="z-50 bg-white">
+                    {stores?.map((store) => (
+                      <SelectItem key={store.id} value={store.id}>
+                        {store.store_name} ({store.store_code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="shift-select" className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 Select Shift
@@ -140,6 +186,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
                 <Select 
                   value={selectedShiftId} 
                   onValueChange={setSelectedShiftId}
+                  disabled={!selectedStoreId}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Choose a shift" />
@@ -153,20 +200,9 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
                   </SelectContent>
                 </Select>
               )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="store-name" className="flex items-center gap-2">
-                <Store className="h-4 w-4" />
-                Store Name
-              </Label>
-              <Input
-                id="store-name"
-                value={storeName}
-                onChange={(e) => setStoreName(e.target.value)}
-                placeholder="Enter store name"
-                className="border-blue-200 focus:border-blue-400"
-              />
+              {!selectedStoreId && (
+                <p className="text-xs text-muted-foreground">Please select a store first</p>
+              )}
             </div>
             
             {/* Display salesperson name as read-only */}
@@ -183,6 +219,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
               onClick={handleSubmit}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               size="lg"
+              disabled={!selectedStoreId || !selectedShiftId}
             >
               Start POS Session
             </Button>
