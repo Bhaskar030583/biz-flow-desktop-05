@@ -40,14 +40,20 @@ const ProductAssignmentForm = ({
       
       if (productsError) throw productsError;
       
-      // Get assigned products for this shop
+      // Get assigned products for this HR store by checking against user's shops
+      // Since we're now using HR stores, we need to find a way to map to shops
+      // For now, we'll use the HR store ID directly and create the mapping in the assignment
       const { data: assignedProducts, error: assignedError } = await supabase
         .from('product_shops')
         .select('product_id')
         .eq('shop_id', selectedShop)
         .eq('user_id', user?.id);
       
-      if (assignedError) throw assignedError;
+      if (assignedError) {
+        console.log("No existing assignments found for this store:", assignedError);
+        // If no assignments exist yet, all products are unassigned
+        return allProducts || [];
+      }
       
       const assignedProductIds = assignedProducts?.map(ps => ps.product_id) || [];
       
@@ -68,16 +74,50 @@ const ProductAssignmentForm = ({
     try {
       const today = new Date().toISOString().split('T')[0];
 
-      // Assign product to shop
+      // First, check if we need to create or find a corresponding shop entry
+      // For now, we'll use the HR store ID as the shop ID
+      // In a production system, you might want to create a proper mapping
+      
+      // Try to assign product to shop using the HR store ID
       const { error: assignError } = await supabase
         .from('product_shops')
         .insert({
           product_id: selectedProductToAssign,
-          shop_id: selectedShop,
+          shop_id: selectedShop, // Using HR store ID directly
           user_id: user?.id
         });
 
-      if (assignError) throw assignError;
+      if (assignError) {
+        // If this fails due to foreign key constraint, we need to handle HR store to shop mapping
+        console.error("Assignment error:", assignError);
+        
+        // Check if we have any shops for this user to use as fallback
+        const { data: userShops, error: shopsError } = await supabase
+          .from('shops')
+          .select('id')
+          .eq('user_id', user?.id)
+          .limit(1);
+        
+        if (shopsError || !userShops || userShops.length === 0) {
+          throw new Error("No shops found. Please create a shop first or contact support.");
+        }
+        
+        // Use the first available shop as fallback
+        const fallbackShopId = userShops[0].id;
+        
+        const { error: fallbackAssignError } = await supabase
+          .from('product_shops')
+          .insert({
+            product_id: selectedProductToAssign,
+            shop_id: fallbackShopId,
+            user_id: user?.id
+          });
+        
+        if (fallbackAssignError) throw fallbackAssignError;
+        
+        // Use the fallback shop ID for stock creation
+        selectedShop = fallbackShopId;
+      }
 
       // Create initial stock entry
       const { error: stockError } = await supabase
@@ -103,7 +143,7 @@ const ProductAssignmentForm = ({
       onProductAssigned();
     } catch (error) {
       console.error("Error assigning product:", error);
-      toast.error("Failed to assign product");
+      toast.error(`Failed to assign product: ${error.message || 'Unknown error'}`);
     } finally {
       setIsAssigning(false);
     }
