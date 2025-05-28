@@ -1,10 +1,13 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Minus, Plus, ShoppingCart, Trash2, Calculator, CreditCard, Banknote, SplitSquareHorizontal, Clock, Smartphone, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Minus, Plus, ShoppingCart, Trash2, Calculator, CreditCard, Banknote, SplitSquareHorizontal, Clock, Smartphone, X, Percent } from "lucide-react";
 
 interface CartItem {
   id: string;
@@ -43,156 +46,233 @@ export const BillingModal: React.FC<BillingModalProps> = ({
   handleSplitPayment,
   handlePendingPayment
 }) => {
+  const [discountType, setDiscountType] = useState<'percentage' | 'value'>('percentage');
+  const [discountValue, setDiscountValue] = useState<number>(0);
+
+  const subtotal = getTotalAmount();
+  
+  const calculateDiscount = () => {
+    if (discountType === 'percentage') {
+      return (subtotal * discountValue) / 100;
+    }
+    return Math.min(discountValue, subtotal); // Ensure discount doesn't exceed subtotal
+  };
+
+  const discountAmount = calculateDiscount();
+  const finalTotal = subtotal - discountAmount;
+
+  const resetDiscount = () => {
+    setDiscountValue(0);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-4">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-blue-900 font-semibold text-base md:text-lg">
-              <Calculator className="h-5 w-5 md:h-6 md:w-6" />
-              Shopping Cart ({cart.length})
+      <DialogContent className="max-w-xs sm:max-w-sm md:max-w-md max-h-[85vh] overflow-y-auto mx-2">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="flex items-center justify-between text-sm md:text-base">
+            <span className="flex items-center gap-2 text-blue-900 font-semibold">
+              <Calculator className="h-4 w-4 md:h-5 md:w-5" />
+              Cart ({cart.length})
             </span>
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               {cart.length > 0 && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={clearCart}
-                  className="text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50 px-3 py-2 h-9 text-sm"
+                  className="text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50 px-2 py-1 h-7 text-xs"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear All
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Clear
                 </Button>
               )}
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={onClose}
-                className="h-9 w-9 p-0 hover:bg-gray-100"
+                className="h-7 w-7 p-0 hover:bg-gray-100"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3" />
               </Button>
             </div>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 md:space-y-6">
+        <div className="space-y-3">
           {cart.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 md:py-16 text-gray-500">
-              <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                <ShoppingCart className="h-10 w-10 md:h-12 md:w-12 text-gray-400" />
+            <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+              <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
+                <ShoppingCart className="h-6 w-6 text-gray-400" />
               </div>
-              <h3 className="text-lg md:text-xl font-semibold mb-2">Your cart is empty</h3>
-              <p className="text-sm md:text-base text-gray-400">Add some products to get started</p>
+              <h3 className="text-sm font-semibold mb-1">Your cart is empty</h3>
+              <p className="text-xs text-gray-400">Add products to get started</p>
             </div>
           ) : (
             <>
-              {/* Cart Items */}
-              <div className="space-y-3 md:space-y-4 max-h-60 md:max-h-80 overflow-y-auto">
+              {/* Cart Items - Compact Version */}
+              <div className="space-y-2 max-h-40 overflow-y-auto">
                 {cart.map((item) => (
-                  <div key={item.id} className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 md:p-5 shadow-sm border border-blue-100 hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1 pr-4">
-                        <h4 className="font-semibold text-sm md:text-base text-gray-800 mb-1">{item.name}</h4>
-                        <p className="text-xs md:text-sm text-gray-600">₹{Number(item.price).toFixed(2)} each</p>
+                  <div key={item.id} className="bg-gray-50 rounded-lg p-2 border border-gray-100">
+                    <div className="flex justify-between items-center">
+                      <div className="flex-1 pr-2 min-w-0">
+                        <h4 className="font-medium text-xs text-gray-800 truncate">{item.name}</h4>
+                        <p className="text-xs text-gray-600">₹{Number(item.price).toFixed(2)} each</p>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 h-8 w-8"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                      
+                      <div className="flex items-center gap-1">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-9 w-9 p-0 border-blue-200 hover:bg-blue-50"
+                          className="h-6 w-6 p-0 border-blue-200"
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
                         >
                           <Minus className="h-3 w-3" />
                         </Button>
-                        <span className="font-semibold text-sm md:text-base min-w-[50px] text-center bg-white px-4 py-2 rounded-lg border shadow-sm">
+                        <span className="font-semibold text-xs min-w-[20px] text-center bg-white px-2 py-1 rounded border text-gray-800">
                           {item.quantity}
                         </span>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-9 w-9 p-0 border-blue-200 hover:bg-blue-50"
+                          className="h-6 w-6 p-0 border-blue-200"
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         >
                           <Plus className="h-3 w-3" />
                         </Button>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-green-700 text-sm md:text-base bg-green-100 px-3 py-2 rounded-lg">
-                          ₹{Number(item.total).toFixed(2)}
-                        </p>
+                        
+                        <div className="text-right ml-2">
+                          <p className="font-bold text-green-700 text-xs bg-green-100 px-2 py-1 rounded">
+                            ₹{Number(item.total).toFixed(2)}
+                          </p>
+                        </div>
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFromCart(item.id)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 h-6 w-6 ml-1"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <Separator className="my-4 md:my-6" />
+              <Separator className="my-2" />
 
-              {/* Total */}
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 md:p-6 border border-green-200 shadow-sm">
-                <div className="flex justify-between items-center text-xl md:text-3xl font-bold">
-                  <span className="text-gray-800">Total Amount:</span>
-                  <span className="text-green-700">₹{getTotalAmount().toFixed(2)}</span>
+              {/* Discount Section */}
+              <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Percent className="h-4 w-4 text-yellow-600" />
+                  <Label className="text-sm font-medium text-yellow-800">Discount</Label>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <Select value={discountType} onValueChange={(value) => setDiscountType(value as 'percentage' | 'value')}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Percentage (%)</SelectItem>
+                      <SelectItem value="value">Fixed Amount (₹)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <div className="flex gap-1">
+                    <Input
+                      type="number"
+                      placeholder={discountType === 'percentage' ? '0' : '0.00'}
+                      value={discountValue || ''}
+                      onChange={(e) => setDiscountValue(Number(e.target.value) || 0)}
+                      className="h-8 text-xs"
+                      min="0"
+                      max={discountType === 'percentage' ? 100 : subtotal}
+                      step={discountType === 'percentage' ? 1 : 0.01}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={resetDiscount}
+                      className="h-8 px-2 text-xs"
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+                
+                {discountAmount > 0 && (
+                  <div className="text-xs text-yellow-700">
+                    Discount: -{discountType === 'percentage' ? `${discountValue}%` : `₹${discountValue.toFixed(2)}`} = ₹{discountAmount.toFixed(2)}
+                  </div>
+                )}
+              </div>
+
+              {/* Billing Summary */}
+              <div className="bg-green-50 rounded-lg p-3 border border-green-200 space-y-1">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-700">Subtotal:</span>
+                  <span className="font-medium">₹{subtotal.toFixed(2)}</span>
+                </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-red-600">Discount:</span>
+                    <span className="font-medium text-red-600">-₹{discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                <Separator className="my-2" />
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span className="text-gray-800">Total:</span>
+                  <span className="text-green-700">₹{finalTotal.toFixed(2)}</span>
                 </div>
               </div>
 
-              {/* Payment Buttons */}
-              <div className="grid grid-cols-2 gap-3 md:gap-4">
+              {/* Payment Buttons - Compact Grid */}
+              <div className="grid grid-cols-2 gap-2">
                 <Button 
-                  className="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 md:py-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-sm md:text-base h-12 md:h-14" 
+                  className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 text-xs h-10" 
                   onClick={handleCashPayment}
                   disabled={cart.length === 0}
                 >
-                  <Banknote className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-                  Cash Payment
+                  <Banknote className="h-3 w-3 mr-1" />
+                  Cash
                 </Button>
                 
                 <Button 
-                  className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 md:py-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-sm md:text-base h-12 md:h-14" 
+                  className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 text-xs h-10" 
                   onClick={handleUPIPayment}
                   disabled={cart.length === 0}
                 >
-                  <Smartphone className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-                  UPI Payment
+                  <Smartphone className="h-3 w-3 mr-1" />
+                  UPI
                 </Button>
                 
                 <Button 
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 md:py-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-sm md:text-base h-12 md:h-14" 
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 text-xs h-10" 
                   onClick={handleCreditPayment}
                   disabled={cart.length === 0}
                 >
-                  <CreditCard className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-                  Credit Payment
+                  <CreditCard className="h-3 w-3 mr-1" />
+                  Credit
                 </Button>
                 
                 <Button 
-                  className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 md:py-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-sm md:text-base h-12 md:h-14" 
+                  className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 text-xs h-10" 
                   onClick={handleSplitPayment}
                   disabled={cart.length === 0}
                 >
-                  <SplitSquareHorizontal className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-                  Split Payment
+                  <SplitSquareHorizontal className="h-3 w-3 mr-1" />
+                  Split
                 </Button>
                 
                 <Button 
-                  className="col-span-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 md:py-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-sm md:text-base h-12 md:h-14" 
+                  className="col-span-2 bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 text-xs h-10" 
                   onClick={handlePendingPayment}
                   disabled={cart.length === 0}
                 >
-                  <Clock className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-                  Save as Pending Payment
+                  <Clock className="h-3 w-3 mr-1" />
+                  Save as Pending
                 </Button>
               </div>
             </>
