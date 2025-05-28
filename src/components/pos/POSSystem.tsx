@@ -181,17 +181,64 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
     setShowSplitModal(false);
   };
 
-  const handlePendingPayment = async () => {
-    const bill = await createBill('pending', 'pending');
-    if (bill) {
-      toast.success("Bill saved as pending payment");
-      clearCart();
+  const handleCashPayment = () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+    setShowCashModal(true);
+  };
+
+  const handleUPIPayment = async () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+    
+    try {
+      const bill = await createBill('upi', 'completed');
+      if (bill) {
+        toast.success("UPI Payment completed successfully!");
+        clearCart();
+      }
+    } catch (error) {
+      console.error('Error processing UPI payment:', error);
+      toast.error("Failed to process UPI payment");
     }
   };
 
-  const handleUPIPayment = () => {
-    // For now, treat UPI as credit payment
+  const handleCreditPayment = () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
     setShowCreditModal(true);
+  };
+
+  const handleSplitPayment = () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+    setShowSplitModal(true);
+  };
+
+  const handlePendingPayment = async () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+    
+    try {
+      const bill = await createBill('pending', 'pending');
+      if (bill) {
+        toast.success("Bill saved as pending payment");
+        clearCart();
+      }
+    } catch (error) {
+      console.error('Error creating pending payment:', error);
+      toast.error("Failed to create pending payment");
+    }
   };
 
   // Filter products based on search term and category
@@ -437,8 +484,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                     {/* Payment Buttons */}
                     <div className="space-y-2">
                       <Button 
-                        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 shadow-md transform hover:scale-105 transition-all duration-200" 
-                        onClick={() => setShowCashModal(true)}
+                        className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 shadow-md transform hover:scale-105 transition-all duration-200" 
+                        onClick={handleCashPayment}
                         disabled={cart.length === 0}
                       >
                         <Banknote className="h-5 w-5 mr-2" />
@@ -446,7 +493,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                       </Button>
                       
                       <Button 
-                        className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 shadow-md transform hover:scale-105 transition-all duration-200" 
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 shadow-md transform hover:scale-105 transition-all duration-200" 
                         onClick={handleUPIPayment}
                         disabled={cart.length === 0}
                       >
@@ -455,8 +502,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                       </Button>
                       
                       <Button 
-                        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 shadow-md transform hover:scale-105 transition-all duration-200" 
-                        onClick={() => setShowCreditModal(true)}
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 shadow-md transform hover:scale-105 transition-all duration-200" 
+                        onClick={handleCreditPayment}
                         disabled={cart.length === 0}
                       >
                         <CreditCard className="h-5 w-5 mr-2" />
@@ -464,8 +511,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                       </Button>
                       
                       <Button 
-                        className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold py-3 shadow-md transform hover:scale-105 transition-all duration-200" 
-                        onClick={() => setShowSplitModal(true)}
+                        className="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 shadow-md transform hover:scale-105 transition-all duration-200" 
+                        onClick={handleSplitPayment}
                         disabled={cart.length === 0}
                       >
                         <SplitSquareHorizontal className="h-5 w-5 mr-2" />
@@ -473,7 +520,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                       </Button>
                       
                       <Button 
-                        className="w-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white font-semibold py-3 shadow-md transform hover:scale-105 transition-all duration-200" 
+                        className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 shadow-md transform hover:scale-105 transition-all duration-200" 
                         onClick={handlePendingPayment}
                         disabled={cart.length === 0}
                       >
