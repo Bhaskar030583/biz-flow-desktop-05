@@ -16,6 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { BillingModal } from "./BillingModal";
+import { QuickStockUpdateModal } from "./QuickStockUpdateModal";
 import { useNavigate } from "react-router-dom";
 
 interface Product {
@@ -40,9 +41,10 @@ interface POSSystemProps {
   products: Product[];
   storeInfo: StoreInfo | null;
   selectedShopId: string;
+  onStockUpdated?: () => void;
 }
 
-export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selectedShopId }) => {
+export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selectedShopId, onStockUpdated }) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -56,6 +58,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
   const [showCustomerManagement, setShowCustomerManagement] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
   const [showBillingModal, setShowBillingModal] = useState(false);
+  const [showQuickStockModal, setShowQuickStockModal] = useState(false);
 
   console.log('POSSystem props:', { 
     productsCount: products?.length, 
@@ -252,9 +255,16 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
   };
 
   const handleQuickStock = () => {
-    // Navigate to stocks page with product management tab
-    navigate('/stocks?tab=management');
-    toast.success("Navigating to Stock Management");
+    // Open quick stock update modal instead of navigating
+    setShowQuickStockModal(true);
+  };
+
+  const handleStockUpdated = () => {
+    // Call the parent callback to refresh products data
+    if (onStockUpdated) {
+      onStockUpdated();
+    }
+    toast.success("Stock updated successfully");
   };
 
   // Filter products based on search term and category
@@ -661,6 +671,15 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
           handleCreditPayment={handleCreditPayment}
           handleSplitPayment={handleSplitPayment}
           handlePendingPayment={handlePendingPayment}
+        />
+
+        {/* Quick Stock Update Modal */}
+        <QuickStockUpdateModal
+          isOpen={showQuickStockModal}
+          onClose={() => setShowQuickStockModal(false)}
+          products={products || []}
+          selectedShopId={selectedShopId}
+          onStockUpdated={handleStockUpdated}
         />
 
         {/* Payment Modals */}

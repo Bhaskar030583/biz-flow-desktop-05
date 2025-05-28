@@ -213,6 +213,7 @@ const POS = () => {
                 products={products || []} 
                 storeInfo={storeInfo} 
                 selectedShopId={selectedShopId}
+                onStockUpdated={handleStockAdded}
               />
             )}
           </div>
