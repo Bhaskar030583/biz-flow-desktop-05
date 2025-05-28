@@ -40,7 +40,6 @@ const stockSchema = z.object({
   closing_stock: z.coerce.number().int().min(0, "Must be a positive number"),
   actual_stock: z.coerce.number().int().min(0, "Must be a positive number"),
   stock_added: z.coerce.number().int().min(0, "Must be a positive number"),
-  shift: z.string().optional(),
   operator_name: z.string().optional(),
 });
 
@@ -70,7 +69,6 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
       closing_stock: 0,
       actual_stock: 0,
       stock_added: 0,
-      shift: "",
       operator_name: "",
     },
   });
@@ -296,7 +294,6 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
         closing_stock: values.closing_stock,
         actual_stock: values.actual_stock,
         stock_added: values.stock_added,
-        shift: values.shift || null,
         operator_name: values.operator_name || null,
       });
 
@@ -557,20 +554,6 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                           e.target.value = formatNumberInput(e) || e.target.value;
                         }}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="shift"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Shift (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter shift" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

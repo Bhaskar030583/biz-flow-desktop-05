@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Plus, Package, Calendar, Clock } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { AlertTriangle, Package, TrendingDown, Calendar } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -17,12 +17,10 @@ import { format } from "date-fns";
 const LossTracking = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [showForm, setShowForm] = useState(false);
-  const [selectedStore, setSelectedStore] = useState<string>("");
-  const [formData, setFormData] = useState({
+  const [selectedStore, setSelectedStore] = useState<string>("_all");
+  const [newLoss, setNewLoss] = useState({
     product_id: "",
     shop_id: "",
-    shift_id: "",
     quantity_lost: "",
     loss_type: "",
     reason: "",
@@ -47,48 +45,37 @@ const LossTracking = () => {
   const { data: products } = useQuery({
     queryKey: ['store-products', selectedStore],
     queryFn: async () => {
-      if (!selectedStore) return [];
+      if (!selectedStore || selectedStore === "_all") return [];
       const { data, error } = await supabase
         .from('product_shops')
         .select(`
           product_id,
-          products (id, name, category)
+          products (id, name, category, price, cost_price)
         `)
         .eq('shop_id', selectedStore)
         .eq('user_id', user?.id);
       if (error) throw error;
       return data?.map(ps => ps.products).filter(Boolean) || [];
     },
-    enabled: !!selectedStore && !!user?.id
+    enabled: !!selectedStore && selectedStore !== "_all" && !!user?.id
   });
 
-  // Fetch shifts for selected store
-  const { data: shifts } = useQuery({
-    queryKey: ['store-shifts', selectedStore],
-    queryFn: async () => {
-      if (!selectedStore) return [];
-      const { data, error } = await supabase
-        .from('hr_shifts')
-        .select('id, shift_name, start_time, end_time')
-        .eq('store_id', selectedStore);
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!selectedStore
-  });
-
-  // Fetch losses with proper error handling and data enrichment
-  const { data: losses, isLoading } = useQuery({
+  // Fetch losses with proper data joining
+  const { data: losses, isLoading: lossesLoading } = useQuery({
     queryKey: ['losses', selectedStore],
     queryFn: async () => {
       // Get losses
-      const { data: lossesData, error } = await supabase
+      let query = supabase
         .from('losses')
         .select('*')
         .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
-        .eq(selectedStore ? 'shop_id' : 'shop_id', selectedStore || undefined);
-      
+        .order('loss_date', { ascending: false });
+
+      if (selectedStore && selectedStore !== "_all") {
+        query = query.eq('shop_id', selectedStore);
+      }
+
+      const { data: lossesData, error } = await query;
       if (error) throw error;
       if (!lossesData?.length) return [];
 
@@ -96,7 +83,7 @@ const LossTracking = () => {
       const productIds = [...new Set(lossesData.map(loss => loss.product_id))];
       const { data: productsData } = await supabase
         .from('products')
-        .select('id, name, category')
+        .select('id, name, category, price, cost_price')
         .in('id', productIds);
 
       // Get shops data
@@ -106,41 +93,15 @@ const LossTracking = () => {
         .select('id, name')
         .in('id', shopIds);
 
-      // Get shifts data
-      const shiftIds = [...new Set(lossesData.filter(loss => loss.shift_id).map(loss => loss.shift_id))];
-      const { data: shiftsData } = shiftIds.length ? await supabase
-        .from('hr_shifts')
-        .select('id, shift_name')
-        .in('id', shiftIds) : { data: [] };
-
-      // Create lookup maps with proper type safety
-      const productsMap = new Map();
-      productsData?.forEach(p => {
-        if (p && p.id) {
-          productsMap.set(p.id, p);
-        }
-      });
-
-      const shopsMap = new Map();
-      shopsData?.forEach(s => {
-        if (s && s.id) {
-          shopsMap.set(s.id, s);
-        }
-      });
-
-      const shiftsMap = new Map();
-      shiftsData?.forEach(s => {
-        if (s && s.id) {
-          shiftsMap.set(s.id, s);
-        }
-      });
+      // Create lookup maps
+      const productsMap = new Map(productsData?.map(p => [p.id, p]) || []);
+      const shopsMap = new Map(shopsData?.map(s => [s.id, s]) || []);
 
       // Combine data
       return lossesData.map(loss => ({
         ...loss,
         products: productsMap.get(loss.product_id),
-        shops: shopsMap.get(loss.shop_id),
-        hr_shifts: loss.shift_id ? shiftsMap.get(loss.shift_id) : null
+        shops: shopsMap.get(loss.shop_id)
       }));
     },
     enabled: !!user?.id
@@ -148,28 +109,27 @@ const LossTracking = () => {
 
   // Create loss mutation
   const createLossMutation = useMutation({
-    mutationFn: async (lossData: any) => {
+    mutationFn: async (data: any) => {
       const { error } = await supabase
         .from('losses')
         .insert({
-          ...lossData,
+          ...data,
           user_id: user?.id,
-          quantity_lost: parseInt(lossData.quantity_lost)
+          quantity_lost: parseInt(data.quantity_lost),
+          loss_date: new Date().toISOString().split('T')[0]
         });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Loss recorded successfully");
-      setFormData({
+      setNewLoss({
         product_id: "",
         shop_id: "",
-        shift_id: "",
         quantity_lost: "",
         loss_type: "",
         reason: "",
         operator_name: ""
       });
-      setShowForm(false);
       queryClient.invalidateQueries({ queryKey: ['losses'] });
     },
     onError: (error: any) => {
@@ -179,17 +139,17 @@ const LossTracking = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.product_id || !formData.shop_id || !formData.quantity_lost || !formData.loss_type) {
+    if (!newLoss.product_id || !newLoss.shop_id || !newLoss.quantity_lost || !newLoss.loss_type) {
       toast.error("Please fill all required fields");
       return;
     }
-    createLossMutation.mutate(formData);
+    createLossMutation.mutate(newLoss);
   };
 
   const getLossTypeColor = (type: string) => {
     const colors = {
       theft: "bg-red-100 text-red-800",
-      damage: "bg-orange-100 text-orange-800", 
+      damage: "bg-orange-100 text-orange-800",
       expiry: "bg-yellow-100 text-yellow-800",
       spillage: "bg-blue-100 text-blue-800",
       breakage: "bg-purple-100 text-purple-800",
@@ -198,214 +158,198 @@ const LossTracking = () => {
     return colors[type as keyof typeof colors] || colors.other;
   };
 
+  const calculateLossValue = (loss: any) => {
+    const cost = loss.products?.cost_price || loss.products?.price || 0;
+    return loss.quantity_lost * cost;
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
+            <TrendingDown className="h-5 w-5" />
             Loss Tracking
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex justify-between items-center">
-            <div className="flex gap-4">
-              <Select value={selectedStore} onValueChange={setSelectedStore}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Select store" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Stores</SelectItem>
-                  {stores?.map(store => (
-                    <SelectItem key={store.id} value={store.id}>
-                      {store.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={() => setShowForm(!showForm)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Record Loss
-            </Button>
+            <Select value={selectedStore} onValueChange={setSelectedStore}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Select store" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All Stores</SelectItem>
+                {stores?.map(store => (
+                  <SelectItem key={store.id} value={store.id}>
+                    {store.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {showForm && (
-            <Card className="border-red-200 bg-red-50">
-              <CardContent className="pt-6">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Store *</Label>
-                      <Select 
-                        value={formData.shop_id} 
-                        onValueChange={(value) => {
-                          setFormData(prev => ({ ...prev, shop_id: value }));
-                          setSelectedStore(value);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select store" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {stores?.map(store => (
-                            <SelectItem key={store.id} value={store.id}>
-                              {store.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label>Product *</Label>
-                      <Select 
-                        value={formData.product_id} 
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, product_id: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select product" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {products?.map(product => (
-                            <SelectItem key={product.id} value={product.id}>
-                              {product.name} - {product.category}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label>Shift</Label>
-                      <Select 
-                        value={formData.shift_id} 
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, shift_id: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select shift (optional)" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">No Shift</SelectItem>
-                          {shifts?.map(shift => (
-                            <SelectItem key={shift.id} value={shift.id}>
-                              {shift.shift_name} ({shift.start_time} - {shift.end_time})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label>Quantity Lost *</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={formData.quantity_lost}
-                        onChange={(e) => setFormData(prev => ({ ...prev, quantity_lost: e.target.value }))}
-                        placeholder="Enter quantity"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Loss Type *</Label>
-                      <Select 
-                        value={formData.loss_type} 
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, loss_type: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select loss type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="theft">Theft</SelectItem>
-                          <SelectItem value="damage">Damage</SelectItem>
-                          <SelectItem value="expiry">Expiry</SelectItem>
-                          <SelectItem value="spillage">Spillage</SelectItem>
-                          <SelectItem value="breakage">Breakage</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label>Operator Name</Label>
-                      <Input
-                        value={formData.operator_name}
-                        onChange={(e) => setFormData(prev => ({ ...prev, operator_name: e.target.value }))}
-                        placeholder="Enter operator name"
-                      />
-                    </div>
+          {/* Record New Loss */}
+          <Card className="border-red-200 bg-red-50">
+            <CardHeader>
+              <CardTitle className="text-lg">Record New Loss</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Store *</Label>
+                    <Select 
+                      value={newLoss.shop_id} 
+                      onValueChange={(value) => setNewLoss(prev => ({ ...prev, shop_id: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select store" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {stores?.map(store => (
+                          <SelectItem key={store.id} value={store.id}>
+                            {store.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div>
+                    <Label>Product *</Label>
+                    <Select 
+                      value={newLoss.product_id} 
+                      onValueChange={(value) => setNewLoss(prev => ({ ...prev, product_id: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select product" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {products?.map(product => (
+                          <SelectItem key={product.id} value={product.id}>
+                            <div className="flex items-center gap-2">
+                              <Package className="h-4 w-4" />
+                              <span>{product.name}</span>
+                              <span className="text-sm text-gray-500">({product.category})</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Loss Type *</Label>
+                    <Select 
+                      value={newLoss.loss_type} 
+                      onValueChange={(value) => setNewLoss(prev => ({ ...prev, loss_type: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select loss type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="theft">Theft</SelectItem>
+                        <SelectItem value="damage">Damage</SelectItem>
+                        <SelectItem value="expiry">Expiry</SelectItem>
+                        <SelectItem value="spillage">Spillage</SelectItem>
+                        <SelectItem value="breakage">Breakage</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Quantity Lost *</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={newLoss.quantity_lost}
+                      onChange={(e) => setNewLoss(prev => ({ ...prev, quantity_lost: e.target.value }))}
+                      placeholder="Enter quantity"
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Operator Name</Label>
+                    <Input
+                      value={newLoss.operator_name}
+                      onChange={(e) => setNewLoss(prev => ({ ...prev, operator_name: e.target.value }))}
+                      placeholder="Enter operator name"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
                     <Label>Reason</Label>
                     <Textarea
-                      value={formData.reason}
-                      onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
+                      value={newLoss.reason}
+                      onChange={(e) => setNewLoss(prev => ({ ...prev, reason: e.target.value }))}
                       placeholder="Describe the reason for loss"
                       rows={3}
                     />
                   </div>
+                </div>
 
-                  <div className="flex gap-2">
-                    <Button type="submit" disabled={createLossMutation.isPending}>
-                      {createLossMutation.isPending ? "Recording..." : "Record Loss"}
-                    </Button>
-                    <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
+                <Button type="submit" disabled={createLossMutation.isPending} className="bg-red-600 hover:bg-red-700">
+                  {createLossMutation.isPending ? "Recording..." : "Record Loss"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
 
+          {/* Loss History */}
           <div className="space-y-4">
-            {isLoading ? (
+            <h3 className="text-lg font-medium">Loss History</h3>
+            {lossesLoading ? (
               <div className="text-center py-8">Loading losses...</div>
             ) : losses?.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No losses recorded yet</p>
-              </div>
+              <Card className="border-green-200 bg-green-50">
+                <CardContent className="pt-6 text-center">
+                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                  <p className="text-green-600 font-medium">No losses recorded! Great job on inventory management.</p>
+                </CardContent>
+              </Card>
             ) : (
               losses?.map(loss => (
                 <Card key={loss.id} className="border-l-4 border-l-red-500">
                   <CardContent className="pt-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h4 className="font-medium">{loss.products?.name}</h4>
-                        <p className="text-sm text-gray-600">{loss.shops?.name}</p>
-                      </div>
-                      <Badge className={getLossTypeColor(loss.loss_type)}>
-                        {loss.loss_type}
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-600">Quantity:</span>
-                        <span className="ml-1 font-medium">{loss.quantity_lost}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Date:</span>
-                        <span className="ml-1">{format(new Date(loss.loss_date), "MMM dd, yyyy")}</span>
-                      </div>
-                      {loss.hr_shifts && (
-                        <div>
-                          <span className="text-gray-600">Shift:</span>
-                          <span className="ml-1">{(loss.hr_shifts as any)?.shift_name}</span>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-medium">{loss.products?.name}</h4>
+                          <Badge className={getLossTypeColor(loss.loss_type)}>
+                            {loss.loss_type}
+                          </Badge>
                         </div>
-                      )}
-                      {loss.operator_name && (
-                        <div>
-                          <span className="text-gray-600">Operator:</span>
-                          <span className="ml-1">{loss.operator_name}</span>
+                        <p className="text-sm text-gray-600 mb-2">{loss.shops?.name}</p>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Quantity Lost:</span>
+                            <span className="ml-1 font-medium text-red-600">{loss.quantity_lost}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Value:</span>
+                            <span className="ml-1 font-medium">₹{calculateLossValue(loss).toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Date:</span>
+                            <span className="ml-1">{format(new Date(loss.loss_date), "MMM dd, yyyy")}</span>
+                          </div>
+                          {loss.operator_name && (
+                            <div>
+                              <span className="text-gray-600">Operator:</span>
+                              <span className="ml-1">{loss.operator_name}</span>
+                            </div>
+                          )}
                         </div>
-                      )}
+                        {loss.reason && (
+                          <div className="mt-2">
+                            <span className="text-gray-600 text-sm">Reason:</span>
+                            <p className="text-sm mt-1">{loss.reason}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    {loss.reason && (
-                      <p className="text-sm text-gray-600 mt-2">{loss.reason}</p>
-                    )}
                   </CardContent>
                 </Card>
               ))

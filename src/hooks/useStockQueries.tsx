@@ -11,7 +11,6 @@ export interface StockEntry {
   closing_stock: number;
   actual_stock: number;
   stock_added?: number;
-  shift?: string;
   operator_name?: string;
   shops?: { id: string; name: string };
   products?: { id: string; name: string; price: number; cost_price: number | null };
@@ -61,7 +60,6 @@ export const useStockQueries = ({
           closing_stock, 
           actual_stock,
           stock_added,
-          shift,
           operator_name,
           shops (id, name),
           products (id, name, price, cost_price)
