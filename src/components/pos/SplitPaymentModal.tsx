@@ -81,14 +81,16 @@ export const SplitPaymentModal: React.FC<SplitPaymentModalProps> = ({
     setIsProcessing(true);
     try {
       // Generate bill with split payment details
-      await generateBill({
+      const bill = await generateBill({
         totalAmount,
         paymentMethod: 'upi', // We'll use UPI as primary but note the split in description
         cartItems
       });
 
-      toast.success(`Split payment successful! UPI: ₹${upiAmt.toFixed(2)}, Cash: ₹${cashAmt.toFixed(2)}`);
-      onPaymentComplete();
+      if (bill) {
+        toast.success(`Split payment successful! UPI: ₹${upiAmt.toFixed(2)}, Cash: ₹${cashAmt.toFixed(2)}`);
+        onPaymentComplete();
+      }
     } catch (error) {
       console.error("Error processing split payment:", error);
       toast.error("Failed to process split payment");

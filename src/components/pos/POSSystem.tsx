@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ interface Product {
   name: string;
   price: number;
   category: string;
+  quantity?: number;
 }
 
 interface CartItem extends Product {
@@ -375,9 +377,28 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                       >
                         <CardContent className="p-4">
                           <div className="text-center">
-                            <h4 className="font-semibold text-sm mb-3 text-gray-800 line-clamp-2 min-h-[2.5rem]">
+                            <h4 className="font-semibold text-sm mb-2 text-gray-800 line-clamp-2 min-h-[2.5rem]">
                               {product.name}
                             </h4>
+                            
+                            {/* Quantity Badge */}
+                            {product.quantity !== undefined && (
+                              <div className="mb-2">
+                                <Badge 
+                                  variant="outline" 
+                                  className={`text-xs ${
+                                    product.quantity > 10 
+                                      ? 'bg-green-50 text-green-700 border-green-200' 
+                                      : product.quantity > 0 
+                                        ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                        : 'bg-red-50 text-red-700 border-red-200'
+                                  }`}
+                                >
+                                  Qty: {product.quantity}
+                                </Badge>
+                              </div>
+                            )}
+                            
                             <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1 rounded-full">
                               <p className="text-lg font-bold">
                                 ₹{Number(product.price).toFixed(2)}
@@ -488,7 +509,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                     {/* Payment Buttons - Made Smaller */}
                     <div className="space-y-1.5">
                       <Button 
-                        className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
+                        className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-1.5 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
                         onClick={handleCashPayment}
                         disabled={cart.length === 0}
                       >
@@ -497,7 +518,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                       </Button>
                       
                       <Button 
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-1.5 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
                         onClick={handleUPIPayment}
                         disabled={cart.length === 0}
                       >
@@ -506,7 +527,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                       </Button>
                       
                       <Button 
-                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-1.5 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
                         onClick={handleCreditPayment}
                         disabled={cart.length === 0}
                       >
@@ -515,7 +536,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                       </Button>
                       
                       <Button 
-                        className="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
+                        className="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-1.5 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
                         onClick={handleSplitPayment}
                         disabled={cart.length === 0}
                       >
@@ -524,7 +545,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                       </Button>
                       
                       <Button 
-                        className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
+                        className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-1.5 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
                         onClick={handlePendingPayment}
                         disabled={cart.length === 0}
                       >

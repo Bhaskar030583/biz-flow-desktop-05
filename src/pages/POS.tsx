@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { POSSystem } from "@/components/pos/POSSystem";
 import { StoreInfoModal } from "@/components/pos/StoreInfoModal";
@@ -49,13 +48,46 @@ const POS = () => {
     enabled: !!user?.id
   });
 
-  // Query for products assigned to selected shop
+  // Query for products assigned to selected shop with current stock quantities
   const { data: products, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
     queryKey: ['pos-products', selectedShopId],
     queryFn: async () => {
       if (!selectedShopId) return [];
       
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Get products with their current stock quantities
       const { data, error } = await supabase
+        .from('product_shops')
+        .select(`
+          products (
+            id,
+            name,
+            price,
+            category
+          ),
+          stocks!inner (
+            actual_stock
+          )
+        `)
+        .eq('shop_id', selectedShopId)
+        .eq('user_id', user?.id)
+        .eq('stocks.stock_date', today)
+        .eq('stocks.shop_id', selectedShopId);
+      
+      if (error) throw error;
+      
+      // Transform the data to include stock quantities
+      const productsWithStock = data?.map(item => ({
+        id: item.products.id,
+        name: item.products.name,
+        price: item.products.price,
+        category: item.products.category,
+        quantity: item.stocks?.actual_stock || 0
+      })).filter(product => product.id) || [];
+
+      // Also get products without stock entries (showing 0 quantity)
+      const { data: allProducts, error: allProductsError } = await supabase
         .from('product_shops')
         .select(`
           products (
@@ -67,11 +99,23 @@ const POS = () => {
         `)
         .eq('shop_id', selectedShopId)
         .eq('user_id', user?.id);
-      
-      if (error) throw error;
-      
-      // Extract products from the join result
-      return data?.map(item => item.products).filter(Boolean) || [];
+
+      if (allProductsError) throw allProductsError;
+
+      // Merge products with and without stock, ensuring all products are included
+      const allProductIds = new Set(productsWithStock.map(p => p.id));
+      const productsWithoutStock = allProducts
+        ?.map(item => item.products)
+        .filter(product => product && !allProductIds.has(product.id))
+        .map(product => ({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          category: product.category,
+          quantity: 0
+        })) || [];
+
+      return [...productsWithStock, ...productsWithoutStock];
     },
     enabled: !!selectedShopId && !!user?.id
   });
@@ -171,7 +215,7 @@ const POS = () => {
               </div>
             ) : (
               <POSSystem 
-                products={products} 
+                products={products || []} 
                 storeInfo={storeInfo} 
                 selectedShopId={selectedShopId}
               />

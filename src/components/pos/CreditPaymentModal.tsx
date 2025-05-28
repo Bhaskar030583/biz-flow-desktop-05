@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,7 @@ export const CreditPaymentModal: React.FC<CreditPaymentModalProps> = ({
   useEffect(() => {
     if (isOpen && user) {
       fetchCustomers();
+      setSelectedCustomerId("");
     }
   }, [isOpen, user]);
 
@@ -83,32 +85,33 @@ export const CreditPaymentModal: React.FC<CreditPaymentModalProps> = ({
 
     setIsProcessing(true);
     try {
-      // Generate bill first
-      await generateBill({
+      // Generate bill using the bill service
+      const bill = await generateBill({
         customerId: selectedCustomerId,
         totalAmount,
         paymentMethod: 'credit',
         cartItems
       });
 
-      // Create the credit transaction
-      const { error } = await supabase
-        .from('credit_transactions')
-        .insert({
-          user_id: user.id,
-          customer_id: selectedCustomerId,
-          amount: totalAmount,
-          description: `Credit sale - ${cartItems.length} items`,
-          status: 'pending'
-        });
+      if (bill) {
+        // Create the credit transaction
+        const { error } = await supabase
+          .from('credit_transactions')
+          .insert({
+            user_id: user.id,
+            customer_id: selectedCustomerId,
+            amount: totalAmount,
+            description: `Credit sale - Bill #${bill.bill_number} - ${cartItems.length} items`,
+            status: 'pending'
+          });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
-      
-      toast.success(`Credit sale of ₹${totalAmount.toFixed(2)} recorded for ${selectedCustomer?.name} and bill generated!`);
-      onPaymentComplete();
-      setSelectedCustomerId("");
+        const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+        
+        toast.success(`Credit sale of ₹${totalAmount.toFixed(2)} recorded for ${selectedCustomer?.name}!`);
+        onPaymentComplete();
+      }
     } catch (error) {
       console.error("Error processing credit payment:", error);
       toast.error("Failed to process credit payment");
