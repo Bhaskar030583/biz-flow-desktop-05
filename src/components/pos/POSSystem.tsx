@@ -166,8 +166,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
     }
   };
 
-  const handlePaymentComplete = (billData: any) => {
-    toast.success(`Bill ${billData.bill_number} created successfully!`);
+  const handlePaymentComplete = () => {
+    toast.success("Payment completed successfully!");
     clearCart();
     setShowCashModal(false);
     setShowCreditModal(false);
@@ -190,11 +190,11 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
   }, {} as Record<string, Product[]>);
 
   if (showBillHistory) {
-    return <BillHistory onBack={() => setShowBillHistory(false)} />;
+    return <BillHistory />;
   }
 
   if (showCustomerManagement) {
-    return <CustomerManagement onBack={() => setShowCustomerManagement(false)} />;
+    return <CustomerManagement />;
   }
 
   return (
@@ -409,15 +409,16 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
         isOpen={showCashModal}
         onClose={() => setShowCashModal(false)}
         totalAmount={getTotalAmount()}
-        onCreateBill={createBill}
+        cartItems={cart}
         onPaymentComplete={handlePaymentComplete}
+        storeInfo={storeInfo}
       />
 
       <CreditPaymentModal
         isOpen={showCreditModal}
         onClose={() => setShowCreditModal(false)}
         totalAmount={getTotalAmount()}
-        onCreateBill={createBill}
+        cartItems={cart}
         onPaymentComplete={handlePaymentComplete}
       />
 
@@ -425,7 +426,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
         isOpen={showSplitModal}
         onClose={() => setShowSplitModal(false)}
         totalAmount={getTotalAmount()}
-        onCreateBill={createBill}
+        cartItems={cart}
         onPaymentComplete={handlePaymentComplete}
       />
     </div>
