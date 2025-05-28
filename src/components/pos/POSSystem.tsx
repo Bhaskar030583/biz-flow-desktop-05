@@ -76,9 +76,20 @@ export const POSSystem: React.FC<POSSystemProps> = ({
   });
 
   const addToCart = (product: Product) => {
+    // Check if product has sufficient stock
+    if (product.quantity !== undefined && product.quantity <= 0) {
+      toast.error(`${product.name} is out of stock`);
+      return;
+    }
+
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.id === product.id);
       if (existingItem) {
+        // Check if adding one more would exceed available stock
+        if (product.quantity !== undefined && existingItem.quantity >= product.quantity) {
+          toast.error(`Only ${product.quantity} units of ${product.name} available`);
+          return prevCart;
+        }
         return prevCart.map(item =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.price }
@@ -94,6 +105,13 @@ export const POSSystem: React.FC<POSSystemProps> = ({
   const updateQuantity = (productId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
       removeFromCart(productId);
+      return;
+    }
+    
+    // Check stock availability
+    const product = products?.find(p => p.id === productId);
+    if (product?.quantity !== undefined && newQuantity > product.quantity) {
+      toast.error(`Only ${product.quantity} units available`);
       return;
     }
     
@@ -153,6 +171,15 @@ export const POSSystem: React.FC<POSSystemProps> = ({
       const billNumber = await generateBillNumber();
       const totalAmount = getTotalAmount();
 
+      // First, check if we have sufficient stock for all items
+      for (const item of cart) {
+        const product = products?.find(p => p.id === item.id);
+        if (product?.quantity !== undefined && item.quantity > product.quantity) {
+          toast.error(`Insufficient stock for ${item.name}. Available: ${product.quantity}, Required: ${item.quantity}`);
+          return null;
+        }
+      }
+
       // Create the bill
       const { data: billData, error: billError } = await supabase
         .from('bills')
@@ -185,6 +212,19 @@ export const POSSystem: React.FC<POSSystemProps> = ({
         .insert(billItems);
 
       if (itemsError) throw itemsError;
+
+      // Update stock levels - decrease for sale
+      try {
+        await adjustStockForBill(cart, selectedShopId, user?.id || '', 'sale');
+        
+        // Refresh products data to show updated stock
+        if (onStockUpdated) {
+          onStockUpdated();
+        }
+      } catch (stockError) {
+        console.error('Stock update failed:', stockError);
+        toast.error("Bill created but stock update failed. Please check stock manually.");
+      }
 
       return billData;
     } catch (error) {
@@ -460,7 +500,11 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                     {filteredProducts.map((product) => (
                       <Card 
                         key={product.id} 
-                        className="cursor-pointer hover:shadow-xl transition-all duration-300 border border-blue-100 bg-gradient-to-br from-white to-blue-50 hover:from-blue-50 hover:to-blue-100 transform hover:scale-105 active:scale-95"
+                        className={`cursor-pointer hover:shadow-xl transition-all duration-300 border transform hover:scale-105 active:scale-95 ${
+                          product.quantity !== undefined && product.quantity <= 0 
+                            ? 'border-red-200 bg-gradient-to-br from-red-50 to-red-100 opacity-75' 
+                            : 'border-blue-100 bg-gradient-to-br from-white to-blue-50 hover:from-blue-50 hover:to-blue-100'
+                        }`}
                         onClick={() => addToCart(product)}
                       >
                         <CardContent className="p-3">
@@ -469,7 +513,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                               {product.name}
                             </h4>
                             
-                            {/* Quantity Badge */}
+                            {/* Stock Quantity Badge */}
                             {product.quantity !== undefined && (
                               <div className="mb-2">
                                 <Badge 
@@ -577,7 +621,11 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                       {filteredProducts.map((product) => (
                         <Card 
                           key={product.id} 
-                          className="cursor-pointer hover:shadow-xl transition-all duration-300 border border-blue-100 bg-gradient-to-br from-white to-blue-50 hover:from-blue-50 hover:to-blue-100 transform hover:scale-105 group"
+                          className={`cursor-pointer hover:shadow-xl transition-all duration-300 border transform hover:scale-105 group ${
+                            product.quantity !== undefined && product.quantity <= 0 
+                              ? 'border-red-200 bg-gradient-to-br from-red-50 to-red-100 opacity-75' 
+                              : 'border-blue-100 bg-gradient-to-br from-white to-blue-50 hover:from-blue-50 hover:to-blue-100'
+                          }`}
                           onClick={() => addToCart(product)}
                         >
                           <CardContent className="p-3 md:p-4">
@@ -586,7 +634,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                                 {product.name}
                               </h4>
                               
-                              {/* Quantity Badge */}
+                              {/* Stock Quantity Badge */}
                               {product.quantity !== undefined && (
                                 <div className="mb-3">
                                   <Badge 
