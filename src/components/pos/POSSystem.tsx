@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { CustomerManagement } from "./CustomerManagement";
 import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { BillingModal } from "./BillingModal";
 
 interface Product {
   id: string;
@@ -52,6 +54,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
   const [showBillHistory, setShowBillHistory] = useState(false);
   const [showCustomerManagement, setShowCustomerManagement] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
+  const [showBillingModal, setShowBillingModal] = useState(false);
 
   console.log('POSSystem props:', { 
     productsCount: products?.length, 
@@ -184,6 +187,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
     setShowCashModal(false);
     setShowCreditModal(false);
     setShowSplitModal(false);
+    setShowBillingModal(false);
   };
 
   const handleCashPayment = () => {
@@ -288,7 +292,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header - More compact on mobile */}
+      {/* Header */}
       <div className="bg-white shadow-lg border-b border-blue-100">
         <div className="w-full px-3 md:px-6 py-2 md:py-5">
           <div className="flex justify-between items-center">
@@ -311,7 +315,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                 )}
               </div>
             </div>
-            <div className="flex gap-1 md:gap-3">
+            <div className="flex gap-1 md:gap-3 items-center">
               <Button
                 variant="outline"
                 size={isMobile ? "sm" : "default"}
@@ -330,6 +334,21 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                 <History className="h-3 w-3 md:h-4 md:w-4" />
                 {!isMobile && "History"}
               </Button>
+              {/* Cart Icon */}
+              <Button
+                variant="outline"
+                size={isMobile ? "sm" : "default"}
+                onClick={() => setShowBillingModal(true)}
+                className="flex items-center gap-1 md:gap-2 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm px-2 md:px-4 relative"
+              >
+                <ShoppingCart className="h-3 w-3 md:h-4 md:w-4" />
+                {!isMobile && "Cart"}
+                {cart.length > 0 && (
+                  <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[20px] h-5 flex items-center justify-center rounded-full">
+                    {cart.length}
+                  </Badge>
+                )}
+              </Button>
             </div>
           </div>
         </div>
@@ -339,7 +358,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
         {isMobile ? (
           // Mobile Layout - Stacked
           <div className="space-y-3">
-            {/* Search Bar - More compact */}
+            {/* Search Bar */}
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
               <CardContent className="p-3">
                 <div className="space-y-2">
@@ -443,149 +462,6 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                 )}
               </CardContent>
             </Card>
-
-            {/* Mobile Cart */}
-            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className="pb-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
-                <CardTitle className="flex items-center justify-between text-base">
-                  <span className="flex items-center gap-2 text-blue-900 font-semibold">
-                    <Calculator className="h-4 w-4" />
-                    Cart ({cart.length})
-                  </span>
-                  {cart.length > 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={clearCart}
-                      className="text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50 h-7 px-2"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              
-              <CardContent className="p-3">
-                {cart.length === 0 ? (
-                  <div className="text-center py-6 text-gray-500">
-                    <div className="text-center">
-                      <ShoppingCart className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                      <p className="font-medium text-sm">Cart is empty</p>
-                      <p className="text-xs">Add products to get started</p>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {/* Cart Items */}
-                    <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
-                      {cart.map((item) => (
-                        <div key={item.id} className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-2 shadow-sm border border-blue-100">
-                          <div className="flex justify-between items-start mb-1">
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-xs text-gray-800 leading-tight">{item.name}</h4>
-                              <p className="text-xs text-gray-600">₹{Number(item.price).toFixed(2)} each</p>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeFromCart(item.id)}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 h-auto"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-6 w-6 p-0 border-blue-200 hover:bg-blue-50"
-                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              >
-                                <Minus className="h-3 w-3" />
-                              </Button>
-                              <span className="font-semibold text-xs min-w-[24px] text-center bg-white px-1 py-1 rounded">
-                                {item.quantity}
-                              </span>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-6 w-6 p-0 border-blue-200 hover:bg-blue-50"
-                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              >
-                                <Plus className="h-3 w-3" />
-                              </Button>
-                            </div>
-                            <p className="font-bold text-green-700 text-xs bg-green-100 px-2 py-1 rounded">
-                              ₹{Number(item.total).toFixed(2)}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <Separator className="my-3" />
-
-                    {/* Total */}
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 mb-3 border border-green-200">
-                      <div className="flex justify-between items-center text-lg font-bold">
-                        <span className="text-gray-800">Total:</span>
-                        <span className="text-green-700">₹{getTotalAmount().toFixed(2)}</span>
-                      </div>
-                    </div>
-
-                    {/* Payment Buttons */}
-                    <div className="grid grid-cols-2 gap-1.5">
-                      <Button 
-                        className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-xs" 
-                        onClick={handleCashPayment}
-                        disabled={cart.length === 0}
-                      >
-                        <Banknote className="h-3 w-3 mr-1" />
-                        Cash
-                      </Button>
-                      
-                      <Button 
-                        className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-xs" 
-                        onClick={handleUPIPayment}
-                        disabled={cart.length === 0}
-                      >
-                        <Smartphone className="h-3 w-3 mr-1" />
-                        UPI
-                      </Button>
-                      
-                      <Button 
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-xs" 
-                        onClick={handleCreditPayment}
-                        disabled={cart.length === 0}
-                      >
-                        <CreditCard className="h-3 w-3 mr-1" />
-                        Credit
-                      </Button>
-                      
-                      <Button 
-                        className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-xs" 
-                        onClick={handleSplitPayment}
-                        disabled={cart.length === 0}
-                      >
-                        <SplitSquareHorizontal className="h-3 w-3 mr-1" />
-                        Split
-                      </Button>
-                      
-                      <Button 
-                        className="col-span-2 bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-xs" 
-                        onClick={handlePendingPayment}
-                        disabled={cart.length === 0}
-                      >
-                        <Clock className="h-3 w-3 mr-1" />
-                        Pending Payment
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
           </div>
         ) : (
           // Desktop/Tablet Layout - Three Column Layout
@@ -602,8 +478,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
               </Card>
             </div>
 
-            {/* Middle - Products Grid */}
-            <div className="col-span-6 lg:col-span-7">
+            {/* Middle - Products Grid and Search */}
+            <div className="col-span-9 lg:col-span-10">
               <Card className="h-full shadow-lg border-0 bg-white/80 backdrop-blur-sm">
                 <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
                   <div className="flex justify-between items-center">
@@ -634,7 +510,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                       }
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
                       {filteredProducts.map((product) => (
                         <Card 
                           key={product.id} 
@@ -679,153 +555,24 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                 </CardContent>
               </Card>
             </div>
-
-            {/* Right - Cart and Payment */}
-            <div className="col-span-3">
-              <Card className="h-full shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
-                  <CardTitle className="flex items-center justify-between text-lg">
-                    <span className="flex items-center gap-2 text-blue-900 font-semibold">
-                      <Calculator className="h-5 w-5" />
-                      Cart ({cart.length})
-                    </span>
-                    {cart.length > 0 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={clearCart}
-                        className="text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                
-                <CardContent className="h-[calc(100%-80px)] flex flex-col p-4">
-                  {cart.length === 0 ? (
-                    <div className="flex-1 flex items-center justify-center text-gray-500">
-                      <div className="text-center">
-                        <ShoppingCart className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                        <p className="text-lg font-medium">Cart is empty</p>
-                        <p className="text-sm">Add products to get started</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      {/* Cart Items */}
-                      <div className="flex-1 space-y-3 overflow-y-auto mb-4">
-                        {cart.map((item) => (
-                          <div key={item.id} className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-3 shadow-sm border border-blue-100">
-                            <div className="flex justify-between items-start mb-2">
-                              <div className="flex-1">
-                                <h4 className="font-semibold text-sm text-gray-800">{item.name}</h4>
-                                <p className="text-xs text-gray-600">₹{Number(item.price).toFixed(2)} each</p>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeFromCart(item.id)}
-                                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 h-auto"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 w-7 p-0 border-blue-200 hover:bg-blue-50"
-                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                >
-                                  <Minus className="h-3 w-3" />
-                                </Button>
-                                <span className="font-semibold text-sm min-w-[30px] text-center bg-white px-2 py-1 rounded">
-                                  {item.quantity}
-                                </span>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 w-7 p-0 border-blue-200 hover:bg-blue-50"
-                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                >
-                                  <Plus className="h-3 w-3" />
-                                </Button>
-                              </div>
-                              <p className="font-bold text-green-700 text-sm bg-green-100 px-2 py-1 rounded">
-                                ₹{Number(item.total).toFixed(2)}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <Separator className="my-4" />
-
-                      {/* Total */}
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 mb-4 border border-green-200">
-                        <div className="flex justify-between items-center text-xl font-bold">
-                          <span className="text-gray-800">Total:</span>
-                          <span className="text-green-700">₹{getTotalAmount().toFixed(2)}</span>
-                        </div>
-                      </div>
-
-                      {/* Payment Buttons */}
-                      <div className="space-y-2">
-                        <Button 
-                          className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
-                          onClick={handleCashPayment}
-                          disabled={cart.length === 0}
-                        >
-                          <Banknote className="h-4 w-4 mr-2" />
-                          Cash
-                        </Button>
-                        
-                        <Button 
-                          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
-                          onClick={handleUPIPayment}
-                          disabled={cart.length === 0}
-                        >
-                          <Smartphone className="h-4 w-4 mr-2" />
-                          UPI
-                        </Button>
-                        
-                        <Button 
-                          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
-                          onClick={handleCreditPayment}
-                          disabled={cart.length === 0}
-                        >
-                          <CreditCard className="h-4 w-4 mr-2" />
-                          Credit
-                        </Button>
-                        
-                        <Button 
-                          className="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
-                          onClick={handleSplitPayment}
-                          disabled={cart.length === 0}
-                        >
-                          <SplitSquareHorizontal className="h-4 w-4 mr-2" />
-                          Split
-                        </Button>
-                        
-                        <Button 
-                          className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
-                          onClick={handlePendingPayment}
-                          disabled={cart.length === 0}
-                        >
-                          <Clock className="h-4 w-4 mr-2" />
-                          Pending
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
           </div>
         )}
+
+        {/* Billing Modal */}
+        <BillingModal
+          isOpen={showBillingModal}
+          onClose={() => setShowBillingModal(false)}
+          cart={cart}
+          updateQuantity={updateQuantity}
+          removeFromCart={removeFromCart}
+          clearCart={clearCart}
+          getTotalAmount={getTotalAmount}
+          handleCashPayment={handleCashPayment}
+          handleUPIPayment={handleUPIPayment}
+          handleCreditPayment={handleCreditPayment}
+          handleSplitPayment={handleSplitPayment}
+          handlePendingPayment={handlePendingPayment}
+        />
 
         {/* Payment Modals */}
         <CashPaymentModal
