@@ -32,7 +32,7 @@ const StockHeader: React.FC<StockHeaderProps> = ({
         <Button
           onClick={() => {
             setShowForm(true);
-            setActiveTab("management");
+            setActiveTab("entries");
           }}
           className="bg-green-600 hover:bg-green-700"
           size="sm"
