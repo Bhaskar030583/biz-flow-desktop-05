@@ -270,7 +270,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
 
   // Mobile Categories Sidebar
   const CategoriesList = () => (
-    <div className="space-y-1 p-2">
+    <div className="space-y-1 p-1">
       {categories.map((category) => (
         <button
           key={category}
@@ -278,7 +278,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
             setSelectedCategory(category);
             setShowCategories(false);
           }}
-          className={`w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+          className={`w-full text-left px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
             selectedCategory === category
               ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
               : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"
@@ -294,18 +294,18 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
       <div className="bg-white shadow-lg border-b border-blue-100">
-        <div className="w-full px-3 md:px-6 py-2 md:py-5">
+        <div className="w-full px-2 md:px-4 lg:px-6 py-1 md:py-3">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2 md:gap-4">
-              <div className="bg-gradient-to-r from-orange-600 to-red-700 p-2 md:p-4 rounded-xl shadow-lg">
+            <div className="flex items-center gap-1 md:gap-3">
+              <div className="bg-gradient-to-r from-orange-600 to-red-700 p-1 md:p-2 lg:p-3 rounded-lg shadow-lg">
                 <img 
                   src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
                   alt="ABC Cafe Logo" 
-                  className="h-5 w-5 md:h-8 md:w-8"
+                  className="h-4 w-4 md:h-6 md:w-6 lg:h-8 lg:w-8"
                 />
               </div>
               <div>
-                <h1 className="text-lg md:text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-700 bg-clip-text text-transparent">
+                <h1 className="text-sm md:text-xl lg:text-2xl xl:text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-700 bg-clip-text text-transparent">
                   ABC CAFE
                 </h1>
                 {storeInfo && (
@@ -315,36 +315,36 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                 )}
               </div>
             </div>
-            <div className="flex gap-1 md:gap-3 items-center">
+            <div className="flex gap-1 md:gap-2 items-center">
               <Button
                 variant="outline"
-                size={isMobile ? "sm" : "default"}
+                size="sm"
                 onClick={() => setShowCustomerManagement(true)}
-                className="flex items-center gap-1 md:gap-2 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm px-2 md:px-4"
+                className="flex items-center gap-1 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm px-1 md:px-2 lg:px-3 h-7 md:h-8 lg:h-9"
               >
                 <User className="h-3 w-3 md:h-4 md:w-4" />
-                {!isMobile && "Customers"}
+                <span className="hidden sm:inline text-xs md:text-sm">Customers</span>
               </Button>
               <Button
                 variant="outline"
-                size={isMobile ? "sm" : "default"}
+                size="sm"
                 onClick={() => setShowBillHistory(true)}
-                className="flex items-center gap-1 md:gap-2 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm px-2 md:px-4"
+                className="flex items-center gap-1 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm px-1 md:px-2 lg:px-3 h-7 md:h-8 lg:h-9"
               >
                 <History className="h-3 w-3 md:h-4 md:w-4" />
-                {!isMobile && "History"}
+                <span className="hidden sm:inline text-xs md:text-sm">History</span>
               </Button>
               {/* Cart Icon */}
               <Button
                 variant="outline"
-                size={isMobile ? "sm" : "default"}
+                size="sm"
                 onClick={() => setShowBillingModal(true)}
-                className="flex items-center gap-1 md:gap-2 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm px-2 md:px-4 relative"
+                className="flex items-center gap-1 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm px-1 md:px-2 lg:px-3 h-7 md:h-8 lg:h-9 relative"
               >
                 <ShoppingCart className="h-3 w-3 md:h-4 md:w-4" />
-                {!isMobile && "Cart"}
+                <span className="hidden sm:inline text-xs md:text-sm">Cart</span>
                 {cart.length > 0 && (
-                  <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[20px] h-5 flex items-center justify-center rounded-full">
+                  <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-xs min-w-[16px] h-4 flex items-center justify-center rounded-full px-1">
                     {cart.length}
                   </Badge>
                 )}
@@ -354,33 +354,33 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
         </div>
       </div>
 
-      <div className="w-full p-2 md:p-6">
+      <div className="w-full p-1 md:p-3 lg:p-4 xl:p-6">
         {isMobile ? (
-          // Mobile Layout - Stacked
-          <div className="space-y-3">
+          // Mobile Layout - Stacked with improved responsiveness
+          <div className="space-y-2">
             {/* Search Bar */}
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-              <CardContent className="p-3">
+              <CardContent className="p-2">
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
                       <Input
                         placeholder="Search products..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 border-blue-200 focus:border-blue-400 focus:ring-blue-300 h-9"
+                        className="pl-8 border-blue-200 focus:border-blue-400 focus:ring-blue-300 h-8 text-sm"
                       />
                     </div>
                     <Sheet open={showCategories} onOpenChange={setShowCategories}>
                       <SheetTrigger asChild>
-                        <Button variant="outline" size="sm" className="shrink-0 h-9 w-9 p-0">
-                          <Menu className="h-4 w-4" />
+                        <Button variant="outline" size="sm" className="shrink-0 h-8 w-8 p-0">
+                          <Menu className="h-3 w-3" />
                         </Button>
                       </SheetTrigger>
-                      <SheetContent side="left" className="w-64">
+                      <SheetContent side="left" className="w-60">
                         <div className="py-4">
-                          <h3 className="text-lg font-semibold mb-4">Categories</h3>
+                          <h3 className="text-base font-semibold mb-3">Categories</h3>
                           <CategoriesList />
                         </div>
                       </SheetContent>
@@ -388,7 +388,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-gray-600">Category:</span>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs px-2 py-0">
                       {selectedCategory === "all" ? "All Items" : selectedCategory}
                     </Badge>
                   </div>
@@ -400,14 +400,14 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader className="pb-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-base text-blue-900 font-semibold">Products</CardTitle>
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 font-medium text-xs">
+                  <CardTitle className="text-sm text-blue-900 font-semibold">Products</CardTitle>
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 font-medium text-xs px-2 py-0">
                     {filteredProducts.length} items
                   </Badge>
                 </div>
               </CardHeader>
               
-              <CardContent className="p-3">
+              <CardContent className="p-2">
                 {filteredProducts.length === 0 ? (
                   <div className="text-center py-6 text-gray-500">
                     {selectedShopId 
@@ -427,7 +427,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                       >
                         <CardContent className="p-2">
                           <div className="text-center">
-                            <h4 className="font-semibold text-xs mb-1 text-gray-800 line-clamp-2 min-h-[1.75rem] leading-tight">
+                            <h4 className="font-semibold text-xs mb-1 text-gray-800 line-clamp-2 min-h-[1.5rem] leading-tight">
                               {product.name}
                             </h4>
                             
@@ -464,16 +464,30 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
             </Card>
           </div>
         ) : (
-          // Desktop/Tablet Layout - Three Column Layout
-          <div className="grid grid-cols-12 gap-4 h-[calc(100vh-160px)]">
+          // Tablet/Desktop Layout - Responsive grid layout
+          <div className="grid grid-cols-12 gap-2 md:gap-3 lg:gap-4 h-[calc(100vh-120px)] md:h-[calc(100vh-140px)] lg:h-[calc(100vh-160px)]">
             {/* Left - Categories Sidebar */}
             <div className="col-span-3 lg:col-span-2">
               <Card className="h-full shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
-                  <CardTitle className="text-lg text-blue-900 font-semibold">Categories</CardTitle>
+                <CardHeader className="pb-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
+                  <CardTitle className="text-sm md:text-base lg:text-lg text-blue-900 font-semibold">Categories</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <CategoriesList />
+                  <div className="space-y-1 p-1 md:p-2">
+                    {categories.map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => setSelectedCategory(category)}
+                        className={`w-full text-left px-2 md:px-3 py-2 md:py-3 text-xs md:text-sm font-medium rounded-lg transition-all duration-200 ${
+                          selectedCategory === category
+                            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
+                            : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                        }`}
+                      >
+                        {category === "all" ? "All Items" : category}
+                      </button>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -481,25 +495,25 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
             {/* Middle - Products Grid and Search */}
             <div className="col-span-9 lg:col-span-10">
               <Card className="h-full shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
+                <CardHeader className="pb-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
                   <div className="flex justify-between items-center">
-                    <CardTitle className="text-lg text-blue-900 font-semibold">Products</CardTitle>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 font-medium">
+                    <CardTitle className="text-sm md:text-base lg:text-lg text-blue-900 font-semibold">Products</CardTitle>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 font-medium text-xs md:text-sm px-2 py-0">
                       {filteredProducts.length} items
                     </Badge>
                   </div>
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3 md:h-4 md:w-4" />
                     <Input
                       placeholder="Search products..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 border-blue-200 focus:border-blue-400 focus:ring-blue-300"
+                      className="pl-8 md:pl-10 border-blue-200 focus:border-blue-400 focus:ring-blue-300 h-8 md:h-10 text-sm"
                     />
                   </div>
                 </CardHeader>
                 
-                <CardContent className="h-[calc(100%-140px)] overflow-y-auto p-4">
+                <CardContent className="h-[calc(100%-100px)] md:h-[calc(100%-120px)] lg:h-[calc(100%-140px)] overflow-y-auto p-2 md:p-3 lg:p-4">
                   {filteredProducts.length === 0 ? (
                     <div className="text-center py-12 text-gray-500">
                       {selectedShopId 
@@ -510,22 +524,22 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                       }
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 md:gap-3">
                       {filteredProducts.map((product) => (
                         <Card 
                           key={product.id} 
                           className="cursor-pointer hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-blue-50 hover:from-blue-50 hover:to-blue-100 transform hover:scale-105"
                           onClick={() => addToCart(product)}
                         >
-                          <CardContent className="p-3">
+                          <CardContent className="p-2 md:p-3">
                             <div className="text-center">
-                              <h4 className="font-semibold text-sm mb-2 text-gray-800 line-clamp-2 min-h-[2.5rem]">
+                              <h4 className="font-semibold text-xs md:text-sm mb-1 md:mb-2 text-gray-800 line-clamp-2 min-h-[1.5rem] md:min-h-[2.5rem] leading-tight">
                                 {product.name}
                               </h4>
                               
                               {/* Quantity Badge */}
                               {product.quantity !== undefined && (
-                                <div className="mb-2">
+                                <div className="mb-1 md:mb-2">
                                   <Badge 
                                     variant="outline" 
                                     className={`text-xs ${
@@ -541,8 +555,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                                 </div>
                               )}
                               
-                              <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1 rounded-full">
-                                <p className="text-sm font-bold">
+                              <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-2 md:px-3 py-1 rounded-full">
+                                <p className="text-xs md:text-sm font-bold">
                                   ₹{Number(product.price).toFixed(2)}
                                 </p>
                               </div>
