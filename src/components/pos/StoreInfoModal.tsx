@@ -63,20 +63,28 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
   const { data: stores, isLoading: storesLoading, error: storesError } = useQuery({
     queryKey: ['hrms-stores-modal'],
     queryFn: async () => {
-      console.log('Fetching stores from hr_stores for modal...');
+      console.log('=== FETCHING STORES FROM HR_STORES FOR MODAL ===');
+      console.log('User ID:', user?.id);
+      
       const { data, error } = await supabase
         .from('hr_stores')
         .select('id, store_name, store_code')
         .order('store_name');
       
+      console.log('Raw Supabase response:', { data, error });
+      
       if (error) {
         console.error('Error fetching hr_stores:', error);
+        toast.error('Failed to load stores: ' + error.message);
         throw error;
       }
       
       console.log('Fetched stores for modal:', data);
+      console.log('Number of stores:', data?.length || 0);
+      
       return data || [];
-    }
+    },
+    enabled: !!user?.id
   });
 
   // Query for shifts from hr_shifts table based on selected store
@@ -114,17 +122,20 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     }
   }, [userProfile, user]);
 
-  // Debug logging
+  // Comprehensive debug logging
   useEffect(() => {
-    console.log('StoreInfoModal Debug:', {
-      stores,
-      storesLoading,
-      storesError,
-      selectedStoreId,
-      shifts,
-      shiftsLoading
-    });
-  }, [stores, storesLoading, storesError, selectedStoreId, shifts, shiftsLoading]);
+    console.log('=== STORE INFO MODAL DEBUG ===');
+    console.log('Modal is open:', isOpen);
+    console.log('User:', user);
+    console.log('Stores loading:', storesLoading);
+    console.log('Stores error:', storesError);
+    console.log('Stores data:', stores);
+    console.log('Selected store ID:', selectedStoreId);
+    console.log('Shifts loading:', shiftsLoading);
+    console.log('Shifts data:', shifts);
+    console.log('Selected shift ID:', selectedShiftId);
+    console.log('Salesperson name:', salespersonName);
+  }, [isOpen, user, stores, storesLoading, storesError, selectedStoreId, shifts, shiftsLoading, selectedShiftId, salespersonName]);
 
   const handleSubmit = () => {
     if (!selectedStoreId) {
@@ -189,40 +200,58 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
                 Select Store
               </Label>
               {storesLoading ? (
-                <Skeleton className="h-10 w-full" />
+                <div>
+                  <Skeleton className="h-10 w-full" />
+                  <p className="text-xs text-gray-500 mt-1">Loading stores from HRMS...</p>
+                </div>
               ) : storesError ? (
-                <div className="text-red-500 text-sm">
-                  Error loading stores: {storesError.message}
+                <div className="text-red-500 text-sm space-y-2">
+                  <div className="p-3 border border-red-200 rounded bg-red-50">
+                    <p className="font-medium">Error loading stores:</p>
+                    <p>{storesError.message}</p>
+                    <p className="text-xs mt-1">Please check if stores are created in HRMS module.</p>
+                  </div>
                 </div>
               ) : (
-                <Select 
-                  value={selectedStoreId} 
-                  onValueChange={(value) => {
-                    console.log('Store selected:', value);
-                    setSelectedStoreId(value);
-                    setSelectedShiftId(""); // Reset shift when store changes
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a store" />
-                  </SelectTrigger>
-                  <SelectContent className="z-50 bg-white">
-                    {stores && stores.length > 0 ? (
-                      stores.map((store) => (
-                        <SelectItem key={store.id} value={store.id}>
-                          {store.store_name} ({store.store_code})
+                <div>
+                  <Select 
+                    value={selectedStoreId} 
+                    onValueChange={(value) => {
+                      console.log('Store selected:', value);
+                      setSelectedStoreId(value);
+                      setSelectedShiftId(""); // Reset shift when store changes
+                    }}
+                  >
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Choose a store" />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 bg-white border shadow-lg">
+                      {stores && stores.length > 0 ? (
+                        stores.map((store) => (
+                          <SelectItem key={store.id} value={store.id} className="cursor-pointer hover:bg-gray-100">
+                            {store.store_name} ({store.store_code})
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-stores" disabled>
+                          No stores available
                         </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="no-stores" disabled>
-                        No stores available
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {stores && stores.length > 0 && (
+                    <p className="text-xs text-green-600 mt-1">
+                      Found {stores.length} store(s) from HRMS
+                    </p>
+                  )}
+                </div>
               )}
               {!storesLoading && !storesError && (!stores || stores.length === 0) && (
-                <p className="text-xs text-red-500">No stores found in HRMS. Please create stores first.</p>
+                <div className="p-3 border border-yellow-200 rounded bg-yellow-50">
+                  <p className="text-xs text-yellow-800">
+                    No stores found in HRMS. Please create stores first in the HRMS module.
+                  </p>
+                </div>
               )}
             </div>
 
@@ -242,13 +271,13 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
                   }}
                   disabled={!selectedStoreId}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white">
                     <SelectValue placeholder="Choose a shift" />
                   </SelectTrigger>
-                  <SelectContent className="z-50 bg-white">
+                  <SelectContent className="z-50 bg-white border shadow-lg">
                     {shifts && shifts.length > 0 ? (
                       shifts.map((shift) => (
-                        <SelectItem key={shift.id} value={shift.id}>
+                        <SelectItem key={shift.id} value={shift.id} className="cursor-pointer hover:bg-gray-100">
                           {shift.shift_name} ({shift.start_time} - {shift.end_time})
                         </SelectItem>
                       ))
