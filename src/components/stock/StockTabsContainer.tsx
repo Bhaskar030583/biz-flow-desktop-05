@@ -1,110 +1,112 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import StockForm from "./StockForm";
-import StockList from "./StockList";
-import StockImport from "./StockImport";
 import ProductStockManagement from "./ProductStockManagement";
-import LossTracking from "./LossTracking";
-import AdvancedReporting from "./AdvancedReporting";
-import LowStockAlerts from "./LowStockAlerts";
-import { Package, FileSpreadsheet, BarChart3, Settings, AlertTriangle, TrendingDown, Bell } from "lucide-react";
+import NewStockManagement from "./NewStockManagement";
+import StockList from "./StockList";
+import StockForm from "./StockForm";
+import BatchStockEntryModal from "./BatchStockEntryModal";
+import { useSearchParams } from "react-router-dom";
 
 interface StockTabsContainerProps {
   showForm: boolean;
   handleStockAdded: () => void;
   setShowForm: (show: boolean) => void;
-  activeTab?: string;
-  setActiveTab?: (tab: string) => void;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
 }
 
-const StockTabsContainer = ({ 
-  showForm, 
-  handleStockAdded, 
+const StockTabsContainer = ({
+  showForm,
+  handleStockAdded,
   setShowForm,
-  activeTab = "management",
-  setActiveTab 
+  activeTab,
+  setActiveTab
 }: StockTabsContainerProps) => {
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [searchParams] = useSearchParams();
 
+  // Handle tab change and update URL
   const handleTabChange = (value: string) => {
-    if (setActiveTab) {
-      setActiveTab(value);
-    }
-  };
-
-  const handleStockUpdated = () => {
-    setRefreshTrigger(prev => prev + 1);
-    handleStockAdded();
+    setActiveTab(value);
+    // Update URL without causing a navigation
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('tab', value);
+    window.history.replaceState({}, '', `${window.location.pathname}?${newSearchParams}`);
   };
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-      <TabsList className="grid w-full grid-cols-6 mb-6">
-        <TabsTrigger value="management" className="flex items-center gap-2">
-          <Settings className="h-4 w-4" />
-          <span className="hidden sm:inline">Management</span>
-          <span className="sm:hidden">Mgmt</span>
-        </TabsTrigger>
-        <TabsTrigger value="losses" className="flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4" />
-          <span className="hidden sm:inline">Losses</span>
-        </TabsTrigger>
-        <TabsTrigger value="alerts" className="flex items-center gap-2">
-          <Bell className="h-4 w-4" />
-          <span className="hidden sm:inline">Alerts</span>
-        </TabsTrigger>
-        <TabsTrigger value="reports" className="flex items-center gap-2">
-          <TrendingDown className="h-4 w-4" />
-          <span className="hidden sm:inline">Reports</span>
-        </TabsTrigger>
-        <TabsTrigger value="entries" className="flex items-center gap-2">
-          <BarChart3 className="h-4 w-4" />
-          <span className="hidden sm:inline">Entries</span>
-        </TabsTrigger>
-        <TabsTrigger value="import" className="flex items-center gap-2">
-          <FileSpreadsheet className="h-4 w-4" />
-          <span className="hidden sm:inline">Import</span>
-        </TabsTrigger>
+      <TabsList className="grid w-full grid-cols-6">
+        <TabsTrigger value="management">Management</TabsTrigger>
+        <TabsTrigger value="add-stock">Add Stock</TabsTrigger>
+        <TabsTrigger value="list">Stock List</TabsTrigger>
+        <TabsTrigger value="create">Create Entry</TabsTrigger>
+        <TabsTrigger value="import">Import</TabsTrigger>
+        <TabsTrigger value="reports">Reports</TabsTrigger>
       </TabsList>
 
       <TabsContent value="management" className="space-y-4">
-        <ProductStockManagement 
-          onStockUpdated={handleStockUpdated} 
-          refreshTrigger={refreshTrigger}
-        />
+        <ProductStockManagement onStockUpdated={handleStockAdded} />
       </TabsContent>
 
-      <TabsContent value="losses" className="space-y-4">
-        <LossTracking />
+      <TabsContent value="add-stock" className="space-y-4">
+        <Card>
+          <CardContent className="p-6">
+            <NewStockManagement 
+              onSuccess={handleStockAdded}
+              onCancel={() => setActiveTab("management")}
+            />
+          </CardContent>
+        </Card>
       </TabsContent>
 
-      <TabsContent value="alerts" className="space-y-4">
-        <LowStockAlerts />
+      <TabsContent value="list" className="space-y-4">
+        <StockList refreshTrigger={0} />
       </TabsContent>
 
-      <TabsContent value="reports" className="space-y-4">
-        <AdvancedReporting />
-      </TabsContent>
-
-      <TabsContent value="entries" className="space-y-4">
+      <TabsContent value="create" className="space-y-4">
         {showForm ? (
+          <StockForm 
+            onSuccess={handleStockAdded}
+            onCancel={() => setShowForm(false)}
+          />
+        ) : (
           <Card>
-            <CardContent className="pt-6">
-              <StockForm 
-                onSuccess={handleStockAdded}
-                onCancel={() => setShowForm(false)}
-              />
+            <CardContent className="p-6 text-center">
+              <p className="text-muted-foreground mb-4">
+                Create individual stock entries one at a time.
+              </p>
+              <button
+                onClick={() => setShowForm(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                Create New Stock Entry
+              </button>
             </CardContent>
           </Card>
-        ) : (
-          <StockList refreshTrigger={refreshTrigger} />
         )}
       </TabsContent>
 
       <TabsContent value="import" className="space-y-4">
-        <StockImport onComplete={handleStockAdded} />
+        <Card>
+          <CardContent className="p-6">
+            <BatchStockEntryModal />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="reports" className="space-y-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center py-8">
+              <h3 className="text-lg font-medium mb-2">Stock Reports</h3>
+              <p className="text-muted-foreground">
+                Advanced stock reporting features coming soon.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </TabsContent>
     </Tabs>
   );
