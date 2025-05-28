@@ -57,34 +57,21 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
         setLoading(true);
         console.log('=== FETCHING ASSIGNED PRODUCTS FOR STOCK LIST ===');
         
-        // Get assigned products with their latest stock data
-        const { data: assignedProductsData, error } = await supabase
+        // First, get the product assignments
+        const { data: assignments, error: assignmentError } = await supabase
           .from('product_shops')
-          .select(`
-            id,
-            products!inner (
-              id,
-              name,
-              category,
-              price,
-              cost_price
-            ),
-            hr_stores!inner (
-              id,
-              store_name
-            )
-          `)
+          .select('id, product_id, shop_id')
           .eq('user_id', user.id);
 
-        if (error) {
-          console.error('Error fetching assigned products:', error);
-          throw error;
+        if (assignmentError) {
+          console.error('Error fetching assignments:', assignmentError);
+          throw assignmentError;
         }
 
-        console.log('Assigned products data:', assignedProductsData);
+        console.log('Product assignments:', assignments);
 
-        if (!assignedProductsData || assignedProductsData.length === 0) {
-          console.log('No assigned products found');
+        if (!assignments || assignments.length === 0) {
+          console.log('No product assignments found');
           setAssignedProducts([]);
           setShops([]);
           setProducts([]);
@@ -92,22 +79,53 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
           return;
         }
 
-        // Get today's date for stock data
-        const today = new Date().toISOString().split('T')[0];
-        
+        // Get unique product IDs and shop IDs
+        const productIds = [...new Set(assignments.map(a => a.product_id))];
+        const shopIds = [...new Set(assignments.map(a => a.shop_id))];
+
+        // Fetch products data
+        const { data: productsData, error: productsError } = await supabase
+          .from('products')
+          .select('id, name, category, price, cost_price')
+          .in('id', productIds);
+
+        if (productsError) {
+          console.error('Error fetching products:', productsError);
+          throw productsError;
+        }
+
+        // Fetch stores data
+        const { data: storesData, error: storesError } = await supabase
+          .from('hr_stores')
+          .select('id, store_name')
+          .in('id', shopIds);
+
+        if (storesError) {
+          console.error('Error fetching stores:', storesError);
+          throw storesError;
+        }
+
+        console.log('Products data:', productsData);
+        console.log('Stores data:', storesData);
+
         // Transform data and get stock information
         const transformedProducts: AssignedProduct[] = [];
         
-        for (const assignment of assignedProductsData) {
-          const product = assignment.products;
-          const shop = assignment.hr_stores;
+        for (const assignment of assignments) {
+          const product = productsData?.find(p => p.id === assignment.product_id);
+          const store = storesData?.find(s => s.id === assignment.shop_id);
           
+          if (!product || !store) {
+            console.log('Missing product or store data for assignment:', assignment);
+            continue;
+          }
+
           // Get latest stock data for this product and shop
           const { data: stockData, error: stockError } = await supabase
             .from('stocks')
             .select('*')
             .eq('product_id', product.id)
-            .eq('shop_id', shop.id)
+            .eq('shop_id', store.id)
             .eq('user_id', user.id)
             .order('stock_date', { ascending: false })
             .limit(1);
@@ -133,8 +151,8 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
             actual_stock: latestStock?.actual_stock || 0,
             last_stock_date: latestStock?.stock_date || null,
             sold_quantity: Math.max(0, soldQuantity),
-            shop_name: shop.store_name,
-            shop_id: shop.id
+            shop_name: store.store_name,
+            shop_id: store.id
           });
         }
 
@@ -142,19 +160,15 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
         setAssignedProducts(transformedProducts);
         
         // Extract unique shops and products for filters
-        const uniqueShops = Array.from(new Set(transformedProducts.map(p => p.shop_name)))
-          .filter(Boolean)
-          .map(name => ({
-            name,
-            id: transformedProducts.find(p => p.shop_name === name)?.shop_id
-          }));
+        const uniqueShops = storesData?.map(store => ({
+          name: store.store_name,
+          id: store.id
+        })) || [];
         
-        const uniqueProducts = Array.from(new Set(transformedProducts.map(p => p.name)))
-          .filter(Boolean)
-          .map(name => ({
-            name,
-            id: transformedProducts.find(p => p.name === name)?.id
-          }));
+        const uniqueProducts = productsData?.map(product => ({
+          name: product.name,
+          id: product.id
+        })) || [];
         
         setShops(uniqueShops);
         setProducts(uniqueProducts);
@@ -186,8 +200,8 @@ const StockList = ({ refreshTrigger }: StockListProps) => {
       product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (product.shop_name && product.shop_name.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesShop = shopFilter === "_all" || product.shop_name === shopFilter;
-    const matchesProduct = productFilter === "_all" || product.name === productFilter;
+    const matchesShop = shopFilter === "_all" || product.shop_id === shopFilter;
+    const matchesProduct = productFilter === "_all" || product.id === productFilter;
     
     return matchesSearch && matchesShop && matchesProduct;
   });
