@@ -87,10 +87,63 @@ const EmployeeManagement = () => {
     setLoading(true);
 
     try {
+      // Validate employee code format
+      if (!/^[A-Za-z0-9]+$/.test(formData.employee_code)) {
+        toast({
+          title: "Invalid Employee Code",
+          description: "Employee code can only contain letters and numbers",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Check for duplicate employee code when adding new employee
+      if (!editingEmployee) {
+        const { data: existingEmployee, error: checkError } = await supabase
+          .from('hr_employees')
+          .select('employee_code')
+          .eq('employee_code', formData.employee_code.trim())
+          .single();
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          // PGRST116 is "not found" which is what we want
+          throw checkError;
+        }
+
+        if (existingEmployee) {
+          toast({
+            title: "Duplicate Employee Code",
+            description: "An employee with this code already exists",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Prepare clean data for submission
+      const cleanFormData = {
+        ...formData,
+        employee_code: formData.employee_code.trim().toUpperCase(),
+        first_name: formData.first_name.trim(),
+        last_name: formData.last_name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim(),
+        address: formData.address.trim(),
+        department: formData.department.trim(),
+        designation: formData.designation.trim(),
+        bank_account_number: formData.bank_account_number.trim(),
+        bank_name: formData.bank_name.trim(),
+        bank_ifsc: formData.bank_ifsc.trim().toUpperCase(),
+        emergency_contact_name: formData.emergency_contact_name.trim(),
+        emergency_contact_phone: formData.emergency_contact_phone.trim(),
+      };
+
       if (editingEmployee) {
         const { error } = await supabase
           .from('hr_employees')
-          .update(formData)
+          .update(cleanFormData)
           .eq('id', editingEmployee.id);
 
         if (error) throw error;
@@ -102,7 +155,7 @@ const EmployeeManagement = () => {
       } else {
         const { error } = await supabase
           .from('hr_employees')
-          .insert([formData]);
+          .insert([cleanFormData]);
 
         if (error) throw error;
         
@@ -115,6 +168,7 @@ const EmployeeManagement = () => {
       resetForm();
       fetchEmployees();
     } catch (error: any) {
+      console.error('Employee submission error:', error);
       toast({
         title: "Error",
         description: error.message || "Operation failed",
@@ -264,8 +318,12 @@ const EmployeeManagement = () => {
                     id="employee_code"
                     value={formData.employee_code}
                     onChange={(e) => setFormData({...formData, employee_code: e.target.value})}
+                    placeholder="e.g., ABC001, EMP123"
+                    pattern="[A-Za-z0-9]+"
+                    title="Employee code can only contain letters and numbers"
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">Only letters and numbers allowed</p>
                 </div>
                 <div>
                   <Label htmlFor="employment_status">Status</Label>
