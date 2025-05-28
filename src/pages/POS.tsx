@@ -28,6 +28,7 @@ const POS = () => {
   const [isPopupWindow, setIsPopupWindow] = useState(false);
   const [storeInfoCompleted, setStoreInfoCompleted] = useState(false);
   const [selectedShiftId, setSelectedShiftId] = useState<string>("");
+  const [selectedStoreId, setSelectedStoreId] = useState<string>("");
   const navigate = useNavigate();
 
   // Query for hr_stores - get stores from HRMS
@@ -44,18 +45,19 @@ const POS = () => {
     }
   });
 
-  // Use the first store for product queries since we removed store selection
-  const defaultStoreId = stores?.[0]?.id || "";
-
-  // Query for products assigned to the default store with current stock quantities
+  // Query for products assigned to the selected store with current stock quantities
   const { data: products, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
-    queryKey: ['pos-products', defaultStoreId],
+    queryKey: ['pos-products', selectedStoreId],
     queryFn: async () => {
-      if (!defaultStoreId) return [];
+      if (!selectedStoreId) {
+        console.log('No store selected for product query');
+        return [];
+      }
       
+      console.log('Fetching products for store:', selectedStoreId);
       const today = new Date().toISOString().split('T')[0];
       
-      // First get all products assigned to the store
+      // First, try to get products assigned to this store from product_shops
       const { data: productShops, error: productShopsError } = await supabase
         .from('product_shops')
         .select(`
@@ -66,52 +68,83 @@ const POS = () => {
             category
           )
         `)
-        .eq('shop_id', defaultStoreId)
+        .eq('shop_id', selectedStoreId)
         .eq('user_id', user?.id);
       
-      if (productShopsError) throw productShopsError;
-      
-      if (!productShops || productShops.length === 0) return [];
-      
+      if (productShopsError) {
+        console.error('Error fetching product_shops:', productShopsError);
+      }
+
+      console.log('Product shops result:', productShops);
+
+      let allProducts = [];
+
+      // If we have products assigned through product_shops, use those
+      if (productShops && productShops.length > 0) {
+        allProducts = productShops
+          .map(item => item.products)
+          .filter(product => product !== null);
+      } else {
+        // If no specific assignments, get all products for this user as fallback
+        console.log('No product assignments found, fetching all user products as fallback');
+        const { data: allUserProducts, error: allProductsError } = await supabase
+          .from('products')
+          .select('id, name, price, category')
+          .eq('user_id', user?.id);
+        
+        if (allProductsError) {
+          console.error('Error fetching all products:', allProductsError);
+          throw allProductsError;
+        }
+
+        allProducts = allUserProducts || [];
+      }
+
+      console.log('Products to process:', allProducts);
+
+      if (allProducts.length === 0) {
+        console.log('No products found');
+        return [];
+      }
+
       // Get product IDs
-      const productIds = productShops
-        .map(item => item.products?.id)
-        .filter(id => id) as string[];
-      
-      if (productIds.length === 0) return [];
-      
-      // Get stock data for these products
+      const productIds = allProducts.map(product => product.id);
+
+      // Get stock data for these products at the selected store
       const { data: stockData, error: stockError } = await supabase
         .from('stocks')
         .select('product_id, actual_stock')
-        .eq('shop_id', defaultStoreId)
+        .eq('shop_id', selectedStoreId)
         .eq('user_id', user?.id)
         .eq('stock_date', today)
         .in('product_id', productIds);
       
-      if (stockError) throw stockError;
-      
+      if (stockError) {
+        console.error('Error fetching stock data:', stockError);
+        // Don't throw error, just log it and continue with zero stock
+      }
+
+      console.log('Stock data:', stockData);
+
       // Create a map for quick stock lookup
       const stockMap = new Map();
       stockData?.forEach(stock => {
         stockMap.set(stock.product_id, stock.actual_stock);
       });
-      
+
       // Combine product data with stock information
-      return productShops
-        .map(item => {
-          if (!item.products) return null;
-          return {
-            id: item.products.id,
-            name: item.products.name,
-            price: item.products.price,
-            category: item.products.category,
-            quantity: stockMap.get(item.products.id) || 0
-          };
-        })
-        .filter(product => product !== null);
+      const productsWithStock = allProducts.map(product => ({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        category: product.category,
+        quantity: stockMap.get(product.id) || 0
+      }));
+
+      console.log('Final products with stock:', productsWithStock);
+      return productsWithStock;
     },
-    enabled: !!defaultStoreId && !!user?.id
+    enabled: !!selectedStoreId && !!user?.id
   });
 
   // Check if this is a popup window and open popup if not
@@ -144,9 +177,11 @@ const POS = () => {
     }
   }, []);
 
-  const handleStoreInfoComplete = (info: StoreInfo, shiftId: string) => {
+  const handleStoreInfoComplete = (info: StoreInfo, shiftId: string, storeId: string) => {
+    console.log('Store info completed:', { info, shiftId, storeId });
     setStoreInfo(info);
     setSelectedShiftId(shiftId);
+    setSelectedStoreId(storeId);
     setShowStoreModal(false);
     setStoreInfoCompleted(true);
   };
@@ -199,7 +234,7 @@ const POS = () => {
           onClose={handleStoreModalClose}
         />
         
-        {storeInfoCompleted && defaultStoreId && (
+        {storeInfoCompleted && selectedStoreId && (
           <div className="p-6">
             {productsLoading ? (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -214,7 +249,7 @@ const POS = () => {
               <POSSystem 
                 products={products || []} 
                 storeInfo={storeInfo} 
-                selectedShopId={defaultStoreId}
+                selectedShopId={selectedStoreId}
                 selectedShiftId={selectedShiftId}
                 onStockUpdated={handleStockAdded}
               />

@@ -23,7 +23,7 @@ interface Shift {
 
 interface StoreInfoModalProps {
   isOpen: boolean;
-  onComplete: (info: { storeName: string; salespersonName: string; shiftName: string }, shiftId: string) => void;
+  onComplete: (info: { storeName: string; salespersonName: string; shiftName: string }, shiftId: string, storeId: string) => void;
   onClose: () => void;
 }
 
@@ -129,7 +129,8 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
         salespersonName: salespersonName.trim(),
         shiftName: shiftName
       }, 
-      selectedShiftId
+      selectedShiftId,
+      selectedStoreId
     );
   };
 
