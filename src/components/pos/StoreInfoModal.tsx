@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface Shift {
+interface HRStore {
+  id: string;
+  store_name: string;
+  store_code: string;
+}
+
+interface HRShift {
   id: string;
   shift_name: string;
   start_time: string;
@@ -59,54 +66,38 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
   });
 
   // Query for hr_stores - get stores from HRMS
-  const { data: stores, isLoading: storesLoading, error: storesError } = useQuery({
+  const { data: hrStores, isLoading: storesLoading, error: storesError } = useQuery({
     queryKey: ['hrms-stores-modal'],
     queryFn: async () => {
-      console.log('🔍 [StoreInfoModal] FETCHING STORES FROM HR_STORES');
-      console.log('🔍 [StoreInfoModal] User ID:', user?.id);
-      console.log('🔍 [StoreInfoModal] Modal is open:', isOpen);
+      console.log('🏪 [StoreInfoModal] FETCHING HR STORES');
       
       const { data, error } = await supabase
         .from('hr_stores')
         .select('id, store_name, store_code')
         .order('store_name');
       
-      console.log('🔍 [StoreInfoModal] Raw Supabase response:', { data, error });
-      console.log('🔍 [StoreInfoModal] Data type:', typeof data);
-      console.log('🔍 [StoreInfoModal] Data is Array?', Array.isArray(data));
-      
       if (error) {
         console.error('❌ [StoreInfoModal] Error fetching hr_stores:', error);
-        toast.error('Failed to load stores: ' + error.message);
+        toast.error('Failed to load HRMS stores: ' + error.message);
         throw error;
       }
       
-      console.log('✅ [StoreInfoModal] Successfully fetched stores:', data);
-      console.log('✅ [StoreInfoModal] Number of stores:', data?.length || 0);
-      
-      if (data && data.length > 0) {
-        console.log('✅ [StoreInfoModal] First store details:', data[0]);
-        toast.success(`Successfully loaded ${data.length} store(s) from HRMS`);
-      } else {
-        console.log('⚠️ [StoreInfoModal] No stores found in hr_stores table');
-        toast.warning('No stores found in HRMS. Please create stores first.');
-      }
-      
+      console.log('✅ [StoreInfoModal] Successfully fetched HR stores:', data);
       return data || [];
     },
     enabled: !!user?.id && isOpen
   });
 
   // Query for shifts from hr_shifts table based on selected store
-  const { data: shifts, isLoading: shiftsLoading } = useQuery({
+  const { data: hrShifts, isLoading: shiftsLoading } = useQuery({
     queryKey: ['hrms-shifts', selectedStoreId],
     queryFn: async () => {
       if (!selectedStoreId) {
-        console.log('🔍 [StoreInfoModal] No store selected for shifts query');
+        console.log('🕐 [StoreInfoModal] No store selected for shifts query');
         return [];
       }
       
-      console.log('🔍 [StoreInfoModal] Fetching shifts for store:', selectedStoreId);
+      console.log('🕐 [StoreInfoModal] Fetching HR shifts for store:', selectedStoreId);
       const { data, error } = await supabase
         .from('hr_shifts')
         .select('id, shift_name, start_time, end_time, store_id')
@@ -119,7 +110,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
         throw error;
       }
       
-      console.log('✅ [StoreInfoModal] Fetched shifts:', data);
+      console.log('✅ [StoreInfoModal] Fetched HR shifts:', data);
       return data || [];
     },
     enabled: !!selectedStoreId
@@ -135,32 +126,19 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     }
   }, [userProfile, user]);
 
-  // Debug effect to track component state changes
+  // Debug logging
   useEffect(() => {
-    console.log('🔄 [StoreInfoModal] State Update:', {
+    console.log('🔄 [StoreInfoModal] Component State:', {
       isOpen,
-      modalVisible: isOpen,
-      userLoggedIn: !!user,
-      storesLoading,
-      storesError: storesError?.message,
-      storesCount: stores?.length || 0,
       selectedStoreId,
       selectedShiftId,
-      salespersonName
+      salespersonName,
+      hrStoresCount: hrStores?.length || 0,
+      hrShiftsCount: hrShifts?.length || 0,
+      storesLoading,
+      shiftsLoading
     });
-  }, [isOpen, user, stores, storesLoading, storesError, selectedStoreId, selectedShiftId, salespersonName]);
-
-  // Debug effect specifically for stores data
-  useEffect(() => {
-    if (stores) {
-      console.log('📊 [StoreInfoModal] Stores data updated:', {
-        storesArray: stores,
-        length: stores.length,
-        firstStore: stores[0],
-        allStoreNames: stores.map(store => store.store_name)
-      });
-    }
-  }, [stores]);
+  }, [isOpen, selectedStoreId, selectedShiftId, salespersonName, hrStores, hrShifts, storesLoading, shiftsLoading]);
 
   const handleSubmit = () => {
     console.log('📝 [StoreInfoModal] Submit button clicked');
@@ -183,8 +161,8 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
       return;
     }
 
-    const selectedStore = stores?.find(store => store.id === selectedStoreId);
-    const selectedShift = shifts?.find(shift => shift.id === selectedShiftId);
+    const selectedStore = hrStores?.find(store => store.id === selectedStoreId);
+    const selectedShift = hrShifts?.find(shift => shift.id === selectedShiftId);
     const storeName = selectedStore?.store_name || "";
     const shiftName = selectedShift?.shift_name || "";
 
@@ -208,15 +186,6 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     );
   };
 
-  // Debug render info
-  console.log('🎨 [StoreInfoModal] Rendering with:', {
-    isOpen,
-    storesLoading,
-    storesError: !!storesError,
-    storesCount: stores?.length || 0,
-    hasStores: !!(stores && stores.length > 0)
-  });
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
@@ -236,18 +205,18 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
             <div className="space-y-2">
               <Label htmlFor="store-select" className="flex items-center gap-2">
                 <Store className="h-4 w-4" />
-                Select Store
+                Select HRMS Store
               </Label>
               
               {storesLoading ? (
                 <div>
                   <Skeleton className="h-10 w-full" />
-                  <p className="text-xs text-blue-600 mt-1">🔄 Loading stores from HRMS...</p>
+                  <p className="text-xs text-blue-600 mt-1">🔄 Loading HRMS stores...</p>
                 </div>
               ) : storesError ? (
                 <div className="text-red-500 text-sm space-y-2">
                   <div className="p-3 border border-red-200 rounded bg-red-50">
-                    <p className="font-medium">❌ Error loading stores:</p>
+                    <p className="font-medium">❌ Error loading HRMS stores:</p>
                     <p>{storesError.message}</p>
                     <p className="text-xs mt-1">Please check if stores are created in HRMS module.</p>
                   </div>
@@ -257,19 +226,19 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
                   <Select 
                     value={selectedStoreId} 
                     onValueChange={(value) => {
-                      console.log('🎯 [StoreInfoModal] Store selected:', value);
-                      console.log('🎯 [StoreInfoModal] Available stores for selection:', stores);
+                      console.log('🎯 [StoreInfoModal] HR Store selected:', value);
+                      console.log('🎯 [StoreInfoModal] Available HR stores:', hrStores);
                       setSelectedStoreId(value);
                       setSelectedShiftId(""); // Reset shift when store changes
                     }}
                   >
                     <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Choose a store" />
+                      <SelectValue placeholder="Choose an HRMS store" />
                     </SelectTrigger>
                     <SelectContent className="z-50 bg-white border shadow-lg">
-                      {stores && stores.length > 0 ? (
-                        stores.map((store) => {
-                          console.log('🏪 [StoreInfoModal] Rendering store option:', store);
+                      {hrStores && hrStores.length > 0 ? (
+                        hrStores.map((store: HRStore) => {
+                          console.log('🏪 [StoreInfoModal] Rendering HR store option:', store);
                           return (
                             <SelectItem key={store.id} value={store.id} className="cursor-pointer hover:bg-gray-100">
                               {store.store_name} ({store.store_code})
@@ -278,25 +247,25 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
                         })
                       ) : (
                         <SelectItem value="no-stores" disabled>
-                          No stores available
+                          No HRMS stores available
                         </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
                   
-                  {stores && stores.length > 0 ? (
+                  {hrStores && hrStores.length > 0 ? (
                     <p className="text-xs text-green-600 mt-1">
-                      ✅ Found {stores.length} store(s) from HRMS
+                      ✅ Found {hrStores.length} HRMS store(s)
                     </p>
                   ) : (
                     <p className="text-xs text-yellow-600 mt-1">
-                      ⚠️ No stores loaded yet
+                      ⚠️ No HRMS stores found
                     </p>
                   )}
                 </div>
               )}
               
-              {!storesLoading && !storesError && (!stores || stores.length === 0) && (
+              {!storesLoading && !storesError && (!hrStores || hrStores.length === 0) && (
                 <div className="p-3 border border-yellow-200 rounded bg-yellow-50">
                   <p className="text-xs text-yellow-800">
                     ⚠️ No stores found in HRMS. Please create stores first in the HRMS module.
@@ -308,7 +277,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
             <div className="space-y-2">
               <Label htmlFor="shift-select" className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Select Shift
+                Select HRMS Shift
               </Label>
               {shiftsLoading ? (
                 <Skeleton className="h-10 w-full" />
@@ -316,38 +285,38 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
                 <Select 
                   value={selectedShiftId} 
                   onValueChange={(value) => {
-                    console.log('Shift selected:', value);
+                    console.log('🕐 [StoreInfoModal] HR Shift selected:', value);
                     setSelectedShiftId(value);
                   }}
                   disabled={!selectedStoreId}
                 >
                   <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Choose a shift" />
+                    <SelectValue placeholder="Choose an HRMS shift" />
                   </SelectTrigger>
                   <SelectContent className="z-50 bg-white border shadow-lg">
-                    {shifts && shifts.length > 0 ? (
-                      shifts.map((shift) => (
+                    {hrShifts && hrShifts.length > 0 ? (
+                      hrShifts.map((shift: HRShift) => (
                         <SelectItem key={shift.id} value={shift.id} className="cursor-pointer hover:bg-gray-100">
                           {shift.shift_name} ({shift.start_time} - {shift.end_time})
                         </SelectItem>
                       ))
                     ) : selectedStoreId ? (
                       <SelectItem value="no-shifts" disabled>
-                        No shifts available for this store
+                        No HRMS shifts available for this store
                       </SelectItem>
                     ) : (
                       <SelectItem value="select-store" disabled>
-                        Please select a store first
+                        Please select an HRMS store first
                       </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
               )}
               {!selectedStoreId && (
-                <p className="text-xs text-muted-foreground">Please select a store first</p>
+                <p className="text-xs text-muted-foreground">Please select an HRMS store first</p>
               )}
-              {selectedStoreId && !shiftsLoading && (!shifts || shifts.length === 0) && (
-                <p className="text-xs text-red-500">No shifts found for this store. Please create shifts in HRMS.</p>
+              {selectedStoreId && !shiftsLoading && (!hrShifts || hrShifts.length === 0) && (
+                <p className="text-xs text-red-500">No HRMS shifts found for this store. Please create shifts in HRMS.</p>
               )}
             </div>
             

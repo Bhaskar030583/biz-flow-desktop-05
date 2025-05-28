@@ -31,36 +31,16 @@ const POS = () => {
   const [selectedStoreId, setSelectedStoreId] = useState<string>("");
   const navigate = useNavigate();
 
-  // Query for hr_stores - get stores from HRMS
-  const { data: stores, isLoading: storesLoading } = useQuery({
-    queryKey: ['hrms-stores'],
-    queryFn: async () => {
-      console.log('Fetching stores from hr_stores for POS...');
-      const { data, error } = await supabase
-        .from('hr_stores')
-        .select('id, store_name, store_code')
-        .order('store_name');
-      
-      if (error) {
-        console.error('Error fetching hr_stores for POS:', error);
-        throw error;
-      }
-      
-      console.log('Fetched stores for POS:', data);
-      return data || [];
-    }
-  });
-
   // Query for products assigned to the selected store with current stock quantities
   const { data: products, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
     queryKey: ['pos-products', selectedStoreId],
     queryFn: async () => {
       if (!selectedStoreId) {
-        console.log('No store selected for product query');
+        console.log('🔍 [POS] No store selected for product query');
         return [];
       }
       
-      console.log('Fetching products for store:', selectedStoreId);
+      console.log('🔍 [POS] Fetching products for HRMS store:', selectedStoreId);
       const today = new Date().toISOString().split('T')[0];
       
       // First, try to get products assigned to this store from product_shops
@@ -78,10 +58,10 @@ const POS = () => {
         .eq('user_id', user?.id);
       
       if (productShopsError) {
-        console.error('Error fetching product_shops:', productShopsError);
+        console.error('❌ [POS] Error fetching product_shops:', productShopsError);
       }
 
-      console.log('Product shops result:', productShops);
+      console.log('📦 [POS] Product shops result:', productShops);
 
       let allProducts = [];
 
@@ -92,24 +72,24 @@ const POS = () => {
           .filter(product => product !== null);
       } else {
         // If no specific assignments, get all products for this user as fallback
-        console.log('No product assignments found, fetching all user products as fallback');
+        console.log('⚠️ [POS] No product assignments found, fetching all user products as fallback');
         const { data: allUserProducts, error: allProductsError } = await supabase
           .from('products')
           .select('id, name, price, category')
           .eq('user_id', user?.id);
         
         if (allProductsError) {
-          console.error('Error fetching all products:', allProductsError);
+          console.error('❌ [POS] Error fetching all products:', allProductsError);
           throw allProductsError;
         }
 
         allProducts = allUserProducts || [];
       }
 
-      console.log('Products to process:', allProducts);
+      console.log('📦 [POS] Products to process:', allProducts);
 
       if (allProducts.length === 0) {
-        console.log('No products found');
+        console.log('⚠️ [POS] No products found');
         return [];
       }
 
@@ -126,11 +106,11 @@ const POS = () => {
         .in('product_id', productIds);
       
       if (stockError) {
-        console.error('Error fetching stock data:', stockError);
+        console.error('❌ [POS] Error fetching stock data:', stockError);
         // Don't throw error, just log it and continue with zero stock
       }
 
-      console.log('Stock data:', stockData);
+      console.log('📊 [POS] Stock data:', stockData);
 
       // Create a map for quick stock lookup
       const stockMap = new Map();
@@ -147,7 +127,7 @@ const POS = () => {
         quantity: stockMap.get(product.id) || 0
       }));
 
-      console.log('Final products with stock:', productsWithStock);
+      console.log('✅ [POS] Final products with stock:', productsWithStock);
       return productsWithStock;
     },
     enabled: !!selectedStoreId && !!user?.id
@@ -167,9 +147,9 @@ const POS = () => {
         
         if (popup) {
           popup.focus();
-          console.log('POS popup window opened successfully');
+          console.log('🪟 [POS] POS popup window opened successfully');
         } else {
-          console.warn('Popup was blocked by browser');
+          console.warn('⚠️ [POS] Popup was blocked by browser');
           alert('Please allow popups for this site to use the POS system in a separate window');
         }
       };
@@ -179,12 +159,12 @@ const POS = () => {
       
       return () => clearTimeout(timer);
     } else {
-      console.log('Already in popup window, showing clean POS interface');
+      console.log('🪟 [POS] Already in popup window, showing clean POS interface');
     }
   }, []);
 
   const handleStoreInfoComplete = (info: StoreInfo, shiftId: string, storeId: string) => {
-    console.log('Store info completed:', { info, shiftId, storeId });
+    console.log('✅ [POS] Store info completed:', { info, shiftId, storeId });
     setStoreInfo(info);
     setSelectedShiftId(shiftId);
     setSelectedStoreId(storeId);
