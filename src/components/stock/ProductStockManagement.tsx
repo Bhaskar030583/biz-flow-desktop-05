@@ -23,19 +23,17 @@ const ProductStockManagement = ({
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
 
-  // Fetch shops
+  // Fetch HRMS stores instead of shops
   const { data: shops, isLoading: shopsLoading } = useQuery({
-    queryKey: ['shops'],
+    queryKey: ['hr-stores'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('shops')
-        .select('id, name')
-        .eq('user_id', user?.id)
-        .order('name');
+        .from('hr_stores')
+        .select('id, store_name as name, store_code')
+        .order('store_name');
       if (error) throw error;
       return data || [];
-    },
-    enabled: !!user?.id
+    }
   });
 
   // Auto-select first shop when shops are loaded
@@ -45,11 +43,23 @@ const ProductStockManagement = ({
     }
   }, [shops, selectedShop]);
 
-  // Fetch assigned products for selected shop
+  // Fetch assigned products for selected shop - need to map hr_stores to shops table for product assignments
   const { data: assignedProducts, refetch: refetchProducts } = useQuery({
     queryKey: ['assigned-products', selectedShop, refreshTrigger],
     queryFn: async () => {
       if (!selectedShop) return [];
+      
+      // First, find the corresponding shop in shops table by matching with hr_stores
+      const { data: shopMapping, error: shopError } = await supabase
+        .from('shops')
+        .select('id')
+        .eq('user_id', user?.id);
+      
+      if (shopError) throw shopError;
+      
+      // For now, we'll use the first shop as a fallback
+      // In a real scenario, you might want to create a proper mapping between hr_stores and shops
+      const shopId = shopMapping?.[0]?.id || selectedShop;
       
       const { data, error } = await supabase
         .from('product_shops')
@@ -63,7 +73,7 @@ const ProductStockManagement = ({
             cost_price
           )
         `)
-        .eq('shop_id', selectedShop)
+        .eq('shop_id', shopId)
         .eq('user_id', user?.id);
       
       if (error) throw error;

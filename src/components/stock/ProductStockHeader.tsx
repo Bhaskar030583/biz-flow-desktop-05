@@ -11,6 +11,7 @@ import { Package2, Store, Search, Plus, Filter } from "lucide-react";
 interface Shop {
   id: string;
   name: string;
+  store_code?: string;
 }
 
 interface ProductStockHeaderProps {
@@ -68,7 +69,7 @@ const ProductStockHeader = ({
               <SelectContent className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 shadow-lg z-50">
                 {shops.map(shop => (
                   <SelectItem key={shop.id} value={shop.id} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 focus:bg-slate-100 dark:focus:bg-slate-700">
-                    {shop.name}
+                    {shop.name} {shop.store_code && `(${shop.store_code})`}
                   </SelectItem>
                 ))}
                 {shops.length === 0 && (
