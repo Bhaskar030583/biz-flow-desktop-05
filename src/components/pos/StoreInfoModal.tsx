@@ -13,11 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface Shop {
-  id: string;
-  name: string;
-}
-
 interface Shift {
   id: string;
   shift_name: string;
@@ -28,42 +23,33 @@ interface Shift {
 
 interface StoreInfoModalProps {
   isOpen: boolean;
-  onComplete: (info: { storeName: string; salespersonName: string; shiftName: string }, shopId: string, shiftId: string) => void;
+  onComplete: (info: { storeName: string; salespersonName: string; shiftName: string }, shiftId: string) => void;
   onClose: () => void;
-  shops: Shop[];
-  shopsLoading: boolean;
 }
 
 export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
   isOpen,
   onComplete,
-  onClose,
-  shops,
-  shopsLoading
+  onClose
 }) => {
   const { user } = useAuth();
   const [storeName, setStoreName] = useState("");
   const [salespersonName, setSalespersonName] = useState("");
-  const [selectedShopId, setSelectedShopId] = useState("");
   const [selectedShiftId, setSelectedShiftId] = useState("");
 
-  // Query for shifts based on selected shop
+  // Query for all shifts from hr_shifts table
   const { data: shifts, isLoading: shiftsLoading } = useQuery({
-    queryKey: ['hr-shifts', selectedShopId],
+    queryKey: ['hr-shifts'],
     queryFn: async () => {
-      if (!selectedShopId) return [];
-      
       const { data, error } = await supabase
         .from('hr_shifts')
         .select('id, shift_name, start_time, end_time, store_id')
-        .eq('store_id', selectedShopId)
         .eq('is_active', true)
         .order('start_time');
       
       if (error) throw error;
       return data || [];
-    },
-    enabled: !!selectedShopId
+    }
   });
 
   const handleSubmit = () => {
@@ -74,11 +60,6 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     
     if (!salespersonName.trim()) {
       toast.error("Please enter salesperson name");
-      return;
-    }
-    
-    if (!selectedShopId) {
-      toast.error("Please select a shop");
       return;
     }
 
@@ -96,20 +77,8 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
         salespersonName: salespersonName.trim(),
         shiftName: shiftName
       }, 
-      selectedShopId,
       selectedShiftId
     );
-  };
-
-  const handleShopChange = (shopId: string) => {
-    setSelectedShopId(shopId);
-    setSelectedShiftId(""); // Reset shift selection when shop changes
-    
-    // Auto-fill store name with selected shop name
-    const selectedShop = shops.find(shop => shop.id === shopId);
-    if (selectedShop) {
-      setStoreName(selectedShop.name);
-    }
   };
 
   return (
@@ -129,29 +98,6 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
           
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="shop-select" className="flex items-center gap-2">
-                <Store className="h-4 w-4" />
-                Select Shop
-              </Label>
-              {shopsLoading ? (
-                <Skeleton className="h-10 w-full" />
-              ) : (
-                <Select value={selectedShopId} onValueChange={handleShopChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a shop" />
-                  </SelectTrigger>
-                  <SelectContent className="z-50 bg-white">
-                    {shops.map((shop) => (
-                      <SelectItem key={shop.id} value={shop.id}>
-                        {shop.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="shift-select" className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 Select Shift
@@ -162,10 +108,9 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
                 <Select 
                   value={selectedShiftId} 
                   onValueChange={setSelectedShiftId}
-                  disabled={!selectedShopId}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={!selectedShopId ? "Select a shop first" : "Choose a shift"} />
+                    <SelectValue placeholder="Choose a shift" />
                   </SelectTrigger>
                   <SelectContent className="z-50 bg-white">
                     {shifts?.map((shift) => (

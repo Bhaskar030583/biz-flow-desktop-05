@@ -19,11 +19,6 @@ interface StoreInfo {
   shiftName: string;
 }
 
-interface Shop {
-  id: string;
-  name: string;
-}
-
 const POS = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -31,11 +26,10 @@ const POS = () => {
   const [showStoreModal, setShowStoreModal] = useState(true);
   const [isPopupWindow, setIsPopupWindow] = useState(false);
   const [storeInfoCompleted, setStoreInfoCompleted] = useState(false);
-  const [selectedShopId, setSelectedShopId] = useState<string>("");
   const [selectedShiftId, setSelectedShiftId] = useState<string>("");
   const navigate = useNavigate();
 
-  // Query for shops
+  // Query for shops - still needed for product queries
   const { data: shops, isLoading: shopsLoading } = useQuery({
     queryKey: ['shops'],
     queryFn: async () => {
@@ -51,11 +45,14 @@ const POS = () => {
     enabled: !!user?.id
   });
 
-  // Query for products assigned to selected shop with current stock quantities
+  // Use the first shop for product queries since we removed shop selection
+  const defaultShopId = shops?.[0]?.id || "";
+
+  // Query for products assigned to the default shop with current stock quantities
   const { data: products, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
-    queryKey: ['pos-products', selectedShopId],
+    queryKey: ['pos-products', defaultShopId],
     queryFn: async () => {
-      if (!selectedShopId) return [];
+      if (!defaultShopId) return [];
       
       const today = new Date().toISOString().split('T')[0];
       
@@ -70,7 +67,7 @@ const POS = () => {
             category
           )
         `)
-        .eq('shop_id', selectedShopId)
+        .eq('shop_id', defaultShopId)
         .eq('user_id', user?.id);
       
       if (productShopsError) throw productShopsError;
@@ -88,7 +85,7 @@ const POS = () => {
       const { data: stockData, error: stockError } = await supabase
         .from('stocks')
         .select('product_id, actual_stock')
-        .eq('shop_id', selectedShopId)
+        .eq('shop_id', defaultShopId)
         .eq('user_id', user?.id)
         .eq('stock_date', today)
         .in('product_id', productIds);
@@ -115,7 +112,7 @@ const POS = () => {
         })
         .filter(product => product !== null);
     },
-    enabled: !!selectedShopId && !!user?.id
+    enabled: !!defaultShopId && !!user?.id
   });
 
   // Check if this is a popup window and open popup if not
@@ -148,9 +145,8 @@ const POS = () => {
     }
   }, []);
 
-  const handleStoreInfoComplete = (info: StoreInfo, shopId: string, shiftId: string) => {
+  const handleStoreInfoComplete = (info: StoreInfo, shiftId: string) => {
     setStoreInfo(info);
-    setSelectedShopId(shopId);
     setSelectedShiftId(shiftId);
     setShowStoreModal(false);
     setStoreInfoCompleted(true);
@@ -202,11 +198,9 @@ const POS = () => {
           isOpen={shouldShowStoreModal}
           onComplete={handleStoreInfoComplete}
           onClose={handleStoreModalClose}
-          shops={shops || []}
-          shopsLoading={shopsLoading}
         />
         
-        {storeInfoCompleted && selectedShopId && (
+        {storeInfoCompleted && defaultShopId && (
           <div className="p-6">
             {productsLoading ? (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -221,7 +215,7 @@ const POS = () => {
               <POSSystem 
                 products={products || []} 
                 storeInfo={storeInfo} 
-                selectedShopId={selectedShopId}
+                selectedShopId={defaultShopId}
                 selectedShiftId={selectedShiftId}
                 onStockUpdated={handleStockAdded}
               />
