@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { POSSystem } from "@/components/pos/POSSystem";
 import { StoreInfoModal } from "@/components/pos/StoreInfoModal";
@@ -7,31 +8,72 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft, X, Store } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/context/AuthContext";
 
 interface StoreInfo {
   storeName: string;
   salespersonName: string;
 }
 
+interface Shop {
+  id: string;
+  name: string;
+}
+
 const POS = () => {
+  const { user } = useAuth();
   const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(null);
   const [showStoreModal, setShowStoreModal] = useState(true);
   const [isPopupWindow, setIsPopupWindow] = useState(false);
   const [storeInfoCompleted, setStoreInfoCompleted] = useState(false);
+  const [selectedShopId, setSelectedShopId] = useState<string>("");
   const navigate = useNavigate();
 
-  const { data: products, isLoading, refetch: refetchProducts } = useQuery({
-    queryKey: ['pos-products'],
+  // Query for shops
+  const { data: shops, isLoading: shopsLoading } = useQuery({
+    queryKey: ['shops'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('products')
-        .select('id, name, price, category')
+        .from('shops')
+        .select('id, name')
+        .eq('user_id', user?.id)
         .order('name');
       
       if (error) throw error;
       return data || [];
-    }
+    },
+    enabled: !!user?.id
+  });
+
+  // Query for products assigned to selected shop
+  const { data: products, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
+    queryKey: ['pos-products', selectedShopId],
+    queryFn: async () => {
+      if (!selectedShopId) return [];
+      
+      const { data, error } = await supabase
+        .from('product_shops')
+        .select(`
+          products (
+            id,
+            name,
+            price,
+            category
+          )
+        `)
+        .eq('shop_id', selectedShopId)
+        .eq('user_id', user?.id);
+      
+      if (error) throw error;
+      
+      // Extract products from the join result
+      return data?.map(item => item.products).filter(Boolean) || [];
+    },
+    enabled: !!selectedShopId && !!user?.id
   });
 
   // Check if this is a popup window and open popup if not
@@ -114,20 +156,73 @@ const POS = () => {
         />
         
         {storeInfoCompleted && (
-          <>
-            {isLoading ? (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-6">
-                <div className="lg:col-span-2 space-y-4">
-                  <Skeleton className="h-64 w-full" />
+          <div className="p-6">
+            {/* Store Selection */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Store className="h-5 w-5" />
+                  Select Store
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Label htmlFor="shop-select">Choose Store for POS</Label>
+                  {shopsLoading ? (
+                    <Skeleton className="h-10 w-full" />
+                  ) : (
+                    <Select value={selectedShopId} onValueChange={setSelectedShopId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a store to start POS" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {shops?.map(shop => (
+                          <SelectItem key={shop.id} value={shop.id}>
+                            {shop.name}
+                          </SelectItem>
+                        ))}
+                        {shops?.length === 0 && (
+                          <div className="px-2 py-1.5 text-sm text-gray-500">
+                            No stores available
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
-                <div className="space-y-4">
-                  <Skeleton className="h-96 w-full" />
-                </div>
-              </div>
+              </CardContent>
+            </Card>
+
+            {/* POS System */}
+            {selectedShopId ? (
+              <>
+                {productsLoading ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="lg:col-span-2 space-y-4">
+                      <Skeleton className="h-64 w-full" />
+                    </div>
+                    <div className="space-y-4">
+                      <Skeleton className="h-96 w-full" />
+                    </div>
+                  </div>
+                ) : (
+                  <POSSystem 
+                    products={products} 
+                    storeInfo={storeInfo} 
+                    selectedShopId={selectedShopId}
+                  />
+                )}
+              </>
             ) : (
-              <POSSystem products={products} storeInfo={storeInfo} />
+              <Card>
+                <CardContent className="py-8 text-center">
+                  <Store className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <h3 className="text-lg font-semibold mb-2">Select a Store</h3>
+                  <p className="text-gray-600">Please select a store to view assigned products and start using the POS system.</p>
+                </CardContent>
+              </Card>
             )}
-          </>
+          </div>
         )}
       </div>
     );
