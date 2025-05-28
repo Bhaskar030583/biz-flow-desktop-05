@@ -333,27 +333,12 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                 <History className="h-3 w-3 md:h-4 md:w-4" />
                 <span className="hidden md:inline text-xs md:text-sm">History</span>
               </Button>
-              {/* Cart Icon */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowBillingModal(true)}
-                className="flex items-center gap-1 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm px-2 md:px-3 h-8 md:h-9 relative"
-              >
-                <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
-                <span className="hidden md:inline text-xs md:text-sm">Cart</span>
-                {cart.length > 0 && (
-                  <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-5 flex items-center justify-center rounded-full px-1.5 font-bold">
-                    {cart.length}
-                  </Badge>
-                )}
-              </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="w-full p-2 md:p-3 lg:p-4 xl:p-6">
+      <div className="w-full p-2 md:p-3 lg:p-4 xl:p-6 pb-24">
         {isMobile ? (
           // Mobile Layout - Enhanced for better usability
           <div className="space-y-3">
@@ -592,6 +577,58 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
             </div>
           </div>
         )}
+
+        {/* Floating Cart Button - Bottom Right */}
+        <div className="fixed bottom-6 right-6 z-50">
+          <Button
+            size="lg"
+            onClick={() => setShowBillingModal(true)}
+            className="relative bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-300 rounded-full w-16 h-16 p-0 group"
+          >
+            <ShoppingCart className="h-6 w-6 group-hover:scale-110 transition-transform" />
+            {cart.length > 0 && (
+              <Badge className="absolute -top-3 -right-3 bg-red-500 text-white text-sm min-w-[24px] h-6 flex items-center justify-center rounded-full px-2 font-bold shadow-lg border-2 border-white">
+                {cart.length}
+              </Badge>
+            )}
+          </Button>
+          
+          {/* Cart Preview when items exist */}
+          {cart.length > 0 && (
+            <div className="absolute bottom-20 right-0 w-80 max-w-[calc(100vw-3rem)] bg-white rounded-lg shadow-xl border border-gray-200 p-4 transform transition-all duration-300 hover:scale-105">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-semibold text-gray-800">Cart Preview</h3>
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  {cart.length} items
+                </Badge>
+              </div>
+              
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {cart.slice(0, 5).map((item) => (
+                  <div key={item.id} className="flex justify-between items-center text-sm bg-gray-50 rounded-lg p-2">
+                    <div className="flex-1 pr-2">
+                      <p className="font-medium text-gray-800 truncate">{item.name}</p>
+                      <p className="text-gray-600">₹{Number(item.price).toFixed(2)} × {item.quantity}</p>
+                    </div>
+                    <p className="font-semibold text-green-600">₹{Number(item.total).toFixed(2)}</p>
+                  </div>
+                ))}
+                {cart.length > 5 && (
+                  <div className="text-center text-sm text-gray-500 py-2">
+                    +{cart.length - 5} more items
+                  </div>
+                )}
+              </div>
+              
+              <Separator className="my-3" />
+              
+              <div className="flex justify-between items-center text-base font-bold">
+                <span>Total:</span>
+                <span className="text-green-600">₹{getTotalAmount().toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Billing Modal */}
         <BillingModal
