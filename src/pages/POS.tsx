@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { POSSystem } from "@/components/pos/POSSystem";
 import { StoreInfoModal } from "@/components/pos/StoreInfoModal";
 import QuickActualStockButton from "@/components/stock/QuickActualStockButton";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ interface Shop {
 
 const POS = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(null);
   const [showStoreModal, setShowStoreModal] = useState(true);
   const [isPopupWindow, setIsPopupWindow] = useState(false);
@@ -158,7 +159,12 @@ const POS = () => {
   };
 
   const handleStockAdded = () => {
-    // Refresh products query to reflect updated stock without page reload
+    // Invalidate and refresh all relevant queries
+    queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+    queryClient.invalidateQueries({ queryKey: ['product-stock-management'] });
+    queryClient.invalidateQueries({ queryKey: ['stocks'] });
+    
+    // Also directly refetch this specific query
     refetchProducts();
   };
 

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -15,6 +14,7 @@ import { Package } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Product {
   id: string;
@@ -40,6 +40,7 @@ export const QuickStockUpdateModal = ({
   onStockUpdated
 }: QuickStockUpdateModalProps) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [stockValues, setStockValues] = useState<Record<string, string>>({});
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -124,8 +125,15 @@ export const QuickStockUpdateModal = ({
         }
       }
 
+      // Invalidate related queries to trigger refetch across the app
+      queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+      queryClient.invalidateQueries({ queryKey: ['product-stock-management'] });
+      queryClient.invalidateQueries({ queryKey: ['stocks'] });
+      
       toast.success(`Updated stock for ${updates.length} products`);
       setStockValues({});
+      
+      // Call the callback to notify parent components
       onStockUpdated();
       onClose();
     } catch (error) {
