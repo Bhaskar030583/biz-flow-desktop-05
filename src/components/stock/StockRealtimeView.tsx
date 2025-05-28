@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -173,31 +172,37 @@ const StockRealtimeView: React.FC<StockRealtimeViewProps> = ({ selectedShop }) =
 
   if (!selectedShop) {
     return (
-      <Card>
-        <div className="bg-gray-50 p-4 flex justify-between items-center">
-          <h3 className="font-medium flex items-center">
-            <ArrowLeftRight className="h-4 w-4 mr-2 text-blue-500" />
+      <Card className="border-2 border-gray-200">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 flex justify-between items-center">
+          <h3 className="font-semibold text-white flex items-center text-lg">
+            <ArrowLeftRight className="h-5 w-5 mr-3 text-blue-100" />
             Real-time Stock Status
           </h3>
         </div>
-        <CardContent className="pt-6 text-center text-gray-500">
-          <Store className="h-12 w-12 mx-auto mb-3 opacity-50" />
-          <p className="text-lg font-medium">No Store Selected</p>
-          <p className="text-sm">Please select a store to view real-time stock status</p>
+        <CardContent className="pt-8 pb-8 text-center">
+          <Store className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+          <p className="text-xl font-semibold text-gray-800 mb-2">No Store Selected</p>
+          <p className="text-gray-600">Please select a store to view real-time stock status</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="overflow-hidden">
-      <div className="bg-gray-50 p-4 flex justify-between items-center">
-        <h3 className="font-medium flex items-center">
-          <ArrowLeftRight className="h-4 w-4 mr-2 text-blue-500" />
+    <Card className="overflow-hidden border-2 border-gray-200 shadow-lg">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 flex justify-between items-center">
+        <h3 className="font-semibold text-white flex items-center text-lg">
+          <ArrowLeftRight className="h-5 w-5 mr-3 text-blue-100" />
           Real-time Stock Status
         </h3>
-        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
-          <RefreshCw className={`h-3 w-3 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+        <Button 
+          variant="secondary" 
+          size="sm" 
+          onClick={handleRefresh} 
+          disabled={isRefreshing}
+          className="bg-white/20 hover:bg-white/30 text-white border-white/30 font-medium"
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
@@ -205,56 +210,63 @@ const StockRealtimeView: React.FC<StockRealtimeViewProps> = ({ selectedShop }) =
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-gray-50 border-b border-t">
-              <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-              <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-              <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Stock</th>
-              <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
-              <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+            <tr className="bg-gray-100 border-b-2 border-gray-200">
+              <th className="py-4 px-4 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Product</th>
+              <th className="py-4 px-4 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Category</th>
+              <th className="py-4 px-4 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Current Stock</th>
+              <th className="py-4 px-4 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Value</th>
+              <th className="py-4 px-4 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Status</th>
+              <th className="py-4 px-4 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Last Updated</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-200 bg-white">
             {stockStatus && stockStatus.length > 0 ? (
               stockStatus.map(item => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="py-3 px-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{item.name}</div>
+                <tr key={item.id} className="hover:bg-blue-50 transition-colors">
+                  <td className="py-4 px-4 whitespace-nowrap">
+                    <div className="font-semibold text-gray-900">{item.name}</div>
                   </td>
-                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="py-4 px-4 whitespace-nowrap text-sm font-medium text-gray-700">
                     {item.category}
                   </td>
-                  <td className="py-3 px-4 whitespace-nowrap">
+                  <td className="py-4 px-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className={`font-medium ${
+                      <div className={`font-bold text-lg ${
                         item.currentStock === 0 ? 'text-red-600' : 
                         item.currentStock <= item.reorderPoint ? 'text-yellow-600' : 
-                        'text-gray-900'
+                        'text-green-600'
                       }`}>
                         {item.currentStock}
                       </div>
                       {item.hasAlert && (
-                        <AlertTriangle className="ml-2 h-4 w-4 text-red-500" />
+                        <AlertTriangle className="ml-2 h-5 w-5 text-red-500" />
                       )}
                     </div>
                   </td>
-                  <td className="py-3 px-4 whitespace-nowrap text-sm">
+                  <td className="py-4 px-4 whitespace-nowrap text-sm font-semibold text-gray-800">
                     ₹{((item.currentStock || 0) * (item.price || 0)).toLocaleString()}
                   </td>
-                  <td className="py-3 px-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.status.color}`}>
+                  <td className="py-4 px-4 whitespace-nowrap">
+                    <span className={`px-3 py-1 inline-flex text-sm leading-5 font-bold rounded-full border ${item.status.color}`}>
                       {item.status.text}
                     </span>
                   </td>
-                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="py-4 px-4 whitespace-nowrap text-sm font-medium text-gray-700">
                     {item.lastUpdated ? new Date(item.lastUpdated).toLocaleDateString() : 'N/A'}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-gray-500">
-                  {!stockStatus ? 'Loading stock data...' : 'No stock data available for this store'}
+                <td colSpan={6} className="py-12 text-center">
+                  <div className="text-gray-500">
+                    <div className="text-lg font-medium mb-2">
+                      {!stockStatus ? 'Loading stock data...' : 'No stock data available for this store'}
+                    </div>
+                    {!stockStatus && (
+                      <div className="text-sm">Please wait while we fetch the latest information</div>
+                    )}
+                  </div>
                 </td>
               </tr>
             )}
@@ -262,8 +274,8 @@ const StockRealtimeView: React.FC<StockRealtimeViewProps> = ({ selectedShop }) =
         </table>
       </div>
       
-      <CardContent className="pt-0 pb-4">
-        <div className="mt-4 text-xs text-gray-500">
+      <CardContent className="pt-0 pb-4 bg-gray-50 border-t border-gray-200">
+        <div className="mt-4 text-sm font-medium text-gray-700">
           Last refreshed: {stockLastUpdated.toLocaleString()}
         </div>
       </CardContent>
