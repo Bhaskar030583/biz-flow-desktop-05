@@ -1,32 +1,20 @@
-
 import React, { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Package2, Search } from "lucide-react";
-
-// Import the new components
 import ProductStockHeader from "./ProductStockHeader";
 import ProductAssignmentForm from "./ProductAssignmentForm";
 import ProductStockTable from "./ProductStockTable";
 import StockEditDialog from "./StockEditDialog";
 
-interface Product {
+interface AssignedProduct {
+  assignment_id: string;
   id: string;
   name: string;
   category: string;
   price: number;
   cost_price: number | null;
-}
-
-interface Shop {
-  id: string;
-  name: string;
-}
-
-interface AssignedProduct extends Product {
-  assignment_id: string;
   opening_stock?: number;
   stock_added?: number;
   closing_stock?: number;
@@ -37,95 +25,48 @@ interface AssignedProduct extends Product {
 
 interface ProductStockManagementProps {
   onStockUpdated: () => void;
+  refreshTrigger?: number;
 }
 
-const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps) => {
+const ProductStockManagement = ({ onStockUpdated, refreshTrigger }: ProductStockManagementProps) => {
   const { user } = useAuth();
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [assignedProducts, setAssignedProducts] = useState<AssignedProduct[]>([]);
-  const [shops, setShops] = useState<Shop[]>([]);
-  const [selectedShop, setSelectedShop] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const [selectedShopId, setSelectedShopId] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [showAssignForm, setShowAssignForm] = useState(false);
-  const [selectedProductToAssign, setSelectedProductToAssign] = useState<string>("");
-  const [initialStockQuantity, setInitialStockQuantity] = useState<string>("");
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [editingProduct, setEditingProduct] = useState<AssignedProduct | null>(null);
+  const [showAssignmentForm, setShowAssignmentForm] = useState(false);
   const [addStockQuantities, setAddStockQuantities] = useState<Record<string, string>>({});
   const [updatingStock, setUpdatingStock] = useState<Record<string, boolean>>({});
-  const [editingProduct, setEditingProduct] = useState<AssignedProduct | null>(null);
-  const [editStockValues, setEditStockValues] = useState({
-    stock_added: 0,
-    actual_stock: 0
-  });
-  const [isUpdatingStock, setIsUpdatingStock] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  console.log("ProductStockManagement component loaded - showing products list with store filter and assignment functionality");
-
+  // Check if current user is admin
   useEffect(() => {
-    if (user) {
-      fetchProducts();
-      fetchShops();
-      checkUserRole();
-    }
+    const checkAdminStatus = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+          
+        if (error) throw error;
+        
+        setIsAdmin(data.role === 'admin');
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+      }
+    };
+    
+    checkAdminStatus();
   }, [user]);
 
-  useEffect(() => {
-    if (selectedShop) {
-      fetchAssignedProducts();
-    }
-  }, [selectedShop]);
-
-  const checkUserRole = async () => {
-    try {
-      // Handle the specific user with hardcoded admin role
-      if (user?.id === 'a364aeaa-69e6-46c7-b72b-4c84ff863ef2') {
-        console.log('Setting admin role for protected user');
-        setIsAdmin(true);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user?.id)
-        .maybeSingle();
-      
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-      
-      setIsAdmin(data?.role === 'admin');
-    } catch (error) {
-      console.error('Error checking user role:', error);
-      setIsAdmin(false);
-    }
-  };
-
-  const fetchProducts = async () => {
-    try {
-      console.log("Fetching all products for user:", user?.id);
-      
-      const { data, error } = await supabase
-        .from('products')
-        .select('id, name, category, price, cost_price')
-        .eq('user_id', user?.id)
-        .order('category, name');
-      
-      if (error) throw error;
-      
-      console.log("Fetched products:", data?.length || 0, "products");
-      setAllProducts(data || []);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      toast.error('Failed to fetch products');
-    }
-  };
-
-  const fetchShops = async () => {
-    try {
-      console.log("Fetching shops for user:", user?.id);
-      
+  // Query for shops
+  const { data: shops, isLoading: shopsLoading } = useQuery({
+    queryKey: ['shops'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('shops')
         .select('id, name')
@@ -133,24 +74,20 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
         .order('name');
       
       if (error) throw error;
-      
-      console.log("Fetched shops:", data?.length || 0, "shops");
-      setShops(data || []);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching shops:', error);
-      toast.error('Failed to fetch shops');
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+    enabled: !!user?.id
+  });
 
-  const fetchAssignedProducts = async () => {
-    if (!selectedShop) return;
-
-    try {
-      console.log("Fetching assigned products for shop:", selectedShop);
+  // Query for assigned products with stock data
+  const { data: assignedProducts, isLoading, refetch } = useQuery({
+    queryKey: ['product-stock-management', selectedShopId, refreshTrigger],
+    queryFn: async () => {
+      if (!selectedShopId) return [];
       
-      const { data: directData, error: directError } = await supabase
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data: productShops, error: productShopsError } = await supabase
         .from('product_shops')
         .select(`
           id,
@@ -162,54 +99,33 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
             cost_price
           )
         `)
-        .eq('shop_id', selectedShop)
+        .eq('shop_id', selectedShopId)
         .eq('user_id', user?.id);
       
-      if (directError) throw directError;
+      if (productShopsError) throw productShopsError;
       
-      // Get latest stock data and sales data for each assigned product
-      const assignedProductsWithStock = await Promise.all(
-        (directData || []).map(async (item: any) => {
-          // Get latest stock data
+      if (!productShops || productShops.length === 0) return [];
+      
+      const productsWithStock = await Promise.all(
+        productShops.map(async (item) => {
+          if (!item.products) return null;
+          
           const { data: stockData, error: stockError } = await supabase
             .from('stocks')
-            .select('opening_stock, stock_added, closing_stock, actual_stock, stock_date')
+            .select('*')
             .eq('product_id', item.products.id)
-            .eq('shop_id', selectedShop)
-            .order('stock_date', { ascending: false })
-            .limit(1)
+            .eq('shop_id', selectedShopId)
+            .eq('user_id', user?.id)
+            .eq('stock_date', today)
             .maybeSingle();
-
-          if (stockError) {
-            console.error('Error fetching stock data:', stockError);
-          }
-
-          // Get today's sales data for this product
-          const today = new Date().toISOString().split('T')[0];
-          const { data: billItems, error: billError } = await supabase
-            .from('bill_items')
-            .select(`
-              quantity,
-              bills!inner(
-                bill_date,
-                user_id
-              )
-            `)
-            .eq('product_id', item.products.id)
-            .eq('bills.user_id', user?.id)
-            .gte('bills.bill_date', today + 'T00:00:00')
-            .lte('bills.bill_date', today + 'T23:59:59');
-
-          if (billError) {
-            console.error('Error fetching sales data:', billError);
-          }
-
-          const soldQuantity = billItems?.reduce((sum, billItem) => sum + billItem.quantity, 0) || 0;
           
-          // Calculate closing stock based on sales
-          const openingStock = stockData?.opening_stock || 0;
-          const calculatedClosingStock = openingStock - soldQuantity;
-
+          if (stockError) {
+            console.error('Error fetching stock for product:', item.products.id, stockError);
+          }
+          
+          const sold_quantity = stockData ? 
+            (stockData.opening_stock + (stockData.stock_added || 0)) - stockData.actual_stock : 0;
+          
           return {
             assignment_id: item.id,
             id: item.products.id,
@@ -217,209 +133,35 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
             category: item.products.category,
             price: item.products.price,
             cost_price: item.products.cost_price,
-            opening_stock: openingStock,
+            opening_stock: stockData?.opening_stock || 0,
             stock_added: stockData?.stock_added || 0,
-            closing_stock: calculatedClosingStock,
+            closing_stock: stockData?.closing_stock || 0,
             actual_stock: stockData?.actual_stock || 0,
-            sold_quantity: soldQuantity,
-            last_stock_date: stockData?.stock_date || null
+            last_stock_date: stockData?.stock_date || null,
+            sold_quantity
           };
         })
       );
       
-      console.log("Fetched assigned products with stock:", assignedProductsWithStock.length, "products");
-      setAssignedProducts(assignedProductsWithStock);
-    } catch (error) {
-      console.error('Error fetching assigned products:', error);
-      toast.error('Failed to fetch assigned products');
-    }
-  };
+      return productsWithStock.filter(product => product !== null) as AssignedProduct[];
+    },
+    enabled: !!selectedShopId && !!user?.id
+  });
 
-  const assignProductToShop = async () => {
-    console.log("=== ASSIGN PRODUCT TO SHOP START ===");
-    console.log("Selected product:", selectedProductToAssign);
-    console.log("Selected shop:", selectedShop);
-    console.log("Initial stock quantity:", initialStockQuantity);
-    console.log("User ID:", user?.id);
+  // Filter products based on search and category
+  const filteredProducts = assignedProducts?.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  }) || [];
 
-    if (!selectedProductToAssign || !selectedShop || !initialStockQuantity) {
-      console.log("Validation failed - missing required fields");
-      toast.error('Please select a product, shop, and enter initial stock quantity');
-      return;
-    }
-
-    const stockQuantity = parseInt(initialStockQuantity);
-    if (isNaN(stockQuantity) || stockQuantity < 0) {
-      console.log("Validation failed - invalid stock quantity:", stockQuantity);
-      toast.error('Please enter a valid stock quantity');
-      return;
-    }
-
-    try {
-      console.log("Starting product assignment process...");
-      
-      // First, assign the product to the shop
-      console.log("Step 1: Assigning product to shop...");
-      const { error: assignError } = await supabase
-        .from('product_shops')
-        .insert({
-          product_id: selectedProductToAssign,
-          shop_id: selectedShop,
-          user_id: user?.id
-        });
-      
-      console.log("Product assignment result:", { assignError });
-      
-      if (assignError) {
-        console.error("Product assignment failed:", assignError);
-        if (assignError.code === '23505') {
-          toast.error('Product is already assigned to this shop');
-        } else {
-          throw assignError;
-        }
-        return;
-      }
-
-      console.log("Step 2: Creating initial stock entry...");
-      // Then create the initial stock entry
-      const { error: stockError } = await supabase
-        .from('stocks')
-        .insert({
-          product_id: selectedProductToAssign,
-          shop_id: selectedShop,
-          stock_date: new Date().toISOString().split('T')[0],
-          opening_stock: stockQuantity,
-          closing_stock: stockQuantity,
-          actual_stock: stockQuantity,
-          stock_added: 0,
-          user_id: user?.id
-        });
-
-      console.log("Stock creation result:", { stockError });
-
-      if (stockError) {
-        console.error('Error creating initial stock entry:', stockError);
-        // If stock creation fails, we should remove the product assignment
-        console.log("Rolling back product assignment...");
-        await supabase
-          .from('product_shops')
-          .delete()
-          .eq('product_id', selectedProductToAssign)
-          .eq('shop_id', selectedShop)
-          .eq('user_id', user?.id);
-        throw stockError;
-      }
-      
-      console.log("Step 3: Assignment completed successfully");
-      toast.success('Product assigned to shop with initial stock successfully');
-      setSelectedProductToAssign("");
-      setInitialStockQuantity("");
-      setShowAssignForm(false);
-      
-      console.log("Step 4: Refreshing data...");
-      fetchAssignedProducts();
-      onStockUpdated();
-      console.log("=== ASSIGN PRODUCT TO SHOP COMPLETED ===");
-    } catch (error) {
-      console.error('Error assigning product to shop:', error);
-      toast.error('Failed to assign product to shop');
-    }
-  };
-
-  const removeProductFromShop = async (assignmentId: string, productName: string) => {
-    console.log("removeProductFromShop called with:", { assignmentId, productName });
-    
-    if (!assignmentId || !productName) {
-      console.error("Missing required parameters:", { assignmentId, productName });
-      toast.error('Invalid parameters for deassignment');
-      return;
-    }
-
-    if (!confirm(`Are you sure you want to deassign "${productName}" from this store? This will remove all stock data for this product.`)) {
-      console.log("User cancelled deassignment");
-      return;
-    }
-
-    try {
-      console.log("Starting deassignment process for:", assignmentId);
-      
-      // First, get the product assignment details with more detailed logging
-      console.log("Fetching assignment details from product_shops table...");
-      const { data: assignmentData, error: fetchError } = await supabase
-        .from('product_shops')
-        .select('product_id, shop_id')
-        .eq('id', assignmentId)
-        .eq('user_id', user?.id)
-        .maybeSingle();
-
-      console.log("Assignment fetch result:", { assignmentData, fetchError });
-
-      if (fetchError) {
-        console.error('Error fetching assignment details:', fetchError);
-        toast.error('Failed to find product assignment');
-        return;
-      }
-
-      if (!assignmentData) {
-        console.log("No assignment data found for ID:", assignmentId);
-        toast.error('Product assignment not found');
-        return;
-      }
-
-      console.log("Found assignment data:", assignmentData);
-
-      // Delete all stock entries for this product-shop combination first
-      console.log("Deleting stock entries for product:", assignmentData.product_id, "in shop:", assignmentData.shop_id);
-      const { error: stockError } = await supabase
-        .from('stocks')
-        .delete()
-        .eq('product_id', assignmentData.product_id)
-        .eq('shop_id', assignmentData.shop_id)
-        .eq('user_id', user?.id);
-
-      if (stockError) {
-        console.error('Error deleting stock entries:', stockError);
-        toast.warning('Some stock entries could not be deleted, but proceeding with deassignment');
-      } else {
-        console.log("Successfully deleted stock entries");
-      }
-
-      // Then delete the product assignment
-      console.log("Deleting product assignment with ID:", assignmentId);
-      const { error: assignmentError } = await supabase
-        .from('product_shops')
-        .delete()
-        .eq('id', assignmentId)
-        .eq('user_id', user?.id);
-      
-      console.log("Assignment deletion result:", { assignmentError });
-
-      if (assignmentError) {
-        console.error('Error deleting product assignment:', assignmentError);
-        toast.error('Failed to deassign product from store');
-        return;
-      }
-      
-      console.log("Successfully completed deassignment");
-      toast.success(`${productName} deassigned from store successfully`);
-      fetchAssignedProducts();
-      onStockUpdated();
-    } catch (error) {
-      console.error('Unexpected error during deassignment:', error);
-      toast.error('Failed to deassign product from store');
-    }
-  };
+  // Get unique categories for filter
+  const categories = Array.from(new Set(assignedProducts?.map(product => product.category) || []));
 
   const handleAddStock = async (productId: string) => {
-    // This function is kept for non-admin users only
-    if (isAdmin) {
-      toast.error('Admins cannot add stock through this interface');
-      return;
-    }
-
     const quantity = addStockQuantities[productId];
-    if (!quantity || parseInt(quantity) <= 0) {
-      toast.error('Please enter a valid quantity');
+    if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) {
+      toast.error("Please enter a valid stock quantity");
       return;
     }
 
@@ -427,52 +169,72 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
 
     try {
       const today = new Date().toISOString().split('T')[0];
-      const stockToAdd = parseInt(quantity);
 
-      // Get current stock data
-      const { data: currentStock, error: fetchError } = await supabase
+      // Check if stock entry exists for today
+      const { data: existingStock, error: fetchError } = await supabase
         .from('stocks')
         .select('*')
         .eq('product_id', productId)
-        .eq('shop_id', selectedShop)
+        .eq('shop_id', selectedShopId)
         .eq('stock_date', today)
+        .eq('user_id', user.id)
         .maybeSingle();
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        console.error('Error fetching existing stock:', fetchError);
+        toast.error(`Failed to add stock for ${filteredProducts.find(p => p.id === productId)?.name}`);
+        return;
+      }
 
-      if (currentStock) {
+      const stockToAdd = Number(quantity);
+
+      if (existingStock) {
         // Update existing stock entry
         const { error: updateError } = await supabase
           .from('stocks')
           .update({
-            stock_added: (currentStock.stock_added || 0) + stockToAdd,
-            closing_stock: currentStock.closing_stock + stockToAdd,
-            actual_stock: currentStock.actual_stock + stockToAdd
+            closing_stock: existingStock.closing_stock + stockToAdd,
+            actual_stock: existingStock.actual_stock + stockToAdd,
+            stock_added: (existingStock.stock_added || 0) + stockToAdd,
+            updated_at: new Date().toISOString()
           })
-          .eq('id', currentStock.id);
+          .eq('id', existingStock.id);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Error updating stock:', updateError);
+          toast.error(`Failed to add stock for ${filteredProducts.find(p => p.id === productId)?.name}`);
+        }
       } else {
         // Create new stock entry
         const { error: insertError } = await supabase
           .from('stocks')
           .insert({
             product_id: productId,
-            shop_id: selectedShop,
+            shop_id: selectedShopId,
             stock_date: today,
             opening_stock: 0,
             closing_stock: stockToAdd,
             actual_stock: stockToAdd,
             stock_added: stockToAdd,
-            user_id: user?.id
+            user_id: user.id
           });
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error('Error creating stock entry:', insertError);
+          toast.error(`Failed to create stock entry for ${filteredProducts.find(p => p.id === productId)?.name}`);
+        }
       }
 
-      toast.success(`Added ${stockToAdd} units to stock`);
-      setAddStockQuantities(prev => ({ ...prev, [productId]: "" }));
-      fetchAssignedProducts();
+      // Invalidate related queries to trigger refetch across the app
+      queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+      queryClient.invalidateQueries({ queryKey: ['product-stock-management'] });
+      queryClient.invalidateQueries({ queryKey: ['stocks'] });
+
+      toast.success(`Added ${quantity} stock for ${filteredProducts.find(p => p.id === productId)?.name}`);
+      setAddStockQuantities(prev => {
+        const { [productId]: removed, ...rest } = prev;
+        return rest;
+      });
       onStockUpdated();
     } catch (error) {
       console.error('Error adding stock:', error);
@@ -482,278 +244,135 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
     }
   };
 
-  const handleDeleteStock = async (productId: string, productName: string) => {
-    if (!isAdmin) {
-      toast.error('Only admins can delete stock entries');
-      return;
-    }
-
-    if (!confirm(`Are you sure you want to delete all stock entries for "${productName}"? This will also remove the product assignment from this store.`)) {
-      return;
-    }
-
-    try {
-      console.log("=== STARTING DELETE STOCK PROCESS ===");
-      console.log("Product ID:", productId);
-      console.log("Product Name:", productName);
-      console.log("Selected Shop:", selectedShop);
-      console.log("User ID:", user?.id);
-      
-      // Step 1: Find the product assignment first
-      console.log("Step 1: Finding product assignment...");
-      const { data: assignmentData, error: assignmentFetchError } = await supabase
-        .from('product_shops')
-        .select('id, product_id, shop_id')
-        .eq('product_id', productId)
-        .eq('shop_id', selectedShop)
-        .eq('user_id', user?.id)
-        .maybeSingle();
-
-      console.log("Assignment query result:", { assignmentData, assignmentFetchError });
-
-      if (assignmentFetchError) {
-        console.error('Error finding product assignment:', assignmentFetchError);
-        toast.error('Failed to find product assignment');
-        return;
-      }
-
-      if (!assignmentData) {
-        console.log("No assignment found for this product-shop combination");
-        toast.error('Product assignment not found');
-        return;
-      }
-
-      console.log("Found assignment:", assignmentData);
-
-      // Step 2: Delete all stock entries for this product-shop combination
-      console.log("Step 2: Deleting stock entries...");
-      const { error: stockError } = await supabase
-        .from('stocks')
-        .delete()
-        .eq('product_id', productId)
-        .eq('shop_id', selectedShop)
-        .eq('user_id', user?.id);
-
-      if (stockError) {
-        console.error('Error deleting stock entries:', stockError);
-        toast.error('Failed to delete stock entries');
-        return;
-      }
-
-      console.log("Stock entries deleted successfully");
-
-      // Step 3: Delete the product assignment
-      console.log("Step 3: Deleting product assignment...");
-      const { error: assignmentDeleteError } = await supabase
-        .from('product_shops')
-        .delete()
-        .eq('id', assignmentData.id)
-        .eq('user_id', user?.id);
-
-      if (assignmentDeleteError) {
-        console.error('Error deleting product assignment:', assignmentDeleteError);
-        toast.error('Stock deleted but failed to remove product assignment');
-        return;
-      }
-
-      console.log("Product assignment deleted successfully");
-      console.log("=== DELETE STOCK PROCESS COMPLETED ===");
-
-      toast.success(`"${productName}" removed from store completely`);
-      
-      // Step 4: Refresh the data to update the UI
-      console.log("Step 4: Refreshing data...");
-      await fetchAssignedProducts();
-      onStockUpdated();
-      console.log("Data refresh completed");
-      
-    } catch (error) {
-      console.error('Unexpected error during delete process:', error);
-      toast.error('Failed to delete stock entries');
-    }
-  };
-
   const handleEditStock = (product: AssignedProduct) => {
+    console.log('=== HANDLE EDIT STOCK ===');
+    console.log('Product received:', product);
     setEditingProduct(product);
-    setEditStockValues({
-      stock_added: product.stock_added || 0,
-      actual_stock: product.actual_stock || 0
-    });
   };
 
-  const handleUpdateStock = async () => {
-    if (!editingProduct) return;
-
-    setIsUpdatingStock(true);
-
+  const handleRemoveProduct = async (assignmentId: string, productName: string) => {
+    if (!window.confirm(`Are you sure you want to deassign "${productName}" from this store? This action cannot be undone.`)) {
+      return;
+    }
+    
     try {
-      const today = new Date().toISOString().split('T')[0];
-
-      // Get current stock data
-      const { data: currentStock, error: fetchError } = await supabase
-        .from('stocks')
-        .select('*')
-        .eq('product_id', editingProduct.id)
-        .eq('shop_id', selectedShop)
-        .eq('stock_date', today)
-        .maybeSingle();
-
-      if (fetchError) throw fetchError;
-
-      if (currentStock) {
-        // Update existing stock entry
-        const { error: updateError } = await supabase
-          .from('stocks')
-          .update({
-            stock_added: editStockValues.stock_added,
-            actual_stock: editStockValues.actual_stock
-          })
-          .eq('id', currentStock.id);
-
-        if (updateError) throw updateError;
-      } else {
-        // Create new stock entry
-        const { error: insertError } = await supabase
-          .from('stocks')
-          .insert({
-            product_id: editingProduct.id,
-            shop_id: selectedShop,
-            stock_date: today,
-            opening_stock: editingProduct.opening_stock || 0,
-            closing_stock: editingProduct.closing_stock || 0,
-            actual_stock: editStockValues.actual_stock,
-            stock_added: editStockValues.stock_added,
-            user_id: user?.id
-          });
-
-        if (insertError) throw insertError;
+      const { error } = await supabase
+        .from('product_shops')
+        .delete()
+        .eq('id', assignmentId);
+        
+      if (error) {
+        console.error("Error deassigning product:", error);
+        toast.error(`Failed to deassign product: ${productName}`);
+        return;
       }
-
-      toast.success('Stock updated successfully');
-      setEditingProduct(null);
-      fetchAssignedProducts();
+      
+      // Invalidate related queries to trigger refetch across the app
+      queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+      queryClient.invalidateQueries({ queryKey: ['product-stock-management'] });
+      queryClient.invalidateQueries({ queryKey: ['stocks'] });
+      
+      toast.success(`Product "${productName}" deassigned successfully.`);
       onStockUpdated();
     } catch (error) {
-      console.error('Error updating stock:', error);
-      toast.error('Failed to update stock');
-    } finally {
-      setIsUpdatingStock(false);
+      console.error("Error deassigning product:", error);
+      toast.error(`Failed to deassign product: ${productName}`);
     }
   };
 
-  const getCategoryColor = (category: string) => {
-    const colors = [
-      'bg-blue-100 text-blue-800',
-      'bg-green-100 text-green-800',
-      'bg-purple-100 text-purple-800',
-      'bg-orange-100 text-orange-800',
-      'bg-pink-100 text-pink-800',
-    ];
-    const index = category.length % colors.length;
-    return colors[index];
-  };
-
-  const getUnassignedProducts = () => {
-    if (!selectedShop) return allProducts;
+  const handleDeleteStock = async (productId: string, productName: string) => {
+    if (!window.confirm(`Are you sure you want to delete all stock entries for "${productName}"? This action cannot be undone.`)) {
+      return;
+    }
     
-    const assignedProductIds = assignedProducts.map(p => p.id);
-    return allProducts.filter(product => !assignedProductIds.includes(product.id));
+    try {
+      const { error } = await supabase
+        .from('stocks')
+        .delete()
+        .eq('product_id', productId)
+        .eq('shop_id', selectedShopId);
+      
+      if (error) {
+        console.error("Error deleting stock:", error);
+        toast.error(`Failed to delete stock for product: ${productName}`);
+        return;
+      }
+      
+      // Invalidate related queries to trigger refetch across the app
+      queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+      queryClient.invalidateQueries({ queryKey: ['product-stock-management'] });
+      queryClient.invalidateQueries({ queryKey: ['stocks'] });
+      
+      toast.success(`Stock entries for product "${productName}" deleted successfully.`);
+      onStockUpdated();
+    } catch (error) {
+      console.error("Error deleting stock:", error);
+      toast.error(`Failed to delete stock for product: ${productName}`);
+    }
   };
 
-  const filteredAssignedProducts = assignedProducts.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleCancelAssignForm = () => {
-    setShowAssignForm(false);
-    setSelectedProductToAssign("");
-    setInitialStockQuantity("");
+  const handleProductAssigned = () => {
+    refetch();
+    onStockUpdated();
+    setShowAssignmentForm(false);
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <Card>
-          <CardContent className="py-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading products...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const handleStockEditComplete = () => {
+    setEditingProduct(null);
+    refetch();
+    onStockUpdated();
+  };
 
   return (
-    <div className="space-y-4">
-      <Card className="border-blue-200">
-        <ProductStockHeader
-          assignedProductsCount={assignedProducts.length}
-          isAdmin={isAdmin}
-          selectedShop={selectedShop}
-          setSelectedShop={setSelectedShop}
-          shops={shops}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          showAssignForm={showAssignForm}
-          setShowAssignForm={setShowAssignForm}
-        />
-        <CardContent className="space-y-4">
-          <ProductAssignmentForm
-            showAssignForm={showAssignForm}
-            unassignedProducts={getUnassignedProducts()}
-            selectedProductToAssign={selectedProductToAssign}
-            setSelectedProductToAssign={setSelectedProductToAssign}
-            initialStockQuantity={initialStockQuantity}
-            setInitialStockQuantity={setInitialStockQuantity}
-            onAssignProduct={assignProductToShop}
-            onCancel={handleCancelAssignForm}
-          />
-        </CardContent>
-      </Card>
-
-      {selectedShop && filteredAssignedProducts.length > 0 ? (
-        <Card>
-          <CardContent>
-            <ProductStockTable
-              filteredProducts={filteredAssignedProducts}
-              isAdmin={isAdmin}
-              addStockQuantities={addStockQuantities}
-              setAddStockQuantities={setAddStockQuantities}
-              updatingStock={updatingStock}
-              onAddStock={handleAddStock}
-              onEditStock={handleEditStock}
-              onRemoveProduct={removeProductFromShop}
-              onDeleteStock={handleDeleteStock}
-            />
-          </CardContent>
-        </Card>
-      ) : selectedShop && filteredAssignedProducts.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center">
-            <Package2 className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-            {searchTerm ? (
-              <p className="text-gray-600">No assigned products found matching "{searchTerm}"</p>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-gray-600">No products assigned to this store yet.</p>
-                <p className="text-sm text-gray-500">Click "Assign Product" to add products to this store with initial stock.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ) : null}
-
-      <StockEditDialog
-        editingProduct={editingProduct}
-        setEditingProduct={setEditingProduct}
-        editStockValues={editStockValues}
-        setEditStockValues={setEditStockValues}
-        selectedShop={selectedShop}
-        shops={shops}
-        onUpdateStock={handleUpdateStock}
-        isUpdatingStock={isUpdatingStock}
+    <div className="space-y-6">
+      <ProductStockHeader
+        selectedShopId={selectedShopId}
+        setSelectedShopId={setSelectedShopId}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        categoryFilter={categoryFilter}
+        setCategoryFilter={setCategoryFilter}
+        showAssignmentForm={showAssignmentForm}
+        setShowAssignmentForm={setShowAssignmentForm}
+        shops={shops || []}
+        shopsLoading={shopsLoading}
+        categories={categories}
+        productCount={filteredProducts.length}
       />
+
+      {selectedShopId && (
+        <>
+          {showAssignmentForm && (
+            <ProductAssignmentForm
+              selectedShopId={selectedShopId}
+              onProductAssigned={handleProductAssigned}
+              onCancel={() => setShowAssignmentForm(false)}
+            />
+          )}
+
+          <ProductStockTable
+            filteredProducts={filteredProducts}
+            isAdmin={isAdmin}
+            addStockQuantities={addStockQuantities}
+            setAddStockQuantities={setAddStockQuantities}
+            updatingStock={updatingStock}
+            onAddStock={handleAddStock}
+            onEditStock={handleEditStock}
+            onRemoveProduct={handleRemoveProduct}
+            onDeleteStock={handleDeleteStock}
+          />
+        </>
+      )}
+
+      {editingProduct && (
+        <StockEditDialog
+          product={editingProduct}
+          shopId={selectedShopId}
+          isOpen={!!editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onStockUpdated={handleStockEditComplete}
+        />
+      )}
     </div>
   );
 };

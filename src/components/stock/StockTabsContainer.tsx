@@ -62,7 +62,10 @@ const StockTabsContainer = ({
       </TabsList>
 
       <TabsContent value="management" className="space-y-4">
-        <ProductStockManagement onStockUpdated={handleStockUpdated} />
+        <ProductStockManagement 
+          onStockUpdated={handleStockUpdated} 
+          refreshTrigger={refreshTrigger}
+        />
       </TabsContent>
 
       <TabsContent value="entries" className="space-y-4">
