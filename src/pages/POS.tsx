@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { POSSystem } from "@/components/pos/POSSystem";
 import { StoreInfoModal } from "@/components/pos/StoreInfoModal";
@@ -99,13 +98,12 @@ const POS = () => {
         <div className="absolute top-4 right-4 z-50">
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={handleClosePopup}
-            className="flex items-center gap-2 bg-white hover:bg-gray-100"
+            className="bg-white hover:bg-gray-100"
             title="Close POS Window"
           >
             <X className="h-4 w-4" />
-            Exit
           </Button>
         </div>
 
