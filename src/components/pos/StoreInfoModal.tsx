@@ -63,12 +63,18 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
   const { data: stores, isLoading: storesLoading } = useQuery({
     queryKey: ['hr-stores-modal'],
     queryFn: async () => {
+      console.log('Fetching stores from hr_stores for modal...');
       const { data, error } = await supabase
         .from('hr_stores')
         .select('id, store_name, store_code')
         .order('store_name');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching hr_stores:', error);
+        throw error;
+      }
+      
+      console.log('Fetched stores for modal:', data);
       return data || [];
     }
   });
@@ -79,6 +85,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     queryFn: async () => {
       if (!selectedStoreId) return [];
       
+      console.log('Fetching shifts for store:', selectedStoreId);
       const { data, error } = await supabase
         .from('hr_shifts')
         .select('id, shift_name, start_time, end_time, store_id')
@@ -86,7 +93,12 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
         .eq('is_active', true)
         .order('start_time');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching hr_shifts:', error);
+        throw error;
+      }
+      
+      console.log('Fetched shifts:', data);
       return data || [];
     },
     enabled: !!selectedStoreId
@@ -122,6 +134,15 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     const selectedShift = shifts?.find(shift => shift.id === selectedShiftId);
     const storeName = selectedStore?.store_name || "";
     const shiftName = selectedShift?.shift_name || "";
+
+    console.log('Submitting store info:', {
+      selectedStore,
+      selectedShift,
+      storeName,
+      shiftName,
+      selectedStoreId,
+      selectedShiftId
+    });
 
     onComplete(
       { 
@@ -160,19 +181,32 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
               ) : (
                 <Select 
                   value={selectedStoreId} 
-                  onValueChange={setSelectedStoreId}
+                  onValueChange={(value) => {
+                    console.log('Store selected:', value);
+                    setSelectedStoreId(value);
+                    setSelectedShiftId(""); // Reset shift when store changes
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Choose a store" />
                   </SelectTrigger>
                   <SelectContent className="z-50 bg-white">
-                    {stores?.map((store) => (
-                      <SelectItem key={store.id} value={store.id}>
-                        {store.store_name} ({store.store_code})
+                    {stores && stores.length > 0 ? (
+                      stores.map((store) => (
+                        <SelectItem key={store.id} value={store.id}>
+                          {store.store_name} ({store.store_code})
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-stores" disabled>
+                        No stores available
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
+              )}
+              {!storesLoading && (!stores || stores.length === 0) && (
+                <p className="text-xs text-red-500">No stores found in HRMS. Please create stores first.</p>
               )}
             </div>
 
@@ -186,23 +220,39 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
               ) : (
                 <Select 
                   value={selectedShiftId} 
-                  onValueChange={setSelectedShiftId}
+                  onValueChange={(value) => {
+                    console.log('Shift selected:', value);
+                    setSelectedShiftId(value);
+                  }}
                   disabled={!selectedStoreId}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Choose a shift" />
                   </SelectTrigger>
                   <SelectContent className="z-50 bg-white">
-                    {shifts?.map((shift) => (
-                      <SelectItem key={shift.id} value={shift.id}>
-                        {shift.shift_name} ({shift.start_time} - {shift.end_time})
+                    {shifts && shifts.length > 0 ? (
+                      shifts.map((shift) => (
+                        <SelectItem key={shift.id} value={shift.id}>
+                          {shift.shift_name} ({shift.start_time} - {shift.end_time})
+                        </SelectItem>
+                      ))
+                    ) : selectedStoreId ? (
+                      <SelectItem value="no-shifts" disabled>
+                        No shifts available for this store
                       </SelectItem>
-                    ))}
+                    ) : (
+                      <SelectItem value="select-store" disabled>
+                        Please select a store first
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               )}
               {!selectedStoreId && (
                 <p className="text-xs text-muted-foreground">Please select a store first</p>
+              )}
+              {selectedStoreId && !shiftsLoading && (!shifts || shifts.length === 0) && (
+                <p className="text-xs text-red-500">No shifts found for this store. Please create shifts in HRMS.</p>
               )}
             </div>
             
@@ -220,7 +270,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
               onClick={handleSubmit}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               size="lg"
-              disabled={!selectedStoreId || !selectedShiftId}
+              disabled={!selectedStoreId || !selectedShiftId || storesLoading || shiftsLoading}
             >
               Start POS Session
             </Button>
