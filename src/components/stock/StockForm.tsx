@@ -81,15 +81,25 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
   useEffect(() => {
     const fetchShopsAndProducts = async () => {
       try {
-        const [shopsResponse, productsResponse] = await Promise.all([
-          supabase.from("shops").select("id, name, address, phone").order("name"),
+        // Fetch HRMS stores instead of shops
+        const [storesResponse, productsResponse] = await Promise.all([
+          supabase.from("hr_stores").select("id, store_name, store_code, address").order("store_name"),
           supabase.from("products").select("id, name").order("name"),
         ]);
 
-        if (shopsResponse.error) throw shopsResponse.error;
+        if (storesResponse.error) throw storesResponse.error;
         if (productsResponse.error) throw productsResponse.error;
 
-        setShops(shopsResponse.data || []);
+        // Transform HRMS stores to match shop interface
+        const transformedStores = storesResponse.data?.map(store => ({
+          id: store.id,
+          name: store.store_name,
+          address: store.address,
+          phone: null, // HRMS stores don't have phone field
+          store_code: store.store_code
+        })) || [];
+
+        setShops(transformedStores);
         setProducts(productsResponse.data || []);
       } catch (error: any) {
         console.error("Error fetching shops and products:", error.message);
@@ -356,7 +366,7 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                 name="shop_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Shop</FormLabel>
+                    <FormLabel>Store</FormLabel>
                     <Select 
                       onValueChange={(value) => {
                         field.onChange(value);
@@ -365,18 +375,18 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a shop" />
+                          <SelectValue placeholder="Select a store" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-white z-50">
                         {validShops.map((shop) => (
                           <SelectItem key={shop.id} value={shop.id}>
-                            {shop.name}
+                            {shop.name} {shop.store_code && `(${shop.store_code})`}
                           </SelectItem>
                         ))}
                         {validShops.length === 0 && (
                           <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                            No shops available
+                            No stores available
                           </div>
                         )}
                       </SelectContent>
@@ -421,10 +431,10 @@ const StockForm = ({ onSuccess, onCancel }: StockFormProps) => {
 
               {selectedShop && (
                 <div className="col-span-2 bg-muted/50 p-3 rounded-md">
-                  <h4 className="font-medium mb-2">Shop Details:</h4>
+                  <h4 className="font-medium mb-2">Store Details:</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                     <div><span className="font-medium">Address:</span> {selectedShop.address || 'N/A'}</div>
-                    <div><span className="font-medium">Phone:</span> {selectedShop.phone || 'N/A'}</div>
+                    <div><span className="font-medium">Store Code:</span> {selectedShop.store_code || 'N/A'}</div>
                   </div>
                 </div>
               )}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +21,7 @@ interface Product {
 interface Shop {
   id: string;
   name: string;
+  store_code?: string;
 }
 
 interface StockEntry {
@@ -72,14 +72,22 @@ const StockCreationForm: React.FC<StockCreationFormProps> = ({ onSuccess, onCanc
 
   const fetchShops = async () => {
     try {
+      // Fetch HRMS stores instead of shops
       const { data, error } = await supabase
-        .from('shops')
-        .select('id, name')
-        .eq('user_id', user?.id)
-        .order('name');
+        .from('hr_stores')
+        .select('id, store_name, store_code')
+        .order('store_name');
       
       if (error) throw error;
-      setShops(data || []);
+      
+      // Transform HRMS stores to match Shop interface
+      const transformedStores = data?.map(store => ({
+        id: store.id,
+        name: store.store_name,
+        store_code: store.store_code
+      })) || [];
+      
+      setShops(transformedStores);
     } catch (error) {
       console.error('Error fetching shops:', error);
       toast.error('Failed to fetch shops');
@@ -207,16 +215,16 @@ const StockCreationForm: React.FC<StockCreationFormProps> = ({ onSuccess, onCanc
             <div className="space-y-2">
               <Label htmlFor="shop" className="flex items-center gap-2">
                 <Store className="h-4 w-4" />
-                Select Shop
+                Select Store
               </Label>
               <Select value={selectedShop} onValueChange={setSelectedShop}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select shop" />
+                  <SelectValue placeholder="Select store" />
                 </SelectTrigger>
                 <SelectContent>
                   {shops.map(shop => (
                     <SelectItem key={shop.id} value={shop.id}>
-                      {shop.name}
+                      {shop.name} {shop.store_code && `(${shop.store_code})`}
                     </SelectItem>
                   ))}
                 </SelectContent>
