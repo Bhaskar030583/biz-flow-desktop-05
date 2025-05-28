@@ -16,6 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 interface StoreInfo {
   storeName: string;
   salespersonName: string;
+  shiftName: string;
 }
 
 interface Shop {
@@ -31,6 +32,7 @@ const POS = () => {
   const [isPopupWindow, setIsPopupWindow] = useState(false);
   const [storeInfoCompleted, setStoreInfoCompleted] = useState(false);
   const [selectedShopId, setSelectedShopId] = useState<string>("");
+  const [selectedShiftId, setSelectedShiftId] = useState<string>("");
   const navigate = useNavigate();
 
   // Query for shops
@@ -146,9 +148,10 @@ const POS = () => {
     }
   }, []);
 
-  const handleStoreInfoComplete = (info: StoreInfo, shopId: string) => {
+  const handleStoreInfoComplete = (info: StoreInfo, shopId: string, shiftId: string) => {
     setStoreInfo(info);
     setSelectedShopId(shopId);
+    setSelectedShiftId(shiftId);
     setShowStoreModal(false);
     setStoreInfoCompleted(true);
   };
@@ -219,6 +222,7 @@ const POS = () => {
                 products={products || []} 
                 storeInfo={storeInfo} 
                 selectedShopId={selectedShopId}
+                selectedShiftId={selectedShiftId}
                 onStockUpdated={handleStockAdded}
               />
             )}

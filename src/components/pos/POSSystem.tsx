@@ -35,16 +35,24 @@ interface CartItem extends Product {
 interface StoreInfo {
   storeName: string;
   salespersonName: string;
+  shiftName: string;
 }
 
 interface POSSystemProps {
   products: Product[];
   storeInfo: StoreInfo | null;
   selectedShopId: string;
+  selectedShiftId?: string;
   onStockUpdated?: () => void;
 }
 
-export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selectedShopId, onStockUpdated }) => {
+export const POSSystem: React.FC<POSSystemProps> = ({ 
+  products, 
+  storeInfo, 
+  selectedShopId, 
+  selectedShiftId,
+  onStockUpdated 
+}) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -63,7 +71,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
   console.log('POSSystem props:', { 
     productsCount: products?.length, 
     storeInfo, 
-    selectedShopId 
+    selectedShopId,
+    selectedShiftId
   });
 
   const addToCart = (product: Product) => {
@@ -326,9 +335,16 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                   ABC CAFE
                 </h1>
                 {storeInfo && (
-                  <p className="text-xs md:text-sm text-gray-600 font-medium hidden sm:block">
-                    {storeInfo.storeName} • {storeInfo.salespersonName}
-                  </p>
+                  <div className="text-xs md:text-sm text-gray-600 font-medium">
+                    <p className="hidden sm:block">
+                      {storeInfo.storeName} • {storeInfo.salespersonName}
+                    </p>
+                    {storeInfo.shiftName && (
+                      <p className="text-xs text-blue-600 font-semibold">
+                        Shift: {storeInfo.shiftName}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
