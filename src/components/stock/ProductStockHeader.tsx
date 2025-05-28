@@ -107,13 +107,13 @@ const ProductStockHeader = ({
         )}
 
         {selectedShop && (
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium text-white">
+          <div className="flex justify-between items-center bg-slate-100 dark:bg-slate-800 p-4 rounded-lg border border-slate-300 dark:border-slate-600">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
               Products assigned to {shops.find(shop => shop.id === selectedShop)?.name}
             </h3>
             <Button
               onClick={() => setShowAssignForm(!showAssignForm)}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 text-white font-medium"
               size="sm"
             >
               <Plus className="h-4 w-4 mr-1" />
