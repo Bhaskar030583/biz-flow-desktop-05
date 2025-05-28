@@ -6,7 +6,7 @@ import ProductStockManagement from "./ProductStockManagement";
 import NewStockManagement from "./NewStockManagement";
 import StockList from "./StockList";
 import StockForm from "./StockForm";
-import { BatchStockEntryModal } from "./BatchStockEntryModal";
+import StockImportInterface from "./StockImportInterface";
 import { useSearchParams } from "react-router-dom";
 
 interface StockTabsContainerProps {
@@ -91,7 +91,7 @@ const StockTabsContainer = ({
       <TabsContent value="import" className="space-y-4">
         <Card>
           <CardContent className="p-6">
-            <BatchStockEntryModal />
+            <StockImportInterface />
           </CardContent>
         </Card>
       </TabsContent>
