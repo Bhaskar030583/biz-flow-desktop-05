@@ -74,7 +74,7 @@ const StockTabsContainer = ({
           <Card>
             <CardContent className="pt-6">
               <StockForm 
-                onStockAdded={handleStockAdded}
+                onSuccess={handleStockAdded}
                 onCancel={() => setShowForm(false)}
               />
             </CardContent>
@@ -85,7 +85,7 @@ const StockTabsContainer = ({
       </TabsContent>
 
       <TabsContent value="import" className="space-y-4">
-        <StockImport onImportComplete={handleStockAdded} />
+        <StockImport onComplete={handleStockAdded} />
       </TabsContent>
     </Tabs>
   );
