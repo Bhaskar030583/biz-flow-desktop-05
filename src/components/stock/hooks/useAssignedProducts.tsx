@@ -40,31 +40,77 @@ export const useAssignedProducts = (refreshTrigger: number) => {
         setLoading(true);
         console.log('=== FETCHING ASSIGNED PRODUCTS FOR STOCK LIST ===');
         
-        // First, get the product assignments
-        const { data: assignments, error: assignmentError } = await supabase
+        // First, get the product assignments - checking both shops and hr_stores
+        let assignments = [];
+        let storesData = [];
+        
+        // Try to get assignments from product_shops table first
+        const { data: productShopAssignments, error: shopAssignmentError } = await supabase
           .from('product_shops')
           .select('id, product_id, shop_id')
           .eq('user_id', user.id);
 
-        if (assignmentError) {
-          console.error('Error fetching assignments:', assignmentError);
-          throw assignmentError;
+        if (productShopAssignments && productShopAssignments.length > 0) {
+          assignments = productShopAssignments;
+          
+          // Get unique shop IDs
+          const shopIds = [...new Set(assignments.map(a => a.shop_id))];
+          
+          // Try to fetch from shops table first
+          const { data: shopsTableData, error: shopsError } = await supabase
+            .from('shops')
+            .select('id, name, store_code')
+            .in('id', shopIds);
+
+          if (shopsTableData && shopsTableData.length > 0) {
+            storesData = shopsTableData.map(shop => ({
+              id: shop.id,
+              store_name: shop.name,
+              store_code: shop.store_code
+            }));
+          } else {
+            // If no data in shops table, try hr_stores
+            const { data: hrStoresData, error: hrStoresError } = await supabase
+              .from('hr_stores')
+              .select('id, store_name, store_code')
+              .in('id', shopIds);
+
+            if (hrStoresData) {
+              storesData = hrStoresData;
+            }
+          }
+        } else {
+          // If no product_shops assignments, check if we should create them from hr_stores
+          console.log('No product_shops assignments found, checking hr_stores');
+          
+          // Get all hr_stores
+          const { data: hrStoresData, error: hrStoresError } = await supabase
+            .from('hr_stores')
+            .select('id, store_name, store_code');
+
+          if (hrStoresData && hrStoresData.length > 0) {
+            storesData = hrStoresData;
+            // For now, we'll show empty assignments but available stores
+            assignments = [];
+          }
         }
 
         console.log('Product assignments:', assignments);
+        console.log('Stores data:', storesData);
 
-        if (!assignments || assignments.length === 0) {
+        if (assignments.length === 0) {
           console.log('No product assignments found');
           setAssignedProducts([]);
-          setShops([]);
+          setShops(storesData.map(store => ({
+            name: store.store_name,
+            id: store.id
+          })));
           setProducts([]);
-          toast.info('No products assigned to stores found');
           return;
         }
 
-        // Get unique product IDs and shop IDs
+        // Get unique product IDs
         const productIds = [...new Set(assignments.map(a => a.product_id))];
-        const shopIds = [...new Set(assignments.map(a => a.shop_id))];
 
         // Fetch products data
         const { data: productsData, error: productsError } = await supabase
@@ -77,19 +123,7 @@ export const useAssignedProducts = (refreshTrigger: number) => {
           throw productsError;
         }
 
-        // Fetch stores data
-        const { data: storesData, error: storesError } = await supabase
-          .from('hr_stores')
-          .select('id, store_name')
-          .in('id', shopIds);
-
-        if (storesError) {
-          console.error('Error fetching stores:', storesError);
-          throw storesError;
-        }
-
         console.log('Products data:', productsData);
-        console.log('Stores data:', storesData);
 
         // Transform data and get stock information
         const transformedProducts: AssignedProduct[] = [];
@@ -156,7 +190,9 @@ export const useAssignedProducts = (refreshTrigger: number) => {
         setShops(uniqueShops);
         setProducts(uniqueProducts);
 
-        toast.success(`Loaded ${transformedProducts.length} assigned products`);
+        if (transformedProducts.length > 0) {
+          toast.success(`Loaded ${transformedProducts.length} assigned products`);
+        }
 
       } catch (error: any) {
         console.error("Error fetching assigned products:", error.message);
