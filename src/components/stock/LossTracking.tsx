@@ -113,10 +113,27 @@ const LossTracking = () => {
         .select('id, shift_name')
         .in('id', shiftIds) : { data: [] };
 
-      // Create lookup maps
-      const productsMap = new Map(productsData?.map(p => [p.id, p]) || []);
-      const shopsMap = new Map(shopsData?.map(s => [s.id, s]) || []);
-      const shiftsMap = new Map(shiftsData?.map(s => [s.id, s]) || []);
+      // Create lookup maps with proper type safety
+      const productsMap = new Map();
+      productsData?.forEach(p => {
+        if (p && p.id) {
+          productsMap.set(p.id, p);
+        }
+      });
+
+      const shopsMap = new Map();
+      shopsData?.forEach(s => {
+        if (s && s.id) {
+          shopsMap.set(s.id, s);
+        }
+      });
+
+      const shiftsMap = new Map();
+      shiftsData?.forEach(s => {
+        if (s && s.id) {
+          shiftsMap.set(s.id, s);
+        }
+      });
 
       // Combine data
       return lossesData.map(loss => ({
@@ -198,7 +215,7 @@ const LossTracking = () => {
                   <SelectValue placeholder="Select store" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Stores</SelectItem>
+                  <SelectItem value="all">All Stores</SelectItem>
                   {stores?.map(store => (
                     <SelectItem key={store.id} value={store.id}>
                       {store.name}
@@ -269,6 +286,7 @@ const LossTracking = () => {
                           <SelectValue placeholder="Select shift (optional)" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="none">No Shift</SelectItem>
                           {shifts?.map(shift => (
                             <SelectItem key={shift.id} value={shift.id}>
                               {shift.shift_name} ({shift.start_time} - {shift.end_time})
@@ -375,7 +393,7 @@ const LossTracking = () => {
                       {loss.hr_shifts && (
                         <div>
                           <span className="text-gray-600">Shift:</span>
-                          <span className="ml-1">{loss.hr_shifts.shift_name}</span>
+                          <span className="ml-1">{(loss.hr_shifts as any)?.shift_name}</span>
                         </div>
                       )}
                       {loss.operator_name && (
