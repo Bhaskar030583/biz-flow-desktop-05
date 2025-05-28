@@ -236,21 +236,30 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
   };
 
   const assignProductToShop = async () => {
+    console.log("=== ASSIGN PRODUCT TO SHOP START ===");
+    console.log("Selected product:", selectedProductToAssign);
+    console.log("Selected shop:", selectedShop);
+    console.log("Initial stock quantity:", initialStockQuantity);
+    console.log("User ID:", user?.id);
+
     if (!selectedProductToAssign || !selectedShop || !initialStockQuantity) {
+      console.log("Validation failed - missing required fields");
       toast.error('Please select a product, shop, and enter initial stock quantity');
       return;
     }
 
     const stockQuantity = parseInt(initialStockQuantity);
     if (isNaN(stockQuantity) || stockQuantity < 0) {
+      console.log("Validation failed - invalid stock quantity:", stockQuantity);
       toast.error('Please enter a valid stock quantity');
       return;
     }
 
     try {
-      console.log("Assigning product to shop with initial stock:", selectedProductToAssign, selectedShop, stockQuantity);
+      console.log("Starting product assignment process...");
       
       // First, assign the product to the shop
+      console.log("Step 1: Assigning product to shop...");
       const { error: assignError } = await supabase
         .from('product_shops')
         .insert({
@@ -259,7 +268,10 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
           user_id: user?.id
         });
       
+      console.log("Product assignment result:", { assignError });
+      
       if (assignError) {
+        console.error("Product assignment failed:", assignError);
         if (assignError.code === '23505') {
           toast.error('Product is already assigned to this shop');
         } else {
@@ -268,6 +280,7 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
         return;
       }
 
+      console.log("Step 2: Creating initial stock entry...");
       // Then create the initial stock entry
       const { error: stockError } = await supabase
         .from('stocks')
@@ -282,9 +295,12 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
           user_id: user?.id
         });
 
+      console.log("Stock creation result:", { stockError });
+
       if (stockError) {
         console.error('Error creating initial stock entry:', stockError);
         // If stock creation fails, we should remove the product assignment
+        console.log("Rolling back product assignment...");
         await supabase
           .from('product_shops')
           .delete()
@@ -294,12 +310,16 @@ const ProductStockManagement = ({ onStockUpdated }: ProductStockManagementProps)
         throw stockError;
       }
       
+      console.log("Step 3: Assignment completed successfully");
       toast.success('Product assigned to shop with initial stock successfully');
       setSelectedProductToAssign("");
       setInitialStockQuantity("");
       setShowAssignForm(false);
+      
+      console.log("Step 4: Refreshing data...");
       fetchAssignedProducts();
       onStockUpdated();
+      console.log("=== ASSIGN PRODUCT TO SHOP COMPLETED ===");
     } catch (error) {
       console.error('Error assigning product to shop:', error);
       toast.error('Failed to assign product to shop');
