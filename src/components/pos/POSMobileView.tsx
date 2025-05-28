@@ -45,77 +45,79 @@ export const POSMobileView: React.FC<POSMobileViewProps> = ({
   setShowBillHistory
 }) => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Enhanced Mobile Header */}
+      <div className="bg-gradient-to-r from-white to-blue-50 border-b-2 border-blue-100 px-6 py-6 shadow-lg">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
               <img 
                 src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
                 alt="Logo" 
-                className="h-6 w-6"
+                className="h-7 w-7"
               />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">ABC CAFE</h1>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                ABC CAFE
+              </h1>
               {storeInfo && (
-                <p className="text-xs text-gray-600">{storeInfo.storeName}</p>
+                <p className="text-sm text-gray-600 font-medium">{storeInfo.storeName}</p>
               )}
             </div>
           </div>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             <Button
               variant="outline"
               size="sm"
               onClick={handleQuickStock}
-              className="p-2"
+              className="p-3 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
             >
-              <Package className="h-4 w-4" />
+              <Package className="h-5 w-5" />
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowCustomerManagement(true)}
-              className="p-2"
+              className="p-3 bg-white hover:bg-green-50 border-green-200 text-green-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
             >
-              <User className="h-4 w-4" />
+              <User className="h-5 w-5" />
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowBillHistory(true)}
-              className="p-2"
+              className="p-3 bg-white hover:bg-purple-50 border-purple-200 text-purple-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
             >
-              <History className="h-4 w-4" />
+              <History className="h-5 w-5" />
             </Button>
           </div>
         </div>
 
-        {/* Mobile Search */}
+        {/* Enhanced Mobile Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
           <Input
             placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 h-10 border-gray-300 focus:border-orange-500"
+            className="pl-12 h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl bg-gray-50 focus:bg-white text-base shadow-sm transition-all duration-300"
           />
         </div>
       </div>
 
-      {/* Mobile Category Tabs */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="flex space-x-2 overflow-x-auto">
+      {/* Enhanced Mobile Category Tabs */}
+      <div className="bg-white border-b-2 border-gray-100 px-6 py-4 shadow-sm">
+        <div className="flex space-x-3 overflow-x-auto">
           {categories.map((category) => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-3 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-colors ${
+              className={`px-5 py-3 text-sm font-bold rounded-xl whitespace-nowrap transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 ${
                 selectedCategory === category
-                  ? "bg-orange-500 text-white"
-                  : "text-gray-600 hover:text-gray-900 bg-gray-100"
+                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white"
+                  : "text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200"
               }`}
             >
               {category === "all" ? "All" : category}
@@ -124,47 +126,47 @@ export const POSMobileView: React.FC<POSMobileViewProps> = ({
         </div>
       </div>
 
-      {/* Mobile Products Grid */}
-      <div className="p-4">
+      {/* Enhanced Mobile Products Grid */}
+      <div className="p-6">
         {filteredProducts.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-              <Search className="h-8 w-8 text-gray-400" />
+          <div className="text-center py-16 text-gray-500">
+            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center shadow-lg">
+              <Search className="h-10 w-10 text-gray-400" />
             </div>
-            <h3 className="text-lg font-semibold mb-2 text-gray-700">No products found</h3>
-            <p className="text-sm text-gray-400">Try adjusting your search or category filter</p>
+            <h3 className="text-xl font-bold mb-3 text-gray-700">No products found</h3>
+            <p className="text-base text-gray-400">Try adjusting your search or category filter</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             {filteredProducts.map((product) => (
               <Card 
                 key={product.id} 
-                className={`cursor-pointer transition-all duration-200 ${
+                className={`cursor-pointer transition-all duration-300 border-2 hover:shadow-xl group transform hover:scale-105 rounded-2xl ${
                   product.quantity !== undefined && product.quantity <= 0 
-                    ? 'border-red-200 bg-red-50 opacity-75' 
-                    : 'border-gray-200 bg-white hover:border-orange-300 hover:shadow-md'
+                    ? 'border-red-300 bg-gradient-to-br from-red-50 to-red-100 opacity-75' 
+                    : 'border-gray-200 bg-white hover:border-blue-300 shadow-lg'
                 }`}
                 onClick={() => addToCart(product)}
               >
-                <CardContent className="p-3">
-                  <div className="aspect-square bg-gray-100 rounded-lg mb-2 flex items-center justify-center">
-                    <Package className="h-6 w-6 text-gray-400" />
+                <CardContent className="p-4">
+                  <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl mb-3 flex items-center justify-center shadow-inner">
+                    <Package className="h-8 w-8 text-gray-400" />
                   </div>
                   
-                  <h4 className="font-semibold text-xs mb-1 text-gray-800 line-clamp-2 min-h-[2rem] leading-tight">
+                  <h4 className="font-bold text-sm mb-3 text-gray-800 line-clamp-2 min-h-[2.5rem] leading-tight">
                     {product.name}
                   </h4>
                   
                   {product.quantity !== undefined && (
-                    <div className="mb-2">
+                    <div className="mb-3">
                       <Badge 
                         variant="outline" 
-                        className={`text-xs py-0.5 px-1.5 ${
+                        className={`text-xs py-1 px-3 font-bold shadow-sm ${
                           product.quantity > 10 
-                            ? 'bg-green-50 text-green-700 border-green-200' 
+                            ? 'bg-green-100 text-green-700 border-green-300' 
                             : product.quantity > 0 
-                              ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                              : 'bg-red-50 text-red-700 border-red-200'
+                              ? 'bg-yellow-100 text-yellow-700 border-yellow-300'
+                              : 'bg-red-100 text-red-700 border-red-300'
                         }`}
                       >
                         {product.quantity}
@@ -172,8 +174,8 @@ export const POSMobileView: React.FC<POSMobileViewProps> = ({
                     </div>
                   )}
                   
-                  <div className="bg-gray-900 text-white px-2 py-1.5 rounded text-center">
-                    <p className="text-xs font-bold">
+                  <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-3 py-3 rounded-xl text-center shadow-lg">
+                    <p className="text-sm font-bold">
                       ₹{Number(product.price).toFixed(2)}
                     </p>
                   </div>
