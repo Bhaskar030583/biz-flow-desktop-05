@@ -1,18 +1,15 @@
+
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { format } from "date-fns";
-import { Save, RefreshCw, Package2, Store, Lock } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
 import QuickStockActions from "./QuickStockActions";
-import StockItemCard from "./StockItemCard";
+import StockManagementHeader from "./StockManagementHeader";
+import StockInventoryDisplay from "./StockInventoryDisplay";
+import StockManagementActions from "./StockManagementActions";
+import StockManagementNote from "./StockManagementNote";
 
 interface Product {
   id: string;
@@ -54,7 +51,6 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
   const [stockDate, setStockDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [isAdmin, setIsAdmin] = useState(false);
   const [quickAddMode, setQuickAddMode] = useState(false);
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (user) {
@@ -88,7 +84,6 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
 
   const fetchShops = async () => {
     try {
-      // Fetch HRMS stores instead of shops
       const { data, error } = await supabase
         .from('hr_stores')
         .select('id, store_name, store_code')
@@ -96,7 +91,6 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
       
       if (error) throw error;
       
-      // Transform HRMS stores to match Shop interface
       const transformedStores = data?.map(store => ({
         id: store.id,
         name: store.store_name,
@@ -182,7 +176,6 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
 
       if (prevError) console.error('Error fetching previous stock:', prevError);
 
-      // Get assigned products for this store
       const { data: assignedData, error: assignedError } = await supabase
         .from('product_shops')
         .select(`
@@ -322,72 +315,16 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
 
   return (
     <div className="space-y-4">
-      <Card className="border-indigo-200">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-indigo-900 text-lg">
-            <Store className="h-5 w-5" />
-            Stock Management
-            {stockItems.length > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {stockItems.length} products
-              </Badge>
-            )}
-            {isAdmin && (
-              <Badge variant="outline" className="ml-2 text-green-600 border-green-600">
-                Admin
-              </Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-3'}`}>
-            <div>
-              <Label htmlFor="date" className="text-sm">Stock Date</Label>
-              <Input
-                id="date"
-                type="date"
-                value={stockDate}
-                onChange={(e) => setStockDate(e.target.value)}
-                className="h-8"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="shop" className="text-sm">Select Store</Label>
-              <Select value={selectedShop} onValueChange={setSelectedShop}>
-                <SelectTrigger className="h-8">
-                  <SelectValue placeholder="Select store" />
-                </SelectTrigger>
-                <SelectContent className="bg-white z-50">
-                  {shops.map(shop => (
-                    <SelectItem key={shop.id} value={shop.id}>
-                      {shop.name} {shop.store_code && `(${shop.store_code})`}
-                    </SelectItem>
-                  ))}
-                  {shops.length === 0 && (
-                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                      No shops available
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-end">
-              <Button
-                onClick={loadStoreInventory}
-                disabled={!selectedShop}
-                variant="outline"
-                size="sm"
-                className="w-full h-8"
-              >
-                <RefreshCw className="h-3 w-3 mr-1" />
-                Load Inventory
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <StockManagementHeader
+        stockDate={stockDate}
+        setStockDate={setStockDate}
+        selectedShop={selectedShop}
+        setSelectedShop={setSelectedShop}
+        shops={shops}
+        stockItemsCount={stockItems.length}
+        isAdmin={isAdmin}
+        onLoadInventory={loadStoreInventory}
+      />
 
       {selectedShop && (
         <QuickStockActions
@@ -401,73 +338,24 @@ const NewStockManagement: React.FC<NewStockManagementProps> = ({ onSuccess, onCa
       )}
 
       {selectedShop && (
-        <Card className="h-fit">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Package2 className="h-4 w-4" />
-              Store Inventory ({stockItems.length})
-              {totalStockAdded > 0 && (
-                <Badge variant="default" className="bg-green-600 ml-2">
-                  +{totalStockAdded} items
-                </Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3">
-            <div className={`space-y-3 ${quickAddMode ? 'max-h-96' : 'max-h-80'} overflow-y-auto`}>
-              {stockItems.map(item => (
-                <StockItemCard
-                  key={item.productId}
-                  item={item}
-                  quickAddMode={quickAddMode}
-                  isAdmin={isAdmin}
-                  onUpdateStock={updateStockItem}
-                />
-              ))}
-              {stockItems.length === 0 && (
-                <div className="text-center py-6 text-muted-foreground">
-                  <Package2 className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                  <p className="text-sm">No products assigned to this store</p>
-                  {!quickAddMode && (
-                    <p className="text-xs">Products must be assigned to this store first</p>
-                  )}
-                  {quickAddMode && (
-                    <p className="text-xs">Exit Quick Mode to assign products to this store</p>
-                  )}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <StockInventoryDisplay
+          stockItems={stockItems}
+          totalStockAdded={totalStockAdded}
+          quickAddMode={quickAddMode}
+          isAdmin={isAdmin}
+          onUpdateStock={updateStockItem}
+        />
       )}
 
-      <div className={`flex gap-3 ${isMobile ? 'flex-col' : 'flex-row justify-end'}`}>
-        <Button variant="outline" onClick={onCancel} disabled={loading} size="sm">
-          Cancel
-        </Button>
-        <Button 
-          onClick={saveStockData}
-          disabled={loading || !selectedShop || stockItems.length === 0}
-          className="bg-green-600 hover:bg-green-700"
-          size="sm"
-        >
-          {loading ? (
-            <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-          ) : (
-            <Save className="h-3 w-3 mr-1" />
-          )}
-          Save Store Inventory
-        </Button>
-      </div>
+      <StockManagementActions
+        loading={loading}
+        selectedShop={selectedShop}
+        stockItemsCount={stockItems.length}
+        onSave={saveStockData}
+        onCancel={onCancel}
+      />
 
-      {!isAdmin && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <div className="flex items-center gap-2 text-blue-700">
-            <Lock className="h-3 w-3" />
-            <span className="text-xs font-medium">Note: Opening stock auto-fills from actual stock for non-admin users</span>
-          </div>
-        </div>
-      )}
+      <StockManagementNote isAdmin={isAdmin} />
     </div>
   );
 };
