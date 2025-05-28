@@ -27,6 +27,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ModeToggle";
@@ -55,6 +56,12 @@ interface DashboardLayoutProps {
 const AppSidebar = () => {
   const location = useLocation();
   const { signOut, user } = useAuth();
+  const { setOpenMobile } = useSidebar();
+
+  const handleNavigation = () => {
+    // Close sidebar on mobile when navigation item is clicked
+    setOpenMobile(false);
+  };
 
   return (
     <Sidebar>
@@ -82,7 +89,11 @@ const AppSidebar = () => {
             return (
               <SidebarMenuItem key={item.name}>
                 <SidebarMenuButton asChild isActive={isActive}>
-                  <Link to={item.href} className="flex items-center gap-2">
+                  <Link 
+                    to={item.href} 
+                    className="flex items-center gap-2"
+                    onClick={handleNavigation}
+                  >
                     <Icon className="h-4 w-4" />
                     <span>{item.name}</span>
                   </Link>
