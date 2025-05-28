@@ -97,10 +97,27 @@ const AdvancedReporting = () => {
         .select('id, shift_name')
         .in('id', shiftIds) : { data: [] };
 
-      // Create lookup maps
-      const productsMap = new Map(productsData?.map(p => [p.id, p]) || []);
-      const shopsMap = new Map(shopsData?.map(s => [s.id, s]) || []);
-      const shiftsMap = new Map(shiftsData?.map(s => [s.id, s]) || []);
+      // Create lookup maps with proper type safety
+      const productsMap = new Map();
+      productsData?.forEach(p => {
+        if (p && p.id) {
+          productsMap.set(p.id, p);
+        }
+      });
+
+      const shopsMap = new Map();
+      shopsData?.forEach(s => {
+        if (s && s.id) {
+          shopsMap.set(s.id, s);
+        }
+      });
+
+      const shiftsMap = new Map();
+      shiftsData?.forEach(s => {
+        if (s && s.id) {
+          shiftsMap.set(s.id, s);
+        }
+      });
 
       // Combine data
       const enrichedLosses = lossesData?.map(loss => ({
@@ -183,9 +200,20 @@ const AdvancedReporting = () => {
         .select('id, name')
         .in('id', shopIds);
 
-      // Create lookup maps
-      const productsMap = new Map(productsData?.map(p => [p.id, p]) || []);
-      const shopsMap = new Map(shopsData?.map(s => [s.id, s]) || []);
+      // Create lookup maps with proper type safety
+      const productsMap = new Map();
+      productsData?.forEach(p => {
+        if (p && p.id) {
+          productsMap.set(p.id, p);
+        }
+      });
+
+      const shopsMap = new Map();
+      shopsData?.forEach(s => {
+        if (s && s.id) {
+          shopsMap.set(s.id, s);
+        }
+      });
 
       // Combine data
       const enrichedStocks = stocksData?.map(stock => ({
@@ -270,7 +298,7 @@ const AdvancedReporting = () => {
                   <SelectValue placeholder="All Stores" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Stores</SelectItem>
+                  <SelectItem value="all">All Stores</SelectItem>
                   {stores?.map(store => (
                     <SelectItem key={store.id} value={store.id}>
                       {store.name}
