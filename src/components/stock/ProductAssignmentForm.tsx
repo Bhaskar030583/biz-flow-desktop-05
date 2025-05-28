@@ -44,17 +44,21 @@ const ProductAssignmentForm = ({
           <Label className="text-sm font-medium">Assign Product with Initial Stock</Label>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <Select value={selectedProductToAssign} onValueChange={setSelectedProductToAssign}>
-              <SelectTrigger className="bg-white">
+              <SelectTrigger className="bg-white border-slate-300 text-slate-900 shadow-sm hover:border-slate-400">
                 <SelectValue placeholder="Choose a product" />
               </SelectTrigger>
-              <SelectContent className="bg-white z-50">
+              <SelectContent className="bg-white border-slate-300 shadow-lg z-50">
                 {unassignedProducts.map(product => (
-                  <SelectItem key={product.id} value={product.id}>
+                  <SelectItem 
+                    key={product.id} 
+                    value={product.id}
+                    className="text-slate-900 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer"
+                  >
                     {product.name} - {product.category}
                   </SelectItem>
                 ))}
                 {unassignedProducts.length === 0 && (
-                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                  <div className="px-2 py-1.5 text-sm text-slate-600">
                     No unassigned products available
                   </div>
                 )}
