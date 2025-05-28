@@ -33,14 +33,20 @@ const POS = () => {
 
   // Query for hr_stores - get stores from HRMS
   const { data: stores, isLoading: storesLoading } = useQuery({
-    queryKey: ['hr-stores'],
+    queryKey: ['hrms-stores'],
     queryFn: async () => {
+      console.log('Fetching stores from hr_stores for POS...');
       const { data, error } = await supabase
         .from('hr_stores')
         .select('id, store_name, store_code')
         .order('store_name');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching hr_stores for POS:', error);
+        throw error;
+      }
+      
+      console.log('Fetched stores for POS:', data);
       return data || [];
     }
   });

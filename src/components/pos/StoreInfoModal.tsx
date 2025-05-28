@@ -60,8 +60,8 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
   });
 
   // Query for hr_stores - get stores from HRMS
-  const { data: stores, isLoading: storesLoading } = useQuery({
-    queryKey: ['hr-stores-modal'],
+  const { data: stores, isLoading: storesLoading, error: storesError } = useQuery({
+    queryKey: ['hrms-stores-modal'],
     queryFn: async () => {
       console.log('Fetching stores from hr_stores for modal...');
       const { data, error } = await supabase
@@ -81,7 +81,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
 
   // Query for shifts from hr_shifts table based on selected store
   const { data: shifts, isLoading: shiftsLoading } = useQuery({
-    queryKey: ['hr-shifts', selectedStoreId],
+    queryKey: ['hrms-shifts', selectedStoreId],
     queryFn: async () => {
       if (!selectedStoreId) return [];
       
@@ -113,6 +113,18 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
       setSalespersonName(user.email.split('@')[0]);
     }
   }, [userProfile, user]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('StoreInfoModal Debug:', {
+      stores,
+      storesLoading,
+      storesError,
+      selectedStoreId,
+      shifts,
+      shiftsLoading
+    });
+  }, [stores, storesLoading, storesError, selectedStoreId, shifts, shiftsLoading]);
 
   const handleSubmit = () => {
     if (!selectedStoreId) {
@@ -178,6 +190,10 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
               </Label>
               {storesLoading ? (
                 <Skeleton className="h-10 w-full" />
+              ) : storesError ? (
+                <div className="text-red-500 text-sm">
+                  Error loading stores: {storesError.message}
+                </div>
               ) : (
                 <Select 
                   value={selectedStoreId} 
@@ -205,7 +221,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
                   </SelectContent>
                 </Select>
               )}
-              {!storesLoading && (!stores || stores.length === 0) && (
+              {!storesLoading && !storesError && (!stores || stores.length === 0) && (
                 <p className="text-xs text-red-500">No stores found in HRMS. Please create stores first.</p>
               )}
             </div>
