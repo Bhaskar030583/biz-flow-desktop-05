@@ -288,20 +288,20 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header */}
+      {/* Header - More compact on mobile */}
       <div className="bg-white shadow-lg border-b border-blue-100">
-        <div className="w-full px-4 md:px-6 py-4 md:py-5">
+        <div className="w-full px-3 md:px-6 py-2 md:py-5">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="bg-gradient-to-r from-orange-600 to-red-700 p-3 md:p-4 rounded-xl shadow-lg">
+            <div className="flex items-center gap-2 md:gap-4">
+              <div className="bg-gradient-to-r from-orange-600 to-red-700 p-2 md:p-4 rounded-xl shadow-lg">
                 <img 
                   src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
                   alt="ABC Cafe Logo" 
-                  className="h-6 w-6 md:h-8 md:w-8"
+                  className="h-5 w-5 md:h-8 md:w-8"
                 />
               </div>
               <div>
-                <h1 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-700 bg-clip-text text-transparent">
+                <h1 className="text-lg md:text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-700 bg-clip-text text-transparent">
                   ABC CAFE
                 </h1>
                 {storeInfo && (
@@ -311,12 +311,12 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                 )}
               </div>
             </div>
-            <div className="flex gap-2 md:gap-3">
+            <div className="flex gap-1 md:gap-3">
               <Button
                 variant="outline"
                 size={isMobile ? "sm" : "default"}
                 onClick={() => setShowCustomerManagement(true)}
-                className="flex items-center gap-1 md:gap-2 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm"
+                className="flex items-center gap-1 md:gap-2 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm px-2 md:px-4"
               >
                 <User className="h-3 w-3 md:h-4 md:w-4" />
                 {!isMobile && "Customers"}
@@ -325,7 +325,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                 variant="outline"
                 size={isMobile ? "sm" : "default"}
                 onClick={() => setShowBillHistory(true)}
-                className="flex items-center gap-1 md:gap-2 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm"
+                className="flex items-center gap-1 md:gap-2 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm px-2 md:px-4"
               >
                 <History className="h-3 w-3 md:h-4 md:w-4" />
                 {!isMobile && "History"}
@@ -335,14 +335,14 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
         </div>
       </div>
 
-      <div className="w-full p-3 md:p-6">
+      <div className="w-full p-2 md:p-6">
         {isMobile ? (
-          // Mobile Layout - Stacked
-          <div className="space-y-4">
-            {/* Search Bar */}
+          // Mobile Layout - More compact spacing
+          <div className="space-y-3">
+            {/* Search Bar - More compact */}
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-              <CardContent className="p-4">
-                <div className="space-y-3">
+              <CardContent className="p-3">
+                <div className="space-y-2">
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -350,12 +350,12 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                         placeholder="Search products..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 border-blue-200 focus:border-blue-400 focus:ring-blue-300"
+                        className="pl-10 border-blue-200 focus:border-blue-400 focus:ring-blue-300 h-9"
                       />
                     </div>
                     <Sheet open={showCategories} onOpenChange={setShowCategories}>
                       <SheetTrigger asChild>
-                        <Button variant="outline" size="icon" className="shrink-0">
+                        <Button variant="outline" size="sm" className="shrink-0 h-9 w-9 p-0">
                           <Menu className="h-4 w-4" />
                         </Button>
                       </SheetTrigger>
@@ -368,8 +368,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                     </Sheet>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Category:</span>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                    <span className="text-xs text-gray-600">Category:</span>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
                       {selectedCategory === "all" ? "All Items" : selectedCategory}
                     </Badge>
                   </div>
@@ -377,20 +377,20 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
               </CardContent>
             </Card>
 
-            {/* Products Grid */}
+            {/* Products Grid - Tighter spacing */}
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
+              <CardHeader className="pb-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-lg text-blue-900 font-semibold">Products</CardTitle>
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 font-medium">
+                  <CardTitle className="text-base text-blue-900 font-semibold">Products</CardTitle>
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 font-medium text-xs">
                     {filteredProducts.length} items
                   </Badge>
                 </div>
               </CardHeader>
               
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 {filteredProducts.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-6 text-gray-500">
                     {selectedShopId 
                       ? searchTerm || selectedCategory !== "all"
                         ? "No products found matching your criteria"
@@ -399,25 +399,25 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                     }
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2">
                     {filteredProducts.map((product) => (
                       <Card 
                         key={product.id} 
                         className="cursor-pointer hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-blue-50 hover:from-blue-50 hover:to-blue-100 transform hover:scale-105 active:scale-95"
                         onClick={() => addToCart(product)}
                       >
-                        <CardContent className="p-3">
+                        <CardContent className="p-2">
                           <div className="text-center">
-                            <h4 className="font-semibold text-xs mb-2 text-gray-800 line-clamp-2 min-h-[2rem]">
+                            <h4 className="font-semibold text-xs mb-1 text-gray-800 line-clamp-2 min-h-[1.75rem] leading-tight">
                               {product.name}
                             </h4>
                             
                             {/* Quantity Badge */}
                             {product.quantity !== undefined && (
-                              <div className="mb-2">
+                              <div className="mb-1">
                                 <Badge 
                                   variant="outline" 
-                                  className={`text-xs ${
+                                  className={`text-xs py-0 px-1 ${
                                     product.quantity > 10 
                                       ? 'bg-green-50 text-green-700 border-green-200' 
                                       : product.quantity > 0 
@@ -431,7 +431,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                             )}
                             
                             <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-2 py-1 rounded-full">
-                              <p className="text-sm font-bold">
+                              <p className="text-xs font-bold">
                                 ₹{Number(product.price).toFixed(2)}
                               </p>
                             </div>
@@ -444,12 +444,12 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
               </CardContent>
             </Card>
 
-            {/* Mobile Cart */}
+            {/* Mobile Cart - More compact */}
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
-                <CardTitle className="flex items-center justify-between text-lg">
+              <CardHeader className="pb-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
+                <CardTitle className="flex items-center justify-between text-base">
                   <span className="flex items-center gap-2 text-blue-900 font-semibold">
-                    <Calculator className="h-5 w-5" />
+                    <Calculator className="h-4 w-4" />
                     Cart ({cart.length})
                   </span>
                   {cart.length > 0 && (
@@ -457,32 +457,32 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                       variant="outline"
                       size="sm"
                       onClick={clearCart}
-                      className="text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50"
+                      className="text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50 h-7 px-2"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3 w-3" />
                     </Button>
                   )}
                 </CardTitle>
               </CardHeader>
               
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 {cart.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-6 text-gray-500">
                     <div className="text-center">
-                      <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                      <p className="font-medium">Cart is empty</p>
-                      <p className="text-sm">Add products to get started</p>
+                      <ShoppingCart className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                      <p className="font-medium text-sm">Cart is empty</p>
+                      <p className="text-xs">Add products to get started</p>
                     </div>
                   </div>
                 ) : (
                   <>
-                    {/* Cart Items */}
-                    <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
+                    {/* Cart Items - More compact */}
+                    <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
                       {cart.map((item) => (
-                        <div key={item.id} className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-3 shadow-sm border border-blue-100">
-                          <div className="flex justify-between items-start mb-2">
+                        <div key={item.id} className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-2 shadow-sm border border-blue-100">
+                          <div className="flex justify-between items-start mb-1">
                             <div className="flex-1">
-                              <h4 className="font-semibold text-sm text-gray-800">{item.name}</h4>
+                              <h4 className="font-semibold text-xs text-gray-800 leading-tight">{item.name}</h4>
                               <p className="text-xs text-gray-600">₹{Number(item.price).toFixed(2)} each</p>
                             </div>
                             <Button
@@ -496,28 +496,28 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                           </div>
                           
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-8 w-8 p-0 border-blue-200 hover:bg-blue-50"
+                                className="h-6 w-6 p-0 border-blue-200 hover:bg-blue-50"
                                 onClick={() => updateQuantity(item.id, item.quantity - 1)}
                               >
                                 <Minus className="h-3 w-3" />
                               </Button>
-                              <span className="font-semibold text-sm min-w-[30px] text-center bg-white px-2 py-1 rounded">
+                              <span className="font-semibold text-xs min-w-[24px] text-center bg-white px-1 py-1 rounded">
                                 {item.quantity}
                               </span>
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-8 w-8 p-0 border-blue-200 hover:bg-blue-50"
+                                className="h-6 w-6 p-0 border-blue-200 hover:bg-blue-50"
                                 onClick={() => updateQuantity(item.id, item.quantity + 1)}
                               >
                                 <Plus className="h-3 w-3" />
                               </Button>
                             </div>
-                            <p className="font-bold text-green-700 text-sm bg-green-100 px-2 py-1 rounded">
+                            <p className="font-bold text-green-700 text-xs bg-green-100 px-2 py-1 rounded">
                               ₹{Number(item.total).toFixed(2)}
                             </p>
                           </div>
@@ -525,60 +525,60 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                       ))}
                     </div>
 
-                    <Separator className="my-4" />
+                    <Separator className="my-3" />
 
-                    {/* Total */}
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 mb-4 border border-green-200">
-                      <div className="flex justify-between items-center text-xl font-bold">
+                    {/* Total - More compact */}
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 mb-3 border border-green-200">
+                      <div className="flex justify-between items-center text-lg font-bold">
                         <span className="text-gray-800">Total:</span>
                         <span className="text-green-700">₹{getTotalAmount().toFixed(2)}</span>
                       </div>
                     </div>
 
-                    {/* Payment Buttons - Mobile Optimized */}
-                    <div className="grid grid-cols-2 gap-2">
+                    {/* Payment Buttons - More compact grid */}
+                    <div className="grid grid-cols-2 gap-1.5">
                       <Button 
-                        className="bg-green-500 hover:bg-green-600 text-white font-medium py-3 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
+                        className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-xs" 
                         onClick={handleCashPayment}
                         disabled={cart.length === 0}
                       >
-                        <Banknote className="h-4 w-4 mr-1" />
+                        <Banknote className="h-3 w-3 mr-1" />
                         Cash
                       </Button>
                       
                       <Button 
-                        className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
+                        className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-xs" 
                         onClick={handleUPIPayment}
                         disabled={cart.length === 0}
                       >
-                        <Smartphone className="h-4 w-4 mr-1" />
+                        <Smartphone className="h-3 w-3 mr-1" />
                         UPI
                       </Button>
                       
                       <Button 
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-xs" 
                         onClick={handleCreditPayment}
                         disabled={cart.length === 0}
                       >
-                        <CreditCard className="h-4 w-4 mr-1" />
+                        <CreditCard className="h-3 w-3 mr-1" />
                         Credit
                       </Button>
                       
                       <Button 
-                        className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
+                        className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-xs" 
                         onClick={handleSplitPayment}
                         disabled={cart.length === 0}
                       >
-                        <SplitSquareHorizontal className="h-4 w-4 mr-1" />
+                        <SplitSquareHorizontal className="h-3 w-3 mr-1" />
                         Split
                       </Button>
                       
                       <Button 
-                        className="col-span-2 bg-amber-500 hover:bg-amber-600 text-white font-medium py-3 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
+                        className="col-span-2 bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-xs" 
                         onClick={handlePendingPayment}
                         disabled={cart.length === 0}
                       >
-                        <Clock className="h-4 w-4 mr-1" />
+                        <Clock className="h-3 w-3 mr-1" />
                         Pending Payment
                       </Button>
                     </div>
