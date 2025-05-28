@@ -6,7 +6,7 @@ import ProductStockManagement from "./ProductStockManagement";
 import NewStockManagement from "./NewStockManagement";
 import StockList from "./StockList";
 import StockForm from "./StockForm";
-import BatchStockEntryModal from "./BatchStockEntryModal";
+import { BatchStockEntryModal } from "./BatchStockEntryModal";
 import { useSearchParams } from "react-router-dom";
 
 interface StockTabsContainerProps {
