@@ -11,50 +11,28 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface StoreInfoModalProps {
   isOpen: boolean;
-  onComplete: (storeInfo: { storeName: string; salespersonName: string }) => void;
+  onComplete: (storeInfo: { storeName: string; salespersonName: string }, shopId: string) => void;
   onClose?: () => void;
-}
-
-interface Shop {
-  id: string;
-  name: string;
+  shops: Array<{ id: string; name: string }>;
+  shopsLoading: boolean;
 }
 
 export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
   isOpen,
   onComplete,
-  onClose
+  onClose,
+  shops,
+  shopsLoading
 }) => {
   const { user } = useAuth();
   const [selectedStoreId, setSelectedStoreId] = useState("");
-  const [stores, setStores] = useState<Shop[]>([]);
-  const [loading, setLoading] = useState(true);
   const [salespersonName, setSalespersonName] = useState("");
 
   useEffect(() => {
     if (user && isOpen) {
-      fetchStores();
       fetchUserProfile();
     }
   }, [user, isOpen]);
-
-  const fetchStores = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("shops")
-        .select("id, name")
-        .order("name");
-      
-      if (error) throw error;
-      
-      setStores(data || []);
-    } catch (error: any) {
-      console.error("Error fetching stores:", error);
-      toast.error("Failed to load stores");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchUserProfile = async () => {
     try {
@@ -85,7 +63,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
       return;
     }
 
-    const selectedStore = stores.find(store => store.id === selectedStoreId);
+    const selectedStore = shops.find(store => store.id === selectedStoreId);
     if (!selectedStore) {
       toast.error("Invalid store selection");
       return;
@@ -94,7 +72,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     onComplete({
       storeName: selectedStore.name,
       salespersonName: salespersonName.trim()
-    });
+    }, selectedStoreId);
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -119,19 +97,19 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
               <Store className="h-4 w-4" />
               Store Name
             </Label>
-            <Select value={selectedStoreId} onValueChange={setSelectedStoreId} disabled={loading}>
+            <Select value={selectedStoreId} onValueChange={setSelectedStoreId} disabled={shopsLoading}>
               <SelectTrigger>
-                <SelectValue placeholder={loading ? "Loading stores..." : "Select a store"} />
+                <SelectValue placeholder={shopsLoading ? "Loading stores..." : "Select a store"} />
               </SelectTrigger>
               <SelectContent>
-                {stores.map((store) => (
+                {shops.map((store) => (
                   <SelectItem key={store.id} value={store.id}>
                     {store.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {!loading && stores.length === 0 && (
+            {!shopsLoading && shops.length === 0 && (
               <p className="text-sm text-muted-foreground">No stores found. Please create a store first.</p>
             )}
           </div>
@@ -149,7 +127,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
           <Button
             onClick={handleSubmit}
             className="w-full bg-blue-600 hover:bg-blue-700"
-            disabled={!selectedStoreId || !salespersonName.trim() || loading}
+            disabled={!selectedStoreId || !salespersonName.trim() || shopsLoading}
           >
             Continue to POS
           </Button>

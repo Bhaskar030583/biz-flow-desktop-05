@@ -106,8 +106,9 @@ const POS = () => {
     }
   }, []);
 
-  const handleStoreInfoComplete = (info: StoreInfo) => {
+  const handleStoreInfoComplete = (info: StoreInfo, shopId: string) => {
     setStoreInfo(info);
+    setSelectedShopId(shopId);
     setShowStoreModal(false);
     setStoreInfoCompleted(true);
   };
@@ -153,74 +154,27 @@ const POS = () => {
           isOpen={shouldShowStoreModal}
           onComplete={handleStoreInfoComplete}
           onClose={handleStoreModalClose}
+          shops={shops || []}
+          shopsLoading={shopsLoading}
         />
         
-        {storeInfoCompleted && (
+        {storeInfoCompleted && selectedShopId && (
           <div className="p-6">
-            {/* Store Selection */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Store className="h-5 w-5" />
-                  Select Store
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Label htmlFor="shop-select">Choose Store for POS</Label>
-                  {shopsLoading ? (
-                    <Skeleton className="h-10 w-full" />
-                  ) : (
-                    <Select value={selectedShopId} onValueChange={setSelectedShopId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a store to start POS" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {shops?.map(shop => (
-                          <SelectItem key={shop.id} value={shop.id}>
-                            {shop.name}
-                          </SelectItem>
-                        ))}
-                        {shops?.length === 0 && (
-                          <div className="px-2 py-1.5 text-sm text-gray-500">
-                            No stores available
-                          </div>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  )}
+            {productsLoading ? (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2 space-y-4">
+                  <Skeleton className="h-64 w-full" />
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* POS System */}
-            {selectedShopId ? (
-              <>
-                {productsLoading ? (
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div className="lg:col-span-2 space-y-4">
-                      <Skeleton className="h-64 w-full" />
-                    </div>
-                    <div className="space-y-4">
-                      <Skeleton className="h-96 w-full" />
-                    </div>
-                  </div>
-                ) : (
-                  <POSSystem 
-                    products={products} 
-                    storeInfo={storeInfo} 
-                    selectedShopId={selectedShopId}
-                  />
-                )}
-              </>
+                <div className="space-y-4">
+                  <Skeleton className="h-96 w-full" />
+                </div>
+              </div>
             ) : (
-              <Card>
-                <CardContent className="py-8 text-center">
-                  <Store className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                  <h3 className="text-lg font-semibold mb-2">Select a Store</h3>
-                  <p className="text-gray-600">Please select a store to view assigned products and start using the POS system.</p>
-                </CardContent>
-              </Card>
+              <POSSystem 
+                products={products} 
+                storeInfo={storeInfo} 
+                selectedShopId={selectedShopId}
+              />
             )}
           </div>
         )}
