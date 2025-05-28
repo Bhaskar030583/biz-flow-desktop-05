@@ -2,8 +2,10 @@
 import React, { useState } from "react";
 import { ProductForm } from "@/components/product/ProductForm";
 import { ProductList } from "@/components/product/ProductList";
+import ProductCleanup from "@/components/product/ProductCleanup";
 import { useAuth } from "@/context/AuthContext";
 import { useDataSync } from "@/context/DataSyncContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Products = () => {
   const { user } = useAuth();
@@ -21,14 +23,28 @@ const Products = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Manage Products</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div>
-          <ProductForm onSuccess={handleProductSuccess} />
-        </div>
-        <div className="lg:col-span-2">
+      
+      <Tabs defaultValue="manage" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="manage">Manage Products</TabsTrigger>
+          <TabsTrigger value="cleanup">Cleanup Tool</TabsTrigger>
+          <TabsTrigger value="add">Add Product</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="manage" className="space-y-6">
           <ProductList key={`${refreshList}-${refreshTrigger}`} />
-        </div>
-      </div>
+        </TabsContent>
+        
+        <TabsContent value="cleanup" className="space-y-6">
+          <ProductCleanup />
+        </TabsContent>
+        
+        <TabsContent value="add" className="space-y-6">
+          <div className="max-w-md">
+            <ProductForm onSuccess={handleProductSuccess} />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
