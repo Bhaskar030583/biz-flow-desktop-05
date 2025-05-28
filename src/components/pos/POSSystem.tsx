@@ -18,6 +18,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { BillingModal } from "./BillingModal";
 import { QuickStockUpdateModal } from "./QuickStockUpdateModal";
 import { useNavigate } from "react-router-dom";
+import { adjustStockForBill } from "@/services/stockService";
 
 interface Product {
   id: string;
