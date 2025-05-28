@@ -481,50 +481,50 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                       </div>
                     </div>
 
-                    {/* Payment Buttons */}
-                    <div className="space-y-2">
+                    {/* Payment Buttons - Made Smaller */}
+                    <div className="space-y-1.5">
                       <Button 
-                        className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 shadow-md transform hover:scale-105 transition-all duration-200" 
+                        className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
                         onClick={handleCashPayment}
                         disabled={cart.length === 0}
                       >
-                        <Banknote className="h-5 w-5 mr-2" />
+                        <Banknote className="h-4 w-4 mr-2" />
                         Cash
                       </Button>
                       
                       <Button 
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 shadow-md transform hover:scale-105 transition-all duration-200" 
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
                         onClick={handleUPIPayment}
                         disabled={cart.length === 0}
                       >
-                        <Smartphone className="h-5 w-5 mr-2" />
+                        <Smartphone className="h-4 w-4 mr-2" />
                         UPI
                       </Button>
                       
                       <Button 
-                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 shadow-md transform hover:scale-105 transition-all duration-200" 
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
                         onClick={handleCreditPayment}
                         disabled={cart.length === 0}
                       >
-                        <CreditCard className="h-5 w-5 mr-2" />
+                        <CreditCard className="h-4 w-4 mr-2" />
                         Credit
                       </Button>
                       
                       <Button 
-                        className="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 shadow-md transform hover:scale-105 transition-all duration-200" 
+                        className="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
                         onClick={handleSplitPayment}
                         disabled={cart.length === 0}
                       >
-                        <SplitSquareHorizontal className="h-5 w-5 mr-2" />
+                        <SplitSquareHorizontal className="h-4 w-4 mr-2" />
                         Split
                       </Button>
                       
                       <Button 
-                        className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 shadow-md transform hover:scale-105 transition-all duration-200" 
+                        className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 shadow-md transform hover:scale-105 transition-all duration-200 text-sm" 
                         onClick={handlePendingPayment}
                         disabled={cart.length === 0}
                       >
-                        <Clock className="h-5 w-5 mr-2" />
+                        <Clock className="h-4 w-4 mr-2" />
                         Pending
                       </Button>
                     </div>
