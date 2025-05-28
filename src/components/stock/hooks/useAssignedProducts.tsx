@@ -23,6 +23,12 @@ export interface AssignedProduct {
 export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: string) => {
   const { user } = useAuth();
 
+  console.log('📦 [useAssignedProducts] Hook called with:', {
+    refreshTrigger,
+    selectedShopId,
+    userId: user?.id
+  });
+
   // Fetch HRMS stores
   const { data: storesData, isLoading: storesLoading } = useQuery({
     queryKey: ['hr-stores-for-stock'],
@@ -38,7 +44,8 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
         throw error;
       }
       
-      console.log('✅ [useAssignedProducts] Successfully fetched HR stores:', data);
+      console.log('✅ [useAssignedProducts] Successfully fetched HR stores:', data?.length, 'stores');
+      console.log('🏪 [useAssignedProducts] Store details:', data?.map(s => ({ id: s.id, name: s.store_name })));
       return data || [];
     },
     enabled: !!user?.id
@@ -54,9 +61,12 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
   const { data: assignedProductsData, isLoading: productsLoading } = useQuery({
     queryKey: ['assigned-products-all-stores', refreshTrigger],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!user?.id) {
+        console.log('❌ [useAssignedProducts] No user ID available');
+        return [];
+      }
       
-      console.log('📦 [useAssignedProducts] Fetching all assigned products');
+      console.log('📦 [useAssignedProducts] Fetching all assigned products for user:', user.id);
       
       // Get all product assignments from product_shops table
       const { data: productShops, error: productShopsError } = await supabase
@@ -80,7 +90,13 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
         throw productShopsError;
       }
 
-      console.log('📦 [useAssignedProducts] Product assignments:', productShops);
+      console.log('📦 [useAssignedProducts] Raw product assignments:', productShops?.length);
+      console.log('📦 [useAssignedProducts] Assignment details:', productShops?.map(ps => ({
+        assignmentId: ps.id,
+        productId: ps.product_id,
+        shopId: ps.shop_id,
+        productName: ps.products?.name
+      })));
 
       if (!productShops || productShops.length === 0) {
         console.log('⚠️ [useAssignedProducts] No product assignments found');
@@ -94,9 +110,19 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
       const assignedProducts: AssignedProduct[] = [];
 
       for (const assignment of productShops) {
-        if (!assignment.products) continue;
+        if (!assignment.products) {
+          console.log('⚠️ [useAssignedProducts] Skipping assignment without product data:', assignment.id);
+          continue;
+        }
 
         const product = assignment.products;
+        
+        console.log('📦 [useAssignedProducts] Processing assignment:', {
+          assignmentId: assignment.id,
+          productId: product.id,
+          productName: product.name,
+          shopId: assignment.shop_id
+        });
         
         // Get stock data for this product at this store
         const { data: stockData, error: stockError } = await supabase
@@ -114,6 +140,13 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
 
         // Find the corresponding HR store name
         const hrStore = storesData?.find(store => store.id === assignment.shop_id);
+        
+        console.log('🏪 [useAssignedProducts] Store lookup:', {
+          assignmentShopId: assignment.shop_id,
+          hrStoreFound: !!hrStore,
+          hrStoreName: hrStore?.store_name,
+          allStoreIds: storesData?.map(s => s.id)
+        });
 
         const soldQuantity = stockData ? (stockData.opening_stock + (stockData.stock_added || 0)) - stockData.actual_stock : 0;
 
@@ -130,24 +163,25 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           actual_stock: stockData?.actual_stock || 0,
           last_stock_date: stockData?.stock_date || null,
           sold_quantity: soldQuantity,
-          shop_id: assignment.shop_id,
+          shop_id: assignment.shop_id, // This should be the HR store ID
           shop_name: hrStore?.store_name || 'Unknown Store'
         };
 
-        console.log('📦 [useAssignedProducts] Processed product:', {
+        console.log('📦 [useAssignedProducts] Created assigned product:', {
           name: assignedProduct.name,
           shopId: assignedProduct.shop_id,
-          shopName: assignedProduct.shop_name
+          shopName: assignedProduct.shop_name,
+          assignmentId: assignedProduct.assignment_id
         });
 
         assignedProducts.push(assignedProduct);
       }
 
-      console.log('✅ [useAssignedProducts] Final assigned products with stock:', {
+      console.log('✅ [useAssignedProducts] Final assigned products:', {
         totalProducts: assignedProducts.length,
         uniqueShops: [...new Set(assignedProducts.map(p => p.shop_id))],
         shopBreakdown: assignedProducts.reduce((acc, p) => {
-          acc[p.shop_name] = (acc[p.shop_name] || 0) + 1;
+          acc[`${p.shop_id}:${p.shop_name}`] = (acc[`${p.shop_id}:${p.shop_name}`] || 0) + 1;
           return acc;
         }, {} as Record<string, number>)
       });
@@ -163,10 +197,22 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
     name: product.name
   })) || [];
 
+  // Remove duplicates
+  const uniqueProducts = products.filter((product, index, self) => 
+    index === self.findIndex(p => p.id === product.id)
+  );
+
+  console.log('📦 [useAssignedProducts] Hook returning:', {
+    assignedProductsCount: assignedProductsData?.length || 0,
+    storesCount: stores.length,
+    productsCount: uniqueProducts.length,
+    loading: storesLoading || productsLoading
+  });
+
   return {
     assignedProducts: assignedProductsData || [],
     loading: storesLoading || productsLoading,
     shops: stores,
-    products
+    products: uniqueProducts
   };
 };
