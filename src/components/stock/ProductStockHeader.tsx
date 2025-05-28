@@ -38,7 +38,7 @@ const ProductStockHeader = ({
 }: ProductStockHeaderProps) => {
   return (
     <CardHeader className="pb-3">
-      <CardTitle className="flex items-center gap-2 text-white">
+      <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
         <Package2 className="h-5 w-5" />
         Store Product Management
         {selectedShop && assignedProductsCount > 0 && (
