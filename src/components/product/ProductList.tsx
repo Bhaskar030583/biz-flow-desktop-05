@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -6,7 +5,8 @@ import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Package, IndianRupee, Edit } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Trash2, Package, IndianRupee, Edit, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +33,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -53,6 +52,7 @@ export function ProductList() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -247,9 +247,15 @@ export function ProductList() {
     }
   }
   
-  const filteredProducts = selectedCategory
-    ? products.filter(product => product.category === selectedCategory)
-    : products;
+  const filteredProducts = products.filter(product => {
+    const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
+    const matchesSearch = searchTerm === "" || 
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.price.toString().includes(searchTerm);
+    
+    return matchesCategory && matchesSearch;
+  });
 
   if (loading) {
     return <div className="text-center py-4">Loading products...</div>;
@@ -271,6 +277,21 @@ export function ProductList() {
     <Card>
       <CardHeader>
         <CardTitle>Your Products</CardTitle>
+        
+        {/* Search Input */}
+        <div className="flex items-center space-x-2 mt-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+        </div>
+        
+        {/* Category Filters */}
         <div className="flex flex-wrap gap-2 mt-4">
           <Button 
             variant={selectedCategory === null ? "default" : "outline"} 
@@ -375,6 +396,12 @@ export function ProductList() {
             </TableBody>
           </Table>
         </div>
+        
+        {filteredProducts.length === 0 && (searchTerm || selectedCategory) && (
+          <div className="text-center py-8 text-muted-foreground">
+            No products found matching your search criteria.
+          </div>
+        )}
       </CardContent>
       
       {/* Edit Product Dialog */}
