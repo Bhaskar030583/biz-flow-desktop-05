@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -270,7 +269,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
 
   // Mobile Categories Sidebar
   const CategoriesList = () => (
-    <div className="space-y-1 p-1">
+    <div className="space-y-1 p-2">
       {categories.map((category) => (
         <button
           key={category}
@@ -278,7 +277,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
             setSelectedCategory(category);
             setShowCategories(false);
           }}
-          className={`w-full text-left px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
+          className={`w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
             selectedCategory === category
               ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
               : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"
@@ -293,23 +292,23 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
-      <div className="bg-white shadow-lg border-b border-blue-100">
-        <div className="w-full px-2 md:px-4 lg:px-6 py-1 md:py-3">
+      <div className="bg-white shadow-lg border-b border-blue-100 sticky top-0 z-40">
+        <div className="w-full px-3 md:px-4 lg:px-6 py-2 md:py-3">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-1 md:gap-3">
-              <div className="bg-gradient-to-r from-orange-600 to-red-700 p-1 md:p-2 lg:p-3 rounded-lg shadow-lg">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="bg-gradient-to-r from-orange-600 to-red-700 p-1.5 md:p-2 lg:p-3 rounded-lg shadow-lg">
                 <img 
                   src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
                   alt="ABC Cafe Logo" 
-                  className="h-4 w-4 md:h-6 md:w-6 lg:h-8 lg:w-8"
+                  className="h-5 w-5 md:h-6 md:w-6 lg:h-8 lg:w-8"
                 />
               </div>
               <div>
-                <h1 className="text-sm md:text-xl lg:text-2xl xl:text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-700 bg-clip-text text-transparent">
+                <h1 className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-700 bg-clip-text text-transparent">
                   ABC CAFE
                 </h1>
                 {storeInfo && (
-                  <p className="text-xs md:text-sm text-gray-600 font-medium">
+                  <p className="text-xs md:text-sm text-gray-600 font-medium hidden sm:block">
                     {storeInfo.storeName} • {storeInfo.salespersonName}
                   </p>
                 )}
@@ -320,31 +319,31 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                 variant="outline"
                 size="sm"
                 onClick={() => setShowCustomerManagement(true)}
-                className="flex items-center gap-1 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm px-1 md:px-2 lg:px-3 h-7 md:h-8 lg:h-9"
+                className="flex items-center gap-1 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm px-2 md:px-3 h-8 md:h-9"
               >
                 <User className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline text-xs md:text-sm">Customers</span>
+                <span className="hidden md:inline text-xs md:text-sm">Customers</span>
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowBillHistory(true)}
-                className="flex items-center gap-1 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm px-1 md:px-2 lg:px-3 h-7 md:h-8 lg:h-9"
+                className="flex items-center gap-1 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm px-2 md:px-3 h-8 md:h-9"
               >
                 <History className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline text-xs md:text-sm">History</span>
+                <span className="hidden md:inline text-xs md:text-sm">History</span>
               </Button>
               {/* Cart Icon */}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowBillingModal(true)}
-                className="flex items-center gap-1 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm px-1 md:px-2 lg:px-3 h-7 md:h-8 lg:h-9 relative"
+                className="flex items-center gap-1 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm px-2 md:px-3 h-8 md:h-9 relative"
               >
-                <ShoppingCart className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline text-xs md:text-sm">Cart</span>
+                <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
+                <span className="hidden md:inline text-xs md:text-sm">Cart</span>
                 {cart.length > 0 && (
-                  <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-xs min-w-[16px] h-4 flex items-center justify-center rounded-full px-1">
+                  <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-5 flex items-center justify-center rounded-full px-1.5 font-bold">
                     {cart.length}
                   </Badge>
                 )}
@@ -354,41 +353,41 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
         </div>
       </div>
 
-      <div className="w-full p-1 md:p-3 lg:p-4 xl:p-6">
+      <div className="w-full p-2 md:p-3 lg:p-4 xl:p-6">
         {isMobile ? (
-          // Mobile Layout - Stacked with improved responsiveness
-          <div className="space-y-2">
+          // Mobile Layout - Enhanced for better usability
+          <div className="space-y-3">
             {/* Search Bar */}
-            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-              <CardContent className="p-2">
-                <div className="space-y-2">
+            <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
+              <CardContent className="p-3">
+                <div className="space-y-3">
                   <div className="flex gap-2">
                     <div className="relative flex-1">
-                      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                       <Input
                         placeholder="Search products..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-8 border-blue-200 focus:border-blue-400 focus:ring-blue-300 h-8 text-sm"
+                        className="pl-10 border-blue-200 focus:border-blue-400 focus:ring-blue-300 h-10 text-sm rounded-lg"
                       />
                     </div>
                     <Sheet open={showCategories} onOpenChange={setShowCategories}>
                       <SheetTrigger asChild>
-                        <Button variant="outline" size="sm" className="shrink-0 h-8 w-8 p-0">
-                          <Menu className="h-3 w-3" />
+                        <Button variant="outline" size="sm" className="shrink-0 h-10 w-10 p-0 rounded-lg">
+                          <Menu className="h-4 w-4" />
                         </Button>
                       </SheetTrigger>
-                      <SheetContent side="left" className="w-60">
-                        <div className="py-4">
-                          <h3 className="text-base font-semibold mb-3">Categories</h3>
+                      <SheetContent side="left" className="w-72">
+                        <div className="py-6">
+                          <h3 className="text-lg font-semibold mb-4">Categories</h3>
                           <CategoriesList />
                         </div>
                       </SheetContent>
                     </Sheet>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-600">Category:</span>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs px-2 py-0">
+                    <span className="text-sm text-gray-600 font-medium">Category:</span>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
                       {selectedCategory === "all" ? "All Items" : selectedCategory}
                     </Badge>
                   </div>
@@ -397,46 +396,57 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
             </Card>
 
             {/* Products Grid */}
-            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className="pb-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
+            <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
+              <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-sm text-blue-900 font-semibold">Products</CardTitle>
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 font-medium text-xs px-2 py-0">
+                  <CardTitle className="text-base text-blue-900 font-semibold">Products</CardTitle>
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 font-medium text-sm px-3 py-1">
                     {filteredProducts.length} items
                   </Badge>
                 </div>
               </CardHeader>
               
-              <CardContent className="p-2">
+              <CardContent className="p-3">
                 {filteredProducts.length === 0 ? (
-                  <div className="text-center py-6 text-gray-500">
-                    {selectedShopId 
-                      ? searchTerm || selectedCategory !== "all"
-                        ? "No products found matching your criteria"
-                        : "No products available in this store" 
-                      : "Please select a store to view products"
-                    }
+                  <div className="text-center py-8 text-gray-500">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                      <Search className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <p className="text-base font-medium mb-2">
+                      {selectedShopId 
+                        ? searchTerm || selectedCategory !== "all"
+                          ? "No products found"
+                          : "No products available" 
+                        : "Please select a store"
+                      }
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      {searchTerm || selectedCategory !== "all" 
+                        ? "Try adjusting your search or category filter"
+                        : "Add products to get started"
+                      }
+                    </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-3">
                     {filteredProducts.map((product) => (
                       <Card 
                         key={product.id} 
-                        className="cursor-pointer hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-blue-50 hover:from-blue-50 hover:to-blue-100 transform hover:scale-105 active:scale-95"
+                        className="cursor-pointer hover:shadow-xl transition-all duration-300 border border-blue-100 bg-gradient-to-br from-white to-blue-50 hover:from-blue-50 hover:to-blue-100 transform hover:scale-105 active:scale-95"
                         onClick={() => addToCart(product)}
                       >
-                        <CardContent className="p-2">
-                          <div className="text-center">
-                            <h4 className="font-semibold text-xs mb-1 text-gray-800 line-clamp-2 min-h-[1.5rem] leading-tight">
+                        <CardContent className="p-3">
+                          <div className="text-center space-y-2">
+                            <h4 className="font-semibold text-sm mb-2 text-gray-800 line-clamp-2 min-h-[2.5rem] leading-tight">
                               {product.name}
                             </h4>
                             
                             {/* Quantity Badge */}
                             {product.quantity !== undefined && (
-                              <div className="mb-1">
+                              <div className="mb-2">
                                 <Badge 
                                   variant="outline" 
-                                  className={`text-xs py-0 px-1 ${
+                                  className={`text-xs py-1 px-2 ${
                                     product.quantity > 10 
                                       ? 'bg-green-50 text-green-700 border-green-200' 
                                       : product.quantity > 0 
@@ -444,13 +454,13 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                                         : 'bg-red-50 text-red-700 border-red-200'
                                   }`}
                                 >
-                                  Qty: {product.quantity}
+                                  Stock: {product.quantity}
                                 </Badge>
                               </div>
                             )}
                             
-                            <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-2 py-1 rounded-full">
-                              <p className="text-xs font-bold">
+                            <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-2 rounded-lg shadow-md">
+                              <p className="text-sm font-bold">
                                 ₹{Number(product.price).toFixed(2)}
                               </p>
                             </div>
@@ -464,24 +474,24 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
             </Card>
           </div>
         ) : (
-          // Tablet/Desktop Layout - Responsive grid layout
-          <div className="grid grid-cols-12 gap-2 md:gap-3 lg:gap-4 h-[calc(100vh-120px)] md:h-[calc(100vh-140px)] lg:h-[calc(100vh-160px)]">
+          // Tablet/Desktop Layout - Enhanced responsive grid
+          <div className="grid grid-cols-12 gap-3 md:gap-4 lg:gap-6 h-[calc(100vh-100px)] md:h-[calc(100vh-120px)] lg:h-[calc(100vh-140px)]">
             {/* Left - Categories Sidebar */}
             <div className="col-span-3 lg:col-span-2">
-              <Card className="h-full shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-                <CardHeader className="pb-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
+              <Card className="h-full shadow-lg border-0 bg-white/90 backdrop-blur-sm">
+                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
                   <CardTitle className="text-sm md:text-base lg:text-lg text-blue-900 font-semibold">Categories</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <div className="space-y-1 p-1 md:p-2">
+                  <div className="space-y-1 p-2 md:p-3">
                     {categories.map((category) => (
                       <button
                         key={category}
                         onClick={() => setSelectedCategory(category)}
-                        className={`w-full text-left px-2 md:px-3 py-2 md:py-3 text-xs md:text-sm font-medium rounded-lg transition-all duration-200 ${
+                        className={`w-full text-left px-3 md:px-4 py-3 md:py-4 text-sm md:text-base font-medium rounded-lg transition-all duration-200 ${
                           selectedCategory === category
-                            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
-                            : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md transform scale-105"
+                            : "text-gray-700 hover:bg-blue-50 hover:text-blue-700 hover:shadow-sm"
                         }`}
                       >
                         {category === "all" ? "All Items" : category}
@@ -492,57 +502,68 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
               </Card>
             </div>
 
-            {/* Middle - Products Grid and Search */}
+            {/* Right - Products Grid and Search */}
             <div className="col-span-9 lg:col-span-10">
-              <Card className="h-full shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-                <CardHeader className="pb-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
-                  <div className="flex justify-between items-center">
-                    <CardTitle className="text-sm md:text-base lg:text-lg text-blue-900 font-semibold">Products</CardTitle>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 font-medium text-xs md:text-sm px-2 py-0">
+              <Card className="h-full shadow-lg border-0 bg-white/90 backdrop-blur-sm">
+                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
+                  <div className="flex justify-between items-center mb-3">
+                    <CardTitle className="text-base md:text-lg lg:text-xl text-blue-900 font-semibold">Products</CardTitle>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 font-medium text-sm md:text-base px-3 py-1">
                       {filteredProducts.length} items
                     </Badge>
                   </div>
                   <div className="relative">
-                    <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3 md:h-4 md:w-4" />
+                    <Search className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 md:h-5 md:w-5" />
                     <Input
                       placeholder="Search products..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-8 md:pl-10 border-blue-200 focus:border-blue-400 focus:ring-blue-300 h-8 md:h-10 text-sm"
+                      className="pl-10 md:pl-12 border-blue-200 focus:border-blue-400 focus:ring-blue-300 h-10 md:h-12 text-sm md:text-base rounded-lg"
                     />
                   </div>
                 </CardHeader>
                 
-                <CardContent className="h-[calc(100%-100px)] md:h-[calc(100%-120px)] lg:h-[calc(100%-140px)] overflow-y-auto p-2 md:p-3 lg:p-4">
+                <CardContent className="h-[calc(100%-140px)] md:h-[calc(100%-160px)] lg:h-[calc(100%-180px)] overflow-y-auto p-3 md:p-4 lg:p-6">
                   {filteredProducts.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">
-                      {selectedShopId 
-                        ? searchTerm || selectedCategory !== "all"
-                          ? "No products found matching your criteria"
-                          : "No products available in this store" 
-                        : "Please select a store to view products"
-                      }
+                    <div className="text-center py-16 text-gray-500">
+                      <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                        <Search className="h-10 w-10 text-gray-400" />
+                      </div>
+                      <h3 className="text-xl font-semibold mb-3">
+                        {selectedShopId 
+                          ? searchTerm || selectedCategory !== "all"
+                            ? "No products found"
+                            : "No products available" 
+                          : "Please select a store"
+                        }
+                      </h3>
+                      <p className="text-base text-gray-400">
+                        {searchTerm || selectedCategory !== "all" 
+                          ? "Try adjusting your search or category filter"
+                          : "Add products to get started"
+                        }
+                      </p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 md:gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4">
                       {filteredProducts.map((product) => (
                         <Card 
                           key={product.id} 
-                          className="cursor-pointer hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-blue-50 hover:from-blue-50 hover:to-blue-100 transform hover:scale-105"
+                          className="cursor-pointer hover:shadow-xl transition-all duration-300 border border-blue-100 bg-gradient-to-br from-white to-blue-50 hover:from-blue-50 hover:to-blue-100 transform hover:scale-105 group"
                           onClick={() => addToCart(product)}
                         >
-                          <CardContent className="p-2 md:p-3">
-                            <div className="text-center">
-                              <h4 className="font-semibold text-xs md:text-sm mb-1 md:mb-2 text-gray-800 line-clamp-2 min-h-[1.5rem] md:min-h-[2.5rem] leading-tight">
+                          <CardContent className="p-3 md:p-4">
+                            <div className="text-center space-y-3">
+                              <h4 className="font-semibold text-sm md:text-base mb-2 text-gray-800 line-clamp-2 min-h-[2.5rem] md:min-h-[3rem] leading-tight group-hover:text-blue-700 transition-colors">
                                 {product.name}
                               </h4>
                               
                               {/* Quantity Badge */}
                               {product.quantity !== undefined && (
-                                <div className="mb-1 md:mb-2">
+                                <div className="mb-3">
                                   <Badge 
                                     variant="outline" 
-                                    className={`text-xs ${
+                                    className={`text-xs md:text-sm py-1 px-2 ${
                                       product.quantity > 10 
                                         ? 'bg-green-50 text-green-700 border-green-200' 
                                         : product.quantity > 0 
@@ -550,13 +571,13 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
                                           : 'bg-red-50 text-red-700 border-red-200'
                                     }`}
                                   >
-                                    Qty: {product.quantity}
+                                    Stock: {product.quantity}
                                   </Badge>
                                 </div>
                               )}
                               
-                              <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-2 md:px-3 py-1 rounded-full">
-                                <p className="text-xs md:text-sm font-bold">
+                              <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 md:px-4 py-2 md:py-3 rounded-lg shadow-md group-hover:shadow-lg transition-shadow">
+                                <p className="text-sm md:text-base font-bold">
                                   ₹{Number(product.price).toFixed(2)}
                                 </p>
                               </div>
