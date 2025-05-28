@@ -106,20 +106,22 @@ const PayrollManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 p-6 rounded-lg border border-blue-200 dark:border-blue-800">
         <div className="flex items-center gap-4">
           <Button 
             variant="outline" 
             size="sm"
             onClick={() => navigate('/hrms')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-white dark:bg-gray-800 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/50"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to HRMS
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Payroll Management</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-3xl font-bold tracking-tight text-blue-900 dark:text-blue-100">
+              Payroll Management
+            </h1>
+            <p className="text-blue-700 dark:text-blue-300 font-medium">
               Manage employee salaries and payslips
             </p>
           </div>
@@ -128,7 +130,7 @@ const PayrollManagement = () => {
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-            className="border rounded px-3 py-2"
+            className="border border-blue-200 dark:border-blue-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-blue-900 dark:text-blue-100 focus:ring-2 focus:ring-blue-500"
           >
             {monthNames.map((month, index) => (
               <option key={index} value={index + 1}>{month}</option>
@@ -137,7 +139,7 @@ const PayrollManagement = () => {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-            className="border rounded px-3 py-2"
+            className="border border-blue-200 dark:border-blue-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-blue-900 dark:text-blue-100 focus:ring-2 focus:ring-blue-500"
           >
             {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
               <option key={year} value={year}>{year}</option>
