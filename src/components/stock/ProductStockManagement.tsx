@@ -24,17 +24,24 @@ const ProductStockManagement = ({
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
 
   // Fetch HRMS stores instead of shops
-  const { data: shops, isLoading: shopsLoading } = useQuery({
+  const { data: storesData, isLoading: shopsLoading } = useQuery({
     queryKey: ['hr-stores'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('hr_stores')
-        .select('id, store_name as name, store_code')
+        .select('id, store_name, store_code')
         .order('store_name');
       if (error) throw error;
       return data || [];
     }
   });
+
+  // Transform hr_stores data to match the Shop interface
+  const shops = storesData?.map(store => ({
+    id: store.id,
+    name: store.store_name,
+    store_code: store.store_code
+  })) || [];
 
   // Auto-select first shop when shops are loaded
   useEffect(() => {
@@ -106,7 +113,7 @@ const ProductStockManagement = ({
         setCategoryFilter={setCategoryFilter}
         showAssignmentForm={showAssignmentForm}
         setShowAssignmentForm={setShowAssignmentForm}
-        shops={shops || []}
+        shops={shops}
         shopsLoading={shopsLoading}
         categories={categories}
         productCount={productCount}
