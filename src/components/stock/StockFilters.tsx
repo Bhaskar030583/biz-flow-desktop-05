@@ -68,7 +68,7 @@ const StockFilters = ({
     );
   };
 
-  const validShops = Array.isArray(shops) ? shops.filter(isValidItem) : [];
+  const validStores = Array.isArray(shops) ? shops.filter(isValidItem) : [];
   const validProducts = Array.isArray(products) ? products.filter(isValidItem) : [];
 
   const hasFilters = 
@@ -101,18 +101,18 @@ const StockFilters = ({
         <div className="flex flex-1 gap-2">
           <Select value={shopFilter || "_all"} onValueChange={setShopFilter}>
             <SelectTrigger className="w-full min-w-[120px]">
-              <SelectValue placeholder="All Shops" />
+              <SelectValue placeholder="All Stores" />
             </SelectTrigger>
             <SelectContent className="bg-white z-50">
-              <SelectItem value="_all">All Shops</SelectItem>
-              {validShops.map((shop) => (
-                <SelectItem key={shop.id} value={shop.id}>
-                  {shop.name}
+              <SelectItem value="_all">All Stores</SelectItem>
+              {validStores.map((store) => (
+                <SelectItem key={store.id} value={store.id}>
+                  {store.name}
                 </SelectItem>
               ))}
-              {validShops.length === 0 && (
+              {validStores.length === 0 && (
                 <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                  No shops available
+                  No stores available
                 </div>
               )}
             </SelectContent>

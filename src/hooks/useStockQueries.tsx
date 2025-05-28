@@ -92,20 +92,26 @@ export const useStockQueries = ({
     }
   });
 
-  // Fetch shop and product options for filters
+  // Fetch HRMS stores and product options for filters
   const { 
     data: filterOptions,
     isLoading: isLoadingFilters 
   } = useQuery({
     queryKey: ['stock-filter-options'],
     queryFn: async () => {
-      // Fetch unique shops
-      const { data: shops, error: shopsError } = await supabase
-        .from('shops')
-        .select('id, name')
-        .order('name');
+      // Fetch HRMS stores instead of shops
+      const { data: hrStores, error: storesError } = await supabase
+        .from('hr_stores')
+        .select('id, store_name')
+        .order('store_name');
       
-      if (shopsError) throw shopsError;
+      if (storesError) throw storesError;
+
+      // Transform to match expected format
+      const stores = hrStores?.map(store => ({
+        id: store.id,
+        name: store.store_name
+      })) || [];
 
       // Fetch unique products
       const { data: products, error: productsError } = await supabase
@@ -115,7 +121,7 @@ export const useStockQueries = ({
       
       if (productsError) throw productsError;
 
-      return { shops: shops || [], products: products || [] };
+      return { shops: stores, products: products || [] };
     },
     staleTime: 1000 * 60 * 15, // 15 minutes
   });

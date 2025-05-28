@@ -1,7 +1,6 @@
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 
 export interface AssignedProduct {
@@ -17,200 +16,135 @@ export interface AssignedProduct {
   actual_stock?: number;
   last_stock_date?: string;
   sold_quantity?: number;
-  shop_name?: string;
-  shop_id?: string;
 }
 
 export const useAssignedProducts = (refreshTrigger: number) => {
   const { user } = useAuth();
-  const [assignedProducts, setAssignedProducts] = useState<AssignedProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [shops, setShops] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
 
-  useEffect(() => {
-    const fetchAssignedProducts = async () => {
-      if (!user?.id) {
-        console.log('No user ID available');
-        setLoading(false);
-        return;
+  // Fetch HRMS stores instead of shops
+  const { data: storesData, isLoading: storesLoading } = useQuery({
+    queryKey: ['hr-stores-for-stock'],
+    queryFn: async () => {
+      console.log('🏪 [useAssignedProducts] Fetching HR stores for stock list');
+      const { data, error } = await supabase
+        .from('hr_stores')
+        .select('id, store_name, store_code')
+        .order('store_name');
+      
+      if (error) {
+        console.error('❌ [useAssignedProducts] Error fetching hr_stores:', error);
+        throw error;
+      }
+      
+      console.log('✅ [useAssignedProducts] Successfully fetched HR stores:', data);
+      return data || [];
+    },
+    enabled: !!user?.id
+  });
+
+  // Transform hr_stores data to match the expected interface
+  const stores = storesData?.map(store => ({
+    id: store.id,
+    name: store.store_name
+  })) || [];
+
+  // Fetch assigned products from all stores
+  const { data: assignedProductsData, isLoading: productsLoading } = useQuery({
+    queryKey: ['assigned-products-all-stores', refreshTrigger],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      console.log('📦 [useAssignedProducts] Fetching assigned products from all stores');
+      
+      // Get product assignments from product_shops table
+      // Since we're now using HR stores, we need to map them properly
+      const { data: productShops, error: productShopsError } = await supabase
+        .from('product_shops')
+        .select(`
+          id,
+          product_id,
+          shop_id,
+          products (
+            id,
+            name,
+            category,
+            price,
+            cost_price
+          )
+        `)
+        .eq('user_id', user?.id);
+      
+      if (productShopsError) {
+        console.error('❌ [useAssignedProducts] Error fetching product assignments:', productShopsError);
+        throw productShopsError;
       }
 
-      try {
-        setLoading(true);
-        console.log('=== FETCHING ASSIGNED PRODUCTS FOR STOCK LIST ===');
+      console.log('📦 [useAssignedProducts] Product assignments:', productShops);
+
+      if (!productShops || productShops.length === 0) {
+        console.log('⚠️ [useAssignedProducts] No product assignments found');
+        return [];
+      }
+
+      // Get today's date for stock queries
+      const today = new Date().toISOString().split('T')[0];
+
+      // For each assignment, get the current stock data
+      const assignedProducts: AssignedProduct[] = [];
+
+      for (const assignment of productShops) {
+        if (!assignment.products) continue;
+
+        const product = assignment.products;
         
-        // First, get the product assignments - checking both shops and hr_stores
-        let assignments = [];
-        let storesData = [];
-        
-        // Try to get assignments from product_shops table first
-        const { data: productShopAssignments, error: shopAssignmentError } = await supabase
-          .from('product_shops')
-          .select('id, product_id, shop_id')
-          .eq('user_id', user.id);
+        // Get stock data for this product at this store
+        const { data: stockData, error: stockError } = await supabase
+          .from('stocks')
+          .select('*')
+          .eq('product_id', product.id)
+          .eq('shop_id', assignment.shop_id)
+          .eq('stock_date', today)
+          .eq('user_id', user?.id)
+          .maybeSingle();
 
-        if (productShopAssignments && productShopAssignments.length > 0) {
-          assignments = productShopAssignments;
-          
-          // Get unique shop IDs
-          const shopIds = [...new Set(assignments.map(a => a.shop_id))];
-          
-          // Try to fetch from shops table first
-          const { data: shopsTableData, error: shopsError } = await supabase
-            .from('shops')
-            .select('id, name, store_code')
-            .in('id', shopIds);
-
-          if (shopsTableData && shopsTableData.length > 0) {
-            storesData = shopsTableData.map(shop => ({
-              id: shop.id,
-              store_name: shop.name,
-              store_code: shop.store_code
-            }));
-          } else {
-            // If no data in shops table, try hr_stores
-            const { data: hrStoresData, error: hrStoresError } = await supabase
-              .from('hr_stores')
-              .select('id, store_name, store_code')
-              .in('id', shopIds);
-
-            if (hrStoresData) {
-              storesData = hrStoresData;
-            }
-          }
-        } else {
-          // If no product_shops assignments, check if we should create them from hr_stores
-          console.log('No product_shops assignments found, checking hr_stores');
-          
-          // Get all hr_stores
-          const { data: hrStoresData, error: hrStoresError } = await supabase
-            .from('hr_stores')
-            .select('id, store_name, store_code');
-
-          if (hrStoresData && hrStoresData.length > 0) {
-            storesData = hrStoresData;
-            // For now, we'll show empty assignments but available stores
-            assignments = [];
-          }
+        if (stockError) {
+          console.error('❌ [useAssignedProducts] Error fetching stock for product:', product.name, stockError);
         }
 
-        console.log('Product assignments:', assignments);
-        console.log('Stores data:', storesData);
+        const soldQuantity = stockData ? (stockData.opening_stock + (stockData.stock_added || 0)) - stockData.actual_stock : 0;
 
-        if (assignments.length === 0) {
-          console.log('No product assignments found');
-          setAssignedProducts([]);
-          setShops(storesData.map(store => ({
-            name: store.store_name,
-            id: store.id
-          })));
-          setProducts([]);
-          return;
-        }
-
-        // Get unique product IDs
-        const productIds = [...new Set(assignments.map(a => a.product_id))];
-
-        // Fetch products data
-        const { data: productsData, error: productsError } = await supabase
-          .from('products')
-          .select('id, name, category, price, cost_price')
-          .in('id', productIds);
-
-        if (productsError) {
-          console.error('Error fetching products:', productsError);
-          throw productsError;
-        }
-
-        console.log('Products data:', productsData);
-
-        // Transform data and get stock information
-        const transformedProducts: AssignedProduct[] = [];
-        
-        for (const assignment of assignments) {
-          const product = productsData?.find(p => p.id === assignment.product_id);
-          const store = storesData?.find(s => s.id === assignment.shop_id);
-          
-          if (!product || !store) {
-            console.log('Missing product or store data for assignment:', assignment);
-            continue;
-          }
-
-          // Get latest stock data for this product and shop
-          const { data: stockData, error: stockError } = await supabase
-            .from('stocks')
-            .select('*')
-            .eq('product_id', product.id)
-            .eq('shop_id', store.id)
-            .eq('user_id', user.id)
-            .order('stock_date', { ascending: false })
-            .limit(1);
-
-          if (stockError) {
-            console.error('Error fetching stock data:', stockError);
-          }
-
-          const latestStock = stockData?.[0];
-          const soldQuantity = latestStock ? 
-            (latestStock.opening_stock + (latestStock.stock_added || 0)) - latestStock.actual_stock : 0;
-
-          transformedProducts.push({
-            assignment_id: assignment.id,
-            id: product.id,
-            name: product.name,
-            category: product.category,
-            price: product.price,
-            cost_price: product.cost_price,
-            opening_stock: latestStock?.opening_stock || 0,
-            stock_added: latestStock?.stock_added || 0,
-            closing_stock: latestStock?.closing_stock || 0,
-            actual_stock: latestStock?.actual_stock || 0,
-            last_stock_date: latestStock?.stock_date || null,
-            sold_quantity: Math.max(0, soldQuantity),
-            shop_name: store.store_name,
-            shop_id: store.id
-          });
-        }
-
-        console.log('Transformed products:', transformedProducts);
-        setAssignedProducts(transformedProducts);
-        
-        // Extract unique shops and products for filters
-        const uniqueShops = storesData?.map(store => ({
-          name: store.store_name,
-          id: store.id
-        })) || [];
-        
-        const uniqueProducts = productsData?.map(product => ({
+        assignedProducts.push({
+          assignment_id: assignment.id,
+          id: product.id,
           name: product.name,
-          id: product.id
-        })) || [];
-        
-        setShops(uniqueShops);
-        setProducts(uniqueProducts);
-
-        if (transformedProducts.length > 0) {
-          toast.success(`Loaded ${transformedProducts.length} assigned products`);
-        }
-
-      } catch (error: any) {
-        console.error("Error fetching assigned products:", error.message);
-        toast.error("Failed to load assigned products data");
-      } finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 300);
+          category: product.category,
+          price: product.price,
+          cost_price: product.cost_price,
+          opening_stock: stockData?.opening_stock || 0,
+          stock_added: stockData?.stock_added || 0,
+          closing_stock: stockData?.closing_stock || 0,
+          actual_stock: stockData?.actual_stock || 0,
+          last_stock_date: stockData?.stock_date || null,
+          sold_quantity: soldQuantity
+        });
       }
-    };
 
-    fetchAssignedProducts();
-  }, [refreshTrigger, user?.id]);
+      console.log('✅ [useAssignedProducts] Final assigned products with stock:', assignedProducts);
+      return assignedProducts;
+    },
+    enabled: !!user?.id
+  });
+
+  // Get unique products for filter dropdown
+  const products = assignedProductsData?.map(product => ({
+    id: product.id,
+    name: product.name
+  })) || [];
 
   return {
-    assignedProducts,
-    loading,
-    shops,
+    assignedProducts: assignedProductsData || [],
+    loading: storesLoading || productsLoading,
+    shops: stores, // This is actually stores now, but keeping the prop name for compatibility
     products
   };
 };
