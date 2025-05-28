@@ -266,12 +266,16 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
         <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-xl shadow-lg">
-                <ShoppingCart className="h-8 w-8 text-white" />
+              <div className="bg-gradient-to-r from-orange-600 to-red-700 p-4 rounded-xl shadow-lg">
+                <img 
+                  src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
+                  alt="ABC Cafe Logo" 
+                  className="h-8 w-8"
+                />
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                  Point of Sale
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-700 bg-clip-text text-transparent">
+                  ABC CAFE
                 </h1>
                 {storeInfo && (
                   <p className="text-sm text-gray-600 font-medium">
