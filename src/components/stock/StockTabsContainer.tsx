@@ -1,45 +1,93 @@
 
-import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import React, { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import StockForm from "./StockForm";
+import StockList from "./StockList";
+import StockImport from "./StockImport";
 import ProductStockManagement from "./ProductStockManagement";
-import StockCreationForm from "./StockCreationForm";
+import { Package, FileSpreadsheet, BarChart3, Settings } from "lucide-react";
 
 interface StockTabsContainerProps {
   showForm: boolean;
   handleStockAdded: () => void;
   setShowForm: (show: boolean) => void;
+  activeTab?: string;
+  setActiveTab?: (tab: string) => void;
 }
 
-const StockTabsContainer = ({
-  showForm,
-  handleStockAdded,
+const StockTabsContainer = ({ 
+  showForm, 
+  handleStockAdded, 
   setShowForm,
+  activeTab = "management",
+  setActiveTab 
 }: StockTabsContainerProps) => {
-  console.log("StockTabsContainer rendered - showing only stock management");
-  
-  const handleCloseForm = () => {
-    setShowForm(false);
-  };
-  
-  return (
-    <div className="w-full">
-      <div className="space-y-4">
-        <ProductStockManagement onStockUpdated={handleStockAdded} />
-      </div>
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-      {/* Stock Creation Form Modal */}
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create New Stock Entry</DialogTitle>
-          </DialogHeader>
-          <StockCreationForm 
-            onSuccess={handleStockAdded}
-            onCancel={handleCloseForm}
-          />
-        </DialogContent>
-      </Dialog>
-    </div>
+  const handleTabChange = (value: string) => {
+    if (setActiveTab) {
+      setActiveTab(value);
+    }
+  };
+
+  const handleStockUpdated = () => {
+    setRefreshTrigger(prev => prev + 1);
+    handleStockAdded();
+  };
+
+  return (
+    <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+      <TabsList className="grid w-full grid-cols-4 mb-6">
+        <TabsTrigger value="management" className="flex items-center gap-2">
+          <Settings className="h-4 w-4" />
+          <span className="hidden sm:inline">Product Management</span>
+          <span className="sm:hidden">Manage</span>
+        </TabsTrigger>
+        <TabsTrigger value="entries" className="flex items-center gap-2">
+          <BarChart3 className="h-4 w-4" />
+          <span className="hidden sm:inline">Stock Entries</span>
+          <span className="sm:hidden">Entries</span>
+        </TabsTrigger>
+        <TabsTrigger value="add" className="flex items-center gap-2">
+          <Package className="h-4 w-4" />
+          <span className="hidden sm:inline">Add Stock</span>
+          <span className="sm:hidden">Add</span>
+        </TabsTrigger>
+        <TabsTrigger value="import" className="flex items-center gap-2">
+          <FileSpreadsheet className="h-4 w-4" />
+          <span className="hidden sm:inline">Import Excel</span>
+          <span className="sm:hidden">Import</span>
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="management" className="space-y-4">
+        <ProductStockManagement onStockUpdated={handleStockUpdated} />
+      </TabsContent>
+
+      <TabsContent value="entries" className="space-y-4">
+        <StockList refreshTrigger={refreshTrigger} />
+      </TabsContent>
+
+      <TabsContent value="add" className="space-y-4">
+        {showForm ? (
+          <Card>
+            <CardContent className="pt-6">
+              <StockForm 
+                onStockAdded={handleStockAdded}
+                onCancel={() => setShowForm(false)}
+              />
+            </CardContent>
+          </Card>
+        ) : (
+          <StockList refreshTrigger={refreshTrigger} />
+        )}
+      </TabsContent>
+
+      <TabsContent value="import" className="space-y-4">
+        <StockImport onImportComplete={handleStockAdded} />
+      </TabsContent>
+    </Tabs>
   );
 };
 

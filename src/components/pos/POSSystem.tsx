@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Minus, Plus, ShoppingCart, Trash2, Calculator, Search, CreditCard, Banknote, SplitSquareHorizontal, User, History, Clock, Smartphone, Menu } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Trash2, Calculator, Search, CreditCard, Banknote, SplitSquareHorizontal, User, History, Clock, Smartphone, Menu, Package } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CashPaymentModal } from "./CashPaymentModal";
@@ -16,6 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { BillingModal } from "./BillingModal";
+import { useNavigate } from "react-router-dom";
 
 interface Product {
   id: string;
@@ -44,6 +45,7 @@ interface POSSystemProps {
 export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selectedShopId }) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -249,6 +251,12 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
     }
   };
 
+  const handleQuickStock = () => {
+    // Navigate to stocks page with product management tab
+    navigate('/stocks?tab=management');
+    toast.success("Navigating to Stock Management");
+  };
+
   // Filter products based on search term and category
   const filteredProducts = products?.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -315,6 +323,15 @@ export const POSSystem: React.FC<POSSystemProps> = ({ products, storeInfo, selec
               </div>
             </div>
             <div className="flex gap-1 md:gap-2 items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleQuickStock}
+                className="flex items-center gap-1 bg-white hover:bg-green-50 border-green-200 text-green-700 shadow-sm px-2 md:px-3 h-8 md:h-9"
+              >
+                <Package className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden md:inline text-xs md:text-sm">Quick Stock</span>
+              </Button>
               <Button
                 variant="outline"
                 size="sm"

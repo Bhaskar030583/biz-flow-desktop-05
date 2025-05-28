@@ -1,18 +1,27 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDataSync } from "@/context/DataSyncContext";
 import { useDataSyncActions } from "@/hooks/useDataSyncActions";
 import StockHeader from "@/components/stock/StockHeader";
 import StockTabsContainer from "@/components/stock/StockTabsContainer";
+import { useSearchParams } from "react-router-dom";
 
 const Stocks = () => {
   const { refreshTrigger } = useDataSync();
   const { syncAfterStockChange } = useDataSyncActions();
+  const [searchParams] = useSearchParams();
   const [showForm, setShowForm] = useState(false);
   const [refreshStockTrigger, setRefreshStockTrigger] = useState(0);
   const [activeTab, setActiveTab] = useState("management");
   const [stockCount, setStockCount] = useState(0);
+
+  // Check for tab parameter in URL
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const countStockEntries = async () => {
@@ -50,6 +59,8 @@ const Stocks = () => {
         showForm={showForm}
         handleStockAdded={handleStockAdded}
         setShowForm={setShowForm}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
       />
     </div>
   );
