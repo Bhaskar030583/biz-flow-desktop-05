@@ -178,7 +178,7 @@ const ProductCleanup = () => {
               <Checkbox
                 id="select-all"
                 checked={selectedProducts.length === products.length}
-                onCheckedChange={handleSelectAll}
+                onCheckedChange={(checked) => handleSelectAll(!!checked)}
               />
               <label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
                 Select All ({products.length} products)
@@ -191,7 +191,7 @@ const ProductCleanup = () => {
                   <Checkbox
                     id={product.id}
                     checked={selectedProducts.includes(product.id)}
-                    onCheckedChange={(checked) => handleProductSelect(product.id, checked)}
+                    onCheckedChange={(checked) => handleProductSelect(product.id, !!checked)}
                   />
                   <label htmlFor={product.id} className="flex-1 cursor-pointer">
                     <div className="flex justify-between items-center">
