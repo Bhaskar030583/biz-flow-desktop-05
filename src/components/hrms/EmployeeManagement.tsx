@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -104,10 +105,9 @@ const EmployeeManagement = () => {
           .from('hr_employees')
           .select('employee_code')
           .eq('employee_code', formData.employee_code.trim())
-          .single();
+          .maybeSingle();
 
-        if (checkError && checkError.code !== 'PGRST116') {
-          // PGRST116 is "not found" which is what we want
+        if (checkError) {
           throw checkError;
         }
 
@@ -122,23 +122,28 @@ const EmployeeManagement = () => {
         }
       }
 
-      // Prepare clean data for submission
+      // Prepare clean data for submission with proper date handling
       const cleanFormData = {
-        ...formData,
         employee_code: formData.employee_code.trim().toUpperCase(),
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
         email: formData.email.trim().toLowerCase(),
-        phone: formData.phone.trim(),
-        address: formData.address.trim(),
-        department: formData.department.trim(),
-        designation: formData.designation.trim(),
-        bank_account_number: formData.bank_account_number.trim(),
-        bank_name: formData.bank_name.trim(),
-        bank_ifsc: formData.bank_ifsc.trim().toUpperCase(),
-        emergency_contact_name: formData.emergency_contact_name.trim(),
-        emergency_contact_phone: formData.emergency_contact_phone.trim(),
+        phone: formData.phone.trim() || null,
+        address: formData.address.trim() || null,
+        date_of_birth: formData.date_of_birth || null,
+        date_of_joining: formData.date_of_joining,
+        employment_status: formData.employment_status,
+        department: formData.department.trim() || null,
+        designation: formData.designation.trim() || null,
+        hourly_rate: formData.hourly_rate,
+        bank_account_number: formData.bank_account_number.trim() || null,
+        bank_name: formData.bank_name.trim() || null,
+        bank_ifsc: formData.bank_ifsc.trim().toUpperCase() || null,
+        emergency_contact_name: formData.emergency_contact_name.trim() || null,
+        emergency_contact_phone: formData.emergency_contact_phone.trim() || null,
       };
+
+      console.log('Submitting employee data:', cleanFormData);
 
       if (editingEmployee) {
         const { error } = await supabase
@@ -429,6 +434,16 @@ const EmployeeManagement = () => {
                     required
                   />
                 </div>
+              </div>
+
+              <div>
+                <Label htmlFor="date_of_birth">Date of Birth (Optional)</Label>
+                <Input
+                  id="date_of_birth"
+                  type="date"
+                  value={formData.date_of_birth}
+                  onChange={(e) => setFormData({...formData, date_of_birth: e.target.value})}
+                />
               </div>
 
               <div className="flex justify-end space-x-2 pt-4">
