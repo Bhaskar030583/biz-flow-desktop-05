@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -349,14 +350,14 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
             </CardHeader>
             
             <CardContent className="p-6">
-              <div className="bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 px-6 py-6 rounded-xl">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
+              <div className="bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 px-4 py-6 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <User className="h-6 w-6 text-white" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium text-green-700 mb-1">Logged in as:</div>
-                    <div className="text-xl font-bold text-green-800">
+                    <div className="text-lg font-bold text-green-800 break-words">
                       {salespersonName || "Loading..."}
                     </div>
                   </div>
