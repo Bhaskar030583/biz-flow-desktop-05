@@ -189,27 +189,68 @@ export const BillHistory: React.FC = () => {
     setIsClearingAll(true);
 
     try {
-      // First delete all bill items for this user's bills
+      console.log("Starting to clear all bills for user:", user.id);
+
+      // First, get all bill IDs for this user
+      const { data: userBills, error: fetchError } = await supabase
+        .from('bills')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (fetchError) throw fetchError;
+
+      if (!userBills || userBills.length === 0) {
+        console.log("No bills found to delete");
+        toast.success("No bills to clear");
+        setIsClearingAll(false);
+        return;
+      }
+
+      const billIds = userBills.map(bill => bill.id);
+      console.log("Found bills to delete:", billIds);
+
+      // Delete all bill items for these bills
+      console.log("Deleting bill items...");
       const { error: itemsError } = await supabase
         .from('bill_items')
         .delete()
-        .in('bill_id', bills.map(bill => bill.id));
+        .in('bill_id', billIds);
 
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error("Error deleting bill items:", itemsError);
+        throw itemsError;
+      }
 
-      // Then delete all bills for this user
+      // Delete all credit transactions related to these bills (if any)
+      console.log("Deleting related credit transactions...");
+      const { error: creditError } = await supabase
+        .from('credit_transactions')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (creditError) {
+        console.error("Error deleting credit transactions:", creditError);
+        // Don't throw here as this might not exist
+      }
+
+      // Finally, delete all bills for this user
+      console.log("Deleting bills...");
       const { error: billsError } = await supabase
         .from('bills')
         .delete()
         .eq('user_id', user.id);
 
-      if (billsError) throw billsError;
+      if (billsError) {
+        console.error("Error deleting bills:", billsError);
+        throw billsError;
+      }
 
+      console.log("Successfully cleared all bills");
       setBills([]);
       toast.success("All bills have been cleared successfully");
     } catch (error) {
       console.error("Error clearing bills:", error);
-      toast.error("Failed to clear bills");
+      toast.error("Failed to clear bills. Please try again.");
     } finally {
       setIsClearingAll(false);
     }
