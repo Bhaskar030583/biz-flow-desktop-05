@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import ProductStockHeader from "./ProductStockHeader";
 import ProductAssignmentForm from "./ProductAssignmentForm";
 import StockRealtimeView from "./StockRealtimeView";
+import AssignedProductsList from "./AssignedProductsList";
 
 interface ProductStockManagementProps {
   onStockUpdated?: () => void;
@@ -50,23 +51,11 @@ const ProductStockManagement = ({
     }
   }, [shops, selectedShop]);
 
-  // Fetch assigned products for selected shop - need to map hr_stores to shops table for product assignments
+  // Fetch assigned products for selected shop
   const { data: assignedProducts, refetch: refetchProducts } = useQuery({
     queryKey: ['assigned-products', selectedShop, refreshTrigger],
     queryFn: async () => {
       if (!selectedShop) return [];
-      
-      // First, find the corresponding shop in shops table by matching with hr_stores
-      const { data: shopMapping, error: shopError } = await supabase
-        .from('shops')
-        .select('id')
-        .eq('user_id', user?.id);
-      
-      if (shopError) throw shopError;
-      
-      // For now, we'll use the first shop as a fallback
-      // In a real scenario, you might want to create a proper mapping between hr_stores and shops
-      const shopId = shopMapping?.[0]?.id || selectedShop;
       
       const { data, error } = await supabase
         .from('product_shops')
@@ -80,7 +69,7 @@ const ProductStockManagement = ({
             cost_price
           )
         `)
-        .eq('shop_id', shopId)
+        .eq('shop_id', selectedShop)
         .eq('user_id', user?.id);
       
       if (error) throw error;
@@ -95,6 +84,13 @@ const ProductStockManagement = ({
   const handleProductAssigned = () => {
     refetchProducts();
     setShowAssignmentForm(false);
+    if (onStockUpdated) {
+      onStockUpdated();
+    }
+  };
+
+  const handleProductDeassigned = () => {
+    refetchProducts();
     if (onStockUpdated) {
       onStockUpdated();
     }
@@ -119,7 +115,7 @@ const ProductStockManagement = ({
         productCount={productCount}
       />
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         {showAssignmentForm && selectedShop && (
           <ProductAssignmentForm
             selectedShop={selectedShop}
@@ -127,6 +123,12 @@ const ProductStockManagement = ({
             onCancel={() => setShowAssignmentForm(false)}
           />
         )}
+
+        <AssignedProductsList
+          assignedProducts={assignedProducts || []}
+          selectedShop={selectedShop}
+          onProductDeassigned={handleProductDeassigned}
+        />
 
         <StockRealtimeView selectedShop={selectedShop} />
       </CardContent>
