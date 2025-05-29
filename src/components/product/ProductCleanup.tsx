@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -21,6 +20,7 @@ import {
 interface Product {
   id: string;
   name: string;
+  sku: string | null;
   category: string;
   price: number;
   cost_price: number | null;
@@ -250,6 +250,7 @@ const ProductCleanup = () => {
                     <div className="flex justify-between items-center">
                       <div>
                         <span className="font-medium">{product.name}</span>
+                        {product.sku && <span className="text-xs text-muted-foreground ml-2">({product.sku})</span>}
                         <span className="text-sm text-muted-foreground ml-2">({product.category})</span>
                       </div>
                       <div className="text-sm text-muted-foreground">

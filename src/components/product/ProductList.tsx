@@ -40,6 +40,7 @@ import { z } from "zod";
 interface Product {
   id: string;
   name: string;
+  sku: string | null;
   category: string;
   price: number;
   cost_price: number | null;
@@ -61,6 +62,7 @@ export function ProductList() {
 
   const productSchema = z.object({
     name: z.string().min(2, "Name is required"),
+    sku: z.string().optional(),
     category: z.string().min(1, "Category is required"),
     quantity: z.coerce.number().min(0, "Quantity must be a positive number"),
     price: z.coerce.number().min(0, "Price must be a positive number"),
@@ -71,6 +73,7 @@ export function ProductList() {
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: "",
+      sku: "",
       category: "",
       quantity: 0,
       price: 0,
@@ -198,6 +201,7 @@ export function ProductList() {
     setEditingProduct(product);
     form.reset({
       name: product.name,
+      sku: product.sku || "",
       category: product.category,
       quantity: product.quantity,
       price: product.price,
@@ -214,6 +218,7 @@ export function ProductList() {
         .from("products")
         .update({
           name: values.name,
+          sku: values.sku || null,
           category: values.category,
           quantity: values.quantity,
           price: values.price,
@@ -252,6 +257,7 @@ export function ProductList() {
     const matchesSearch = searchTerm === "" || 
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase())) ||
       product.price.toString().includes(searchTerm);
     
     return matchesCategory && matchesSearch;
@@ -283,7 +289,7 @@ export function ProductList() {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search products..."
+              placeholder="Search products, SKU..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8"
@@ -319,6 +325,7 @@ export function ProductList() {
             <TableHeader>
               <TableRow>
                 <TableHead>Product Name</TableHead>
+                <TableHead>SKU</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Quantity</TableHead>
                 <TableHead>Cost Price</TableHead>
@@ -330,6 +337,11 @@ export function ProductList() {
               {filteredProducts.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      {product.sku || "—"}
+                    </div>
+                  </TableCell>
                   <TableCell>{product.category}</TableCell>
                   <TableCell>
                     <div className="flex items-center">
@@ -421,6 +433,20 @@ export function ProductList() {
                     <FormLabel>Product Name</FormLabel>
                     <FormControl>
                       <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="sku"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>SKU</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
