@@ -1,5 +1,3 @@
-
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,9 +44,9 @@ export const POSMobileView: React.FC<POSMobileViewProps> = ({
   setShowBillHistory
 }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Enhanced Mobile Header with responsive design */}
-      <div className="bg-gradient-to-r from-white to-blue-50 border-b-2 border-blue-100 px-4 sm:px-6 py-4 sm:py-6 shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col overflow-hidden">
+      {/* Fixed Mobile Header */}
+      <div className="bg-gradient-to-r from-white to-blue-50 border-b-2 border-blue-100 px-4 sm:px-6 py-4 sm:py-6 shadow-lg flex-shrink-0">
         <div className="flex justify-between items-center mb-4 sm:mb-6">
           <div className="flex items-center space-x-3 sm:space-x-4">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
@@ -96,7 +94,7 @@ export const POSMobileView: React.FC<POSMobileViewProps> = ({
           </div>
         </div>
 
-        {/* Enhanced Mobile Search with responsive design */}
+        {/* Fixed Mobile Search */}
         <div className="relative">
           <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
           <Input
@@ -108,9 +106,9 @@ export const POSMobileView: React.FC<POSMobileViewProps> = ({
         </div>
       </div>
 
-      <div className="flex">
-        {/* Mobile Category Sidebar - Left side with responsive design */}
-        <div className="w-12 sm:w-16 bg-white border-r-2 border-gray-100 flex flex-col py-3 sm:py-4 space-y-1 sm:space-y-2 shadow-sm">
+      <div className="flex flex-1 overflow-hidden">
+        {/* Fixed Mobile Category Sidebar */}
+        <div className="w-12 sm:w-16 bg-white border-r-2 border-gray-100 flex flex-col py-3 sm:py-4 space-y-1 sm:space-y-2 shadow-sm flex-shrink-0">
           {categories.map((category) => (
             <button
               key={category}
@@ -127,8 +125,8 @@ export const POSMobileView: React.FC<POSMobileViewProps> = ({
           ))}
         </div>
 
-        {/* Enhanced Mobile Products Grid with compact cards */}
-        <div className="flex-1 p-3 sm:p-4">
+        {/* Scrollable Mobile Products Grid */}
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4">
           {filteredProducts.length === 0 ? (
             <div className="text-center py-12 sm:py-16 text-gray-500">
               <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center shadow-lg">
@@ -186,4 +184,3 @@ export const POSMobileView: React.FC<POSMobileViewProps> = ({
     </div>
   );
 };
-

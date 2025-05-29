@@ -424,13 +424,13 @@ export const POSSystem: React.FC<POSSystemProps> = ({
     );
   }
 
-  // Enhanced Desktop View with better responsiveness
+  // Enhanced Desktop View with fixed layout and scrollable product grid
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 to-blue-50 overflow-hidden">
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Enhanced Header with responsive design */}
-        <div className="bg-gradient-to-r from-white to-blue-50 border-b-2 border-blue-100 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 shadow-sm">
+        {/* Fixed Header */}
+        <div className="bg-gradient-to-r from-white to-blue-50 border-b-2 border-blue-100 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 shadow-sm flex-shrink-0">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center space-x-3 sm:space-x-4">
               <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
@@ -484,8 +484,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({
           </div>
         </div>
 
-        {/* Enhanced Category Tabs with responsive scrolling */}
-        <div className="bg-white border-b-2 border-gray-100 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 shadow-sm">
+        {/* Fixed Category Tabs */}
+        <div className="bg-white border-b-2 border-gray-100 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 shadow-sm flex-shrink-0">
           <div className="flex space-x-2 overflow-x-auto scrollbar-hide">
             {categories.map((category) => (
               <button
@@ -503,8 +503,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({
           </div>
         </div>
 
-        {/* Enhanced Search Bar with responsive design */}
-        <div className="bg-white px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b-2 border-gray-100 shadow-sm">
+        {/* Fixed Search Bar */}
+        <div className="bg-white px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b-2 border-gray-100 shadow-sm flex-shrink-0">
           <div className="relative">
             <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 sm:h-6 sm:w-6" />
             <Input
@@ -516,7 +516,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
           </div>
         </div>
 
-        {/* Enhanced Products Grid with compact cards */}
+        {/* Scrollable Products Grid */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-blue-50">
           {filteredProducts.length === 0 ? (
             <div className="text-center py-16 sm:py-24 text-gray-500">
@@ -539,18 +539,18 @@ export const POSSystem: React.FC<POSSystemProps> = ({
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2 sm:gap-3 lg:gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2 sm:gap-3">
               {filteredProducts.map((product) => (
                 <Card 
                   key={product.id} 
-                  className={`cursor-pointer transition-all duration-300 border-2 hover:shadow-xl group transform hover:scale-105 rounded-lg sm:rounded-xl ${
+                  className={`cursor-pointer transition-all duration-300 border-2 hover:shadow-xl group transform hover:scale-105 rounded-lg ${
                     product.quantity !== undefined && product.quantity <= 0 
                       ? 'border-red-300 bg-gradient-to-br from-red-50 to-red-100 opacity-75' 
                       : 'border-gray-200 bg-white hover:border-blue-300 shadow-md'
                   }`}
                   onClick={() => addToCart(product)}
                 >
-                  <CardContent className="p-2 sm:p-3">
+                  <CardContent className="p-2">
                     <h4 className="font-bold text-xs leading-tight mb-2 text-gray-800 line-clamp-2 min-h-[2rem]">
                       {product.name}
                     </h4>
@@ -559,7 +559,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                       <div className="mb-2">
                         <Badge 
                           variant="outline" 
-                          className={`text-xs py-0.5 px-1.5 font-bold shadow-sm ${
+                          className={`text-xs py-0.5 px-1 font-bold shadow-sm ${
                             product.quantity > 10 
                               ? 'bg-green-100 text-green-700 border-green-300' 
                               : product.quantity > 0 
@@ -572,7 +572,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                       </div>
                     )}
                     
-                    <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-2 py-1.5 rounded-md text-center shadow-lg">
+                    <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-2 py-1 rounded-md text-center shadow-lg">
                       <p className="text-xs font-bold">
                         ₹{Number(product.price).toFixed(2)}
                       </p>
@@ -585,10 +585,10 @@ export const POSSystem: React.FC<POSSystemProps> = ({
         </div>
       </div>
 
-      {/* Enhanced Right Sidebar - Cart with responsive design */}
-      <div className="w-80 sm:w-96 bg-white border-l-2 border-blue-100 flex flex-col shadow-2xl">
-        {/* Enhanced Cart Header */}
-        <div className="p-4 sm:p-6 lg:p-8 border-b-2 border-gray-100 bg-gradient-to-r from-white to-blue-50">
+      {/* Fixed Right Sidebar - Cart */}
+      <div className="w-80 sm:w-96 bg-white border-l-2 border-blue-100 flex flex-col shadow-2xl flex-shrink-0">
+        {/* Fixed Cart Header */}
+        <div className="p-4 sm:p-6 lg:p-8 border-b-2 border-gray-100 bg-gradient-to-r from-white to-blue-50 flex-shrink-0">
           <div className="flex justify-between items-center">
             <h2 className="text-lg sm:text-xl font-bold text-gray-900">Current Order</h2>
             {cart.length > 0 && (
@@ -605,7 +605,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
           </div>
         </div>
 
-        {/* Enhanced Cart Items with responsive scrolling */}
+        {/* Scrollable Cart Items */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gradient-to-br from-gray-50 to-blue-50">
           {cart.length === 0 ? (
             <div className="text-center py-12 sm:py-16 text-gray-500">
@@ -667,9 +667,9 @@ export const POSSystem: React.FC<POSSystemProps> = ({
           )}
         </div>
 
-        {/* Enhanced Cart Footer with responsive design */}
+        {/* Fixed Cart Footer */}
         {cart.length > 0 && (
-          <div className="border-t-2 border-gray-100 p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 bg-gradient-to-r from-white to-blue-50">
+          <div className="border-t-2 border-gray-100 p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 bg-gradient-to-r from-white to-blue-50 flex-shrink-0">
             <div className="space-y-2 sm:space-y-3">
               <div className="flex justify-between text-sm sm:text-base font-medium">
                 <span>Subtotal</span>
