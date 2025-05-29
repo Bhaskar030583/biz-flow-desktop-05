@@ -26,6 +26,7 @@ import { BillViewModal } from "./BillViewModal";
 import { BillEditModal } from "./BillEditModal";
 import { getBillDetails } from "@/services/billService";
 import { downloadBillAsPDF } from "@/utils/billDownloadUtils";
+import { useDataSyncActions } from "@/hooks/useDataSyncActions";
 
 interface Bill {
   id: string;
@@ -41,6 +42,7 @@ interface Bill {
 
 export const BillHistory: React.FC = () => {
   const { user } = useAuth();
+  const { syncAfterBillChange } = useDataSyncActions();
   const [bills, setBills] = useState<Bill[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -192,81 +194,118 @@ export const BillHistory: React.FC = () => {
     try {
       console.log("Starting to clear all bills for user:", user.id);
 
-      // Clear local state immediately to provide instant feedback
-      setBills([]);
-
-      // Step 1: Get all bill IDs for this user first
-      console.log("Fetching bill IDs...");
-      const { data: userBills, error: fetchError } = await supabase
+      // Step 1: First, let's check what bills exist for this user
+      console.log("Checking existing bills...");
+      const { data: existingBills, error: checkError } = await supabase
         .from('bills')
-        .select('id')
+        .select('id, bill_number, user_id')
         .eq('user_id', user.id);
 
-      if (fetchError) {
-        console.error("Error fetching bill IDs:", fetchError);
-        throw fetchError;
+      if (checkError) {
+        console.error("Error checking existing bills:", checkError);
+        throw checkError;
       }
 
-      if (!userBills || userBills.length === 0) {
+      console.log("Found existing bills:", existingBills);
+
+      if (!existingBills || existingBills.length === 0) {
         console.log("No bills found to delete");
         toast.success("No bills to clear");
+        setBills([]);
         setIsClearingAll(false);
         return;
       }
 
-      const billIds = userBills.map(bill => bill.id);
-      console.log("Found bills to delete:", billIds);
+      const billIds = existingBills.map(bill => bill.id);
+      console.log("Bill IDs to delete:", billIds);
 
-      // Step 2: Delete all bill items for these bills
-      console.log("Deleting all bill items...");
-      const { error: itemsError, count: itemsDeleted } = await supabase
+      // Step 2: Check and delete bill items
+      console.log("Checking bill items...");
+      const { data: existingBillItems, error: itemsCheckError } = await supabase
         .from('bill_items')
-        .delete({ count: 'exact' })
+        .select('id, bill_id')
         .in('bill_id', billIds);
 
-      if (itemsError) {
-        console.error("Error deleting bill items:", itemsError);
-        throw itemsError;
+      if (itemsCheckError) {
+        console.error("Error checking bill items:", itemsCheckError);
       } else {
-        console.log(`Successfully deleted ${itemsDeleted} bill items`);
+        console.log("Found bill items:", existingBillItems);
+        
+        if (existingBillItems && existingBillItems.length > 0) {
+          console.log("Deleting bill items...");
+          const { error: deleteItemsError, count: itemsDeleted } = await supabase
+            .from('bill_items')
+            .delete({ count: 'exact' })
+            .in('bill_id', billIds);
+
+          if (deleteItemsError) {
+            console.error("Error deleting bill items:", deleteItemsError);
+            throw deleteItemsError;
+          }
+          console.log(`Successfully deleted ${itemsDeleted} bill items`);
+        }
       }
 
-      // Step 3: Delete credit transactions for this user
-      console.log("Deleting credit transactions...");
-      const { error: creditError, count: creditDeleted } = await supabase
+      // Step 3: Check and delete credit transactions
+      console.log("Checking credit transactions...");
+      const { data: existingCredits, error: creditsCheckError } = await supabase
         .from('credit_transactions')
-        .delete({ count: 'exact' })
+        .select('id, user_id')
         .eq('user_id', user.id);
 
-      if (creditError) {
-        console.error("Error deleting credit transactions:", creditError);
-        // Don't throw here, continue with bill deletion
+      if (creditsCheckError) {
+        console.error("Error checking credit transactions:", creditsCheckError);
       } else {
-        console.log(`Successfully deleted ${creditDeleted} credit transactions`);
+        console.log("Found credit transactions:", existingCredits);
+        
+        if (existingCredits && existingCredits.length > 0) {
+          console.log("Deleting credit transactions...");
+          const { error: deleteCreditsError, count: creditsDeleted } = await supabase
+            .from('credit_transactions')
+            .delete({ count: 'exact' })
+            .eq('user_id', user.id);
+
+          if (deleteCreditsError) {
+            console.error("Error deleting credit transactions:", deleteCreditsError);
+            // Don't throw here, continue with bill deletion
+          } else {
+            console.log(`Successfully deleted ${creditsDeleted} credit transactions`);
+          }
+        }
       }
 
-      // Step 4: Delete all bills for this user
+      // Step 4: Finally delete all bills
       console.log("Deleting all bills...");
-      const { error: billsError, count: billsDeleted } = await supabase
+      const { error: billsDeleteError, count: billsDeleted } = await supabase
         .from('bills')
         .delete({ count: 'exact' })
         .eq('user_id', user.id);
 
-      if (billsError) {
-        console.error("Error deleting bills:", billsError);
-        throw billsError;
+      if (billsDeleteError) {
+        console.error("Error deleting bills:", billsDeleteError);
+        throw billsDeleteError;
       }
 
-      console.log(`Successfully deleted ${billsDeleted} bills`);
-      console.log("Successfully cleared all bills");
-      toast.success("All bills have been cleared successfully");
-      
-      // Force a fresh fetch to ensure state is correct
+      console.log(`Successfully deleted ${billsDeleted} bills out of ${existingBills.length} expected`);
+
+      if (billsDeleted === 0) {
+        console.warn("No bills were deleted - this might indicate an RLS or permission issue");
+        toast.error("Failed to delete bills - permission issue detected");
+      } else {
+        console.log("Successfully cleared all bills");
+        toast.success(`Successfully deleted ${billsDeleted} bills`);
+        
+        // Trigger data sync
+        syncAfterBillChange('delete', { count: billsDeleted });
+      }
+
+      // Clear local state and refresh
+      setBills([]);
       await fetchBills();
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error clearing bills:", error);
-      toast.error(`Failed to clear bills: ${error.message}`);
+      toast.error(`Failed to clear bills: ${error.message || 'Unknown error'}`);
       
       // Refresh bills list to show current state
       await fetchBills();
