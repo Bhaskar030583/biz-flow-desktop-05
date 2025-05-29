@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,7 +23,11 @@ export const useDashboardData = (
   endDate: Date | null,
   selectedShops: string[],
   selectedCategory: string | null,
-  selectedProduct: string | null
+  selectedProduct: string | null,
+  paymentMethod?: string | null,
+  employee?: string | null,
+  minAmount?: number | null,
+  maxAmount?: number | null
 ) => {
   const [data, setData] = useState<DashboardData>({
     totalSales: 0,
@@ -46,13 +51,20 @@ export const useDashboardData = (
     async function fetchSummaryData() {
       try {
         setIsLoading(true);
+        
         // Fetch collection data for payment methods
         let collectionQuery = supabase.from("credits").select(`
           credit_type,
           amount,
           credit_date
-        `)
-        .in('credit_type', ['cash', 'card', 'online']);
+        `);
+        
+        // Apply payment method filter if specified
+        if (paymentMethod && paymentMethod !== "all_payments") {
+          collectionQuery = collectionQuery.eq('credit_type', paymentMethod);
+        } else {
+          collectionQuery = collectionQuery.in('credit_type', ['cash', 'card', 'online', 'given', 'received']);
+        }
         
         // Apply date filters to collections
         if (startDate) {
@@ -69,6 +81,14 @@ export const useDashboardData = (
         if (selectedShops && selectedShops.length > 0) {
           collectionQuery = collectionQuery.in("shop_id", selectedShops);
         }
+
+        // Apply amount range filters
+        if (minAmount !== null) {
+          collectionQuery = collectionQuery.gte("amount", minAmount);
+        }
+        if (maxAmount !== null) {
+          collectionQuery = collectionQuery.lte("amount", maxAmount);
+        }
         
         const { data: collectionData, error: collectionError } = await collectionQuery;
         
@@ -78,6 +98,8 @@ export const useDashboardData = (
         let cashAmount = 0;
         let cardAmount = 0;
         let onlineAmount = 0;
+        let creditGiven = 0;
+        let creditReceived = 0;
         
         collectionData?.forEach((item) => {
           if (item.credit_type === 'cash') {
@@ -86,43 +108,7 @@ export const useDashboardData = (
             cardAmount += Number(item.amount) || 0;
           } else if (item.credit_type === 'online') {
             onlineAmount += Number(item.amount) || 0;
-          }
-        });
-
-        // Fetch credit data (given and received)
-        let creditQuery = supabase.from("credits").select(`
-          credit_type,
-          amount,
-          credit_date
-        `)
-        .in('credit_type', ['given', 'received']);
-
-        // Apply date filters to credits
-        if (startDate) {
-          const formattedStartDate = startDate.toISOString().split('T')[0];
-          creditQuery = creditQuery.gte("credit_date", formattedStartDate);
-        }
-        
-        if (endDate) {
-          const formattedEndDate = endDate.toISOString().split('T')[0];
-          creditQuery = creditQuery.lte("credit_date", formattedEndDate);
-        }
-        
-        // Apply shop filter to credits
-        if (selectedShops && selectedShops.length > 0) {
-          creditQuery = creditQuery.in("shop_id", selectedShops);
-        }
-
-        const { data: creditData, error: creditError } = await creditQuery;
-        
-        if (creditError) throw creditError;
-
-        // Calculate credit totals
-        let creditGiven = 0;
-        let creditReceived = 0;
-
-        creditData?.forEach((item) => {
-          if (item.credit_type === 'given') {
+          } else if (item.credit_type === 'given') {
             creditGiven += Number(item.amount) || 0;
           } else if (item.credit_type === 'received') {
             creditReceived += Number(item.amount) || 0;
@@ -161,15 +147,31 @@ export const useDashboardData = (
         if (selectedProduct) {
           salesQuery = salesQuery.eq("product_id", selectedProduct);
         }
+
+        // Apply amount range filters to sales
+        if (minAmount !== null || maxAmount !== null) {
+          // Calculate total amount for each sale (price * quantity) in the filter
+          // This is a bit complex with Supabase, so we'll filter after fetching
+        }
         
         const { data: salesData, error: salesError } = await salesQuery;
         
         if (salesError) throw salesError;
         
         // Filter by category if needed
-        const filteredSales = selectedCategory
+        let filteredSales = selectedCategory
           ? salesData?.filter((sale) => sale.products?.category === selectedCategory)
           : salesData;
+
+        // Apply amount range filters to sales (post-fetch filtering)
+        if (minAmount !== null || maxAmount !== null) {
+          filteredSales = filteredSales?.filter((sale) => {
+            const saleTotal = (Number(sale.price) || 0) * (Number(sale.quantity) || 0);
+            const meetsMin = minAmount === null || saleTotal >= minAmount;
+            const meetsMax = maxAmount === null || saleTotal <= maxAmount;
+            return meetsMin && meetsMax;
+          });
+        }
         
         // Calculate sales metrics and profit/loss
         let totalSales = 0;
@@ -237,6 +239,7 @@ export const useDashboardData = (
             opening_stock, 
             closing_stock, 
             actual_stock,
+            operator_name,
             products (id, name, price, cost_price),
             shops (id, name)
           `);
@@ -261,15 +264,25 @@ export const useDashboardData = (
         if (selectedProduct) {
           query = query.eq("product_id", selectedProduct);
         }
+
+        // Apply employee filter
+        if (employee) {
+          query = query.eq("operator_name", employee);
+        }
         
         const { data: stockData, error } = await query;
         
         if (error) throw error;
         
+        // Filter by category if needed (post-fetch filtering)
+        let filteredStockData = selectedCategory && stockData
+          ? stockData.filter((stock: any) => stock.products?.category === selectedCategory)
+          : stockData;
+        
         // Update state with stock data
         setData(prevData => ({
           ...prevData,
-          stockEntries: stockData || []
+          stockEntries: filteredStockData || []
         }));
       } catch (error) {
         console.error("Error fetching stock data:", error);
@@ -280,7 +293,7 @@ export const useDashboardData = (
     
     fetchSummaryData();
     fetchStockData();
-  }, [startDate, endDate, selectedShops, selectedCategory, selectedProduct]);
+  }, [startDate, endDate, selectedShops, selectedCategory, selectedProduct, paymentMethod, employee, minAmount, maxAmount]);
 
   return { data, isLoading, isLoadingStock };
 };

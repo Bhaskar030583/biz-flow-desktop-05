@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-interface DashboardFiltersProps {
+interface EnhancedDashboardFiltersProps {
   startDate: Date | null;
   endDate: Date | null;
   setStartDate: (date: Date | null) => void;
@@ -36,17 +36,17 @@ interface DashboardFiltersProps {
   setSelectedCategory: (category: string | null) => void;
   selectedProduct: string | null;
   setSelectedProduct: (product: string | null) => void;
-  paymentMethod?: string | null;
-  setPaymentMethod?: (method: string | null) => void;
-  employee?: string | null;
-  setEmployee?: (employee: string | null) => void;
-  minAmount?: number | null;
-  setMinAmount?: (amount: number | null) => void;
-  maxAmount?: number | null;
-  setMaxAmount?: (amount: number | null) => void;
+  paymentMethod: string | null;
+  setPaymentMethod: (method: string | null) => void;
+  employee: string | null;
+  setEmployee: (employee: string | null) => void;
+  minAmount: number | null;
+  setMinAmount: (amount: number | null) => void;
+  maxAmount: number | null;
+  setMaxAmount: (amount: number | null) => void;
 }
 
-export function DashboardFilters({
+export function EnhancedDashboardFilters({
   startDate,
   endDate,
   setStartDate,
@@ -65,21 +65,18 @@ export function DashboardFilters({
   setMinAmount,
   maxAmount,
   setMaxAmount
-}: DashboardFiltersProps) {
+}: EnhancedDashboardFiltersProps) {
   const { user } = useAuth();
   const [shops, setShops] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch shops, categories, and products on component mount
   useEffect(() => {
     if (!user) return;
     
     const fetchFilterData = async () => {
-      setIsLoading(true);
       try {
         // Fetch shops
         const { data: shopsData } = await supabase
@@ -90,7 +87,7 @@ export function DashboardFilters({
         
         setShops(shopsData || []);
         
-        // Fetch categories
+        // Fetch categories and products
         const { data: productsData } = await supabase
           .from("products")
           .select("id, name, category")
@@ -120,8 +117,6 @@ export function DashboardFilters({
         setEmployees(uniqueEmployees);
       } catch (error) {
         console.error("Error fetching filter data:", error);
-      } finally {
-        setIsLoading(false);
       }
     };
     
@@ -168,10 +163,10 @@ export function DashboardFilters({
     setSelectedShops([]);
     setSelectedCategory(null);
     setSelectedProduct(null);
-    setPaymentMethod?.(null);
-    setEmployee?.(null);
-    setMinAmount?.(null);
-    setMaxAmount?.(null);
+    setPaymentMethod(null);
+    setEmployee(null);
+    setMinAmount(null);
+    setMaxAmount(null);
   };
 
   const activeFiltersCount = [
@@ -186,7 +181,6 @@ export function DashboardFilters({
     maxAmount
   ].filter(Boolean).length;
 
-  // Filter products based on selected category
   const filteredProducts = selectedCategory
     ? products.filter(product => product.category === selectedCategory)
     : products;
@@ -277,7 +271,6 @@ export function DashboardFilters({
                     selected={startDate || undefined}
                     onSelect={setStartDate}
                     initialFocus
-                    className={cn("p-3 pointer-events-auto")}
                   />
                 </PopoverContent>
               </Popover>
@@ -302,7 +295,6 @@ export function DashboardFilters({
                     selected={endDate || undefined}
                     onSelect={setEndDate}
                     initialFocus
-                    className={cn("p-3 pointer-events-auto")}
                   />
                 </PopoverContent>
               </Popover>
@@ -337,36 +329,34 @@ export function DashboardFilters({
           </div>
 
           {/* Payment Method */}
-          {setPaymentMethod && (
-            <div>
-              <Label className="text-sm font-medium">Payment Method</Label>
-              <Select
-                value={paymentMethod || "all_payments"}
-                onValueChange={(value) => setPaymentMethod(value === "all_payments" ? null : value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All Methods" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all_payments">All Methods</SelectItem>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="card">Card</SelectItem>
-                  <SelectItem value="online">Online/UPI</SelectItem>
-                  <SelectItem value="given">Credit Given</SelectItem>
-                  <SelectItem value="received">Credit Received</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div>
+            <Label className="text-sm font-medium">Payment Method</Label>
+            <Select
+              value={paymentMethod || "all_payments"}
+              onValueChange={(value) => setPaymentMethod(value === "all_payments" ? null : value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All Methods" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all_payments">All Methods</SelectItem>
+                <SelectItem value="cash">Cash</SelectItem>
+                <SelectItem value="card">Card</SelectItem>
+                <SelectItem value="online">Online/UPI</SelectItem>
+                <SelectItem value="given">Credit Given</SelectItem>
+                <SelectItem value="received">Credit Received</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-          {/* Category Selection */}
+          {/* Category */}
           <div>
             <Label className="text-sm font-medium">Category</Label>
             <Select
               value={selectedCategory || "all_categories"}
               onValueChange={(value) => {
                 setSelectedCategory(value === "all_categories" ? null : value);
-                setSelectedProduct(null);
+                setSelectedProduct(null); // Reset product when category changes
               }}
             >
               <SelectTrigger>
@@ -387,7 +377,7 @@ export function DashboardFilters({
         {/* Advanced Filters - Only show when expanded */}
         {isExpanded && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
-            {/* Product Selection */}
+            {/* Product */}
             <div>
               <Label className="text-sm font-medium">Product</Label>
               <Select
@@ -409,52 +399,46 @@ export function DashboardFilters({
             </div>
 
             {/* Employee/Operator */}
-            {setEmployee && (
-              <div>
-                <Label className="text-sm font-medium">Employee/Operator</Label>
-                <Select
-                  value={employee || "all_employees"}
-                  onValueChange={(value) => setEmployee(value === "all_employees" ? null : value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Employees" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all_employees">All Employees</SelectItem>
-                    {employees.map((emp, index) => (
-                      <SelectItem key={index} value={emp.name}>
-                        {emp.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            <div>
+              <Label className="text-sm font-medium">Employee/Operator</Label>
+              <Select
+                value={employee || "all_employees"}
+                onValueChange={(value) => setEmployee(value === "all_employees" ? null : value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Employees" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all_employees">All Employees</SelectItem>
+                  {employees.map((emp, index) => (
+                    <SelectItem key={index} value={emp.name}>
+                      {emp.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* Amount Range */}
-            {setMinAmount && (
-              <div>
-                <Label className="text-sm font-medium">Min Amount (₹)</Label>
-                <Input
-                  type="number"
-                  placeholder="0"
-                  value={minAmount || ""}
-                  onChange={(e) => setMinAmount(e.target.value ? Number(e.target.value) : null)}
-                />
-              </div>
-            )}
+            <div>
+              <Label className="text-sm font-medium">Min Amount (₹)</Label>
+              <Input
+                type="number"
+                placeholder="0"
+                value={minAmount || ""}
+                onChange={(e) => setMinAmount(e.target.value ? Number(e.target.value) : null)}
+              />
+            </div>
 
-            {setMaxAmount && (
-              <div>
-                <Label className="text-sm font-medium">Max Amount (₹)</Label>
-                <Input
-                  type="number"
-                  placeholder="No limit"
-                  value={maxAmount || ""}
-                  onChange={(e) => setMaxAmount(e.target.value ? Number(e.target.value) : null)}
-                />
-              </div>
-            )}
+            <div>
+              <Label className="text-sm font-medium">Max Amount (₹)</Label>
+              <Input
+                type="number"
+                placeholder="No limit"
+                value={maxAmount || ""}
+                onChange={(e) => setMaxAmount(e.target.value ? Number(e.target.value) : null)}
+              />
+            </div>
           </div>
         )}
       </CardContent>
