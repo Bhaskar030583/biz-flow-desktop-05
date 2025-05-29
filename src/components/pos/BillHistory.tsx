@@ -115,7 +115,6 @@ export const BillHistory: React.FC = () => {
 
   const handleViewBill = async (billId: string) => {
     try {
-      console.log("View bill:", billId);
       const billDetails = await getBillDetails(billId);
       setSelectedBillDetails(billDetails);
       setViewModalOpen(true);
@@ -127,18 +126,13 @@ export const BillHistory: React.FC = () => {
 
   const handleEditBill = async (billId: string) => {
     try {
-      console.log("Edit bill clicked for ID:", billId);
-      
       if (!billId) {
-        console.error("No bill ID provided");
         toast.error("Invalid bill ID");
         return;
       }
 
-      // Set the selected bill ID and open the modal
       setSelectedBillId(billId);
       setEditModalOpen(true);
-      console.log("Edit modal should be opening with bill ID:", billId);
     } catch (error) {
       console.error("Error opening edit modal:", error);
       toast.error("Failed to open edit modal");
@@ -147,7 +141,6 @@ export const BillHistory: React.FC = () => {
 
   const handleDownloadBill = async (billId: string) => {
     try {
-      console.log("Download bill:", billId);
       await downloadBillAsPDF(billId);
       toast.success("Bill downloaded successfully");
     } catch (error) {
@@ -192,112 +185,26 @@ export const BillHistory: React.FC = () => {
     setIsClearingAll(true);
 
     try {
-      console.log("Starting to clear all bills for user:", user.id);
-
-      // Step 1: First, let's check what bills exist for this user
-      console.log("Checking existing bills...");
-      const { data: existingBills, error: checkError } = await supabase
-        .from('bills')
-        .select('id, bill_number, user_id')
-        .eq('user_id', user.id);
-
-      if (checkError) {
-        console.error("Error checking existing bills:", checkError);
-        throw checkError;
-      }
-
-      console.log("Found existing bills:", existingBills);
-
-      if (!existingBills || existingBills.length === 0) {
-        console.log("No bills found to delete");
-        toast.success("No bills to clear");
-        setBills([]);
-        setIsClearingAll(false);
-        return;
-      }
-
-      const billIds = existingBills.map(bill => bill.id);
-      console.log("Bill IDs to delete:", billIds);
-
-      // Step 2: Check and delete bill items
-      console.log("Checking bill items...");
-      const { data: existingBillItems, error: itemsCheckError } = await supabase
-        .from('bill_items')
-        .select('id, bill_id')
-        .in('bill_id', billIds);
-
-      if (itemsCheckError) {
-        console.error("Error checking bill items:", itemsCheckError);
-      } else {
-        console.log("Found bill items:", existingBillItems);
-        
-        if (existingBillItems && existingBillItems.length > 0) {
-          console.log("Deleting bill items...");
-          const { error: deleteItemsError, count: itemsDeleted } = await supabase
-            .from('bill_items')
-            .delete({ count: 'exact' })
-            .in('bill_id', billIds);
-
-          if (deleteItemsError) {
-            console.error("Error deleting bill items:", deleteItemsError);
-            throw deleteItemsError;
-          }
-          console.log(`Successfully deleted ${itemsDeleted} bill items`);
-        }
-      }
-
-      // Step 3: Check and delete credit transactions
-      console.log("Checking credit transactions...");
-      const { data: existingCredits, error: creditsCheckError } = await supabase
+      // Delete credit transactions first
+      await supabase
         .from('credit_transactions')
-        .select('id, user_id')
+        .delete()
         .eq('user_id', user.id);
 
-      if (creditsCheckError) {
-        console.error("Error checking credit transactions:", creditsCheckError);
-      } else {
-        console.log("Found credit transactions:", existingCredits);
-        
-        if (existingCredits && existingCredits.length > 0) {
-          console.log("Deleting credit transactions...");
-          const { error: deleteCreditsError, count: creditsDeleted } = await supabase
-            .from('credit_transactions')
-            .delete({ count: 'exact' })
-            .eq('user_id', user.id);
-
-          if (deleteCreditsError) {
-            console.error("Error deleting credit transactions:", deleteCreditsError);
-            // Don't throw here, continue with bill deletion
-          } else {
-            console.log(`Successfully deleted ${creditsDeleted} credit transactions`);
-          }
-        }
-      }
-
-      // Step 4: Finally delete all bills
-      console.log("Deleting all bills...");
+      // Delete all bills (bill items will be deleted via cascade or RLS)
       const { error: billsDeleteError, count: billsDeleted } = await supabase
         .from('bills')
         .delete({ count: 'exact' })
         .eq('user_id', user.id);
 
       if (billsDeleteError) {
-        console.error("Error deleting bills:", billsDeleteError);
         throw billsDeleteError;
       }
 
-      console.log(`Successfully deleted ${billsDeleted} bills out of ${existingBills.length} expected`);
-
-      if (billsDeleted === 0) {
-        console.warn("No bills were deleted - this might indicate an RLS or permission issue");
-        toast.error("Failed to delete bills - permission issue detected");
-      } else {
-        console.log("Successfully cleared all bills");
-        toast.success(`Successfully deleted ${billsDeleted} bills`);
-        
-        // Trigger data sync
-        syncAfterBillChange('delete', { count: billsDeleted });
-      }
+      toast.success(`Successfully deleted ${billsDeleted || 0} bills`);
+      
+      // Trigger data sync
+      syncAfterBillChange('delete', { count: billsDeleted });
 
       // Clear local state and refresh
       setBills([]);
@@ -315,14 +222,12 @@ export const BillHistory: React.FC = () => {
   };
 
   const handleBillUpdated = () => {
-    console.log("Bill updated callback called");
     fetchBills(); // Refresh the bills list
     setEditModalOpen(false); // Close the edit modal
     setSelectedBillId(""); // Clear selected bill ID
   };
 
   const handleEditModalClose = () => {
-    console.log("Edit modal closing");
     setEditModalOpen(false);
     setSelectedBillId("");
   };
@@ -468,10 +373,7 @@ export const BillHistory: React.FC = () => {
                           variant="outline"
                           className="h-8 w-8 p-0"
                           title="Edit bill"
-                          onClick={() => {
-                            console.log("Edit button clicked for bill:", bill.id, bill.bill_number);
-                            handleEditBill(bill.id);
-                          }}
+                          onClick={() => handleEditBill(bill.id)}
                           disabled={bill.payment_status === 'cancelled'}
                         >
                           <Edit className="h-4 w-4" />
