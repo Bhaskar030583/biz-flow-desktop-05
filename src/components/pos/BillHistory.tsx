@@ -14,7 +14,8 @@ import {
   Download,
   Filter,
   Edit,
-  X
+  X,
+  Trash2
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +48,7 @@ export const BillHistory: React.FC = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedBillId, setSelectedBillId] = useState<string>("");
   const [selectedBillDetails, setSelectedBillDetails] = useState<any>(null);
+  const [isClearingAll, setIsClearingAll] = useState(false);
 
   const fetchBills = async () => {
     if (!user) return;
@@ -175,6 +177,44 @@ export const BillHistory: React.FC = () => {
     }
   };
 
+  const handleClearAllBills = async () => {
+    if (!user) return;
+
+    const confirmClear = window.confirm(
+      "Are you sure you want to delete ALL bills? This action cannot be undone."
+    );
+
+    if (!confirmClear) return;
+
+    setIsClearingAll(true);
+
+    try {
+      // First delete all bill items for this user's bills
+      const { error: itemsError } = await supabase
+        .from('bill_items')
+        .delete()
+        .in('bill_id', bills.map(bill => bill.id));
+
+      if (itemsError) throw itemsError;
+
+      // Then delete all bills for this user
+      const { error: billsError } = await supabase
+        .from('bills')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (billsError) throw billsError;
+
+      setBills([]);
+      toast.success("All bills have been cleared successfully");
+    } catch (error) {
+      console.error("Error clearing bills:", error);
+      toast.error("Failed to clear bills");
+    } finally {
+      setIsClearingAll(false);
+    }
+  };
+
   const handleBillUpdated = () => {
     console.log("Bill updated callback called");
     fetchBills(); // Refresh the bills list
@@ -217,10 +257,25 @@ export const BillHistory: React.FC = () => {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Receipt className="h-5 w-5" />
-            Bill History ({bills.length})
-          </CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5" />
+              Bill History ({bills.length})
+            </CardTitle>
+            
+            {bills.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleClearAllBills}
+                disabled={isClearingAll}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                {isClearingAll ? "Clearing..." : "Clear All"}
+              </Button>
+            )}
+          </div>
           
           <div className="flex gap-4 flex-col sm:flex-row">
             <div className="relative flex-1">
