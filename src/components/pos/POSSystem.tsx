@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -515,7 +516,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
           </div>
         </div>
 
-        {/* Enhanced Products Grid with responsive layout */}
+        {/* Enhanced Products Grid with compact cards */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-blue-50">
           {filteredProducts.length === 0 ? (
             <div className="text-center py-16 sm:py-24 text-gray-500">
@@ -538,27 +539,27 @@ export const POSSystem: React.FC<POSSystemProps> = ({
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2 sm:gap-3 lg:gap-4">
               {filteredProducts.map((product) => (
                 <Card 
                   key={product.id} 
-                  className={`cursor-pointer transition-all duration-300 border-2 hover:shadow-xl group transform hover:scale-105 rounded-xl sm:rounded-2xl ${
+                  className={`cursor-pointer transition-all duration-300 border-2 hover:shadow-xl group transform hover:scale-105 rounded-lg sm:rounded-xl ${
                     product.quantity !== undefined && product.quantity <= 0 
                       ? 'border-red-300 bg-gradient-to-br from-red-50 to-red-100 opacity-75' 
-                      : 'border-gray-200 bg-white hover:border-blue-300 shadow-lg'
+                      : 'border-gray-200 bg-white hover:border-blue-300 shadow-md'
                   }`}
                   onClick={() => addToCart(product)}
                 >
-                  <CardContent className="p-3 sm:p-4 lg:p-5">
-                    <h4 className="font-bold text-xs sm:text-sm mb-2 sm:mb-3 text-gray-800 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] leading-tight">
+                  <CardContent className="p-2 sm:p-3">
+                    <h4 className="font-bold text-xs leading-tight mb-2 text-gray-800 line-clamp-2 min-h-[2rem]">
                       {product.name}
                     </h4>
                     
                     {product.quantity !== undefined && (
-                      <div className="mb-2 sm:mb-3">
+                      <div className="mb-2">
                         <Badge 
                           variant="outline" 
-                          className={`text-xs py-1 px-2 sm:px-3 font-bold shadow-sm ${
+                          className={`text-xs py-0.5 px-1.5 font-bold shadow-sm ${
                             product.quantity > 10 
                               ? 'bg-green-100 text-green-700 border-green-300' 
                               : product.quantity > 0 
@@ -566,13 +567,13 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                                 : 'bg-red-100 text-red-700 border-red-300'
                           }`}
                         >
-                          Stock: {product.quantity}
+                          {product.quantity}
                         </Badge>
                       </div>
                     )}
                     
-                    <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-center shadow-lg">
-                      <p className="text-xs sm:text-sm font-bold">
+                    <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-2 py-1.5 rounded-md text-center shadow-lg">
+                      <p className="text-xs font-bold">
                         ₹{Number(product.price).toFixed(2)}
                       </p>
                     </div>

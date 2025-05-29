@@ -1,4 +1,5 @@
 
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -126,7 +127,7 @@ export const POSMobileView: React.FC<POSMobileViewProps> = ({
           ))}
         </div>
 
-        {/* Enhanced Mobile Products Grid with responsive design */}
+        {/* Enhanced Mobile Products Grid with compact cards */}
         <div className="flex-1 p-3 sm:p-4">
           {filteredProducts.length === 0 ? (
             <div className="text-center py-12 sm:py-16 text-gray-500">
@@ -137,27 +138,27 @@ export const POSMobileView: React.FC<POSMobileViewProps> = ({
               <p className="text-sm sm:text-base text-gray-400">Try adjusting your search or category filter</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
               {filteredProducts.map((product) => (
                 <Card 
                   key={product.id} 
-                  className={`cursor-pointer transition-all duration-300 border-2 hover:shadow-xl group transform hover:scale-105 rounded-xl sm:rounded-2xl ${
+                  className={`cursor-pointer transition-all duration-300 border-2 hover:shadow-xl group transform hover:scale-105 rounded-lg sm:rounded-xl ${
                     product.quantity !== undefined && product.quantity <= 0 
                       ? 'border-red-300 bg-gradient-to-br from-red-50 to-red-100 opacity-75' 
-                      : 'border-gray-200 bg-white hover:border-blue-300 shadow-lg'
+                      : 'border-gray-200 bg-white hover:border-blue-300 shadow-md'
                   }`}
                   onClick={() => addToCart(product)}
                 >
-                  <CardContent className="p-3 sm:p-4">
-                    <h4 className="font-bold text-xs sm:text-sm mb-2 sm:mb-3 text-gray-800 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] leading-tight">
+                  <CardContent className="p-2 sm:p-3">
+                    <h4 className="font-bold text-xs leading-tight mb-2 text-gray-800 line-clamp-2 min-h-[2rem]">
                       {product.name}
                     </h4>
                     
                     {product.quantity !== undefined && (
-                      <div className="mb-2 sm:mb-3">
+                      <div className="mb-2">
                         <Badge 
                           variant="outline" 
-                          className={`text-xs py-1 px-2 sm:px-3 font-bold shadow-sm ${
+                          className={`text-xs py-0.5 px-1.5 font-bold shadow-sm ${
                             product.quantity > 10 
                               ? 'bg-green-100 text-green-700 border-green-300' 
                               : product.quantity > 0 
@@ -170,8 +171,8 @@ export const POSMobileView: React.FC<POSMobileViewProps> = ({
                       </div>
                     )}
                     
-                    <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-2 sm:px-3 py-2 sm:py-3 rounded-lg sm:rounded-xl text-center shadow-lg">
-                      <p className="text-xs sm:text-sm font-bold">
+                    <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-2 py-1.5 rounded-md text-center shadow-lg">
+                      <p className="text-xs font-bold">
                         ₹{Number(product.price).toFixed(2)}
                       </p>
                     </div>
@@ -185,3 +186,4 @@ export const POSMobileView: React.FC<POSMobileViewProps> = ({
     </div>
   );
 };
+
