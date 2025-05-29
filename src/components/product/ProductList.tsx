@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Package, IndianRupee, Edit, Search } from "lucide-react";
+import { Trash2, Package, IndianRupee, Edit, Search, ChevronUp, ChevronDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -48,6 +48,9 @@ interface Product {
   created_at: string;
 }
 
+type SortField = 'sku' | 'cost_price' | 'price' | 'quantity';
+type SortDirection = 'asc' | 'desc';
+
 export function ProductList() {
   const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
@@ -59,6 +62,8 @@ export function ProductList() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteError, setShowDeleteError] = useState(false);
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const productSchema = z.object({
     name: z.string().min(2, "Name is required"),
@@ -80,6 +85,55 @@ export function ProductList() {
       cost_price: 0,
     },
   });
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ChevronUp className="h-4 w-4 text-gray-400" />;
+    }
+    return sortDirection === 'asc' ? 
+      <ChevronUp className="h-4 w-4 text-gray-700" /> : 
+      <ChevronDown className="h-4 w-4 text-gray-700" />;
+  };
+
+  const sortProducts = (products: Product[]) => {
+    if (!sortField) return products;
+
+    return [...products].sort((a, b) => {
+      let aValue: any = a[sortField];
+      let bValue: any = b[sortField];
+
+      // Handle null values for sku and cost_price
+      if (sortField === 'sku') {
+        aValue = aValue || '';
+        bValue = bValue || '';
+      } else if (sortField === 'cost_price') {
+        aValue = aValue || 0;
+        bValue = bValue || 0;
+      }
+
+      if (typeof aValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+
+      if (aValue < bValue) {
+        return sortDirection === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortDirection === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -263,6 +317,8 @@ export function ProductList() {
     return matchesCategory && matchesSearch;
   });
 
+  const sortedProducts = sortProducts(filteredProducts);
+
   if (loading) {
     return <div className="text-center py-4">Loading products...</div>;
   }
@@ -325,16 +381,48 @@ export function ProductList() {
             <TableHeader>
               <TableRow>
                 <TableHead>Product Name</TableHead>
-                <TableHead>SKU</TableHead>
+                <TableHead>
+                  <div 
+                    className="flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-1 rounded"
+                    onClick={() => handleSort('sku')}
+                  >
+                    SKU
+                    {getSortIcon('sku')}
+                  </div>
+                </TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Cost Price</TableHead>
-                <TableHead>Selling Price</TableHead>
+                <TableHead>
+                  <div 
+                    className="flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-1 rounded"
+                    onClick={() => handleSort('quantity')}
+                  >
+                    Quantity
+                    {getSortIcon('quantity')}
+                  </div>
+                </TableHead>
+                <TableHead>
+                  <div 
+                    className="flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-1 rounded"
+                    onClick={() => handleSort('cost_price')}
+                  >
+                    Cost Price
+                    {getSortIcon('cost_price')}
+                  </div>
+                </TableHead>
+                <TableHead>
+                  <div 
+                    className="flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-1 rounded"
+                    onClick={() => handleSort('price')}
+                  >
+                    Selling Price
+                    {getSortIcon('price')}
+                  </div>
+                </TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProducts.map((product) => (
+              {sortedProducts.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>
@@ -409,7 +497,7 @@ export function ProductList() {
           </Table>
         </div>
         
-        {filteredProducts.length === 0 && (searchTerm || selectedCategory) && (
+        {sortedProducts.length === 0 && (searchTerm || selectedCategory) && (
           <div className="text-center py-8 text-muted-foreground">
             No products found matching your search criteria.
           </div>
