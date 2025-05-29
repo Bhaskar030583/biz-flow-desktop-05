@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store, Clock, User, MapPin } from "lucide-react";
+import { Store, Clock, User, MapPin, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -188,30 +188,30 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl w-full max-h-[85vh] overflow-y-auto">
-        <DialogHeader className="space-y-4 pb-6">
-          <DialogTitle className="flex items-center gap-3 text-2xl font-bold text-center justify-center">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-              <Store className="h-7 w-7 text-white" />
-            </div>
-            <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+      <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-50 to-blue-50 border-0 shadow-2xl">
+        <DialogHeader className="space-y-6 pb-8 text-center">
+          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 rounded-2xl flex items-center justify-center shadow-lg">
+            <Store className="h-10 w-10 text-white" />
+          </div>
+          <div>
+            <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
               POS Session Setup
-            </span>
-          </DialogTitle>
-          <p className="text-gray-600 text-center text-lg">
-            Configure your point of sale session to get started
-          </p>
+            </DialogTitle>
+            <p className="text-gray-600 text-lg font-medium">
+              Configure your point of sale session to get started
+            </p>
+          </div>
         </DialogHeader>
         
-        <div className="space-y-8">
-          {/* Store Selection Card */}
-          <Card className="border-2 border-blue-100 shadow-lg">
-            <CardHeader className="pb-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-t-lg">
-              <CardTitle className="flex items-center gap-3 text-xl text-blue-800">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <MapPin className="h-5 w-5 text-white" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Store Selection */}
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+            <CardHeader className="pb-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-lg">
+              <CardTitle className="flex items-center gap-3 text-lg">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                  <MapPin className="h-5 w-5" />
                 </div>
-                Select Store Location
+                Store Location
               </CardTitle>
             </CardHeader>
             
@@ -219,37 +219,32 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
               {storesLoading ? (
                 <div className="space-y-3">
                   <Skeleton className="h-12 w-full" />
-                  <p className="text-sm text-blue-600 animate-pulse">🔄 Loading HRMS stores...</p>
-                </div>
-              ) : storesError ? (
-                <div className="text-red-500 text-sm space-y-3">
-                  <div className="p-4 border-2 border-red-200 rounded-lg bg-red-50">
-                    <p className="font-semibold text-red-700 mb-2">❌ Error loading HRMS stores:</p>
-                    <p className="text-red-600">{storesError.message}</p>
-                    <p className="text-xs mt-2 text-red-500">Please check if stores are created in HRMS module.</p>
+                  <div className="flex items-center gap-2 text-sm text-blue-600">
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    Loading stores...
                   </div>
                 </div>
+              ) : storesError ? (
+                <div className="p-4 border-2 border-red-200 rounded-lg bg-red-50">
+                  <div className="flex items-center gap-2 text-red-700 mb-2">
+                    <AlertCircle className="h-5 w-5" />
+                    <span className="font-semibold">Error loading stores</span>
+                  </div>
+                  <p className="text-red-600 text-sm">{storesError.message}</p>
+                </div>
               ) : (
-                <div className="space-y-3">
-                  <Select 
-                    value={selectedStoreId} 
-                    onValueChange={(value) => {
-                      console.log('🎯 [StoreInfoModal] HR Store selected:', value);
-                      setSelectedStoreId(value);
-                      setSelectedShiftId(""); // Reset shift when store changes
-                    }}
-                  >
-                    <SelectTrigger className="h-12 bg-white border-2 border-gray-200 hover:border-blue-300 focus:border-blue-500 text-base">
-                      <SelectValue placeholder="Choose a store location" />
+                <div className="space-y-4">
+                  <Select value={selectedStoreId} onValueChange={(value) => {
+                    setSelectedStoreId(value);
+                    setSelectedShiftId("");
+                  }}>
+                    <SelectTrigger className="h-12 bg-white border-2 border-gray-200 hover:border-blue-300 focus:border-blue-500 text-base font-medium">
+                      <SelectValue placeholder="Choose store location" />
                     </SelectTrigger>
                     <SelectContent className="z-50 bg-white border-2 shadow-xl">
                       {hrStores && hrStores.length > 0 ? (
                         hrStores.map((store: HRStore) => (
-                          <SelectItem 
-                            key={store.id} 
-                            value={store.id} 
-                            className="cursor-pointer hover:bg-blue-50 py-3 text-base"
-                          >
+                          <SelectItem key={store.id} value={store.id} className="cursor-pointer hover:bg-blue-50 py-3">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                                 <Store className="h-4 w-4 text-blue-600" />
@@ -262,74 +257,52 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="no-stores" disabled>
-                          No HRMS stores available
-                        </SelectItem>
+                        <SelectItem value="no-stores" disabled>No stores available</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
                   
-                  {hrStores && hrStores.length > 0 ? (
+                  {selectedStoreId && (
                     <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-3 rounded-lg">
-                      <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs">✓</span>
-                      </div>
-                      Found {hrStores.length} store location(s)
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-sm text-yellow-600 bg-yellow-50 p-3 rounded-lg">
-                      <span>⚠️</span>
-                      No HRMS stores found
+                      <CheckCircle className="w-4 h-4" />
+                      Store selected successfully
                     </div>
                   )}
-                </div>
-              )}
-              
-              {!storesLoading && !storesError && (!hrStores || hrStores.length === 0) && (
-                <div className="p-4 border-2 border-yellow-200 rounded-lg bg-yellow-50">
-                  <p className="text-sm text-yellow-800 font-medium">
-                    ⚠️ No stores found in HRMS. Please create stores first in the HRMS module.
-                  </p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Shift Selection Card */}
-          <Card className="border-2 border-purple-100 shadow-lg">
-            <CardHeader className="pb-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-t-lg">
-              <CardTitle className="flex items-center gap-3 text-xl text-purple-800">
-                <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-white" />
+          {/* Shift Selection */}
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+            <CardHeader className="pb-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-t-lg">
+              <CardTitle className="flex items-center gap-3 text-lg">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Clock className="h-5 w-5" />
                 </div>
-                Select Work Shift
+                Work Shift
               </CardTitle>
             </CardHeader>
             
             <CardContent className="p-6 space-y-4">
               {shiftsLoading ? (
-                <Skeleton className="h-12 w-full" />
-              ) : (
                 <div className="space-y-3">
-                  <Select 
-                    value={selectedShiftId} 
-                    onValueChange={(value) => {
-                      console.log('🕐 [StoreInfoModal] HR Shift selected:', value);
-                      setSelectedShiftId(value);
-                    }}
-                    disabled={!selectedStoreId}
-                  >
-                    <SelectTrigger className="h-12 bg-white border-2 border-gray-200 hover:border-purple-300 focus:border-purple-500 text-base disabled:opacity-50">
-                      <SelectValue placeholder="Choose a work shift" />
+                  <Skeleton className="h-12 w-full" />
+                  <div className="flex items-center gap-2 text-sm text-purple-600">
+                    <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                    Loading shifts...
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <Select value={selectedShiftId} onValueChange={setSelectedShiftId} disabled={!selectedStoreId}>
+                    <SelectTrigger className="h-12 bg-white border-2 border-gray-200 hover:border-purple-300 focus:border-purple-500 text-base font-medium disabled:opacity-50">
+                      <SelectValue placeholder="Choose work shift" />
                     </SelectTrigger>
                     <SelectContent className="z-50 bg-white border-2 shadow-xl">
                       {hrShifts && hrShifts.length > 0 ? (
                         hrShifts.map((shift: HRShift) => (
-                          <SelectItem 
-                            key={shift.id} 
-                            value={shift.id} 
-                            className="cursor-pointer hover:bg-purple-50 py-3 text-base"
-                          >
+                          <SelectItem key={shift.id} value={shift.id} className="cursor-pointer hover:bg-purple-50 py-3">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                                 <Clock className="h-4 w-4 text-purple-600" />
@@ -342,52 +315,50 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
                           </SelectItem>
                         ))
                       ) : selectedStoreId ? (
-                        <SelectItem value="no-shifts" disabled>
-                          No HRMS shifts available for this store
-                        </SelectItem>
+                        <SelectItem value="no-shifts" disabled>No shifts available</SelectItem>
                       ) : (
-                        <SelectItem value="select-store" disabled>
-                          Please select a store first
-                        </SelectItem>
+                        <SelectItem value="select-store" disabled>Select store first</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
                   
                   {!selectedStoreId && (
-                    <p className="text-sm text-gray-500 bg-gray-50 p-3 rounded-lg">
+                    <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded-lg">
                       Please select a store first to view available shifts
-                    </p>
+                    </div>
                   )}
-                  {selectedStoreId && !shiftsLoading && (!hrShifts || hrShifts.length === 0) && (
-                    <p className="text-sm text-red-500 bg-red-50 p-3 rounded-lg">
-                      No HRMS shifts found for this store. Please create shifts in HRMS.
-                    </p>
+                  
+                  {selectedShiftId && (
+                    <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-3 rounded-lg">
+                      <CheckCircle className="w-4 h-4" />
+                      Shift selected successfully
+                    </div>
                   )}
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Salesperson Information Card */}
-          <Card className="border-2 border-green-100 shadow-lg">
-            <CardHeader className="pb-4 bg-gradient-to-r from-green-50 to-green-100 rounded-t-lg">
-              <CardTitle className="flex items-center gap-3 text-xl text-green-800">
-                <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-                  <User className="h-5 w-5 text-white" />
+          {/* Salesperson Information */}
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+            <CardHeader className="pb-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-t-lg">
+              <CardTitle className="flex items-center gap-3 text-lg">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                  <User className="h-5 w-5" />
                 </div>
-                Salesperson Information
+                Salesperson
               </CardTitle>
             </CardHeader>
             
             <CardContent className="p-6">
-              <div className="bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 px-4 py-4 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                    <User className="h-5 w-5 text-white" />
+              <div className="bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 px-6 py-6 rounded-xl">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
+                    <User className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-green-700">Logged in as:</div>
-                    <div className="text-lg font-bold text-green-800">
+                    <div className="text-sm font-medium text-green-700 mb-1">Logged in as:</div>
+                    <div className="text-xl font-bold text-green-800">
                       {salespersonName || "Loading..."}
                     </div>
                   </div>
@@ -395,23 +366,23 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
               </div>
             </CardContent>
           </Card>
-          
-          {/* Start Session Button */}
-          <div className="pt-4">
-            <Button 
-              onClick={handleSubmit}
-              className="w-full h-16 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-lg font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-              size="lg"
-              disabled={!selectedStoreId || !selectedShiftId || storesLoading || shiftsLoading}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <Store className="h-5 w-5" />
-                </div>
-                Start POS Session
+        </div>
+        
+        {/* Start Session Button */}
+        <div className="pt-6">
+          <Button 
+            onClick={handleSubmit}
+            className="w-full h-16 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 hover:from-blue-700 hover:via-purple-700 hover:to-blue-800 text-white text-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] rounded-xl"
+            size="lg"
+            disabled={!selectedStoreId || !selectedShiftId || storesLoading || shiftsLoading}
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <Store className="h-6 w-6" />
               </div>
-            </Button>
-          </div>
+              <span>Start POS Session</span>
+            </div>
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
