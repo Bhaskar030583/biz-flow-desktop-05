@@ -191,38 +191,25 @@ export const BillHistory: React.FC = () => {
     try {
       console.log("Starting to clear all bills for user:", user.id);
 
-      // First, get all bill IDs for this user
-      const { data: userBills, error: fetchError } = await supabase
-        .from('bills')
-        .select('id')
-        .eq('user_id', user.id);
-
-      if (fetchError) throw fetchError;
-
-      if (!userBills || userBills.length === 0) {
-        console.log("No bills found to delete");
-        toast.success("No bills to clear");
-        setIsClearingAll(false);
-        return;
-      }
-
-      const billIds = userBills.map(bill => bill.id);
-      console.log("Found bills to delete:", billIds);
-
-      // Delete all bill items for these bills
+      // Step 1: Delete bill items first (foreign key dependency)
       console.log("Deleting bill items...");
       const { error: itemsError } = await supabase
         .from('bill_items')
         .delete()
-        .in('bill_id', billIds);
+        .in('bill_id', 
+          supabase
+            .from('bills')
+            .select('id')
+            .eq('user_id', user.id)
+        );
 
       if (itemsError) {
         console.error("Error deleting bill items:", itemsError);
         throw itemsError;
       }
 
-      // Delete all credit transactions related to these bills (if any)
-      console.log("Deleting related credit transactions...");
+      // Step 2: Delete credit transactions related to this user
+      console.log("Deleting credit transactions...");
       const { error: creditError } = await supabase
         .from('credit_transactions')
         .delete()
@@ -230,10 +217,10 @@ export const BillHistory: React.FC = () => {
 
       if (creditError) {
         console.error("Error deleting credit transactions:", creditError);
-        // Don't throw here as this might not exist
+        // Don't throw here as this might not exist for all users
       }
 
-      // Finally, delete all bills for this user
+      // Step 3: Finally delete all bills for this user
       console.log("Deleting bills...");
       const { error: billsError } = await supabase
         .from('bills')
@@ -246,11 +233,20 @@ export const BillHistory: React.FC = () => {
       }
 
       console.log("Successfully cleared all bills");
+      
+      // Update local state immediately
       setBills([]);
+      
+      // Also refresh from database to ensure sync
+      await fetchBills();
+      
       toast.success("All bills have been cleared successfully");
     } catch (error) {
       console.error("Error clearing bills:", error);
       toast.error("Failed to clear bills. Please try again.");
+      
+      // Refresh bills list to show current state
+      await fetchBills();
     } finally {
       setIsClearingAll(false);
     }
