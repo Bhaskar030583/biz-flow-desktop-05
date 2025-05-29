@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -189,17 +188,16 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-50 to-blue-50 border-0 shadow-2xl">
-        <DialogHeader className="space-y-6 pb-8 text-center">
-          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 rounded-2xl flex items-center justify-center shadow-lg">
-            <Store className="h-10 w-10 text-white" />
-          </div>
-          <div>
-            <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              POS Session Setup
+        <DialogHeader className="space-y-4 pb-6 text-center">
+          <div className="mx-auto flex items-center justify-center gap-4">
+            <img 
+              src="/lovable-uploads/7e552f66-f5e2-416f-af98-1a5f74c1bfed.png" 
+              alt="ABC Cafe Logo" 
+              className="h-16 w-16 object-contain"
+            />
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+              ABC CAFE
             </DialogTitle>
-            <p className="text-gray-600 text-lg font-medium">
-              Configure your point of sale session to get started
-            </p>
           </div>
         </DialogHeader>
         
@@ -372,7 +370,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
         <div className="pt-6">
           <Button 
             onClick={handleSubmit}
-            className="w-full h-16 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 hover:from-blue-700 hover:via-purple-700 hover:to-blue-800 text-white text-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] rounded-xl"
+            className="w-full h-16 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 hover:from-amber-700 hover:via-orange-700 hover:to-amber-800 text-white text-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] rounded-xl"
             size="lg"
             disabled={!selectedStoreId || !selectedShiftId || storesLoading || shiftsLoading}
           >
