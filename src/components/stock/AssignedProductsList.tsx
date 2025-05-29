@@ -8,6 +8,14 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -99,71 +107,74 @@ const AssignedProductsList: React.FC<AssignedProductsListProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {assignedProducts.map((product) => (
-            <div
-              key={product.id}
-              className="border rounded-lg p-4 bg-white hover:shadow-md transition-shadow"
-            >
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900 line-clamp-2">
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead className="text-right">Price</TableHead>
+                <TableHead className="text-right">Cost Price</TableHead>
+                <TableHead className="w-[100px] text-center">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {assignedProducts.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell className="font-medium">
                     {product.name}
-                  </h4>
-                  <Badge variant="outline" className="mt-1">
-                    {product.category}
-                  </Badge>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-                      disabled={deassigning[product.id]}
-                    >
-                      {deassigning[product.id] ? (
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>De-assign Product</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to de-assign "{product.name}" from this store? 
-                        This will remove the product from the store's inventory.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => handleDeassignProduct(product.id, product.name)}
-                        className="bg-red-600 hover:bg-red-700"
-                      >
-                        De-assign
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-              
-              <div className="space-y-1 text-sm text-gray-600">
-                <div className="flex justify-between">
-                  <span>Price:</span>
-                  <span className="font-medium">₹{product.price.toFixed(2)}</span>
-                </div>
-                {product.cost_price && (
-                  <div className="flex justify-between">
-                    <span>Cost:</span>
-                    <span className="font-medium">₹{product.cost_price.toFixed(2)}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">
+                      {product.category}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    ₹{product.price.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {product.cost_price ? `₹${product.cost_price.toFixed(2)}` : '-'}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                          disabled={deassigning[product.id]}
+                        >
+                          {deassigning[product.id] ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>De-assign Product</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to de-assign "{product.name}" from this store? 
+                            This will remove the product from the store's inventory.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeassignProduct(product.id, product.name)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            De-assign
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       </CardContent>
     </Card>
