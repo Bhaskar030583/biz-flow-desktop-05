@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -427,40 +426,19 @@ export const POSSystem: React.FC<POSSystemProps> = ({
   // Enhanced Desktop View
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Enhanced Left Sidebar - Categories */}
-      <div className="w-24 bg-gradient-to-b from-white to-gray-50 border-r-2 border-blue-100 flex flex-col items-center py-6 space-y-4 shadow-lg">
-        <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300">
-          <img 
-            src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
-            alt="Logo" 
-            className="h-9 w-9"
-          />
-        </div>
-        
-        {/* Enhanced Category Icons */}
-        {categories.slice(0, 6).map((category, index) => (
-          <button
-            key={category}
-            onClick={() => setSelectedCategory(category)}
-            className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-md ${
-              selectedCategory === category
-                ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg scale-105"
-                : "bg-white text-gray-600 hover:bg-blue-50 hover:text-blue-600 hover:shadow-lg"
-            }`}
-            title={category === "all" ? "All Items" : category}
-          >
-            <Package className="h-6 w-6" />
-          </button>
-        ))}
-      </div>
-
       {/* Main Content Area */}
-      <div className="flex-1 flex">
-        {/* Enhanced Products Section */}
-        <div className="flex-1 flex flex-col">
-          {/* Enhanced Header */}
-          <div className="bg-gradient-to-r from-white to-blue-50 border-b-2 border-blue-100 px-8 py-6 shadow-sm">
-            <div className="flex justify-between items-center">
+      <div className="flex-1 flex flex-col">
+        {/* Enhanced Header */}
+        <div className="bg-gradient-to-r from-white to-blue-50 border-b-2 border-blue-100 px-8 py-6 shadow-sm">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+                <img 
+                  src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
+                  alt="Logo" 
+                  className="h-9 w-9"
+                />
+              </div>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
                   ABC CAFE
@@ -471,311 +449,273 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                   </p>
                 )}
               </div>
-              
-              <div className="flex items-center space-x-4">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={handleQuickStock}
-                  className="flex items-center gap-3 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 font-semibold px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
-                >
-                  <Package className="h-5 w-5" />
-                  Quick Stock
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => setShowCustomerManagement(true)}
-                  className="flex items-center gap-3 bg-white hover:bg-green-50 border-green-200 text-green-700 font-semibold px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
-                >
-                  <User className="h-5 w-5" />
-                  Customers
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => setShowBillHistory(true)}
-                  className="flex items-center gap-3 bg-white hover:bg-purple-50 border-purple-200 text-purple-700 font-semibold px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
-                >
-                  <History className="h-5 w-5" />
-                  History
-                </Button>
-              </div>
             </div>
-          </div>
-
-          {/* Enhanced Category Tabs */}
-          <div className="bg-white border-b-2 border-gray-100 px-8 py-4 shadow-sm">
-            <div className="flex space-x-2 overflow-x-auto">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-300 whitespace-nowrap shadow-sm hover:shadow-md transform hover:scale-105 ${
-                    selectedCategory === category
-                      ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
-                      : "text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200"
-                  }`}
-                >
-                  {category === "all" ? "All Items" : category}
-                </button>
-              ))}
+            
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleQuickStock}
+                className="flex items-center gap-3 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 font-semibold px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
+              >
+                <Package className="h-5 w-5" />
+                Quick Stock
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setShowCustomerManagement(true)}
+                className="flex items-center gap-3 bg-white hover:bg-green-50 border-green-200 text-green-700 font-semibold px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
+              >
+                <User className="h-5 w-5" />
+                Customers
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setShowBillHistory(true)}
+                className="flex items-center gap-3 bg-white hover:bg-purple-50 border-purple-200 text-purple-700 font-semibold px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
+              >
+                <History className="h-5 w-5" />
+                History
+              </Button>
             </div>
-          </div>
-
-          {/* Enhanced Search Bar */}
-          <div className="bg-white px-8 py-6 border-b-2 border-gray-100 shadow-sm">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-6 w-6" />
-              <Input
-                placeholder="Search products..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-14 text-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl shadow-sm bg-gray-50 focus:bg-white transition-all duration-300"
-              />
-            </div>
-          </div>
-
-          {/* Enhanced Products Grid */}
-          <div className="flex-1 overflow-y-auto p-8 bg-gradient-to-br from-gray-50 to-blue-50">
-            {filteredProducts.length === 0 ? (
-              <div className="text-center py-24 text-gray-500">
-                <div className="w-32 h-32 mx-auto mb-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center shadow-lg">
-                  <Search className="h-16 w-16 text-gray-400" />
-                </div>
-                <h3 className="text-2xl font-bold mb-4 text-gray-700">
-                  {selectedShopId 
-                    ? searchTerm || selectedCategory !== "all"
-                      ? "No products found"
-                      : "No products available" 
-                    : "Please select a store"
-                  }
-                </h3>
-                <p className="text-lg text-gray-400">
-                  {searchTerm || selectedCategory !== "all" 
-                    ? "Try adjusting your search or category filter"
-                    : "Add products to get started"
-                  }
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
-                {filteredProducts.map((product) => (
-                  <Card 
-                    key={product.id} 
-                    className={`cursor-pointer transition-all duration-300 border-2 hover:shadow-xl group transform hover:scale-105 rounded-2xl ${
-                      product.quantity !== undefined && product.quantity <= 0 
-                        ? 'border-red-300 bg-gradient-to-br from-red-50 to-red-100 opacity-75' 
-                        : 'border-gray-200 bg-white hover:border-blue-300 shadow-lg'
-                    }`}
-                    onClick={() => addToCart(product)}
-                  >
-                    <CardContent className="p-5">
-                      <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl mb-4 flex items-center justify-center shadow-inner">
-                        <Package className="h-10 w-10 text-gray-400" />
-                      </div>
-                      
-                      <h4 className="font-bold text-sm mb-3 text-gray-800 line-clamp-2 min-h-[2.5rem] leading-tight">
-                        {product.name}
-                      </h4>
-                      
-                      {product.quantity !== undefined && (
-                        <div className="mb-3">
-                          <Badge 
-                            variant="outline" 
-                            className={`text-xs py-1 px-3 font-bold shadow-sm ${
-                              product.quantity > 10 
-                                ? 'bg-green-100 text-green-700 border-green-300' 
-                                : product.quantity > 0 
-                                  ? 'bg-yellow-100 text-yellow-700 border-yellow-300'
-                                  : 'bg-red-100 text-red-700 border-red-300'
-                            }`}
-                          >
-                            Stock: {product.quantity}
-                          </Badge>
-                        </div>
-                      )}
-                      
-                      <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-4 py-3 rounded-xl text-center shadow-lg">
-                        <p className="text-sm font-bold">
-                          ₹{Number(product.price).toFixed(2)}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Enhanced Right Sidebar - Cart */}
-        <div className="w-96 bg-white border-l-2 border-blue-100 flex flex-col shadow-2xl">
-          {/* Enhanced Cart Header */}
-          <div className="p-8 border-b-2 border-gray-100 bg-gradient-to-r from-white to-blue-50">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-900">Current Order</h2>
-              {cart.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={clearCart}
-                  className="text-red-600 hover:text-red-700 border-red-300 hover:bg-red-50 font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear
-                </Button>
-              )}
+        {/* Enhanced Category Tabs - Moved to top */}
+        <div className="bg-white border-b-2 border-gray-100 px-8 py-4 shadow-sm">
+          <div className="flex space-x-2 overflow-x-auto">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-300 whitespace-nowrap shadow-sm hover:shadow-md transform hover:scale-105 ${
+                  selectedCategory === category
+                    ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
+                    : "text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200"
+                }`}
+              >
+                {category === "all" ? "All Items" : category}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Enhanced Search Bar */}
+        <div className="bg-white px-8 py-6 border-b-2 border-gray-100 shadow-sm">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-6 w-6" />
+            <Input
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-12 h-14 text-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl shadow-sm bg-gray-50 focus:bg-white transition-all duration-300"
+            />
+          </div>
+        </div>
+
+        {/* Enhanced Products Grid */}
+        <div className="flex-1 overflow-y-auto p-8 bg-gradient-to-br from-gray-50 to-blue-50">
+          {filteredProducts.length === 0 ? (
+            <div className="text-center py-24 text-gray-500">
+              <div className="w-32 h-32 mx-auto mb-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center shadow-lg">
+                <Search className="h-16 w-16 text-gray-400" />
+              </div>
+              <h3 className="text-2xl font-bold mb-4 text-gray-700">
+                {selectedShopId 
+                  ? searchTerm || selectedCategory !== "all"
+                    ? "No products found"
+                    : "No products available" 
+                  : "Please select a store"
+                }
+              </h3>
+              <p className="text-lg text-gray-400">
+                {searchTerm || selectedCategory !== "all" 
+                  ? "Try adjusting your search or category filter"
+                  : "Add products to get started"
+                }
+              </p>
             </div>
-          </div>
-
-          {/* Enhanced Cart Items */}
-          <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-gray-50 to-blue-50">
-            {cart.length === 0 ? (
-              <div className="text-center py-16 text-gray-500">
-                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center shadow-lg">
-                  <ShoppingCart className="h-10 w-10 text-gray-400" />
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-gray-700">Your cart is empty</h3>
-                <p className="text-base text-gray-400">Add products to get started</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {cart.map((item, index) => (
-                  <div key={item.id} className="bg-white rounded-2xl p-5 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex-1 pr-4">
-                        <h4 className="font-bold text-sm text-gray-800">{item.name}</h4>
-                        <p className="text-xs text-gray-600 mt-1">₹{Number(item.price).toFixed(2)} each</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 h-8 w-8 rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-10 w-10 p-0 rounded-lg border-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50 shadow-sm hover:shadow-md transition-all duration-300"
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="font-bold text-lg min-w-[40px] text-center bg-gray-100 px-4 py-2 rounded-lg border-2 border-gray-200">
-                          {item.quantity}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-10 w-10 p-0 rounded-lg border-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50 shadow-sm hover:shadow-md transition-all duration-300"
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      
-                      <div className="text-right">
-                        <p className="font-bold text-lg text-gray-900">₹{Number(item.total).toFixed(2)}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Enhanced Cart Footer */}
-          {cart.length > 0 && (
-            <div className="border-t-2 border-gray-100 p-8 space-y-6 bg-gradient-to-r from-white to-blue-50">
-              <div className="space-y-3">
-                <div className="flex justify-between text-base font-medium">
-                  <span>Subtotal</span>
-                  <span>₹{getTotalAmount().toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-base font-medium">
-                  <span>Tax</span>
-                  <span>₹0.00</span>
-                </div>
-                <Separator className="my-3" />
-                <div className="flex justify-between text-2xl font-bold text-gray-900">
-                  <span>Total</span>
-                  <span className="text-blue-600">₹{getTotalAmount().toFixed(2)}</span>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <Button 
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 h-14 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105" 
-                  onClick={handleCashPayment}
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+              {filteredProducts.map((product) => (
+                <Card 
+                  key={product.id} 
+                  className={`cursor-pointer transition-all duration-300 border-2 hover:shadow-xl group transform hover:scale-105 rounded-2xl ${
+                    product.quantity !== undefined && product.quantity <= 0 
+                      ? 'border-red-300 bg-gradient-to-br from-red-50 to-red-100 opacity-75' 
+                      : 'border-gray-200 bg-white hover:border-blue-300 shadow-lg'
+                  }`}
+                  onClick={() => addToCart(product)}
                 >
-                  <Banknote className="h-5 w-5 mr-3" />
-                  Cash Payment
-                </Button>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <Button 
-                    variant="outline"
-                    className="h-12 font-semibold bg-white hover:bg-green-50 border-2 border-green-200 text-green-700 hover:border-green-300 rounded-xl shadow-md hover:shadow-lg transition-all duration-300" 
-                    onClick={handleUPIPayment}
-                  >
-                    <Smartphone className="h-4 w-4 mr-2" />
-                    UPI
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    className="h-12 font-semibold bg-white hover:bg-purple-50 border-2 border-purple-200 text-purple-700 hover:border-purple-300 rounded-xl shadow-md hover:shadow-lg transition-all duration-300" 
-                    onClick={handleCreditPayment}
-                  >
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Credit
-                  </Button>
-                </div>
-              </div>
+                  <CardContent className="p-5">
+                    <h4 className="font-bold text-sm mb-3 text-gray-800 line-clamp-2 min-h-[2.5rem] leading-tight">
+                      {product.name}
+                    </h4>
+                    
+                    {product.quantity !== undefined && (
+                      <div className="mb-3">
+                        <Badge 
+                          variant="outline" 
+                          className={`text-xs py-1 px-3 font-bold shadow-sm ${
+                            product.quantity > 10 
+                              ? 'bg-green-100 text-green-700 border-green-300' 
+                              : product.quantity > 0 
+                                ? 'bg-yellow-100 text-yellow-700 border-yellow-300'
+                                : 'bg-red-100 text-red-700 border-red-300'
+                          }`}
+                        >
+                          Stock: {product.quantity}
+                        </Badge>
+                      </div>
+                    )}
+                    
+                    <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-4 py-3 rounded-xl text-center shadow-lg">
+                      <p className="text-sm font-bold">
+                        ₹{Number(product.price).toFixed(2)}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           )}
         </div>
       </div>
 
-      {/* Desktop Modals */}
-      <QuickStockUpdateModal
-        isOpen={showQuickStockModal}
-        onClose={() => setShowQuickStockModal(false)}
-        products={products || []}
-        selectedShopId={selectedShopId}
-        onStockUpdated={handleStockUpdated}
-      />
+      {/* Enhanced Right Sidebar - Cart */}
+      <div className="w-96 bg-white border-l-2 border-blue-100 flex flex-col shadow-2xl">
+        {/* Enhanced Cart Header */}
+        <div className="p-8 border-b-2 border-gray-100 bg-gradient-to-r from-white to-blue-50">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-bold text-gray-900">Current Order</h2>
+            {cart.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearCart}
+                className="text-red-600 hover:text-red-700 border-red-300 hover:bg-red-50 font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear
+              </Button>
+            )}
+          </div>
+        </div>
 
-      <CashPaymentModal
-        isOpen={showCashModal}
-        onClose={() => setShowCashModal(false)}
-        totalAmount={getTotalAmount()}
-        cartItems={cart}
-        onPaymentComplete={handlePaymentComplete}
-        storeInfo={storeInfo}
-      />
+        {/* Enhanced Cart Items */}
+        <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-gray-50 to-blue-50">
+          {cart.length === 0 ? (
+            <div className="text-center py-16 text-gray-500">
+              <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center shadow-lg">
+                <ShoppingCart className="h-10 w-10 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-gray-700">Your cart is empty</h3>
+              <p className="text-base text-gray-400">Add products to get started</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {cart.map((item, index) => (
+                <div key={item.id} className="bg-white rounded-2xl p-5 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1 pr-4">
+                      <h4 className="font-bold text-sm text-gray-800">{item.name}</h4>
+                      <p className="text-xs text-gray-600 mt-1">₹{Number(item.price).toFixed(2)} each</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFromCart(item.id)}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 h-8 w-8 rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-10 w-10 p-0 rounded-lg border-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50 shadow-sm hover:shadow-md transition-all duration-300"
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="font-bold text-lg min-w-[40px] text-center bg-gray-100 px-4 py-2 rounded-lg border-2 border-gray-200">
+                        {item.quantity}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-10 w-10 p-0 rounded-lg border-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50 shadow-sm hover:shadow-md transition-all duration-300"
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    <div className="text-right">
+                      <p className="font-bold text-lg text-gray-900">₹{Number(item.total).toFixed(2)}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-      <CreditPaymentModal
-        isOpen={showCreditModal}
-        onClose={() => setShowCreditModal(false)}
-        totalAmount={getTotalAmount()}
-        cartItems={cart}
-        onPaymentComplete={handlePaymentComplete}
-      />
-
-      <SplitPaymentModal
-        isOpen={showSplitModal}
-        onClose={() => setShowSplitModal(false)}
-        totalAmount={getTotalAmount()}
-        cartItems={cart}
-        onPaymentComplete={handlePaymentComplete}
-      />
+        {/* Enhanced Cart Footer */}
+        {cart.length > 0 && (
+          <div className="border-t-2 border-gray-100 p-8 space-y-6 bg-gradient-to-r from-white to-blue-50">
+            <div className="space-y-3">
+              <div className="flex justify-between text-base font-medium">
+                <span>Subtotal</span>
+                <span>₹{getTotalAmount().toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-base font-medium">
+                <span>Tax</span>
+                <span>₹0.00</span>
+              </div>
+              <Separator className="my-3" />
+              <div className="flex justify-between text-2xl font-bold text-gray-900">
+                <span>Total</span>
+                <span className="text-blue-600">₹{getTotalAmount().toFixed(2)}</span>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <Button 
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 h-14 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105" 
+                onClick={handleCashPayment}
+              >
+                <Banknote className="h-5 w-5 mr-3" />
+                Cash Payment
+              </Button>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  variant="outline"
+                  className="h-12 font-semibold bg-white hover:bg-green-50 border-2 border-green-200 text-green-700 hover:border-green-300 rounded-xl shadow-md hover:shadow-lg transition-all duration-300" 
+                  onClick={handleUPIPayment}
+                >
+                  <Smartphone className="h-4 w-4 mr-2" />
+                  UPI
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="h-12 font-semibold bg-white hover:bg-purple-50 border-2 border-purple-200 text-purple-700 hover:border-purple-300 rounded-xl shadow-md hover:shadow-lg transition-all duration-300" 
+                  onClick={handleCreditPayment}
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Credit
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
