@@ -219,33 +219,37 @@ export const BillHistory: React.FC = () => {
 
       // Step 2: Delete all bill items for these bills
       console.log("Deleting all bill items...");
-      const { error: itemsError } = await supabase
+      const { error: itemsError, count: itemsDeleted } = await supabase
         .from('bill_items')
-        .delete()
+        .delete({ count: 'exact' })
         .in('bill_id', billIds);
 
       if (itemsError) {
         console.error("Error deleting bill items:", itemsError);
-        // Continue with deletion even if this fails
+        throw itemsError;
+      } else {
+        console.log(`Successfully deleted ${itemsDeleted} bill items`);
       }
 
       // Step 3: Delete credit transactions for this user
       console.log("Deleting credit transactions...");
-      const { error: creditError } = await supabase
+      const { error: creditError, count: creditDeleted } = await supabase
         .from('credit_transactions')
-        .delete()
+        .delete({ count: 'exact' })
         .eq('user_id', user.id);
 
       if (creditError) {
         console.error("Error deleting credit transactions:", creditError);
-        // Continue with deletion even if this fails
+        // Don't throw here, continue with bill deletion
+      } else {
+        console.log(`Successfully deleted ${creditDeleted} credit transactions`);
       }
 
       // Step 4: Delete all bills for this user
       console.log("Deleting all bills...");
-      const { error: billsError } = await supabase
+      const { error: billsError, count: billsDeleted } = await supabase
         .from('bills')
-        .delete()
+        .delete({ count: 'exact' })
         .eq('user_id', user.id);
 
       if (billsError) {
@@ -253,6 +257,7 @@ export const BillHistory: React.FC = () => {
         throw billsError;
       }
 
+      console.log(`Successfully deleted ${billsDeleted} bills`);
       console.log("Successfully cleared all bills");
       toast.success("All bills have been cleared successfully");
       
@@ -261,7 +266,7 @@ export const BillHistory: React.FC = () => {
       
     } catch (error) {
       console.error("Error clearing bills:", error);
-      toast.error("Failed to clear bills. Please try again.");
+      toast.error(`Failed to clear bills: ${error.message}`);
       
       // Refresh bills list to show current state
       await fetchBills();
