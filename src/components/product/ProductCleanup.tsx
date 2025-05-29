@@ -82,56 +82,109 @@ const ProductCleanup = () => {
     setDeleting(true);
     
     try {
-      // First check if any products have assignments or stock
+      // Delete in the correct order to avoid foreign key violations
       for (const productId of selectedProducts) {
-        // Check product assignments
-        const { data: assignments } = await supabase
-          .from("product_shops")
-          .select("id")
-          .eq("product_id", productId);
+        console.log(`Deleting all related data for product: ${productId}`);
         
-        if (assignments && assignments.length > 0) {
-          // Delete assignments first
-          await supabase
-            .from("product_shops")
-            .delete()
-            .eq("product_id", productId);
-        }
-        
-        // Check and delete stock entries
-        const { data: stocks } = await supabase
-          .from("stocks")
-          .select("id")
-          .eq("product_id", productId);
-        
-        if (stocks && stocks.length > 0) {
-          await supabase
-            .from("stocks")
-            .delete()
-            .eq("product_id", productId);
-        }
-        
-        // Check and delete bill items
-        const { data: billItems } = await supabase
+        // 1. Delete bill items first (they reference products)
+        const { error: billItemsError } = await supabase
           .from("bill_items")
-          .select("id")
+          .delete()
           .eq("product_id", productId);
         
-        if (billItems && billItems.length > 0) {
-          await supabase
-            .from("bill_items")
-            .delete()
-            .eq("product_id", productId);
+        if (billItemsError) {
+          console.error(`Error deleting bill items for product ${productId}:`, billItemsError);
+          // Continue with other deletions even if bill items fail
+        }
+        
+        // 2. Delete sales records
+        const { error: salesError } = await supabase
+          .from("sales")
+          .delete()
+          .eq("product_id", productId);
+        
+        if (salesError) {
+          console.error(`Error deleting sales for product ${productId}:`, salesError);
+        }
+        
+        // 3. Delete stock entries
+        const { error: stocksError } = await supabase
+          .from("stocks")
+          .delete()
+          .eq("product_id", productId);
+        
+        if (stocksError) {
+          console.error(`Error deleting stocks for product ${productId}:`, stocksError);
+        }
+        
+        // 4. Delete product assignments
+        const { error: assignmentsError } = await supabase
+          .from("product_shops")
+          .delete()
+          .eq("product_id", productId);
+        
+        if (assignmentsError) {
+          console.error(`Error deleting assignments for product ${productId}:`, assignmentsError);
+        }
+        
+        // 5. Delete losses
+        const { error: lossesError } = await supabase
+          .from("losses")
+          .delete()
+          .eq("product_id", productId);
+        
+        if (lossesError) {
+          console.error(`Error deleting losses for product ${productId}:`, lossesError);
+        }
+        
+        // 6. Delete low stock alerts
+        const { error: alertsError } = await supabase
+          .from("low_stock_alerts")
+          .delete()
+          .eq("product_id", productId);
+        
+        if (alertsError) {
+          console.error(`Error deleting alerts for product ${productId}:`, alertsError);
+        }
+        
+        // 7. Delete reorder points
+        const { error: reorderError } = await supabase
+          .from("reorder_points")
+          .delete()
+          .eq("product_id", productId);
+        
+        if (reorderError) {
+          console.error(`Error deleting reorder points for product ${productId}:`, reorderError);
+        }
+        
+        // 8. Delete stock requests
+        const { error: requestsError } = await supabase
+          .from("stock_requests")
+          .delete()
+          .eq("product_id", productId);
+        
+        if (requestsError) {
+          console.error(`Error deleting stock requests for product ${productId}:`, requestsError);
+        }
+        
+        // 9. Delete stock movements
+        const { error: movementsError } = await supabase
+          .from("stock_movements")
+          .delete()
+          .eq("product_id", productId);
+        
+        if (movementsError) {
+          console.error(`Error deleting stock movements for product ${productId}:`, movementsError);
         }
       }
       
-      // Finally delete the products
-      const { error } = await supabase
+      // Finally delete the products themselves
+      const { error: productsError } = await supabase
         .from("products")
         .delete()
         .in("id", selectedProducts);
       
-      if (error) throw error;
+      if (productsError) throw productsError;
       
       toast({
         title: "Products deleted successfully",
@@ -166,7 +219,7 @@ const ProductCleanup = () => {
           Product Cleanup Tool
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Select test products to delete (like "kinhs", "lights", etc.). This will also remove all related stock entries, assignments, and bill items.
+          Select products to delete. This will also remove all related stock entries, assignments, bill items, and other related data.
         </p>
       </CardHeader>
       <CardContent>
@@ -236,9 +289,15 @@ const ProductCleanup = () => {
                 This will permanently remove:
                 <ul className="list-disc list-inside mt-2 text-sm">
                   <li>The selected products</li>
+                  <li>All bill items for these products</li>
+                  <li>All sales records for these products</li>
                   <li>All stock entries for these products</li>
                   <li>All store assignments for these products</li>
-                  <li>All bill items for these products</li>
+                  <li>All losses for these products</li>
+                  <li>All stock alerts for these products</li>
+                  <li>All reorder points for these products</li>
+                  <li>All stock requests for these products</li>
+                  <li>All stock movements for these products</li>
                 </ul>
                 This action cannot be undone.
               </AlertDialogDescription>
