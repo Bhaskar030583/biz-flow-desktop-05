@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -194,24 +195,41 @@ export const BillHistory: React.FC = () => {
       // Clear local state immediately to provide instant feedback
       setBills([]);
 
-      // Step 1: Delete all bill items for this user
-      console.log("Deleting all bill items for user...");
+      // Step 1: Get all bill IDs for this user first
+      console.log("Fetching bill IDs...");
+      const { data: userBills, error: fetchError } = await supabase
+        .from('bills')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (fetchError) {
+        console.error("Error fetching bill IDs:", fetchError);
+        throw fetchError;
+      }
+
+      if (!userBills || userBills.length === 0) {
+        console.log("No bills found to delete");
+        toast.success("No bills to clear");
+        setIsClearingAll(false);
+        return;
+      }
+
+      const billIds = userBills.map(bill => bill.id);
+      console.log("Found bills to delete:", billIds);
+
+      // Step 2: Delete all bill items for these bills
+      console.log("Deleting all bill items...");
       const { error: itemsError } = await supabase
         .from('bill_items')
         .delete()
-        .in('bill_id', 
-          supabase
-            .from('bills')
-            .select('id')
-            .eq('user_id', user.id)
-        );
+        .in('bill_id', billIds);
 
       if (itemsError) {
         console.error("Error deleting bill items:", itemsError);
         // Continue with deletion even if this fails
       }
 
-      // Step 2: Delete credit transactions for this user
+      // Step 3: Delete credit transactions for this user
       console.log("Deleting credit transactions...");
       const { error: creditError } = await supabase
         .from('credit_transactions')
@@ -223,7 +241,7 @@ export const BillHistory: React.FC = () => {
         // Continue with deletion even if this fails
       }
 
-      // Step 3: Delete all bills for this user
+      // Step 4: Delete all bills for this user
       console.log("Deleting all bills...");
       const { error: billsError } = await supabase
         .from('bills')
