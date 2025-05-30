@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { format } from "date-fns";
 import { Save, Plus, Store, Calendar } from "lucide-react";
+import { useQueryClient } from "react-query";
 
 interface Product {
   id: string;
@@ -40,6 +41,7 @@ interface StockCreationFormProps {
 
 const StockCreationForm: React.FC<StockCreationFormProps> = ({ onSuccess, onCancel }) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [products, setProducts] = useState<Product[]>([]);
   const [shops, setShops] = useState<Shop[]>([]);
   const [selectedShop, setSelectedShop] = useState<string>('');
@@ -160,6 +162,12 @@ const StockCreationForm: React.FC<StockCreationFormProps> = ({ onSuccess, onCanc
         });
 
       if (error) throw error;
+
+      // Invalidate all relevant queries to refresh data across the app
+      queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+      queryClient.invalidateQueries({ queryKey: ['product-stock-management'] });
+      queryClient.invalidateQueries({ queryKey: ['stocks'] });
+      queryClient.invalidateQueries({ queryKey: ['assigned-products'] });
 
       toast.success('Stock entries created successfully');
       onSuccess();

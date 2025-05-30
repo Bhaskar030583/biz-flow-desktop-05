@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import ProductStockHeader from "./ProductStockHeader";
@@ -19,6 +19,7 @@ const ProductStockManagement = ({
   refreshTrigger 
 }: ProductStockManagementProps) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [selectedShop, setSelectedShop] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -84,6 +85,10 @@ const ProductStockManagement = ({
   const handleProductAssigned = () => {
     refetchProducts();
     setShowAssignmentForm(false);
+    
+    // Invalidate POS queries to refresh stock data in POS
+    queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+    
     if (onStockUpdated) {
       onStockUpdated();
     }
@@ -91,6 +96,10 @@ const ProductStockManagement = ({
 
   const handleProductDeassigned = () => {
     refetchProducts();
+    
+    // Invalidate POS queries to refresh stock data in POS
+    queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+    
     if (onStockUpdated) {
       onStockUpdated();
     }

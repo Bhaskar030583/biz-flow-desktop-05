@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { updateProductStock } from "@/services/stockService";
 import { useAuth } from "@/context/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Product {
   id: string;
@@ -35,6 +36,7 @@ export const QuickStockUpdateModal: React.FC<QuickStockUpdateModalProps> = ({
   onStockUpdated
 }) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [stockUpdates, setStockUpdates] = useState<Record<string, number>>({});
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -70,6 +72,12 @@ export const QuickStockUpdateModal: React.FC<QuickStockUpdateModalProps> = ({
         [productId]: 0
       }));
       
+      // Invalidate all relevant queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+      queryClient.invalidateQueries({ queryKey: ['product-stock-management'] });
+      queryClient.invalidateQueries({ queryKey: ['stocks'] });
+      queryClient.invalidateQueries({ queryKey: ['assigned-products'] });
+      
       // Notify parent to refresh data
       onStockUpdated();
     } catch (error) {
@@ -101,6 +109,13 @@ export const QuickStockUpdateModal: React.FC<QuickStockUpdateModalProps> = ({
       
       toast.success(`Updated stock for ${updatesNeeded.length} products`);
       setStockUpdates({});
+      
+      // Invalidate all relevant queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+      queryClient.invalidateQueries({ queryKey: ['product-stock-management'] });
+      queryClient.invalidateQueries({ queryKey: ['stocks'] });
+      queryClient.invalidateQueries({ queryKey: ['assigned-products'] });
+      
       onStockUpdated();
       onClose();
     } catch (error) {

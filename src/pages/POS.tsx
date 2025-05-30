@@ -113,7 +113,9 @@ const POS = () => {
       console.log('✅ [POS] Final products with stock:', productsWithStock);
       return productsWithStock;
     },
-    enabled: !!selectedStoreId && !!user?.id
+    enabled: !!selectedStoreId && !!user?.id,
+    refetchInterval: 30000, // Auto-refetch every 30 seconds for real-time updates
+    staleTime: 10000 // Consider data stale after 10 seconds
   });
 
   // Check if this is a popup window and open popup if not
@@ -165,6 +167,7 @@ const POS = () => {
     queryClient.invalidateQueries({ queryKey: ['pos-products'] });
     queryClient.invalidateQueries({ queryKey: ['product-stock-management'] });
     queryClient.invalidateQueries({ queryKey: ['stocks'] });
+    queryClient.invalidateQueries({ queryKey: ['assigned-products'] });
     
     // Also directly refetch this specific query
     refetchProducts();

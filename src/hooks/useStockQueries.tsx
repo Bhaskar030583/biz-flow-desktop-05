@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { format, subDays } from 'date-fns';
 
@@ -35,6 +34,7 @@ export const useStockQueries = ({
   page = 1,
   pageSize = 50
 }: UseStockParams = {}) => {
+  const queryClient = useQueryClient();
   const [sortField, setSortField] = useState<string>("stock_date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
@@ -199,6 +199,17 @@ export const useStockQueries = ({
     }, { totalSold: 0, totalSales: 0, totalProfit: 0 });
   };
 
+  // Enhanced refetch function that also invalidates POS queries
+  const enhancedRefetch = () => {
+    // Invalidate POS queries to refresh stock data
+    queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+    queryClient.invalidateQueries({ queryKey: ['product-stock-management'] });
+    queryClient.invalidateQueries({ queryKey: ['assigned-products'] });
+    
+    return refetchStock();
+  };
+
+  // Handle sorting change
   const handleSortChange = (field: string) => {
     if (sortField === field) {
       // Toggle direction if same field
@@ -227,7 +238,7 @@ export const useStockQueries = ({
     sortDirection,
     handleSortChange,
     calculateProfit,
-    refetch: refetchStock
+    refetch: enhancedRefetch
   };
 };
 
