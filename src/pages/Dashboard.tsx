@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { DashboardMetrics } from "@/components/dashboard/DashboardMetrics";
 import { ChartsOverview } from "@/components/dashboard/ChartsOverview";
 import { LowStockAlert } from "@/components/dashboard/LowStockAlert";
-import CollectionSummary from "@/components/dashboard/CollectionSummary";
+import { CollectionSummary } from "@/components/dashboard/CollectionSummary";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { DenominationManagement } from "@/components/dashboard/DenominationManagement";
 import { useDashboardData } from "@/hooks/useDashboardData";
@@ -97,7 +97,7 @@ const Dashboard = () => {
               <CollectionSummary
                 startDate={startDate}
                 endDate={endDate}
-                shopIds={selectedShops}
+                selectedShops={selectedShops}
               />
             </div>
           </div>

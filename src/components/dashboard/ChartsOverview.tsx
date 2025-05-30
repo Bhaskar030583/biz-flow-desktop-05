@@ -1,7 +1,7 @@
 
 import React from "react";
 import { SalesChart } from "@/components/dashboard/SalesChart";
-import CollectionSummary from "@/components/dashboard/CollectionSummary";
+import { CollectionSummary } from "@/components/dashboard/CollectionSummary";
 
 interface ChartsOverviewProps {
   startDate: Date | null;
@@ -33,7 +33,7 @@ export const ChartsOverview: React.FC<ChartsOverviewProps> = ({
         <CollectionSummary
           startDate={startDate}
           endDate={endDate}
-          shopIds={selectedShops}
+          selectedShops={selectedShops}
         />
       </div>
     </div>
