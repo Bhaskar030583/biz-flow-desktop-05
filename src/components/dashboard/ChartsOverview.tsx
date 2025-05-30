@@ -19,8 +19,8 @@ export const ChartsOverview: React.FC<ChartsOverviewProps> = ({
   selectedProduct
 }) => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-      <div className="lg:col-span-2">
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
+      <div className="xl:col-span-3">
         <SalesChart 
           startDate={startDate}
           endDate={endDate}
@@ -29,7 +29,7 @@ export const ChartsOverview: React.FC<ChartsOverviewProps> = ({
           productId={selectedProduct}
         />
       </div>
-      <div>
+      <div className="xl:col-span-3 2xl:hidden">
         <CollectionSummary
           startDate={startDate}
           endDate={endDate}

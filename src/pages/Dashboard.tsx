@@ -37,14 +37,14 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div className="text-center">Loading dashboard data...</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
       {/* Enhanced Filters */}
       <DashboardFilters
         startDate={startDate}
@@ -67,11 +67,11 @@ const Dashboard = () => {
         setMaxAmount={setMaxAmount}
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 2xl:grid-cols-4 gap-4 sm:gap-6">
         {/* Main Dashboard Content */}
-        <div className="xl:col-span-3 space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
+        <div className="2xl:col-span-3 space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="lg:col-span-3 space-y-4 sm:space-y-6">
               <DashboardMetrics
                 totalRevenue={data.totalRevenue}
                 totalSales={data.totalSales}
@@ -92,20 +92,29 @@ const Dashboard = () => {
                 selectedProduct={selectedProduct}
               />
             </div>
-            <div className="space-y-6">
+            <div className="lg:col-span-1 space-y-4 sm:space-y-6">
               <LowStockAlert />
-              <CollectionSummary
-                startDate={startDate}
-                endDate={endDate}
-                selectedShops={selectedShops}
-              />
+              <div className="lg:hidden">
+                <CollectionSummary
+                  startDate={startDate}
+                  endDate={endDate}
+                  selectedShops={selectedShops}
+                />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Denomination Management Sidebar */}
-        <div className="xl:col-span-1">
+        <div className="2xl:col-span-1 space-y-4 sm:space-y-6">
           <DenominationManagement />
+          <div className="hidden lg:block 2xl:hidden">
+            <CollectionSummary
+              startDate={startDate}
+              endDate={endDate}
+              selectedShops={selectedShops}
+            />
+          </div>
         </div>
       </div>
     </div>
