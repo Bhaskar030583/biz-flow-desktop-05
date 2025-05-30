@@ -1,16 +1,21 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 interface POSPopupManagerProps {
   onPopupCheck: (isPopup: boolean) => void;
 }
 
 export const POSPopupManager: React.FC<POSPopupManagerProps> = ({ onPopupCheck }) => {
+  const [popupOpened, setPopupOpened] = useState(false);
+
   useEffect(() => {
     const checkIfPopup = window.opener !== null || window.name === 'POSWindow';
+    console.log('🔍 [POSPopupManager] Checking if popup:', checkIfPopup);
     onPopupCheck(checkIfPopup);
     
-    if (!checkIfPopup) {
+    if (!checkIfPopup && !popupOpened) {
+      console.log('📝 [POSPopupManager] Not in popup, attempting to open popup window');
+      
       const openPOSPopup = () => {
         const popupUrl = window.location.href;
         const popupFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
@@ -19,10 +24,11 @@ export const POSPopupManager: React.FC<POSPopupManagerProps> = ({ onPopupCheck }
         
         if (popup) {
           popup.focus();
+          setPopupOpened(true);
           console.log('🪟 [POS] POS popup window opened successfully');
         } else {
           console.warn('⚠️ [POS] Popup was blocked by browser');
-          alert('Please allow popups for this site to use the POS system in a separate window');
+          setPopupOpened(true); // Prevent further attempts
         }
       };
 
@@ -30,10 +36,10 @@ export const POSPopupManager: React.FC<POSPopupManagerProps> = ({ onPopupCheck }
       const timer = setTimeout(openPOSPopup, 500);
       
       return () => clearTimeout(timer);
-    } else {
+    } else if (checkIfPopup) {
       console.log('🪟 [POS] Already in popup window, showing clean POS interface');
     }
-  }, [onPopupCheck]);
+  }, [onPopupCheck, popupOpened]);
 
   return null; // This component doesn't render anything
 };
