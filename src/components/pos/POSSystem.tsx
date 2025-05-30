@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -424,13 +423,13 @@ export const POSSystem: React.FC<POSSystemProps> = ({
     );
   }
 
-  // Enhanced Desktop View with fixed layout and scrollable product grid
+  // Enhanced Desktop View with dark theme
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 to-blue-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-900 overflow-hidden">
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Fixed Header */}
-        <div className="bg-gradient-to-r from-white to-blue-50 border-b-2 border-blue-100 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 shadow-sm flex-shrink-0">
+        <div className="bg-gray-800 border-b-2 border-gray-700 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 shadow-lg flex-shrink-0">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center space-x-3 sm:space-x-4">
               <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
@@ -441,11 +440,11 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                 />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-400 to-blue-300 bg-clip-text text-transparent">
                   ABC CAFE
                 </h1>
                 {storeInfo && (
-                  <p className="text-sm sm:text-base text-gray-600 font-medium mt-1">
+                  <p className="text-sm sm:text-base text-gray-300 font-medium mt-1">
                     {storeInfo.storeName} • {storeInfo.salespersonName}
                   </p>
                 )}
@@ -457,7 +456,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={handleQuickStock}
-                className="flex items-center gap-2 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 font-semibold px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-xs sm:text-sm"
+                className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-300 font-semibold px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-xs sm:text-sm"
               >
                 <Package className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="hidden sm:inline">Quick Stock</span>
@@ -466,7 +465,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => setShowCustomerManagement(true)}
-                className="flex items-center gap-2 bg-white hover:bg-green-50 border-green-200 text-green-700 font-semibold px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-xs sm:text-sm"
+                className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-300 font-semibold px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-xs sm:text-sm"
               >
                 <User className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="hidden sm:inline">Customers</span>
@@ -475,7 +474,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => setShowBillHistory(true)}
-                className="flex items-center gap-2 bg-white hover:bg-purple-50 border-purple-200 text-purple-700 font-semibold px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-xs sm:text-sm"
+                className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-300 font-semibold px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-xs sm:text-sm"
               >
                 <History className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="hidden sm:inline">History</span>
@@ -485,7 +484,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
         </div>
 
         {/* Fixed Category Tabs */}
-        <div className="bg-white border-b-2 border-gray-100 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 shadow-sm flex-shrink-0">
+        <div className="bg-gray-800 border-b-2 border-gray-700 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 shadow-sm flex-shrink-0">
           <div className="flex space-x-2 overflow-x-auto scrollbar-hide">
             {categories.map((category) => (
               <button
@@ -494,7 +493,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                 className={`px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl transition-all duration-300 whitespace-nowrap shadow-sm hover:shadow-md transform hover:scale-105 ${
                   selectedCategory === category
                     ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
-                    : "text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200"
+                    : "text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600"
                 }`}
               >
                 {category === "all" ? "All Items" : category}
@@ -504,26 +503,26 @@ export const POSSystem: React.FC<POSSystemProps> = ({
         </div>
 
         {/* Fixed Search Bar */}
-        <div className="bg-white px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b-2 border-gray-100 shadow-sm flex-shrink-0">
+        <div className="bg-gray-800 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b-2 border-gray-700 shadow-sm flex-shrink-0">
           <div className="relative">
             <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 sm:h-6 sm:w-6" />
             <Input
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 sm:pl-12 h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-lg sm:rounded-xl shadow-sm bg-gray-50 focus:bg-white transition-all duration-300"
+              className="pl-10 sm:pl-12 h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-600 focus:border-blue-500 focus:ring-blue-500 rounded-lg sm:rounded-xl shadow-sm bg-gray-700 focus:bg-gray-600 transition-all duration-300 text-white placeholder-gray-400"
             />
           </div>
         </div>
 
         {/* Scrollable Products Grid */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gray-900">
           {filteredProducts.length === 0 ? (
-            <div className="text-center py-16 sm:py-24 text-gray-500">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-6 sm:mb-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center shadow-lg">
-                <Search className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400" />
+            <div className="text-center py-16 sm:py-24 text-gray-400">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-6 sm:mb-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center shadow-lg">
+                <Search className="h-12 w-12 sm:h-16 sm:w-16 text-gray-500" />
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-700">
+              <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-300">
                 {selectedShopId 
                   ? searchTerm || selectedCategory !== "all"
                     ? "No products found"
@@ -531,7 +530,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                   : "Please select a store"
                 }
               </h3>
-              <p className="text-base sm:text-lg text-gray-400">
+              <p className="text-base sm:text-lg text-gray-500">
                 {searchTerm || selectedCategory !== "all" 
                   ? "Try adjusting your search or category filter"
                   : "Add products to get started"
@@ -545,13 +544,13 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                   key={product.id} 
                   className={`cursor-pointer transition-all duration-300 border-2 hover:shadow-xl group transform hover:scale-105 rounded-lg ${
                     product.quantity !== undefined && product.quantity <= 0 
-                      ? 'border-red-300 bg-gradient-to-br from-red-50 to-red-100 opacity-75' 
-                      : 'border-gray-200 bg-white hover:border-blue-300 shadow-md'
+                      ? 'border-red-600 bg-gradient-to-br from-red-900 to-red-800 opacity-75' 
+                      : 'border-gray-600 bg-gray-800 hover:border-blue-400 shadow-md hover:bg-gray-700'
                   }`}
                   onClick={() => addToCart(product)}
                 >
                   <CardContent className="p-2">
-                    <h4 className="font-bold text-xs leading-tight mb-2 text-gray-800 line-clamp-2 min-h-[2rem]">
+                    <h4 className="font-bold text-xs leading-tight mb-2 text-gray-200 line-clamp-2 min-h-[2rem]">
                       {product.name}
                     </h4>
                     
@@ -561,10 +560,10 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                           variant="outline" 
                           className={`text-xs py-0.5 px-1 font-bold shadow-sm ${
                             product.quantity > 10 
-                              ? 'bg-green-100 text-green-700 border-green-300' 
+                              ? 'bg-green-900 text-green-300 border-green-600' 
                               : product.quantity > 0 
-                                ? 'bg-yellow-100 text-yellow-700 border-yellow-300'
-                                : 'bg-red-100 text-red-700 border-red-300'
+                                ? 'bg-yellow-900 text-yellow-300 border-yellow-600'
+                                : 'bg-red-900 text-red-300 border-red-600'
                           }`}
                         >
                           {product.quantity}
@@ -572,7 +571,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                       </div>
                     )}
                     
-                    <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-2 py-1 rounded-md text-center shadow-lg">
+                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-2 py-1 rounded-md text-center shadow-lg">
                       <p className="text-xs font-bold">
                         ₹{Number(product.price).toFixed(2)}
                       </p>
@@ -586,17 +585,17 @@ export const POSSystem: React.FC<POSSystemProps> = ({
       </div>
 
       {/* Fixed Right Sidebar - Cart */}
-      <div className="w-80 sm:w-96 bg-white border-l-2 border-blue-100 flex flex-col shadow-2xl flex-shrink-0">
+      <div className="w-80 sm:w-96 bg-gray-800 border-l-2 border-gray-700 flex flex-col shadow-2xl flex-shrink-0">
         {/* Fixed Cart Header */}
-        <div className="p-4 sm:p-6 lg:p-8 border-b-2 border-gray-100 bg-gradient-to-r from-white to-blue-50 flex-shrink-0">
+        <div className="p-4 sm:p-6 lg:p-8 border-b-2 border-gray-700 bg-gray-800 flex-shrink-0">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900">Current Order</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-100">Current Order</h2>
             {cart.length > 0 && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={clearCart}
-                className="text-red-600 hover:text-red-700 border-red-300 hover:bg-red-50 font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-300 text-xs sm:text-sm"
+                className="text-red-400 hover:text-red-300 border-red-600 hover:bg-red-900 font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-300 text-xs sm:text-sm"
               >
                 <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 Clear
@@ -606,29 +605,29 @@ export const POSSystem: React.FC<POSSystemProps> = ({
         </div>
 
         {/* Scrollable Cart Items */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-900">
           {cart.length === 0 ? (
-            <div className="text-center py-12 sm:py-16 text-gray-500">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center shadow-lg">
-                <ShoppingCart className="h-8 w-8 sm:h-10 sm:w-10 text-gray-400" />
+            <div className="text-center py-12 sm:py-16 text-gray-400">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center shadow-lg">
+                <ShoppingCart className="h-8 w-8 sm:h-10 sm:w-10 text-gray-500" />
               </div>
-              <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-gray-700">Your cart is empty</h3>
-              <p className="text-sm sm:text-base text-gray-400">Add products to get started</p>
+              <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-gray-300">Your cart is empty</h3>
+              <p className="text-sm sm:text-base text-gray-500">Add products to get started</p>
             </div>
           ) : (
             <div className="space-y-3 sm:space-y-4">
               {cart.map((item, index) => (
-                <div key={item.id} className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-5 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div key={item.id} className="bg-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-5 shadow-lg border border-gray-700 hover:shadow-xl transition-all duration-300">
                   <div className="flex justify-between items-start mb-3 sm:mb-4">
                     <div className="flex-1 pr-3 sm:pr-4">
-                      <h4 className="font-bold text-xs sm:text-sm text-gray-800">{item.name}</h4>
-                      <p className="text-xs text-gray-600 mt-1">₹{Number(item.price).toFixed(2)} each</p>
+                      <h4 className="font-bold text-xs sm:text-sm text-gray-200">{item.name}</h4>
+                      <p className="text-xs text-gray-400 mt-1">₹{Number(item.price).toFixed(2)} each</p>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => removeFromCart(item.id)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 sm:p-2 h-6 w-6 sm:h-8 sm:w-8 rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+                      className="text-red-400 hover:text-red-300 hover:bg-red-900 p-1 sm:p-2 h-6 w-6 sm:h-8 sm:w-8 rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
                     >
                       <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
@@ -639,18 +638,18 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 w-8 sm:h-10 sm:w-10 p-0 rounded-lg border-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50 shadow-sm hover:shadow-md transition-all duration-300"
+                        className="h-8 w-8 sm:h-10 sm:w-10 p-0 rounded-lg border-2 border-gray-600 hover:border-blue-400 hover:bg-blue-900 shadow-sm hover:shadow-md transition-all duration-300"
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
                       >
                         <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
-                      <span className="font-bold text-sm sm:text-lg min-w-[32px] sm:min-w-[40px] text-center bg-gray-100 px-2 sm:px-4 py-1 sm:py-2 rounded-lg border-2 border-gray-200">
+                      <span className="font-bold text-sm sm:text-lg min-w-[32px] sm:min-w-[40px] text-center bg-gray-700 px-2 sm:px-4 py-1 sm:py-2 rounded-lg border-2 border-gray-600 text-gray-200">
                         {item.quantity}
                       </span>
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 w-8 sm:h-10 sm:w-10 p-0 rounded-lg border-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50 shadow-sm hover:shadow-md transition-all duration-300"
+                        className="h-8 w-8 sm:h-10 sm:w-10 p-0 rounded-lg border-2 border-gray-600 hover:border-blue-400 hover:bg-blue-900 shadow-sm hover:shadow-md transition-all duration-300"
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       >
                         <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -658,7 +657,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                     </div>
                     
                     <div className="text-right">
-                      <p className="font-bold text-sm sm:text-lg text-gray-900">₹{Number(item.total).toFixed(2)}</p>
+                      <p className="font-bold text-sm sm:text-lg text-gray-200">₹{Number(item.total).toFixed(2)}</p>
                     </div>
                   </div>
                 </div>
@@ -669,20 +668,20 @@ export const POSSystem: React.FC<POSSystemProps> = ({
 
         {/* Fixed Cart Footer */}
         {cart.length > 0 && (
-          <div className="border-t-2 border-gray-100 p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 bg-gradient-to-r from-white to-blue-50 flex-shrink-0">
+          <div className="border-t-2 border-gray-700 p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 bg-gray-800 flex-shrink-0">
             <div className="space-y-2 sm:space-y-3">
-              <div className="flex justify-between text-sm sm:text-base font-medium">
+              <div className="flex justify-between text-sm sm:text-base font-medium text-gray-300">
                 <span>Subtotal</span>
                 <span>₹{getTotalAmount().toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm sm:text-base font-medium">
+              <div className="flex justify-between text-sm sm:text-base font-medium text-gray-300">
                 <span>Tax</span>
                 <span>₹0.00</span>
               </div>
-              <Separator className="my-2 sm:my-3" />
-              <div className="flex justify-between text-xl sm:text-2xl font-bold text-gray-900">
+              <Separator className="my-2 sm:my-3 bg-gray-600" />
+              <div className="flex justify-between text-xl sm:text-2xl font-bold text-gray-100">
                 <span>Total</span>
-                <span className="text-blue-600">₹{getTotalAmount().toFixed(2)}</span>
+                <span className="text-blue-400">₹{getTotalAmount().toFixed(2)}</span>
               </div>
             </div>
             
@@ -698,7 +697,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
               <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <Button 
                   variant="outline"
-                  className="h-10 sm:h-12 font-semibold bg-white hover:bg-green-50 border-2 border-green-200 text-green-700 hover:border-green-300 rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-xs sm:text-sm" 
+                  className="h-10 sm:h-12 font-semibold bg-gray-700 hover:bg-green-800 border-2 border-gray-600 text-gray-300 hover:border-green-500 hover:text-green-300 rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-xs sm:text-sm" 
                   onClick={handleUPIPayment}
                 >
                   <Smartphone className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
@@ -706,7 +705,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                 </Button>
                 <Button 
                   variant="outline"
-                  className="h-10 sm:h-12 font-semibold bg-white hover:bg-purple-50 border-2 border-purple-200 text-purple-700 hover:border-purple-300 rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-xs sm:text-sm" 
+                  className="h-10 sm:h-12 font-semibold bg-gray-700 hover:bg-purple-800 border-2 border-gray-600 text-gray-300 hover:border-purple-500 hover:text-purple-300 rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-xs sm:text-sm" 
                   onClick={handleCreditPayment}
                 >
                   <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
