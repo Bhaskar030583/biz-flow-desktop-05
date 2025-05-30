@@ -24,17 +24,20 @@ const ProductStockManagement = ({
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
 
-  // Fetch user's shops (not HR stores for this component)
+  // Fetch HR stores instead of regular shops
   const { data: shopsData, isLoading: shopsLoading } = useQuery({
-    queryKey: ['user-shops'],
+    queryKey: ['hr-stores-for-stock-management'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('shops')
-        .select('id, name, store_code')
-        .eq('user_id', user?.id)
-        .order('name');
+        .from('hr_stores')
+        .select('id, store_name, store_code')
+        .order('store_name');
       if (error) throw error;
-      return data || [];
+      return data?.map(store => ({
+        id: store.id,
+        name: store.store_name,
+        store_code: store.store_code
+      })) || [];
     },
     enabled: !!user?.id
   });
@@ -48,7 +51,7 @@ const ProductStockManagement = ({
     }
   }, [shops, selectedShop]);
 
-  // Fetch assigned products for selected shop
+  // Fetch assigned products for selected shop using hr_shop_id
   const { data: assignedProducts, refetch: refetchProducts } = useQuery({
     queryKey: ['assigned-products', selectedShop, refreshTrigger],
     queryFn: async () => {
@@ -66,7 +69,7 @@ const ProductStockManagement = ({
             cost_price
           )
         `)
-        .eq('shop_id', selectedShop)
+        .eq('hr_shop_id', selectedShop)
         .eq('user_id', user?.id);
       
       if (error) throw error;

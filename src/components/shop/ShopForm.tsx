@@ -12,10 +12,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const shopSchema = z.object({
-  name: z.string().min(2, { message: "Store name must be at least 2 characters" }),
+  store_name: z.string().min(2, { message: "Store name must be at least 2 characters" }),
   store_code: z.string().min(2, { message: "Store code must be at least 2 characters" }),
-  address: z.string().optional(),
-  phone: z.string().optional(),
+  address: z.string().min(1, { message: "Address is required" }),
 });
 
 type ShopFormValues = z.infer<typeof shopSchema>;
@@ -32,10 +31,9 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
   const form = useForm<ShopFormValues>({
     resolver: zodResolver(shopSchema),
     defaultValues: {
-      name: "",
+      store_name: "",
       store_code: "",
       address: "",
-      phone: "",
     },
   });
 
@@ -53,16 +51,14 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
     setErrorMessage("");
     
     try {
-      console.log("Creating store with data:", { ...data, user_id: user.id });
+      console.log("Creating HR store with data:", data);
       
       const { data: insertedData, error } = await supabase
-        .from("shops")
+        .from("hr_stores")
         .insert({
-          name: data.name,
+          store_name: data.store_name,
           store_code: data.store_code,
-          address: data.address || null,
-          phone: data.phone || null,
-          user_id: user.id,
+          address: data.address,
         })
         .select();
 
@@ -74,17 +70,17 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
         throw error;
       }
       
-      console.log("Store created successfully:", insertedData);
+      console.log("HR store created successfully:", insertedData);
       
       toast({
         title: "Store created",
-        description: "Your store has been created successfully",
+        description: "Your store has been created successfully in the HR system",
       });
       
       form.reset();
       if (onSuccess) onSuccess();
     } catch (error: any) {
-      console.error("Error creating store:", error);
+      console.error("Error creating HR store:", error);
       setErrorMessage(error.message || "Something went wrong");
       toast({
         variant: "destructive",
@@ -99,9 +95,16 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Add New Store</CardTitle>
+        <CardTitle>Add New Store (HR System)</CardTitle>
       </CardHeader>
       <CardContent>
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+          <p className="text-sm text-blue-700">
+            <strong>Note:</strong> Store management has been moved to the HRMS section. 
+            Please use the HRMS → Stores section for full store management features.
+          </p>
+        </div>
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {errorMessage && (
@@ -112,7 +115,7 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
             
             <FormField
               control={form.control}
-              name="name"
+              name="store_name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Store Name</FormLabel>
@@ -143,23 +146,9 @@ export function ShopForm({ onSuccess }: ShopFormProps) {
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Address (Optional)</FormLabel>
+                  <FormLabel>Address</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter store address" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone (Optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter phone number" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

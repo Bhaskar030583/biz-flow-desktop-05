@@ -57,7 +57,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
     name: store.store_name
   })) || [];
 
-  // Fetch assigned products with current stock data
+  // Fetch assigned products with current stock data using hr_shop_id
   const { data: assignedProductsData, isLoading: productsLoading } = useQuery({
     queryKey: ['assigned-products-with-stock', refreshTrigger],
     queryFn: async () => {
@@ -68,13 +68,13 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
       
       console.log('📦 [useAssignedProducts] Fetching assigned products with stock data for user:', user.id);
       
-      // Get all product assignments from product_shops table
+      // Get all product assignments from product_shops table using hr_shop_id
       const { data: productShops, error: productShopsError } = await supabase
         .from('product_shops')
         .select(`
           id,
           product_id,
-          shop_id,
+          hr_shop_id,
           products (
             id,
             name,
@@ -83,7 +83,8 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
             cost_price
           )
         `)
-        .eq('user_id', user?.id);
+        .eq('user_id', user?.id)
+        .not('hr_shop_id', 'is', null);
       
       if (productShopsError) {
         console.error('❌ [useAssignedProducts] Error fetching product assignments:', productShopsError);
@@ -114,12 +115,12 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
 
         const product = assignment.products;
         
-        // Get current stock data for today
+        // Get current stock data for today using hr_shop_id
         const { data: stockData, error: stockError } = await supabase
           .from('stocks')
           .select('*')
           .eq('product_id', product.id)
-          .eq('shop_id', assignment.shop_id)
+          .eq('hr_shop_id', assignment.hr_shop_id)
           .eq('stock_date', today)
           .eq('user_id', user?.id)
           .maybeSingle();
@@ -133,7 +134,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           .from('stocks')
           .select('actual_stock')
           .eq('product_id', product.id)
-          .eq('shop_id', assignment.shop_id)
+          .eq('hr_shop_id', assignment.hr_shop_id)
           .eq('stock_date', yesterdayStr)
           .eq('user_id', user?.id)
           .maybeSingle();
@@ -169,7 +170,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
         const variance = actualStock - expectedClosing;
 
         // Find the corresponding HR store name
-        const hrStore = storesData?.find(store => store.id === assignment.shop_id);
+        const hrStore = storesData?.find(store => store.id === assignment.hr_shop_id);
 
         const assignedProduct: AssignedProduct = {
           assignment_id: assignment.id,
@@ -185,7 +186,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           actual_stock: actualStock,
           variance: variance,
           last_stock_date: stockData?.stock_date || null,
-          shop_id: assignment.shop_id,
+          shop_id: assignment.hr_shop_id,
           shop_name: hrStore?.store_name || 'Unknown Store'
         };
 

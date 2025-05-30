@@ -43,7 +43,7 @@ const StockManagementHeader: React.FC<StockManagementHeaderProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-indigo-900 text-lg">
           <Store className="h-5 w-5" />
-          Stock Management
+          Stock Management (HR Stores)
           {stockItemsCount > 0 && (
             <Badge variant="secondary" className="ml-2">
               {stockItemsCount} products
@@ -70,10 +70,10 @@ const StockManagementHeader: React.FC<StockManagementHeaderProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="shop" className="text-sm">Select Store</Label>
+            <Label htmlFor="shop" className="text-sm">Select HR Store</Label>
             <Select value={selectedShop} onValueChange={setSelectedShop}>
               <SelectTrigger className="h-8">
-                <SelectValue placeholder="Select store" />
+                <SelectValue placeholder="Select HR store" />
               </SelectTrigger>
               <SelectContent className="bg-white z-50">
                 {shops.map(shop => (
@@ -83,7 +83,7 @@ const StockManagementHeader: React.FC<StockManagementHeaderProps> = ({
                 ))}
                 {shops.length === 0 && (
                   <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                    No shops available
+                    No HR stores available
                   </div>
                 )}
               </SelectContent>

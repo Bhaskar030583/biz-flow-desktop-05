@@ -40,15 +40,15 @@ const ProductAssignmentForm = ({
       
       if (productsError) throw productsError;
       
-      // Get assigned products for this shop
+      // Get assigned products for this HR store
       const { data: assignedProducts, error: assignedError } = await supabase
         .from('product_shops')
         .select('product_id')
-        .eq('shop_id', selectedShop)
+        .eq('hr_shop_id', selectedShop)
         .eq('user_id', user?.id);
       
       if (assignedError) {
-        console.log("No existing assignments found for this shop:", assignedError);
+        console.log("No existing assignments found for this store:", assignedError);
         // If no assignments exist yet, all products are unassigned
         return allProducts || [];
       }
@@ -72,23 +72,23 @@ const ProductAssignmentForm = ({
     try {
       const today = new Date().toISOString().split('T')[0];
 
-      // Assign product to shop
+      // Assign product to HR store
       const { error: assignError } = await supabase
         .from('product_shops')
         .insert({
           product_id: selectedProductToAssign,
-          shop_id: selectedShop,
+          hr_shop_id: selectedShop,
           user_id: user?.id
         });
 
       if (assignError) throw assignError;
 
-      // Create initial stock entry
+      // Create initial stock entry using hr_shop_id
       const { error: stockError } = await supabase
         .from('stocks')
         .insert({
           product_id: selectedProductToAssign,
-          shop_id: selectedShop,
+          hr_shop_id: selectedShop,
           stock_date: today,
           opening_stock: Number(initialStockQuantity),
           closing_stock: Number(initialStockQuantity),

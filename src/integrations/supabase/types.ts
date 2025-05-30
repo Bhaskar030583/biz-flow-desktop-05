@@ -155,6 +155,7 @@ export type Database = {
           credit_date: string
           credit_type: string
           description: string | null
+          hr_shop_id: string | null
           id: string
           shop_id: string
           user_id: string
@@ -165,6 +166,7 @@ export type Database = {
           credit_date: string
           credit_type: string
           description?: string | null
+          hr_shop_id?: string | null
           id?: string
           shop_id: string
           user_id: string
@@ -175,11 +177,19 @@ export type Database = {
           credit_date?: string
           credit_type?: string
           description?: string | null
+          hr_shop_id?: string | null
           id?: string
           shop_id?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "credits_hr_shop_id_fkey"
+            columns: ["hr_shop_id"]
+            isOneToOne: false
+            referencedRelation: "hr_stores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "credits_shop_id_fkey"
             columns: ["shop_id"]
@@ -229,6 +239,7 @@ export type Database = {
           created_at: string
           description: string
           expense_date: string
+          hr_shop_id: string | null
           id: string
           payment_method: string
           receipt_url: string | null
@@ -241,6 +252,7 @@ export type Database = {
           created_at?: string
           description: string
           expense_date: string
+          hr_shop_id?: string | null
           id?: string
           payment_method: string
           receipt_url?: string | null
@@ -253,6 +265,7 @@ export type Database = {
           created_at?: string
           description?: string
           expense_date?: string
+          hr_shop_id?: string | null
           id?: string
           payment_method?: string
           receipt_url?: string | null
@@ -260,6 +273,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "expenses_hr_shop_id_fkey"
+            columns: ["hr_shop_id"]
+            isOneToOne: false
+            referencedRelation: "hr_stores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "expenses_shop_id_fkey"
             columns: ["shop_id"]
@@ -1030,6 +1050,7 @@ export type Database = {
       losses: {
         Row: {
           created_at: string
+          hr_shop_id: string | null
           id: string
           loss_date: string
           loss_type: Database["public"]["Enums"]["loss_type"]
@@ -1043,6 +1064,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          hr_shop_id?: string | null
           id?: string
           loss_date?: string
           loss_type: Database["public"]["Enums"]["loss_type"]
@@ -1056,6 +1078,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          hr_shop_id?: string | null
           id?: string
           loss_date?: string
           loss_type?: Database["public"]["Enums"]["loss_type"]
@@ -1089,6 +1112,13 @@ export type Database = {
             referencedRelation: "shops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "losses_hr_shop_id_fkey"
+            columns: ["hr_shop_id"]
+            isOneToOne: false
+            referencedRelation: "hr_stores"
+            referencedColumns: ["id"]
+          },
         ]
       }
       low_stock_alerts: {
@@ -1096,6 +1126,7 @@ export type Database = {
           alert_date: string
           created_at: string
           current_stock: number
+          hr_shop_id: string | null
           id: string
           is_resolved: boolean | null
           minimum_threshold: number
@@ -1108,6 +1139,7 @@ export type Database = {
           alert_date?: string
           created_at?: string
           current_stock: number
+          hr_shop_id?: string | null
           id?: string
           is_resolved?: boolean | null
           minimum_threshold: number
@@ -1120,6 +1152,7 @@ export type Database = {
           alert_date?: string
           created_at?: string
           current_stock?: number
+          hr_shop_id?: string | null
           id?: string
           is_resolved?: boolean | null
           minimum_threshold?: number
@@ -1143,11 +1176,19 @@ export type Database = {
             referencedRelation: "shops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "low_stock_alerts_hr_shop_id_fkey"
+            columns: ["hr_shop_id"]
+            isOneToOne: false
+            referencedRelation: "hr_stores"
+            referencedColumns: ["id"]
+          },
         ]
       }
       product_shops: {
         Row: {
           created_at: string
+          hr_shop_id: string | null
           id: string
           product_id: string
           shop_id: string
@@ -1155,6 +1196,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          hr_shop_id?: string | null
           id?: string
           product_id: string
           shop_id: string
@@ -1162,12 +1204,20 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          hr_shop_id?: string | null
           id?: string
           product_id?: string
           shop_id?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "product_shops_hr_shop_id_fkey"
+            columns: ["hr_shop_id"]
+            isOneToOne: false
+            referencedRelation: "hr_stores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "product_shops_product_id_fkey"
             columns: ["product_id"]
@@ -1259,6 +1309,7 @@ export type Database = {
       reorder_points: {
         Row: {
           created_at: string
+          hr_shop_id: string | null
           id: string
           minimum_stock: number
           product_id: string
@@ -1269,6 +1320,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          hr_shop_id?: string | null
           id?: string
           minimum_stock?: number
           product_id: string
@@ -1279,6 +1331,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          hr_shop_id?: string | null
           id?: string
           minimum_stock?: number
           product_id?: string
@@ -1302,11 +1355,19 @@ export type Database = {
             referencedRelation: "shops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reorder_points_hr_shop_id_fkey"
+            columns: ["hr_shop_id"]
+            isOneToOne: false
+            referencedRelation: "hr_stores"
+            referencedColumns: ["id"]
+          },
         ]
       }
       sales: {
         Row: {
           created_at: string
+          hr_shop_id: string | null
           id: string
           price: number
           product_id: string
@@ -1317,6 +1378,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          hr_shop_id?: string | null
           id?: string
           price: number
           product_id: string
@@ -1327,6 +1389,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          hr_shop_id?: string | null
           id?: string
           price?: number
           product_id?: string
@@ -1336,6 +1399,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "sales_hr_shop_id_fkey"
+            columns: ["hr_shop_id"]
+            isOneToOne: false
+            referencedRelation: "hr_stores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sales_product_id_fkey"
             columns: ["product_id"]
@@ -1457,6 +1527,8 @@ export type Database = {
           created_at: string
           created_by: string
           from_shop_id: string | null
+          hr_from_shop_id: string | null
+          hr_to_shop_id: string | null
           id: string
           movement_date: string
           movement_type: string
@@ -1473,6 +1545,8 @@ export type Database = {
           created_at?: string
           created_by: string
           from_shop_id?: string | null
+          hr_from_shop_id?: string | null
+          hr_to_shop_id?: string | null
           id?: string
           movement_date?: string
           movement_type?: string
@@ -1489,6 +1563,8 @@ export type Database = {
           created_at?: string
           created_by?: string
           from_shop_id?: string | null
+          hr_from_shop_id?: string | null
+          hr_to_shop_id?: string | null
           id?: string
           movement_date?: string
           movement_type?: string
@@ -1522,12 +1598,28 @@ export type Database = {
             referencedRelation: "shops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "stock_movements_hr_from_shop_id_fkey"
+            columns: ["hr_from_shop_id"]
+            isOneToOne: false
+            referencedRelation: "hr_stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_hr_to_shop_id_fkey"
+            columns: ["hr_to_shop_id"]
+            isOneToOne: false
+            referencedRelation: "hr_stores"
+            referencedColumns: ["id"]
+          },
         ]
       }
       stock_requests: {
         Row: {
           created_at: string
           fulfilling_store_id: string
+          hr_fulfilling_store_id: string | null
+          hr_requesting_store_id: string | null
           id: string
           notes: string | null
           product_id: string
@@ -1542,6 +1634,8 @@ export type Database = {
         Insert: {
           created_at?: string
           fulfilling_store_id: string
+          hr_fulfilling_store_id?: string | null
+          hr_requesting_store_id?: string | null
           id?: string
           notes?: string | null
           product_id: string
@@ -1556,6 +1650,8 @@ export type Database = {
         Update: {
           created_at?: string
           fulfilling_store_id?: string
+          hr_fulfilling_store_id?: string | null
+          hr_requesting_store_id?: string | null
           id?: string
           notes?: string | null
           product_id?: string
@@ -1567,11 +1663,27 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "stock_requests_hr_fulfilling_store_id_fkey"
+            columns: ["hr_fulfilling_store_id"]
+            isOneToOne: false
+            referencedRelation: "hr_stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_requests_hr_requesting_store_id_fkey"
+            columns: ["hr_requesting_store_id"]
+            isOneToOne: false
+            referencedRelation: "hr_stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stock_templates: {
         Row: {
           created_at: string
+          hr_shop_id: string | null
           id: string
           name: string
           products: Json
@@ -1581,6 +1693,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          hr_shop_id?: string | null
           id?: string
           name: string
           products?: Json
@@ -1590,6 +1703,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          hr_shop_id?: string | null
           id?: string
           name?: string
           products?: Json
@@ -1598,6 +1712,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "stock_templates_hr_shop_id_fkey"
+            columns: ["hr_shop_id"]
+            isOneToOne: false
+            referencedRelation: "hr_stores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "stock_templates_shop_id_fkey"
             columns: ["shop_id"]
@@ -1613,6 +1734,7 @@ export type Database = {
           cash_received: number | null
           closing_stock: number
           created_at: string
+          hr_shop_id: string | null
           id: string
           online_received: number | null
           opening_stock: number
@@ -1629,6 +1751,7 @@ export type Database = {
           cash_received?: number | null
           closing_stock: number
           created_at?: string
+          hr_shop_id?: string | null
           id?: string
           online_received?: number | null
           opening_stock: number
@@ -1645,6 +1768,7 @@ export type Database = {
           cash_received?: number | null
           closing_stock?: number
           created_at?: string
+          hr_shop_id?: string | null
           id?: string
           online_received?: number | null
           opening_stock?: number
@@ -1657,6 +1781,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "stocks_hr_shop_id_fkey"
+            columns: ["hr_shop_id"]
+            isOneToOne: false
+            referencedRelation: "hr_stores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "stocks_product_id_fkey"
             columns: ["product_id"]
@@ -1678,6 +1809,7 @@ export type Database = {
           created_at: string
           date: string
           denominations: Json
+          hr_shop_id: string | null
           id: string
           shop_id: string
           total_amount: number
@@ -1688,6 +1820,7 @@ export type Database = {
           created_at?: string
           date?: string
           denominations?: Json
+          hr_shop_id?: string | null
           id?: string
           shop_id: string
           total_amount?: number
@@ -1698,6 +1831,7 @@ export type Database = {
           created_at?: string
           date?: string
           denominations?: Json
+          hr_shop_id?: string | null
           id?: string
           shop_id?: string
           total_amount?: number
@@ -1705,6 +1839,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "store_denominations_hr_shop_id_fkey"
+            columns: ["hr_shop_id"]
+            isOneToOne: false
+            referencedRelation: "hr_stores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "store_denominations_shop_id_fkey"
             columns: ["shop_id"]
