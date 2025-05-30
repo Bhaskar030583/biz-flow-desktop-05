@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -735,6 +736,48 @@ export const POSSystem: React.FC<POSSystemProps> = ({
           </div>
         )}
       </div>
+
+      {/* Desktop Payment Modals */}
+      <CashPaymentModal
+        isOpen={showCashModal}
+        onClose={() => setShowCashModal(false)}
+        totalAmount={getTotalAmount()}
+        cartItems={cart}
+        onPaymentComplete={handlePaymentComplete}
+        storeInfo={storeInfo}
+      />
+
+      <CreditPaymentModal
+        isOpen={showCreditModal}
+        onClose={() => setShowCreditModal(false)}
+        totalAmount={getTotalAmount()}
+        cartItems={cart}
+        onPaymentComplete={handlePaymentComplete}
+      />
+
+      <SplitPaymentModal
+        isOpen={showSplitModal}
+        onClose={() => setShowSplitModal(false)}
+        totalAmount={getTotalAmount()}
+        cartItems={cart}
+        onPaymentComplete={handlePaymentComplete}
+      />
+
+      <PendingPaymentModal
+        isOpen={showPendingModal}
+        onClose={() => setShowPendingModal(false)}
+        totalAmount={getTotalAmount()}
+        cartItems={cart}
+        onPaymentComplete={handlePaymentComplete}
+      />
+
+      <QuickStockUpdateModal
+        isOpen={showQuickStockModal}
+        onClose={() => setShowQuickStockModal(false)}
+        products={products || []}
+        selectedShopId={selectedShopId}
+        onStockUpdated={handleStockUpdated}
+      />
     </div>
   );
 };
