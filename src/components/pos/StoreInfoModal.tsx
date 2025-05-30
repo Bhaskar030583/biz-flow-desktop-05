@@ -194,7 +194,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
             <img 
               src="/lovable-uploads/7e552f66-f5e2-416f-af98-1a5f74c1bfed.png" 
               alt="ABC Cafe Logo" 
-              className="h-12 w-12 object-contain"
+              className="h-20 w-auto object-contain rounded-lg shadow-lg"
             />
           </div>
         </DialogHeader>
