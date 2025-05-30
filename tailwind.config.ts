@@ -19,6 +19,22 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+				inter: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+			},
+			fontSize: {
+				'xs': ['0.75rem', { lineHeight: '1rem', fontWeight: '400' }],
+				'sm': ['0.875rem', { lineHeight: '1.25rem', fontWeight: '400' }],
+				'base': ['1rem', { lineHeight: '1.5rem', fontWeight: '400' }],
+				'lg': ['1.125rem', { lineHeight: '1.75rem', fontWeight: '500' }],
+				'xl': ['1.25rem', { lineHeight: '1.75rem', fontWeight: '600' }],
+				'2xl': ['1.5rem', { lineHeight: '2rem', fontWeight: '600' }],
+				'3xl': ['1.875rem', { lineHeight: '2.25rem', fontWeight: '700' }],
+				'4xl': ['2.25rem', { lineHeight: '2.5rem', fontWeight: '700' }],
+				'5xl': ['3rem', { lineHeight: '1', fontWeight: '800' }],
+				'6xl': ['3.75rem', { lineHeight: '1', fontWeight: '800' }],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

@@ -1,3 +1,5 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -177,7 +179,88 @@
   }
 
   body {
-    @apply bg-background text-foreground transition-colors duration-300;
+    @apply bg-background text-foreground transition-colors duration-300 font-inter antialiased;
+  }
+  
+  /* Typography utilities with consistent Inter font usage */
+  .text-display-2xl {
+    @apply text-6xl font-bold leading-none tracking-tight;
+  }
+  
+  .text-display-xl {
+    @apply text-5xl font-bold leading-none tracking-tight;
+  }
+  
+  .text-display-lg {
+    @apply text-4xl font-bold leading-tight;
+  }
+  
+  .text-display-md {
+    @apply text-3xl font-bold leading-tight;
+  }
+  
+  .text-display-sm {
+    @apply text-2xl font-semibold leading-tight;
+  }
+  
+  .text-display-xs {
+    @apply text-xl font-semibold leading-normal;
+  }
+  
+  .text-heading-h1 {
+    @apply text-3xl font-bold leading-tight;
+  }
+  
+  .text-heading-h2 {
+    @apply text-2xl font-semibold leading-tight;
+  }
+  
+  .text-heading-h3 {
+    @apply text-xl font-semibold leading-normal;
+  }
+  
+  .text-heading-h4 {
+    @apply text-lg font-medium leading-normal;
+  }
+  
+  .text-body-lg {
+    @apply text-lg font-normal leading-relaxed;
+  }
+  
+  .text-body-md {
+    @apply text-base font-normal leading-normal;
+  }
+  
+  .text-body-sm {
+    @apply text-sm font-normal leading-normal;
+  }
+  
+  .text-body-xs {
+    @apply text-xs font-normal leading-normal;
+  }
+  
+  .text-label-lg {
+    @apply text-sm font-medium leading-normal;
+  }
+  
+  .text-label-md {
+    @apply text-sm font-medium leading-normal;
+  }
+  
+  .text-label-sm {
+    @apply text-xs font-medium leading-normal;
+  }
+  
+  .text-button-lg {
+    @apply text-base font-semibold leading-normal;
+  }
+  
+  .text-button-md {
+    @apply text-sm font-semibold leading-normal;
+  }
+  
+  .text-button-sm {
+    @apply text-xs font-semibold leading-normal;
   }
   
   /* High contrast text utility classes */
