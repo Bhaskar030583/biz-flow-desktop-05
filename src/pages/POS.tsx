@@ -31,7 +31,7 @@ const POS = () => {
   const [selectedStoreId, setSelectedStoreId] = useState<string>("");
   const navigate = useNavigate();
 
-  // Query for products assigned to the selected store with current stock quantities
+  // Query for products assigned to the selected HR store with current stock quantities
   const { data: products, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
     queryKey: ['pos-products', selectedStoreId],
     queryFn: async () => {
@@ -43,7 +43,7 @@ const POS = () => {
       console.log('🔍 [POS] Fetching products for HRMS store:', selectedStoreId);
       const today = new Date().toISOString().split('T')[0];
       
-      // Get products assigned to this store from product_shops
+      // Get products assigned to this HR store from product_shops using hr_shop_id
       const { data: productShops, error: productShopsError } = await supabase
         .from('product_shops')
         .select(`
@@ -54,7 +54,7 @@ const POS = () => {
             category
           )
         `)
-        .eq('shop_id', selectedStoreId)
+        .eq('hr_shop_id', selectedStoreId)
         .eq('user_id', user?.id);
       
       if (productShopsError) {
@@ -79,11 +79,11 @@ const POS = () => {
       // Get product IDs
       const productIds = allProducts.map(product => product.id);
 
-      // Get stock data for these products at the selected store
+      // Get stock data for these products at the selected HR store using hr_shop_id
       const { data: stockData, error: stockError } = await supabase
         .from('stocks')
         .select('product_id, actual_stock')
-        .eq('shop_id', selectedStoreId)
+        .eq('hr_shop_id', selectedStoreId)
         .eq('user_id', user?.id)
         .eq('stock_date', today)
         .in('product_id', productIds);

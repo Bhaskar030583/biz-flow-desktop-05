@@ -1,103 +1,74 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 interface CartItem {
   id: string;
   quantity: number;
 }
 
-export const updateProductStock = async (
-  productId: string, 
+export const adjustStockForBill = async (
+  cartItems: CartItem[], 
   shopId: string, 
-  quantityChange: number, // positive to add, negative to subtract
-  userId: string
+  userId: string, 
+  adjustmentType: 'sale' | 'return' = 'sale'
 ) => {
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Get current stock for today
+  const today = new Date().toISOString().split('T')[0];
+  
+  for (const item of cartItems) {
+    // Get current stock record using hr_shop_id
     const { data: currentStock, error: fetchError } = await supabase
       .from('stocks')
       .select('*')
-      .eq('product_id', productId)
-      .eq('shop_id', shopId)
-      .eq('stock_date', today)
+      .eq('product_id', item.id)
+      .eq('hr_shop_id', shopId)
       .eq('user_id', userId)
+      .eq('stock_date', today)
       .maybeSingle();
-
+    
     if (fetchError) {
       console.error('Error fetching current stock:', fetchError);
       throw fetchError;
     }
-
+    
     if (currentStock) {
       // Update existing stock record
-      const newActualStock = currentStock.actual_stock + quantityChange;
+      const adjustment = adjustmentType === 'sale' ? -item.quantity : item.quantity;
       
-      // Prevent negative stock
-      if (newActualStock < 0) {
-        throw new Error('Insufficient stock available');
-      }
-
       const { error: updateError } = await supabase
         .from('stocks')
-        .update({ 
-          actual_stock: newActualStock,
-          closing_stock: newActualStock
+        .update({
+          actual_stock: Math.max(0, currentStock.actual_stock + adjustment),
+          closing_stock: Math.max(0, currentStock.closing_stock + adjustment)
         })
         .eq('id', currentStock.id);
-
+      
       if (updateError) {
         console.error('Error updating stock:', updateError);
         throw updateError;
       }
     } else {
       // Create new stock record if none exists for today
-      if (quantityChange < 0) {
-        throw new Error('Cannot sell from empty stock');
-      }
-
+      const initialStock = adjustmentType === 'sale' ? 0 : item.quantity;
+      const actualStock = adjustmentType === 'sale' ? Math.max(0, -item.quantity) : item.quantity;
+      
       const { error: insertError } = await supabase
         .from('stocks')
         .insert({
-          product_id: productId,
-          shop_id: shopId,
+          product_id: item.id,
+          shop_id: shopId, // Keep for backward compatibility
+          hr_shop_id: shopId, // Use hr_shop_id as primary field
           stock_date: today,
-          opening_stock: quantityChange,
-          closing_stock: quantityChange,
-          actual_stock: quantityChange,
-          stock_added: quantityChange,
+          opening_stock: initialStock,
+          closing_stock: actualStock,
+          actual_stock: actualStock,
+          stock_added: adjustmentType === 'return' ? item.quantity : 0,
           user_id: userId
         });
-
+      
       if (insertError) {
         console.error('Error creating stock record:', insertError);
         throw insertError;
       }
     }
-
-    return true;
-  } catch (error) {
-    console.error('Stock update failed:', error);
-    throw error;
-  }
-};
-
-export const adjustStockForBill = async (
-  cartItems: CartItem[],
-  shopId: string,
-  userId: string,
-  operation: 'sale' | 'cancel'
-) => {
-  try {
-    for (const item of cartItems) {
-      const quantityChange = operation === 'sale' ? -item.quantity : item.quantity;
-      await updateProductStock(item.id, shopId, quantityChange, userId);
-    }
-    return true;
-  } catch (error) {
-    console.error(`Stock adjustment failed for ${operation}:`, error);
-    throw error;
   }
 };
