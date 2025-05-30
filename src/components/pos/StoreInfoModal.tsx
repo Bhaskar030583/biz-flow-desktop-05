@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,9 +43,13 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
   const [selectedStoreId, setSelectedStoreId] = useState("");
   const [selectedShiftId, setSelectedShiftId] = useState("");
   const [salespersonName, setSalespersonName] = useState("");
+  
+  // Use refs to track if we've already initialized salesperson name
+  const salespersonInitialized = useRef(false);
+  const lastUserProfile = useRef<string | null>(null);
 
-  // Memoize query configurations to prevent recreating them on every render
-  const userProfileQueryConfig = useMemo(() => ({
+  // Stable query for user profile - only depends on user.id
+  const { data: userProfile } = useQuery({
     queryKey: ['user-profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -65,15 +69,16 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
       console.log('✅ [StoreInfoModal] User profile fetched:', data);
       return data;
     },
-    enabled: !!user?.id && isOpen,
-    staleTime: Infinity, // Never consider stale
-    gcTime: Infinity, // Never garbage collect
+    enabled: !!user?.id,
+    staleTime: Infinity,
+    gcTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false
-  }), [user?.id, isOpen]);
+  });
 
-  const storesQueryConfig = useMemo(() => ({
+  // Stable query for stores - only depends on user.id  
+  const { data: hrStores, isLoading: storesLoading, error: storesError } = useQuery({
     queryKey: ['hrms-stores-modal'],
     queryFn: async () => {
       console.log('🏪 [StoreInfoModal] FETCHING HR STORES');
@@ -92,15 +97,16 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
       console.log('✅ [StoreInfoModal] Successfully fetched HR stores:', data);
       return data || [];
     },
-    enabled: !!user?.id && isOpen,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    enabled: !!user?.id,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false
-  }), [user?.id, isOpen]);
+  });
 
-  const shiftsQueryConfig = useMemo(() => ({
+  // Stable query for shifts - only depends on selectedStoreId
+  const { data: hrShifts, isLoading: shiftsLoading } = useQuery({
     queryKey: ['hrms-shifts', selectedStoreId],
     queryFn: async () => {
       if (!selectedStoreId) {
@@ -124,39 +130,40 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
       console.log('✅ [StoreInfoModal] Fetched HR shifts:', data);
       return data || [];
     },
-    enabled: !!selectedStoreId && isOpen,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    enabled: !!selectedStoreId,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false
-  }), [selectedStoreId, isOpen]);
-
-  // Execute queries with memoized configs
-  const { data: userProfile } = useQuery(userProfileQueryConfig);
-  const { data: hrStores, isLoading: storesLoading, error: storesError } = useQuery(storesQueryConfig);
-  const { data: hrShifts, isLoading: shiftsLoading } = useQuery(shiftsQueryConfig);
+  });
 
   // Initialize salesperson name only once when user profile loads
   useEffect(() => {
-    console.log('🔄 [StoreInfoModal] useEffect for salesperson name initialization');
-    if (!salespersonName && userProfile?.full_name) {
-      console.log('📝 [StoreInfoModal] Setting salesperson name from profile:', userProfile.full_name);
-      setSalespersonName(userProfile.full_name);
-    } else if (!salespersonName && user?.email) {
-      console.log('📝 [StoreInfoModal] Setting salesperson name from email:', user.email);
-      setSalespersonName(user.email.split('@')[0]);
+    if (salespersonInitialized.current) return;
+    
+    const profileName = userProfile?.full_name;
+    const emailName = user?.email?.split('@')[0];
+    
+    if (profileName && profileName !== lastUserProfile.current) {
+      console.log('📝 [StoreInfoModal] Setting salesperson name from profile:', profileName);
+      setSalespersonName(profileName);
+      lastUserProfile.current = profileName;
+      salespersonInitialized.current = true;
+    } else if (!profileName && emailName && !salespersonInitialized.current) {
+      console.log('📝 [StoreInfoModal] Setting salesperson name from email:', emailName);
+      setSalespersonName(emailName);
+      salespersonInitialized.current = true;
     }
-  }, [userProfile?.full_name, user?.email, salespersonName]);
+  }, [userProfile?.full_name, user?.email]);
 
-  // Reset form when modal closes (but keep salesperson name)
+  // Reset form when modal closes but keep salesperson name
   useEffect(() => {
-    console.log('🔄 [StoreInfoModal] useEffect for form reset, isOpen:', isOpen);
     if (!isOpen) {
       console.log('🧹 [StoreInfoModal] Resetting form state');
       setSelectedStoreId("");
       setSelectedShiftId("");
-      // Don't reset salesperson name as it should persist
+      // Don't reset salesperson name or initialization flag
     }
   }, [isOpen]);
 
@@ -227,7 +234,8 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     storesLoading,
     shiftsLoading,
     hrStoresCount: hrStores?.length || 0,
-    hrShiftsCount: hrShifts?.length || 0
+    hrShiftsCount: hrShifts?.length || 0,
+    salespersonInitialized: salespersonInitialized.current
   });
 
   return (
