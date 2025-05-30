@@ -30,7 +30,7 @@ const POS = () => {
   const [selectedStoreId, setSelectedStoreId] = useState<string>("");
   const navigate = useNavigate();
 
-  // Query for products assigned to the selected HR store with calculated available stock
+  // Query for products assigned to the selected HR store with calculated Expected Closing stock
   const { data: products, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
     queryKey: ['pos-products', selectedStoreId],
     queryFn: async () => {
@@ -84,7 +84,7 @@ const POS = () => {
       // First try with hr_shop_id
       let { data: stockData, error: stockError } = await supabase
         .from('stocks')
-        .select('product_id, opening_stock, stock_added, actual_stock, closing_stock')
+        .select('product_id, opening_stock, stock_added')
         .eq('hr_shop_id', selectedStoreId)
         .eq('user_id', user?.id)
         .eq('stock_date', today)
@@ -95,7 +95,7 @@ const POS = () => {
         console.log('📊 [POS] No stock found with hr_shop_id, trying shop_id...');
         const shopIdResult = await supabase
           .from('stocks')
-          .select('product_id, opening_stock, stock_added, actual_stock, closing_stock')
+          .select('product_id, opening_stock, stock_added')
           .eq('shop_id', selectedStoreId)
           .eq('user_id', user?.id)
           .eq('stock_date', today)
@@ -114,7 +114,7 @@ const POS = () => {
 
       console.log('📊 [POS] Final stock data:', stockData);
 
-      // Get today's sales data to calculate real-time available stock
+      // Get today's sales data to calculate sold quantity
       const { data: salesData, error: salesError } = await supabase
         .from('bill_items')
         .select(`
@@ -138,9 +138,7 @@ const POS = () => {
       stockData?.forEach(stock => {
         stockMap.set(stock.product_id, {
           opening: stock.opening_stock || 0,
-          added: stock.stock_added || 0,
-          actual: stock.actual_stock,
-          closing: stock.closing_stock || 0
+          added: stock.stock_added || 0
         });
       });
 
@@ -151,24 +149,17 @@ const POS = () => {
         salesMap.set(sale.product_id, currentSales + sale.quantity);
       });
 
-      // Combine product data with calculated available stock
+      // Combine product data with calculated Expected Closing stock
       const productsWithStock = allProducts.map(product => {
         const stockInfo = stockMap.get(product.id);
         const soldToday = salesMap.get(product.id) || 0;
         
-        let availableQuantity = 0;
+        let expectedClosing = 0;
         
         if (stockInfo) {
-          // Use actual_stock if available (manually counted)
-          if (stockInfo.actual !== null && stockInfo.actual !== undefined) {
-            availableQuantity = Math.max(0, stockInfo.actual - soldToday);
-            console.log(`📊 [POS] Product ${product.name}: Using actual stock ${stockInfo.actual} - sold ${soldToday} = ${availableQuantity}`);
-          } else {
-            // Calculate expected available: (opening + added) - sold today
-            const expectedAvailable = (stockInfo.opening + stockInfo.added) - soldToday;
-            availableQuantity = Math.max(0, expectedAvailable);
-            console.log(`📊 [POS] Product ${product.name}: Calculated available (${stockInfo.opening} + ${stockInfo.added}) - ${soldToday} = ${availableQuantity}`);
-          }
+          // Calculate Expected Closing: Opening Stock + Stock Added - Sold
+          expectedClosing = Math.max(0, (stockInfo.opening + stockInfo.added) - soldToday);
+          console.log(`📊 [POS] Product ${product.name}: Expected Closing = (${stockInfo.opening} + ${stockInfo.added}) - ${soldToday} = ${expectedClosing}`);
         } else {
           console.log(`⚠️ [POS] No stock info found for product ${product.name} (ID: ${product.id})`);
         }
@@ -178,11 +169,11 @@ const POS = () => {
           name: product.name,
           price: product.price,
           category: product.category,
-          quantity: availableQuantity
+          quantity: expectedClosing // Use Expected Closing as available quantity
         };
       });
 
-      console.log('✅ [POS] Final products with calculated stock:', productsWithStock);
+      console.log('✅ [POS] Final products with Expected Closing stock:', productsWithStock);
       return productsWithStock;
     },
     enabled: !!selectedStoreId && !!user?.id,
