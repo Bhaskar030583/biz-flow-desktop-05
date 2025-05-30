@@ -423,77 +423,83 @@ export const POSSystem: React.FC<POSSystemProps> = ({
     );
   }
 
-  // Enhanced Desktop View with dark theme
+  // Enhanced Desktop View with professional styling
   return (
-    <div className="flex h-screen bg-gray-900 overflow-hidden">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 to-blue-50 overflow-hidden">
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Fixed Header */}
-        <div className="bg-gray-800 border-b-2 border-gray-700 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 shadow-lg flex-shrink-0">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
-                <img 
-                  src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
-                  alt="Logo" 
-                  className="h-6 w-6 sm:h-7 sm:w-7 lg:h-9 lg:w-9"
-                />
-              </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-400 to-blue-300 bg-clip-text text-transparent">
-                  ABC CAFE
-                </h1>
-                {storeInfo && (
-                  <p className="text-sm sm:text-base text-gray-300 font-medium mt-1">
-                    {storeInfo.storeName} • {storeInfo.salespersonName}
-                  </p>
-                )}
+        {/* Professional Header */}
+        <div className="bg-white/90 backdrop-blur-sm border-b border-slate-200 shadow-sm px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <img 
+                    src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
+                    alt="Logo" 
+                    className="h-7 w-7"
+                  />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                    ABC CAFE POS
+                  </h1>
+                  {storeInfo && (
+                    <div className="flex items-center space-x-3 text-sm text-slate-600">
+                      <span className="font-medium">{storeInfo.storeName}</span>
+                      <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                      <span>{storeInfo.salespersonName}</span>
+                      <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                      <span className="text-blue-600 font-medium">{storeInfo.shiftName}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             
-            <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 w-full sm:w-auto justify-end">
+            <div className="flex items-center space-x-3">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleQuickStock}
-                className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-300 font-semibold px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-xs sm:text-sm"
+                className="bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm"
               >
-                <Package className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden sm:inline">Quick Stock</span>
+                <Package className="h-4 w-4 mr-2" />
+                Quick Stock
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowCustomerManagement(true)}
-                className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-300 font-semibold px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-xs sm:text-sm"
+                className="bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm"
               >
-                <User className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden sm:inline">Customers</span>
+                <User className="h-4 w-4 mr-2" />
+                Customers
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowBillHistory(true)}
-                className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-300 font-semibold px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-xs sm:text-sm"
+                className="bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm"
               >
-                <History className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden sm:inline">History</span>
+                <History className="h-4 w-4 mr-2" />
+                History
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Fixed Category Tabs */}
-        <div className="bg-gray-800 border-b-2 border-gray-700 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 shadow-sm flex-shrink-0">
+        {/* Professional Category Tabs */}
+        <div className="bg-white/70 backdrop-blur-sm border-b border-slate-200 px-6 py-3">
           <div className="flex space-x-2 overflow-x-auto scrollbar-hide">
             {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl transition-all duration-300 whitespace-nowrap shadow-sm hover:shadow-md transform hover:scale-105 ${
+                className={`px-6 py-2 text-sm font-medium rounded-lg transition-all duration-200 whitespace-nowrap shadow-sm ${
                   selectedCategory === category
-                    ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
-                    : "text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600"
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "text-slate-600 hover:text-slate-900 bg-white/70 hover:bg-white hover:shadow-sm"
                 }`}
               >
                 {category === "all" ? "All Items" : category}
@@ -502,27 +508,27 @@ export const POSSystem: React.FC<POSSystemProps> = ({
           </div>
         </div>
 
-        {/* Fixed Search Bar */}
-        <div className="bg-gray-800 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b-2 border-gray-700 shadow-sm flex-shrink-0">
-          <div className="relative">
-            <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 sm:h-6 sm:w-6" />
+        {/* Professional Search Bar */}
+        <div className="bg-white/70 backdrop-blur-sm px-6 py-4 border-b border-slate-200">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
             <Input
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 sm:pl-12 h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-600 focus:border-blue-500 focus:ring-blue-500 rounded-lg sm:rounded-xl shadow-sm bg-gray-700 focus:bg-gray-600 transition-all duration-300 text-white placeholder-gray-400"
+              className="pl-10 h-11 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 bg-white/90 backdrop-blur-sm shadow-sm"
             />
           </div>
         </div>
 
-        {/* Scrollable Products Grid */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gray-900">
+        {/* Products Grid */}
+        <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-slate-50/50 to-blue-50/50">
           {filteredProducts.length === 0 ? (
-            <div className="text-center py-16 sm:py-24 text-gray-400">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-6 sm:mb-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center shadow-lg">
-                <Search className="h-12 w-12 sm:h-16 sm:w-16 text-gray-500" />
+            <div className="text-center py-24 text-slate-500">
+              <div className="w-32 h-32 mx-auto mb-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
+                <Search className="h-16 w-16 text-slate-400" />
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-300">
+              <h3 className="text-2xl font-bold mb-4 text-slate-700">
                 {selectedShopId 
                   ? searchTerm || selectedCategory !== "all"
                     ? "No products found"
@@ -530,7 +536,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                   : "Please select a store"
                 }
               </h3>
-              <p className="text-base sm:text-lg text-gray-500">
+              <p className="text-lg text-slate-500">
                 {searchTerm || selectedCategory !== "all" 
                   ? "Try adjusting your search or category filter"
                   : "Add products to get started"
@@ -538,41 +544,41 @@ export const POSSystem: React.FC<POSSystemProps> = ({
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2 sm:gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
               {filteredProducts.map((product) => (
                 <Card 
                   key={product.id} 
-                  className={`cursor-pointer transition-all duration-300 border-2 hover:shadow-xl group transform hover:scale-105 rounded-lg ${
+                  className={`cursor-pointer transition-all duration-300 group hover:shadow-xl transform hover:scale-105 ${
                     product.quantity !== undefined && product.quantity <= 0 
-                      ? 'border-red-600 bg-gradient-to-br from-red-900 to-red-800 opacity-75' 
-                      : 'border-gray-600 bg-gray-800 hover:border-blue-400 shadow-md hover:bg-gray-700'
+                      ? 'border-red-200 bg-gradient-to-br from-red-50 to-red-100 opacity-80' 
+                      : 'border-slate-200 bg-white/90 backdrop-blur-sm hover:border-blue-300 shadow-sm hover:bg-white'
                   }`}
                   onClick={() => addToCart(product)}
                 >
-                  <CardContent className="p-2">
-                    <h4 className="font-bold text-xs leading-tight mb-2 text-gray-200 line-clamp-2 min-h-[2rem]">
+                  <CardContent className="p-4">
+                    <h4 className="font-semibold text-sm leading-tight mb-3 text-slate-800 line-clamp-2 min-h-[2.5rem]">
                       {product.name}
                     </h4>
                     
                     {product.quantity !== undefined && (
-                      <div className="mb-2">
+                      <div className="mb-3">
                         <Badge 
                           variant="outline" 
-                          className={`text-xs py-0.5 px-1 font-bold shadow-sm ${
+                          className={`text-xs py-1 px-2 font-semibold shadow-sm ${
                             product.quantity > 10 
-                              ? 'bg-green-900 text-green-300 border-green-600' 
+                              ? 'bg-green-50 text-green-700 border-green-200' 
                               : product.quantity > 0 
-                                ? 'bg-yellow-900 text-yellow-300 border-yellow-600'
-                                : 'bg-red-900 text-red-300 border-red-600'
+                                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                : 'bg-red-50 text-red-700 border-red-200'
                           }`}
                         >
-                          {product.quantity}
+                          Stock: {product.quantity}
                         </Badge>
                       </div>
                     )}
                     
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-2 py-1 rounded-md text-center shadow-lg">
-                      <p className="text-xs font-bold">
+                    <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white px-3 py-2 rounded-lg text-center shadow-md">
+                      <p className="text-sm font-bold">
                         ₹{Number(product.price).toFixed(2)}
                       </p>
                     </div>
@@ -584,80 +590,80 @@ export const POSSystem: React.FC<POSSystemProps> = ({
         </div>
       </div>
 
-      {/* Fixed Right Sidebar - Cart */}
-      <div className="w-80 sm:w-96 bg-gray-800 border-l-2 border-gray-700 flex flex-col shadow-2xl flex-shrink-0">
-        {/* Fixed Cart Header */}
-        <div className="p-4 sm:p-6 lg:p-8 border-b-2 border-gray-700 bg-gray-800 flex-shrink-0">
+      {/* Professional Right Sidebar - Cart */}
+      <div className="w-96 bg-white/95 backdrop-blur-sm border-l border-slate-200 flex flex-col shadow-xl">
+        {/* Cart Header */}
+        <div className="p-6 border-b border-slate-200 bg-white/90 backdrop-blur-sm">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-100">Current Order</h2>
+            <h2 className="text-xl font-bold text-slate-800">Order Summary</h2>
             {cart.length > 0 && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={clearCart}
-                className="text-red-400 hover:text-red-300 border-red-600 hover:bg-red-900 font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-300 text-xs sm:text-sm"
+                className="text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50"
               >
-                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <Trash2 className="h-4 w-4 mr-2" />
                 Clear
               </Button>
             )}
           </div>
         </div>
 
-        {/* Scrollable Cart Items */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-900">
+        {/* Cart Items */}
+        <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-slate-50/50 to-white/50">
           {cart.length === 0 ? (
-            <div className="text-center py-12 sm:py-16 text-gray-400">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center shadow-lg">
-                <ShoppingCart className="h-8 w-8 sm:h-10 sm:w-10 text-gray-500" />
+            <div className="text-center py-16 text-slate-500">
+              <div className="w-20 h-20 mx-auto mb-6 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
+                <ShoppingCart className="h-10 w-10 text-slate-400" />
               </div>
-              <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-gray-300">Your cart is empty</h3>
-              <p className="text-sm sm:text-base text-gray-500">Add products to get started</p>
+              <h3 className="text-xl font-bold mb-3 text-slate-700">Your cart is empty</h3>
+              <p className="text-base text-slate-500">Add products to get started</p>
             </div>
           ) : (
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-4">
               {cart.map((item, index) => (
-                <div key={item.id} className="bg-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-5 shadow-lg border border-gray-700 hover:shadow-xl transition-all duration-300">
-                  <div className="flex justify-between items-start mb-3 sm:mb-4">
-                    <div className="flex-1 pr-3 sm:pr-4">
-                      <h4 className="font-bold text-xs sm:text-sm text-gray-200">{item.name}</h4>
-                      <p className="text-xs text-gray-400 mt-1">₹{Number(item.price).toFixed(2)} each</p>
+                <div key={item.id} className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-all duration-200">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1 pr-4">
+                      <h4 className="font-semibold text-sm text-slate-800">{item.name}</h4>
+                      <p className="text-xs text-slate-500 mt-1">₹{Number(item.price).toFixed(2)} each</p>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => removeFromCart(item.id)}
-                      className="text-red-400 hover:text-red-300 hover:bg-red-900 p-1 sm:p-2 h-6 w-6 sm:h-8 sm:w-8 rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 h-8 w-8"
                     >
-                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2 sm:space-x-3">
+                    <div className="flex items-center space-x-3">
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 w-8 sm:h-10 sm:w-10 p-0 rounded-lg border-2 border-gray-600 hover:border-blue-400 hover:bg-blue-900 shadow-sm hover:shadow-md transition-all duration-300"
+                        className="h-9 w-9 p-0 border-slate-200 hover:border-blue-400 hover:bg-blue-50"
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
                       >
-                        <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <Minus className="h-4 w-4" />
                       </Button>
-                      <span className="font-bold text-sm sm:text-lg min-w-[32px] sm:min-w-[40px] text-center bg-gray-700 px-2 sm:px-4 py-1 sm:py-2 rounded-lg border-2 border-gray-600 text-gray-200">
+                      <span className="font-bold text-lg min-w-[40px] text-center bg-slate-50 px-3 py-1 rounded-lg border border-slate-200 text-slate-800">
                         {item.quantity}
                       </span>
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 w-8 sm:h-10 sm:w-10 p-0 rounded-lg border-2 border-gray-600 hover:border-blue-400 hover:bg-blue-900 shadow-sm hover:shadow-md transition-all duration-300"
+                        className="h-9 w-9 p-0 border-slate-200 hover:border-blue-400 hover:bg-blue-50"
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       >
-                        <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <Plus className="h-4 w-4" />
                       </Button>
                     </div>
                     
                     <div className="text-right">
-                      <p className="font-bold text-sm sm:text-lg text-gray-200">₹{Number(item.total).toFixed(2)}</p>
+                      <p className="font-bold text-lg text-slate-800">₹{Number(item.total).toFixed(2)}</p>
                     </div>
                   </div>
                 </div>
@@ -666,52 +672,61 @@ export const POSSystem: React.FC<POSSystemProps> = ({
           )}
         </div>
 
-        {/* Fixed Cart Footer */}
+        {/* Cart Footer */}
         {cart.length > 0 && (
-          <div className="border-t-2 border-gray-700 p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 bg-gray-800 flex-shrink-0">
-            <div className="space-y-2 sm:space-y-3">
-              <div className="flex justify-between text-sm sm:text-base font-medium text-gray-300">
+          <div className="border-t border-slate-200 p-6 space-y-6 bg-white/95 backdrop-blur-sm">
+            <div className="space-y-3">
+              <div className="flex justify-between text-base font-medium text-slate-700">
                 <span>Subtotal</span>
                 <span>₹{getTotalAmount().toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm sm:text-base font-medium text-gray-300">
+              <div className="flex justify-between text-base font-medium text-slate-700">
                 <span>Tax</span>
                 <span>₹0.00</span>
               </div>
-              <Separator className="my-2 sm:my-3 bg-gray-600" />
-              <div className="flex justify-between text-xl sm:text-2xl font-bold text-gray-100">
+              <Separator className="my-3 bg-slate-200" />
+              <div className="flex justify-between text-2xl font-bold text-slate-800">
                 <span>Total</span>
-                <span className="text-blue-400">₹{getTotalAmount().toFixed(2)}</span>
+                <span className="text-blue-600">₹{getTotalAmount().toFixed(2)}</span>
               </div>
             </div>
             
-            <div className="space-y-2 sm:space-y-3">
+            <div className="space-y-3">
               <Button 
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 sm:py-4 h-12 sm:h-14 rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-sm sm:text-base" 
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 h-14 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300" 
                 onClick={handleCashPayment}
               >
-                <Banknote className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
+                <Banknote className="h-5 w-5 mr-3" />
                 Cash Payment
               </Button>
               
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <Button 
                   variant="outline"
-                  className="h-10 sm:h-12 font-semibold bg-gray-700 hover:bg-green-800 border-2 border-gray-600 text-gray-300 hover:border-green-500 hover:text-green-300 rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-xs sm:text-sm" 
+                  className="h-12 font-semibold bg-white hover:bg-green-50 border-slate-200 text-slate-700 hover:border-green-300 hover:text-green-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300" 
                   onClick={handleUPIPayment}
                 >
-                  <Smartphone className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <Smartphone className="h-4 w-4 mr-2" />
                   UPI
                 </Button>
                 <Button 
                   variant="outline"
-                  className="h-10 sm:h-12 font-semibold bg-gray-700 hover:bg-purple-800 border-2 border-gray-600 text-gray-300 hover:border-purple-500 hover:text-purple-300 rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-xs sm:text-sm" 
+                  className="h-12 font-semibold bg-white hover:bg-purple-50 border-slate-200 text-slate-700 hover:border-purple-300 hover:text-purple-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300" 
                   onClick={handleCreditPayment}
                 >
-                  <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <CreditCard className="h-4 w-4 mr-2" />
                   Credit
                 </Button>
               </div>
+              
+              <Button 
+                variant="outline"
+                className="w-full h-12 font-semibold bg-white hover:bg-amber-50 border-slate-200 text-slate-700 hover:border-amber-300 hover:text-amber-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300" 
+                onClick={handleSplitPayment}
+              >
+                <SplitSquareHorizontal className="h-4 w-4 mr-2" />
+                Split Payment
+              </Button>
             </div>
           </div>
         )}

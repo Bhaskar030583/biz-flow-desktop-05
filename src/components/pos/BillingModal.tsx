@@ -67,12 +67,12 @@ export const BillingModal: React.FC<BillingModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-xs sm:max-w-sm md:max-w-lg lg:max-w-xl max-h-[90vh] overflow-y-auto mx-2 rounded-xl">
-        <DialogHeader className="pb-3">
-          <DialogTitle className="flex items-center justify-between text-base md:text-lg">
-            <span className="flex items-center gap-2 text-blue-900 font-bold">
-              <Calculator className="h-5 w-5 md:h-6 md:w-6" />
-              Shopping Cart ({cart.length})
+      <DialogContent className="max-w-sm mx-2 max-h-[90vh] overflow-y-auto rounded-2xl bg-white/95 backdrop-blur-sm border border-slate-200 shadow-2xl">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="flex items-center justify-between text-lg">
+            <span className="flex items-center gap-2 text-slate-800 font-bold">
+              <Calculator className="h-6 w-6 text-blue-600" />
+              Order Summary ({cart.length})
             </span>
             <div className="flex gap-2">
               {cart.length > 0 && (
@@ -83,14 +83,14 @@ export const BillingModal: React.FC<BillingModalProps> = ({
                   className="text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50 px-3 py-1 h-8 text-xs rounded-lg"
                 >
                   <Trash2 className="h-3 w-3 mr-1" />
-                  Clear All
+                  Clear
                 </Button>
               )}
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={onClose}
-                className="h-8 w-8 p-0 hover:bg-gray-100 rounded-lg"
+                className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -100,48 +100,48 @@ export const BillingModal: React.FC<BillingModalProps> = ({
 
         <div className="space-y-4">
           {cart.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                <ShoppingCart className="h-8 w-8 text-gray-400" />
+            <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+              <div className="w-16 h-16 mx-auto mb-4 bg-slate-50 rounded-full flex items-center justify-center shadow-sm">
+                <ShoppingCart className="h-8 w-8 text-slate-400" />
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-gray-700">Your cart is empty</h3>
-              <p className="text-sm text-gray-400">Add products to get started</p>
+              <h3 className="text-lg font-semibold mb-2 text-slate-700">Your cart is empty</h3>
+              <p className="text-sm text-slate-400">Add products to get started</p>
             </div>
           ) : (
             <>
-              {/* Enhanced Cart Items */}
-              <div className="space-y-3 max-h-48 md:max-h-64 overflow-y-auto">
+              {/* Professional Cart Items */}
+              <div className="space-y-3 max-h-64 overflow-y-auto">
                 {cart.map((item) => (
-                  <div key={item.id} className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-3 md:p-4 border border-gray-200">
+                  <div key={item.id} className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl p-4 border border-slate-200/50 shadow-sm">
                     <div className="flex justify-between items-center">
                       <div className="flex-1 pr-3 min-w-0">
-                        <h4 className="font-semibold text-sm md:text-base text-gray-800 truncate">{item.name}</h4>
-                        <p className="text-xs md:text-sm text-gray-600">₹{Number(item.price).toFixed(2)} each</p>
+                        <h4 className="font-semibold text-sm text-slate-800 truncate">{item.name}</h4>
+                        <p className="text-xs text-slate-600">₹{Number(item.price).toFixed(2)} each</p>
                       </div>
                       
-                      <div className="flex items-center gap-2 md:gap-3">
+                      <div className="flex items-center gap-3">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-7 w-7 md:h-8 md:w-8 p-0 border-blue-200 hover:bg-blue-50 rounded-lg"
+                          className="h-8 w-8 p-0 border-slate-200 hover:bg-blue-50 rounded-lg"
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
                         >
-                          <Minus className="h-3 w-3 md:h-4 md:w-4" />
+                          <Minus className="h-4 w-4" />
                         </Button>
-                        <span className="font-bold text-sm md:text-base min-w-[24px] md:min-w-[32px] text-center bg-white px-2 md:px-3 py-1 rounded-lg border text-gray-800">
+                        <span className="font-bold text-sm min-w-[28px] text-center bg-white px-2 py-1 rounded-lg border border-slate-200 text-slate-800">
                           {item.quantity}
                         </span>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-7 w-7 md:h-8 md:w-8 p-0 border-blue-200 hover:bg-blue-50 rounded-lg"
+                          className="h-8 w-8 p-0 border-slate-200 hover:bg-blue-50 rounded-lg"
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         >
-                          <Plus className="h-3 w-3 md:h-4 md:w-4" />
+                          <Plus className="h-4 w-4" />
                         </Button>
                         
-                        <div className="text-right ml-2 md:ml-3">
-                          <p className="font-bold text-green-700 text-sm md:text-base bg-green-100 px-2 md:px-3 py-1 rounded-lg">
+                        <div className="text-right ml-2">
+                          <p className="font-bold text-green-700 text-sm bg-green-50 px-2 py-1 rounded-lg border border-green-200">
                             ₹{Number(item.total).toFixed(2)}
                           </p>
                         </div>
@@ -150,9 +150,9 @@ export const BillingModal: React.FC<BillingModalProps> = ({
                           variant="ghost"
                           size="sm"
                           onClick={() => removeFromCart(item.id)}
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 h-7 w-7 md:h-8 md:w-8 ml-1 rounded-lg"
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 h-8 w-8 ml-1 rounded-lg"
                         >
-                          <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -160,18 +160,18 @@ export const BillingModal: React.FC<BillingModalProps> = ({
                 ))}
               </div>
 
-              <Separator className="my-4" />
+              <Separator className="my-4 bg-slate-200" />
 
-              {/* Enhanced Discount Section */}
-              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-4 border border-yellow-200">
+              {/* Professional Discount Section */}
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200/50">
                 <div className="flex items-center gap-2 mb-3">
-                  <Percent className="h-5 w-5 text-yellow-600" />
-                  <Label className="text-sm md:text-base font-semibold text-yellow-800">Apply Discount</Label>
+                  <Percent className="h-5 w-5 text-amber-600" />
+                  <Label className="text-sm font-semibold text-amber-800">Apply Discount</Label>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <div className="grid grid-cols-2 gap-3 mb-3">
                   <Select value={discountType} onValueChange={(value) => setDiscountType(value as 'percentage' | 'value')}>
-                    <SelectTrigger className="h-9 md:h-10 text-sm md:text-base rounded-lg">
+                    <SelectTrigger className="h-10 text-sm rounded-lg border-amber-200">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -186,7 +186,7 @@ export const BillingModal: React.FC<BillingModalProps> = ({
                       placeholder={discountType === 'percentage' ? '0' : '0.00'}
                       value={discountValue || ''}
                       onChange={(e) => setDiscountValue(Number(e.target.value) || 0)}
-                      className="h-9 md:h-10 text-sm md:text-base rounded-lg"
+                      className="h-10 text-sm rounded-lg border-amber-200"
                       min="0"
                       max={discountType === 'percentage' ? 100 : subtotal}
                       step={discountType === 'percentage' ? 1 : 0.01}
@@ -195,7 +195,7 @@ export const BillingModal: React.FC<BillingModalProps> = ({
                       variant="outline"
                       size="sm"
                       onClick={resetDiscount}
-                      className="h-9 md:h-10 px-3 text-sm md:text-base rounded-lg"
+                      className="h-10 px-3 text-sm rounded-lg border-amber-200"
                     >
                       Clear
                     </Button>
@@ -203,75 +203,75 @@ export const BillingModal: React.FC<BillingModalProps> = ({
                 </div>
                 
                 {discountAmount > 0 && (
-                  <div className="text-sm md:text-base text-yellow-700 font-medium">
+                  <div className="text-sm text-amber-700 font-medium">
                     Discount Applied: -{discountType === 'percentage' ? `${discountValue}%` : `₹${discountValue.toFixed(2)}`} = ₹{discountAmount.toFixed(2)}
                   </div>
                 )}
               </div>
 
-              {/* Enhanced Billing Summary */}
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200 space-y-2">
-                <div className="flex justify-between items-center text-sm md:text-base">
-                  <span className="text-gray-700 font-medium">Subtotal:</span>
+              {/* Professional Billing Summary */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200/50 space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-700 font-medium">Subtotal:</span>
                   <span className="font-semibold">₹{subtotal.toFixed(2)}</span>
                 </div>
                 {discountAmount > 0 && (
-                  <div className="flex justify-between items-center text-sm md:text-base">
+                  <div className="flex justify-between items-center text-sm">
                     <span className="text-red-600 font-medium">Discount:</span>
                     <span className="font-semibold text-red-600">-₹{discountAmount.toFixed(2)}</span>
                   </div>
                 )}
-                <Separator className="my-2" />
-                <div className="flex justify-between items-center text-xl md:text-2xl font-bold">
-                  <span className="text-gray-800">Total:</span>
+                <Separator className="my-2 bg-green-200" />
+                <div className="flex justify-between items-center text-xl font-bold">
+                  <span className="text-slate-800">Total:</span>
                   <span className="text-green-700">₹{finalTotal.toFixed(2)}</span>
                 </div>
               </div>
 
-              {/* Enhanced Payment Buttons */}
-              <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
+              {/* Professional Payment Buttons */}
+              <div className="grid grid-cols-2 gap-3">
                 <Button 
-                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 md:py-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-sm md:text-base h-12 md:h-14 rounded-xl" 
+                  className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-sm h-14 rounded-xl" 
                   onClick={handleCashPayment}
                   disabled={cart.length === 0}
                 >
-                  <Banknote className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                  <Banknote className="h-5 w-5 mr-2" />
                   Cash Payment
                 </Button>
                 
                 <Button 
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 md:py-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-sm md:text-base h-12 md:h-14 rounded-xl" 
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-sm h-14 rounded-xl" 
                   onClick={handleUPIPayment}
                   disabled={cart.length === 0}
                 >
-                  <Smartphone className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                  <Smartphone className="h-5 w-5 mr-2" />
                   UPI Payment
                 </Button>
                 
                 <Button 
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 md:py-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-sm md:text-base h-12 md:h-14 rounded-xl" 
+                  className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-sm h-14 rounded-xl" 
                   onClick={handleCreditPayment}
                   disabled={cart.length === 0}
                 >
-                  <CreditCard className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                  <CreditCard className="h-5 w-5 mr-2" />
                   Credit Sale
                 </Button>
                 
                 <Button 
-                  className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold py-3 md:py-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-sm md:text-base h-12 md:h-14 rounded-xl" 
+                  className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-semibold py-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-sm h-14 rounded-xl" 
                   onClick={handleSplitPayment}
                   disabled={cart.length === 0}
                 >
-                  <SplitSquareHorizontal className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                  <SplitSquareHorizontal className="h-5 w-5 mr-2" />
                   Split Payment
                 </Button>
                 
                 <Button 
-                  className="col-span-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold py-3 md:py-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-sm md:text-base h-12 md:h-14 rounded-xl" 
+                  className="col-span-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-semibold py-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-sm h-14 rounded-xl" 
                   onClick={handlePendingPayment}
                   disabled={cart.length === 0}
                 >
-                  <Clock className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                  <Clock className="h-5 w-5 mr-2" />
                   Save as Pending Payment
                 </Button>
               </div>
