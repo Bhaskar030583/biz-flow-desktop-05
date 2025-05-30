@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -146,7 +147,8 @@ const StockCreationForm: React.FC<StockCreationFormProps> = ({ onSuccess, onCanc
       const stockData = stockEntries.map(entry => ({
         stock_date: stockDate,
         product_id: entry.productId,
-        hr_shop_id: selectedShop,
+        shop_id: selectedShop, // Required field
+        hr_shop_id: selectedShop, // Optional field for HR integration
         opening_stock: entry.openingStock,
         closing_stock: entry.openingStock + entry.stockAdded,
         actual_stock: entry.actualStock,
@@ -157,7 +159,7 @@ const StockCreationForm: React.FC<StockCreationFormProps> = ({ onSuccess, onCanc
       const { error } = await supabase
         .from('stocks')
         .upsert(stockData, {
-          onConflict: 'stock_date,product_id,hr_shop_id',
+          onConflict: 'stock_date,product_id,shop_id',
           ignoreDuplicates: false
         });
 
