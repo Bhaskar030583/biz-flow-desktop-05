@@ -1,17 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { POSSystem } from "@/components/pos/POSSystem";
-import { StoreInfoModal } from "@/components/pos/StoreInfoModal";
-import QuickActualStockButton from "@/components/stock/QuickActualStockButton";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, X, Store } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/context/AuthContext";
+
+import React, { useState } from "react";
+import { POSPopupManager } from "@/components/pos/POSPopupManager";
+import { POSPopupInterface } from "@/components/pos/POSPopupInterface";
+import { POSMainView } from "@/components/pos/POSMainView";
+import { usePOSProducts } from "@/hooks/usePOSProducts";
 
 interface StoreInfo {
   storeName: string;
@@ -20,264 +12,18 @@ interface StoreInfo {
 }
 
 const POS = () => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(null);
   const [showStoreModal, setShowStoreModal] = useState(true);
   const [isPopupWindow, setIsPopupWindow] = useState(false);
   const [storeInfoCompleted, setStoreInfoCompleted] = useState(false);
   const [selectedShiftId, setSelectedShiftId] = useState<string>("");
   const [selectedStoreId, setSelectedStoreId] = useState<string>("");
-  const navigate = useNavigate();
 
-  // Query for products assigned to the selected HR store with calculated Expected Closing stock
-  const { data: products, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
-    queryKey: ['pos-products', selectedStoreId],
-    queryFn: async () => {
-      if (!selectedStoreId) {
-        console.log('🔍 [POS] No store selected for product query');
-        return [];
-      }
-      
-      console.log('🔍 [POS] Fetching products for HRMS store:', selectedStoreId);
-      const today = new Date().toISOString().split('T')[0];
-      
-      // Get products assigned to this HR store from product_shops using hr_shop_id
-      const { data: productShops, error: productShopsError } = await supabase
-        .from('product_shops')
-        .select(`
-          products (
-            id,
-            name,
-            price,
-            category
-          )
-        `)
-        .eq('hr_shop_id', selectedStoreId)
-        .eq('user_id', user?.id);
-      
-      if (productShopsError) {
-        console.error('❌ [POS] Error fetching product_shops:', productShopsError);
-        throw productShopsError;
-      }
+  const { products, productsLoading, handleStockAdded } = usePOSProducts(selectedStoreId);
 
-      console.log('📦 [POS] Product shops result:', productShops);
-
-      // Only show assigned products - no fallback to all products
-      const allProducts = productShops
-        ?.map(item => item.products)
-        .filter(product => product !== null) || [];
-
-      console.log('📦 [POS] Products to process:', allProducts);
-
-      if (allProducts.length === 0) {
-        console.log('⚠️ [POS] No products assigned to this store');
-        return [];
-      }
-
-      // Get product IDs
-      const productIds = allProducts.map(product => product.id);
-
-      // Try to get stock data using both hr_shop_id and shop_id to handle different storage methods
-      console.log('📊 [POS] Attempting to fetch stock data for store:', selectedStoreId);
-      
-      // First try with hr_shop_id
-      let { data: stockData, error: stockError } = await supabase
-        .from('stocks')
-        .select('product_id, opening_stock, stock_added')
-        .eq('hr_shop_id', selectedStoreId)
-        .eq('user_id', user?.id)
-        .eq('stock_date', today)
-        .in('product_id', productIds);
-      
-      // If no data found with hr_shop_id, try with shop_id
-      if (stockError || !stockData || stockData.length === 0) {
-        console.log('📊 [POS] No stock found with hr_shop_id, trying shop_id...');
-        const shopIdResult = await supabase
-          .from('stocks')
-          .select('product_id, opening_stock, stock_added')
-          .eq('shop_id', selectedStoreId)
-          .eq('user_id', user?.id)
-          .eq('stock_date', today)
-          .in('product_id', productIds);
-        
-        if (!shopIdResult.error) {
-          stockData = shopIdResult.data;
-          console.log('📊 [POS] Found stock data using shop_id:', stockData);
-        }
-      }
-      
-      if (stockError && !stockData) {
-        console.error('❌ [POS] Error fetching stock data:', stockError);
-        // Don't throw error, just log it and continue with zero stock
-      }
-
-      console.log('📊 [POS] Final stock data:', stockData);
-
-      // Get today's sales data to calculate sold quantity
-      const { data: salesData, error: salesError } = await supabase
-        .from('bill_items')
-        .select(`
-          product_id,
-          quantity,
-          bills!inner(bill_date, user_id)
-        `)
-        .eq('bills.user_id', user?.id)
-        .gte('bills.bill_date', today)
-        .lt('bills.bill_date', new Date(new Date(today).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-        .in('product_id', productIds);
-
-      if (salesError) {
-        console.error('❌ [POS] Error fetching sales data:', salesError);
-      }
-
-      console.log('💰 [POS] Sales data for today:', salesData);
-
-      // Create maps for quick lookup
-      const stockMap = new Map();
-      stockData?.forEach(stock => {
-        stockMap.set(stock.product_id, {
-          opening: stock.opening_stock || 0,
-          added: stock.stock_added || 0
-        });
-      });
-
-      // Calculate total sales for each product today
-      const salesMap = new Map();
-      salesData?.forEach(sale => {
-        const currentSales = salesMap.get(sale.product_id) || 0;
-        salesMap.set(sale.product_id, currentSales + sale.quantity);
-      });
-
-      // Combine product data with calculated Expected Closing stock
-      const productsWithStock = allProducts.map(product => {
-        const stockInfo = stockMap.get(product.id);
-        const soldToday = salesMap.get(product.id) || 0;
-        
-        let expectedClosing = 0;
-        
-        if (stockInfo) {
-          // Calculate Expected Closing: Opening Stock + Stock Added - Sold
-          expectedClosing = Math.max(0, (stockInfo.opening + stockInfo.added) - soldToday);
-          console.log(`📊 [POS] Product ${product.name}: Expected Closing = (${stockInfo.opening} + ${stockInfo.added}) - ${soldToday} = ${expectedClosing}`);
-        } else {
-          console.log(`⚠️ [POS] No stock info found for product ${product.name} (ID: ${product.id})`);
-        }
-
-        return {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          category: product.category,
-          quantity: expectedClosing // Use Expected Closing as available quantity
-        };
-      });
-
-      console.log('✅ [POS] Final products with Expected Closing stock:', productsWithStock);
-      return productsWithStock;
-    },
-    enabled: !!selectedStoreId && !!user?.id,
-    refetchInterval: 5000, // Check every 5 seconds for stock updates
-    staleTime: 2000, // Consider data stale after 2 seconds
-    refetchOnWindowFocus: true,
-    refetchOnMount: true
-  });
-
-  // Check if this is a popup window and open popup if not
-  useEffect(() => {
-    const checkIfPopup = window.opener !== null || window.name === 'POSWindow';
-    setIsPopupWindow(checkIfPopup);
-    
-    if (!checkIfPopup) {
-      const openPOSPopup = () => {
-        const popupUrl = window.location.href;
-        const popupFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
-        
-        const popup = window.open(popupUrl, 'POSWindow', popupFeatures);
-        
-        if (popup) {
-          popup.focus();
-          console.log('🪟 [POS] POS popup window opened successfully');
-        } else {
-          console.warn('⚠️ [POS] Popup was blocked by browser');
-          alert('Please allow popups for this site to use the POS system in a separate window');
-        }
-      };
-
-      // Open popup after a short delay to ensure page is loaded
-      const timer = setTimeout(openPOSPopup, 500);
-      
-      return () => clearTimeout(timer);
-    } else {
-      console.log('🪟 [POS] Already in popup window, showing clean POS interface');
-    }
-  }, []);
-
-  // Set up real-time listener for stock changes
-  useEffect(() => {
-    if (!selectedStoreId || !user?.id) return;
-
-    console.log('📡 [POS] Setting up real-time stock listener for store:', selectedStoreId);
-    
-    const channel = supabase
-      .channel('stock-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'stocks',
-          filter: `hr_shop_id=eq.${selectedStoreId}`
-        },
-        (payload) => {
-          console.log('📡 [POS] Real-time stock change detected:', payload);
-          // Invalidate and refetch products to get updated stock
-          queryClient.invalidateQueries({ queryKey: ['pos-products', selectedStoreId] });
-          refetchProducts();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'stocks',
-          filter: `shop_id=eq.${selectedStoreId}`
-        },
-        (payload) => {
-          console.log('📡 [POS] Real-time stock change detected (shop_id):', payload);
-          // Invalidate and refetch products to get updated stock
-          queryClient.invalidateQueries({ queryKey: ['pos-products', selectedStoreId] });
-          refetchProducts();
-        }
-      )
-      .subscribe();
-
-    // Also listen for bill changes (sales) to update stock in real-time
-    const billChannel = supabase
-      .channel('bill-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'bills'
-        },
-        (payload) => {
-          console.log('📡 [POS] Real-time sale detected:', payload);
-          // Refetch products to reflect new sales
-          queryClient.invalidateQueries({ queryKey: ['pos-products', selectedStoreId] });
-          refetchProducts();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('📡 [POS] Cleaning up real-time listeners');
-      supabase.removeChannel(channel);
-      supabase.removeChannel(billChannel);
-    };
-  }, [selectedStoreId, user?.id, queryClient, refetchProducts]);
+  const handlePopupCheck = (isPopup: boolean) => {
+    setIsPopupWindow(isPopup);
+  };
 
   const handleStoreInfoComplete = (info: StoreInfo, shiftId: string, storeId: string) => {
     console.log('✅ [POS] Store info completed:', { info, shiftId, storeId });
@@ -293,18 +39,6 @@ const POS = () => {
     setStoreInfoCompleted(true);
   };
 
-  const handleStockAdded = () => {
-    console.log('🔄 [POS] Stock updated, refreshing product data');
-    // Invalidate and refresh all relevant queries
-    queryClient.invalidateQueries({ queryKey: ['pos-products'] });
-    queryClient.invalidateQueries({ queryKey: ['product-stock-management'] });
-    queryClient.invalidateQueries({ queryKey: ['stocks'] });
-    queryClient.invalidateQueries({ queryKey: ['assigned-products'] });
-    
-    // Also directly refetch this specific query
-    refetchProducts();
-  };
-
   const handleClosePopup = () => {
     if (window.opener) {
       window.opener.focus();
@@ -315,81 +49,28 @@ const POS = () => {
   // Only show store modal if store info hasn't been completed yet
   const shouldShowStoreModal = showStoreModal && !storeInfoCompleted;
 
-  // If this is a popup window, render without DashboardLayout
-  if (isPopupWindow) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        {/* Exit button for popup */}
-        <div className="absolute top-4 right-4 z-50">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleClosePopup}
-            className="bg-white hover:bg-gray-100"
-            title="Close POS Window"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <StoreInfoModal
-          isOpen={shouldShowStoreModal}
-          onComplete={handleStoreInfoComplete}
-          onClose={handleStoreModalClose}
-        />
-        
-        {storeInfoCompleted && selectedStoreId && (
-          <div className="p-6">
-            {productsLoading ? (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="lg:col-span-2 space-y-4">
-                  <Skeleton className="h-64 w-full" />
-                </div>
-                <div className="space-y-4">
-                  <Skeleton className="h-96 w-full" />
-                </div>
-              </div>
-            ) : (
-              <POSSystem 
-                products={products || []} 
-                storeInfo={storeInfo} 
-                selectedShopId={selectedStoreId}
-                selectedShiftId={selectedShiftId}
-                onStockUpdated={handleStockAdded}
-              />
-            )}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // For non-popup (main app), show a simple message and handle popup opening
   return (
-    <div className="container mx-auto px-4 py-6 h-full">
-      <div className="mb-4 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Button>
-          <h1 className="text-2xl font-bold">Point of Sale</h1>
-        </div>
-        <QuickActualStockButton onStockAdded={handleStockAdded} />
-      </div>
+    <>
+      <POSPopupManager onPopupCheck={handlePopupCheck} />
       
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-4">POS System</h2>
-          <p className="text-gray-600 mb-4">The POS system will open in a separate window for better usability.</p>
-          <p className="text-sm text-gray-500">If the popup was blocked, please allow popups for this site and refresh the page.</p>
-        </div>
-      </div>
-    </div>
+      {isPopupWindow ? (
+        <POSPopupInterface
+          shouldShowStoreModal={shouldShowStoreModal}
+          storeInfoCompleted={storeInfoCompleted}
+          selectedStoreId={selectedStoreId}
+          productsLoading={productsLoading}
+          products={products || []}
+          storeInfo={storeInfo}
+          selectedShiftId={selectedShiftId}
+          onStoreInfoComplete={handleStoreInfoComplete}
+          onStoreModalClose={handleStoreModalClose}
+          onClosePopup={handleClosePopup}
+          onStockUpdated={handleStockAdded}
+        />
+      ) : (
+        <POSMainView onStockAdded={handleStockAdded} />
+      )}
+    </>
   );
 };
 
