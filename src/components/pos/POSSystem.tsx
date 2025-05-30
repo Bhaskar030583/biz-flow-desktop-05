@@ -20,6 +20,7 @@ import { QuickStockUpdateModal } from "./QuickStockUpdateModal";
 import { useNavigate } from "react-router-dom";
 import { adjustStockForBill } from "@/services/stockService";
 import { POSMobileView } from "./POSMobileView";
+import { PendingPaymentModal } from "./PendingPaymentModal";
 
 interface Product {
   id: string;
@@ -69,6 +70,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
   const [showCategories, setShowCategories] = useState(false);
   const [showBillingModal, setShowBillingModal] = useState(false);
   const [showQuickStockModal, setShowQuickStockModal] = useState(false);
+  const [showPendingModal, setShowPendingModal] = useState(false);
 
   console.log('POSSystem props:', { 
     productsCount: products?.length, 
@@ -158,7 +160,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
     }
   };
 
-  const createBill = async (paymentMethod: string, paymentStatus: string = 'completed', customerId?: string) => {
+  const createBill = async (paymentMethod: string, paymentStatus: string = 'completed', customerId?: string, customerName?: string) => {
     if (cart.length === 0) {
       toast.error("Cart is empty");
       return null;
@@ -182,38 +184,16 @@ export const POSSystem: React.FC<POSSystemProps> = ({
         }
       }
 
-      // Create the bill
-      const { data: billData, error: billError } = await supabase
-        .from('bills')
-        .insert({
-          bill_number: billNumber,
-          total_amount: totalAmount,
-          payment_method: paymentMethod,
-          payment_status: paymentStatus,
-          customer_id: customerId || null,
-          user_id: user?.id,
-          bill_date: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (billError) throw billError;
-
-      // Create bill items
-      const billItems = cart.map(item => ({
-        bill_id: billData.id,
-        product_id: item.id,
-        product_name: item.name,
-        quantity: item.quantity,
-        unit_price: item.price,
-        total_price: item.total
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('bill_items')
-        .insert(billItems);
-
-      if (itemsError) throw itemsError;
+      // Create the bill using the service
+      const billData = await generateBill({
+        customerId,
+        customerName,
+        totalAmount,
+        paymentMethod: paymentMethod as any,
+        cartItems: cart,
+        storeName: storeInfo?.storeName,
+        salespersonName: storeInfo?.salespersonName
+      });
 
       // Update stock levels - decrease for sale
       try {
@@ -287,21 +267,28 @@ export const POSSystem: React.FC<POSSystemProps> = ({
     setShowSplitModal(true);
   };
 
-  const handlePendingPayment = async () => {
+  const handlePendingPayment = async (customerName?: string) => {
     if (cart.length === 0) {
       toast.error("Cart is empty");
       return;
     }
     
-    try {
-      const bill = await createBill('pending', 'pending');
-      if (bill) {
-        toast.success("Bill saved as pending payment");
-        clearCart();
+    if (customerName) {
+      // Direct pending payment with customer name
+      try {
+        const bill = await createBill('pending', 'pending', undefined, customerName);
+        if (bill) {
+          toast.success(`Pending payment saved for ${customerName}`);
+          clearCart();
+          setShowBillingModal(false);
+        }
+      } catch (error) {
+        console.error('Error creating pending payment:', error);
+        toast.error("Failed to create pending payment");
       }
-    } catch (error) {
-      console.error('Error creating pending payment:', error);
-      toast.error("Failed to create pending payment");
+    } else {
+      // Show modal for customer name input
+      setShowPendingModal(true);
     }
   };
 
@@ -385,6 +372,14 @@ export const POSSystem: React.FC<POSSystemProps> = ({
           handleCreditPayment={handleCreditPayment}
           handleSplitPayment={handleSplitPayment}
           handlePendingPayment={handlePendingPayment}
+        />
+
+        <PendingPaymentModal
+          isOpen={showPendingModal}
+          onClose={() => setShowPendingModal(false)}
+          totalAmount={getTotalAmount()}
+          cartItems={cart}
+          onPaymentComplete={handlePaymentComplete}
         />
 
         <QuickStockUpdateModal

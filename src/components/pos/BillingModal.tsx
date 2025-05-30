@@ -29,7 +29,7 @@ interface BillingModalProps {
   handleUPIPayment: () => void;
   handleCreditPayment: () => void;
   handleSplitPayment: () => void;
-  handlePendingPayment: () => void;
+  handlePendingPayment: (customerName?: string) => void;
 }
 
 export const BillingModal: React.FC<BillingModalProps> = ({
@@ -48,6 +48,8 @@ export const BillingModal: React.FC<BillingModalProps> = ({
 }) => {
   const [discountType, setDiscountType] = useState<'percentage' | 'value'>('percentage');
   const [discountValue, setDiscountValue] = useState<number>(0);
+  const [pendingCustomerName, setPendingCustomerName] = useState("");
+  const [showPendingNameInput, setShowPendingNameInput] = useState(false);
 
   const subtotal = getTotalAmount();
   
@@ -63,6 +65,21 @@ export const BillingModal: React.FC<BillingModalProps> = ({
 
   const resetDiscount = () => {
     setDiscountValue(0);
+  };
+
+  const handlePendingClick = () => {
+    if (showPendingNameInput && pendingCustomerName.trim()) {
+      handlePendingPayment(pendingCustomerName.trim());
+      setPendingCustomerName("");
+      setShowPendingNameInput(false);
+    } else {
+      setShowPendingNameInput(true);
+    }
+  };
+
+  const cancelPendingInput = () => {
+    setShowPendingNameInput(false);
+    setPendingCustomerName("");
   };
 
   return (
@@ -228,6 +245,31 @@ export const BillingModal: React.FC<BillingModalProps> = ({
                 </div>
               </div>
 
+              {/* Pending Customer Name Input */}
+              {showPendingNameInput && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200/50">
+                  <Label className="text-sm font-semibold text-blue-800 mb-3 block">Enter Customer Name for Pending Payment</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Customer name..."
+                      value={pendingCustomerName}
+                      onChange={(e) => setPendingCustomerName(e.target.value)}
+                      className="h-10 text-sm rounded-lg border-blue-200"
+                      autoFocus
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={cancelPendingInput}
+                      className="h-10 px-3 text-sm rounded-lg border-blue-200"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Professional Payment Buttons */}
               <div className="grid grid-cols-2 gap-3">
                 <Button 
@@ -268,11 +310,11 @@ export const BillingModal: React.FC<BillingModalProps> = ({
                 
                 <Button 
                   className="col-span-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-semibold py-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-sm h-14 rounded-xl" 
-                  onClick={handlePendingPayment}
-                  disabled={cart.length === 0}
+                  onClick={handlePendingClick}
+                  disabled={cart.length === 0 || (showPendingNameInput && !pendingCustomerName.trim())}
                 >
                   <Clock className="h-5 w-5 mr-2" />
-                  Save as Pending Payment
+                  {showPendingNameInput ? "Save Pending Payment" : "Pending Payment"}
                 </Button>
               </div>
             </>

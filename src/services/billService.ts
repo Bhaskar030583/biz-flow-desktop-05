@@ -11,8 +11,9 @@ interface CartItem {
 
 interface BillData {
   customerId?: string;
+  customerName?: string;
   totalAmount: number;
-  paymentMethod: 'cash' | 'card' | 'upi' | 'credit';
+  paymentMethod: 'cash' | 'card' | 'upi' | 'credit' | 'pending';
   cartItems: CartItem[];
   storeName?: string;
   salespersonName?: string;
@@ -47,16 +48,49 @@ export const generateBill = async (billData: BillData) => {
     const salespersonPrefix = (billData.salespersonName || 'USER').substring(0, 4).toUpperCase();
     const billNumber = `${storePrefix}-${salespersonPrefix}-${dateStr}-${billCount.toString().padStart(4, '0')}`;
 
+    // Handle customer for pending payments with manual name entry
+    let customerId = billData.customerId;
+    
+    // If it's a pending payment with a customer name but no ID, create a temporary customer record
+    if (billData.paymentMethod === 'pending' && billData.customerName && !customerId) {
+      // Check if customer with this name already exists
+      const { data: existingCustomer } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('name', billData.customerName)
+        .single();
+
+      if (existingCustomer) {
+        customerId = existingCustomer.id;
+      } else {
+        // Create new customer record
+        const { data: newCustomer, error: customerError } = await supabase
+          .from('customers')
+          .insert({
+            user_id: user.id,
+            name: billData.customerName,
+            phone: '', // Empty phone for pending payment customers
+            email: null
+          })
+          .select()
+          .single();
+
+        if (customerError) throw customerError;
+        customerId = newCustomer.id;
+      }
+    }
+
     // Create the bill
     const { data: bill, error: billError } = await supabase
       .from('bills')
       .insert({
         user_id: user.id,
-        customer_id: billData.customerId || null,
+        customer_id: customerId || null,
         bill_number: billNumber,
         total_amount: billData.totalAmount,
         payment_method: billData.paymentMethod,
-        payment_status: billData.paymentMethod === 'credit' ? 'pending' : 'completed'
+        payment_status: billData.paymentMethod === 'credit' || billData.paymentMethod === 'pending' ? 'pending' : 'completed'
       })
       .select()
       .single();
