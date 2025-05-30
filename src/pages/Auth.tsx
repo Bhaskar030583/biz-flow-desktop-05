@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -102,9 +103,9 @@ const Auth = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-indigo-950">
+    <div className="flex items-center justify-center min-h-screen bg-gray-900">
       <div className="w-full max-w-md p-4">
-        <Card className="w-full shadow-xl border-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl">
+        <Card className="w-full shadow-2xl border border-gray-700 bg-gray-800 backdrop-blur-xl">
           <CardHeader className="space-y-4 text-center">
             <div className="flex justify-center mb-4">
               <img 
@@ -113,34 +114,34 @@ const Auth = () => {
                 className="h-20 w-auto rounded-lg shadow-lg"
               />
             </div>
-            <CardDescription className="text-center text-gray-600 dark:text-gray-400">
+            <CardDescription className="text-center text-gray-300">
               {activeTab === "login" ? "Welcome back" : "Create your business account"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {authError && (
-              <Alert variant="destructive" className="mb-4">
+              <Alert variant="destructive" className="mb-4 bg-red-900/20 border-red-800">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>
+                <AlertTitle className="text-red-400">Error</AlertTitle>
+                <AlertDescription className="text-red-300">
                   {authError}
                 </AlertDescription>
               </Alert>
             )}
             
             {verificationSent && (
-              <Alert className="mb-4">
-                <AlertTitle>Verification Email Sent</AlertTitle>
-                <AlertDescription>
+              <Alert className="mb-4 bg-blue-900/20 border-blue-800">
+                <AlertTitle className="text-blue-400">Verification Email Sent</AlertTitle>
+                <AlertDescription className="text-blue-300">
                   Please check your email to verify your account before logging in.
                 </AlertDescription>
               </Alert>
             )}
             
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "login" | "signup")}>
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-700">
+                <TabsTrigger value="login" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white text-gray-300">Login</TabsTrigger>
+                <TabsTrigger value="signup" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white text-gray-300">Sign Up</TabsTrigger>
               </TabsList>
               <TabsContent value="login">
                 <Form {...loginForm}>
@@ -150,9 +151,14 @@ const Auth = () => {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel className="text-gray-300">Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="email@example.com" type="email" {...field} />
+                            <Input 
+                              placeholder="email@example.com" 
+                              type="email" 
+                              {...field} 
+                              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -163,15 +169,20 @@ const Auth = () => {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel className="text-gray-300">Password</FormLabel>
                           <FormControl>
-                            <Input placeholder="••••••••" type="password" {...field} />
+                            <Input 
+                              placeholder="••••••••" 
+                              type="password" 
+                              {...field} 
+                              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <Button type="submit" className="w-full" disabled={isLoading}>
+                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading}>
                       {isLoading ? "Logging in..." : "Login"}
                     </Button>
                   </form>
@@ -185,9 +196,13 @@ const Auth = () => {
                       name="fullName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Full Name</FormLabel>
+                          <FormLabel className="text-gray-300">Full Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="John Doe" {...field} />
+                            <Input 
+                              placeholder="John Doe" 
+                              {...field} 
+                              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -198,9 +213,14 @@ const Auth = () => {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel className="text-gray-300">Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="email@example.com" type="email" {...field} />
+                            <Input 
+                              placeholder="email@example.com" 
+                              type="email" 
+                              {...field} 
+                              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -211,9 +231,14 @@ const Auth = () => {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel className="text-gray-300">Password</FormLabel>
                           <FormControl>
-                            <Input placeholder="••••••••" type="password" {...field} />
+                            <Input 
+                              placeholder="••••••••" 
+                              type="password" 
+                              {...field} 
+                              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -224,15 +249,20 @@ const Auth = () => {
                       name="confirmPassword"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Confirm Password</FormLabel>
+                          <FormLabel className="text-gray-300">Confirm Password</FormLabel>
                           <FormControl>
-                            <Input placeholder="••••••••" type="password" {...field} />
+                            <Input 
+                              placeholder="••••••••" 
+                              type="password" 
+                              {...field} 
+                              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <Button type="submit" className="w-full" disabled={isLoading}>
+                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading}>
                       {isLoading ? "Creating account..." : "Create account"}
                     </Button>
                   </form>
@@ -241,7 +271,7 @@ const Auth = () => {
             </Tabs>
           </CardContent>
           <CardFooter>
-            <div className="w-full text-center text-sm text-muted-foreground">
+            <div className="w-full text-center text-sm text-gray-400">
               By continuing, you agree to our Terms of Service and Privacy Policy
             </div>
           </CardFooter>
