@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -189,15 +190,12 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md w-full bg-gray-800 border border-gray-700 shadow-2xl">
         <DialogHeader className="space-y-4 pb-6 text-center">
-          <div className="mx-auto flex items-center justify-center gap-4">
+          <div className="mx-auto flex items-center justify-center">
             <img 
               src="/lovable-uploads/7e552f66-f5e2-416f-af98-1a5f74c1bfed.png" 
               alt="ABC Cafe Logo" 
-              className="h-16 w-16 object-contain"
+              className="h-12 w-12 object-contain"
             />
-            <DialogTitle className="text-2xl font-bold text-white">
-              ABC CAFE
-            </DialogTitle>
           </div>
         </DialogHeader>
         
