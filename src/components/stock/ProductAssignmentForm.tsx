@@ -62,8 +62,8 @@ const ProductAssignmentForm = ({
   });
 
   const handleAssignProduct = async () => {
-    if (!selectedProductToAssign || !initialStockQuantity || Number(initialStockQuantity) <= 0) {
-      toast.error("Please select a product and enter a valid stock quantity");
+    if (!selectedProductToAssign || initialStockQuantity === "" || Number(initialStockQuantity) < 0) {
+      toast.error("Please select a product and enter a valid stock quantity (0 or greater)");
       return;
     }
 
@@ -153,7 +153,7 @@ const ProductAssignmentForm = ({
             <div className="flex gap-2">
               <Button 
                 onClick={handleAssignProduct} 
-                disabled={!selectedProductToAssign || !initialStockQuantity || initialStockQuantity === "0" || isAssigning}
+                disabled={!selectedProductToAssign || initialStockQuantity === "" || isAssigning}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isAssigning ? "Assigning..." : "Assign"}
