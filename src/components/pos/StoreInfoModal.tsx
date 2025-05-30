@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,17 +37,20 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
   onComplete,
   onClose
 }) => {
+  console.log('🔄 [StoreInfoModal] Component render, isOpen:', isOpen);
+  
   const { user } = useAuth();
   const [selectedStoreId, setSelectedStoreId] = useState("");
   const [selectedShiftId, setSelectedShiftId] = useState("");
   const [salespersonName, setSalespersonName] = useState("");
 
-  // Query for user profile to get the full name - only when modal is open
-  const { data: userProfile } = useQuery({
+  // Memoize query configurations to prevent recreating them on every render
+  const userProfileQueryConfig = useMemo(() => ({
     queryKey: ['user-profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       
+      console.log('📋 [StoreInfoModal] Fetching user profile for:', user.id);
       const { data, error } = await supabase
         .from('profiles')
         .select('full_name')
@@ -56,22 +58,22 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
         .single();
       
       if (error) {
-        console.error('Error fetching user profile:', error);
+        console.error('❌ [StoreInfoModal] Error fetching user profile:', error);
         return null;
       }
       
+      console.log('✅ [StoreInfoModal] User profile fetched:', data);
       return data;
     },
     enabled: !!user?.id && isOpen,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: Infinity, // Never consider stale
+    gcTime: Infinity, // Never garbage collect
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false
-  });
+  }), [user?.id, isOpen]);
 
-  // Query for hr_stores - only when modal is open
-  const { data: hrStores, isLoading: storesLoading, error: storesError } = useQuery({
+  const storesQueryConfig = useMemo(() => ({
     queryKey: ['hrms-stores-modal'],
     queryFn: async () => {
       console.log('🏪 [StoreInfoModal] FETCHING HR STORES');
@@ -96,10 +98,9 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false
-  });
+  }), [user?.id, isOpen]);
 
-  // Query for shifts from hr_shifts table based on selected store - only when store is selected
-  const { data: hrShifts, isLoading: shiftsLoading } = useQuery({
+  const shiftsQueryConfig = useMemo(() => ({
     queryKey: ['hrms-shifts', selectedStoreId],
     queryFn: async () => {
       if (!selectedStoreId) {
@@ -129,46 +130,46 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false
-  });
+  }), [selectedStoreId, isOpen]);
 
-  // Set salesperson name when user profile is loaded - memoized to prevent re-renders
-  const initializeSalespersonName = useCallback(() => {
-    if (!salespersonName) {
-      if (userProfile?.full_name) {
-        setSalespersonName(userProfile.full_name);
-      } else if (user?.email) {
-        setSalespersonName(user.email.split('@')[0]);
-      }
+  // Execute queries with memoized configs
+  const { data: userProfile } = useQuery(userProfileQueryConfig);
+  const { data: hrStores, isLoading: storesLoading, error: storesError } = useQuery(storesQueryConfig);
+  const { data: hrShifts, isLoading: shiftsLoading } = useQuery(shiftsQueryConfig);
+
+  // Initialize salesperson name only once when user profile loads
+  useEffect(() => {
+    console.log('🔄 [StoreInfoModal] useEffect for salesperson name initialization');
+    if (!salespersonName && userProfile?.full_name) {
+      console.log('📝 [StoreInfoModal] Setting salesperson name from profile:', userProfile.full_name);
+      setSalespersonName(userProfile.full_name);
+    } else if (!salespersonName && user?.email) {
+      console.log('📝 [StoreInfoModal] Setting salesperson name from email:', user.email);
+      setSalespersonName(user.email.split('@')[0]);
     }
   }, [userProfile?.full_name, user?.email, salespersonName]);
 
+  // Reset form when modal closes (but keep salesperson name)
   useEffect(() => {
-    if (isOpen) {
-      initializeSalespersonName();
-    }
-  }, [isOpen, initializeSalespersonName]);
-
-  // Reset form when modal closes - memoized to prevent unnecessary re-renders
-  const resetForm = useCallback(() => {
+    console.log('🔄 [StoreInfoModal] useEffect for form reset, isOpen:', isOpen);
     if (!isOpen) {
+      console.log('🧹 [StoreInfoModal] Resetting form state');
       setSelectedStoreId("");
       setSelectedShiftId("");
       // Don't reset salesperson name as it should persist
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    resetForm();
-  }, [resetForm]);
-
-  // Handle store selection with callback to prevent re-renders
+  // Handle store selection
   const handleStoreChange = useCallback((value: string) => {
+    console.log('🏪 [StoreInfoModal] Store selection changed to:', value);
     setSelectedStoreId(value);
     setSelectedShiftId(""); // Reset shift when store changes
   }, []);
 
-  // Handle shift selection with callback
+  // Handle shift selection
   const handleShiftChange = useCallback((value: string) => {
+    console.log('🕐 [StoreInfoModal] Shift selection changed to:', value);
     setSelectedShiftId(value);
   }, []);
 
@@ -217,6 +218,17 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
       selectedStoreId
     );
   }, [selectedStoreId, selectedShiftId, salespersonName, hrStores, hrShifts, onComplete]);
+
+  console.log('🔄 [StoreInfoModal] Current state:', {
+    isOpen,
+    selectedStoreId,
+    selectedShiftId,
+    salespersonName,
+    storesLoading,
+    shiftsLoading,
+    hrStoresCount: hrStores?.length || 0,
+    hrShiftsCount: hrShifts?.length || 0
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
