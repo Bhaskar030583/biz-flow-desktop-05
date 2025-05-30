@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { POSSystem } from "@/components/pos/POSSystem";
 import { StoreInfoModal } from "@/components/pos/StoreInfoModal";
@@ -31,7 +30,7 @@ const POS = () => {
   const [selectedStoreId, setSelectedStoreId] = useState<string>("");
   const navigate = useNavigate();
 
-  // Query for products assigned to the selected HR store with current stock quantities
+  // Query for products assigned to the selected HR store with calculated available stock
   const { data: products, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
     queryKey: ['pos-products', selectedStoreId],
     queryFn: async () => {
@@ -82,7 +81,7 @@ const POS = () => {
       // Get stock data for these products at the selected HR store using hr_shop_id
       const { data: stockData, error: stockError } = await supabase
         .from('stocks')
-        .select('product_id, actual_stock')
+        .select('product_id, opening_stock, stock_added, actual_stock, closing_stock')
         .eq('hr_shop_id', selectedStoreId)
         .eq('user_id', user?.id)
         .eq('stock_date', today)
@@ -95,22 +94,73 @@ const POS = () => {
 
       console.log('📊 [POS] Stock data:', stockData);
 
-      // Create a map for quick stock lookup
+      // Get today's sales data to calculate real-time available stock
+      const { data: salesData, error: salesError } = await supabase
+        .from('bill_items')
+        .select(`
+          product_id,
+          quantity,
+          bills!inner(bill_date, user_id)
+        `)
+        .eq('bills.user_id', user?.id)
+        .gte('bills.bill_date', today)
+        .lt('bills.bill_date', new Date(new Date(today).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+        .in('product_id', productIds);
+
+      if (salesError) {
+        console.error('❌ [POS] Error fetching sales data:', salesError);
+      }
+
+      console.log('💰 [POS] Sales data:', salesData);
+
+      // Create maps for quick lookup
       const stockMap = new Map();
       stockData?.forEach(stock => {
-        stockMap.set(stock.product_id, stock.actual_stock);
+        stockMap.set(stock.product_id, {
+          opening: stock.opening_stock || 0,
+          added: stock.stock_added || 0,
+          actual: stock.actual_stock,
+          closing: stock.closing_stock || 0
+        });
       });
 
-      // Combine product data with stock information
-      const productsWithStock = allProducts.map(product => ({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        category: product.category,
-        quantity: stockMap.get(product.id) || 0
-      }));
+      // Calculate total sales for each product today
+      const salesMap = new Map();
+      salesData?.forEach(sale => {
+        const currentSales = salesMap.get(sale.product_id) || 0;
+        salesMap.set(sale.product_id, currentSales + sale.quantity);
+      });
 
-      console.log('✅ [POS] Final products with stock:', productsWithStock);
+      // Combine product data with calculated available stock
+      const productsWithStock = allProducts.map(product => {
+        const stockInfo = stockMap.get(product.id);
+        const soldToday = salesMap.get(product.id) || 0;
+        
+        let availableQuantity = 0;
+        
+        if (stockInfo) {
+          // If actual_stock is available (counted), use it
+          if (stockInfo.actual !== null && stockInfo.actual !== undefined) {
+            availableQuantity = Math.max(0, stockInfo.actual - soldToday);
+          } else {
+            // Otherwise calculate expected closing: opening + added - sold
+            const expectedClosing = stockInfo.opening + stockInfo.added - soldToday;
+            availableQuantity = Math.max(0, expectedClosing);
+          }
+        }
+
+        console.log(`📊 [POS] Product ${product.name}: Opening=${stockInfo?.opening || 0}, Added=${stockInfo?.added || 0}, Sold=${soldToday}, Available=${availableQuantity}`);
+
+        return {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          category: product.category,
+          quantity: availableQuantity
+        };
+      });
+
+      console.log('✅ [POS] Final products with calculated stock:', productsWithStock);
       return productsWithStock;
     },
     enabled: !!selectedStoreId && !!user?.id,
@@ -175,9 +225,29 @@ const POS = () => {
       )
       .subscribe();
 
+    // Also listen for bill changes (sales) to update stock in real-time
+    const billChannel = supabase
+      .channel('bill-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'bills'
+        },
+        (payload) => {
+          console.log('📡 [POS] Real-time sale detected:', payload);
+          // Refetch products to reflect new sales
+          queryClient.invalidateQueries({ queryKey: ['pos-products', selectedStoreId] });
+          refetchProducts();
+        }
+      )
+      .subscribe();
+
     return () => {
-      console.log('📡 [POS] Cleaning up real-time stock listener');
+      console.log('📡 [POS] Cleaning up real-time listeners');
       supabase.removeChannel(channel);
+      supabase.removeChannel(billChannel);
     };
   }, [selectedStoreId, user?.id, queryClient, refetchProducts]);
 
