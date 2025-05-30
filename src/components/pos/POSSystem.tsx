@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { BillingModal } from "./BillingModal";
 import { QuickStockUpdateModal } from "./QuickStockUpdateModal";
 import { useNavigate } from "react-router-dom";
 import { adjustStockForBill } from "@/services/stockService";
+import { generateBill } from "@/services/billService";
 import { POSMobileView } from "./POSMobileView";
 import { PendingPaymentModal } from "./PendingPaymentModal";
 
