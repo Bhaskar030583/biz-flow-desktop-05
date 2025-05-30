@@ -1,26 +1,31 @@
 
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
-export function StockRequestForm() {
+interface StockRequestFormProps {
+  onRequestCreated: () => void;
+}
+
+export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const [requestingStoreId, setRequestingStoreId] = useState("");
-  const [fulfillingStoreId, setFulfillingStoreId] = useState("");
-  const [productId, setProductId] = useState("");
-  const [requestedQuantity, setRequestedQuantity] = useState("");
-  const [notes, setNotes] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    requesting_hr_store_id: "",
+    fulfilling_hr_store_id: "",
+    product_id: "",
+    requested_quantity: "",
+    notes: ""
+  });
 
-  // Fetch stores
+  // Fetch HR stores
   const { data: stores } = useQuery({
     queryKey: ['hr-stores'],
     queryFn: async () => {
@@ -40,7 +45,7 @@ export function StockRequestForm() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name')
+        .select('id, name, category')
         .eq('user_id', user?.id)
         .order('name');
       
@@ -49,147 +54,157 @@ export function StockRequestForm() {
     },
   });
 
-  const createRequestMutation = useMutation({
-    mutationFn: async (requestData: any) => {
-      const { data, error } = await supabase
-        .from('stock_requests')
-        .insert({
-          user_id: user?.id,
-          requesting_store_id: requestData.requesting_store_id,
-          fulfilling_store_id: requestData.fulfilling_store_id,
-          requesting_hr_store_id: requestData.requesting_hr_store_id,
-          fulfilling_hr_store_id: requestData.fulfilling_hr_store_id,
-          product_id: requestData.product_id,
-          requested_quantity: requestData.requested_quantity,
-          notes: requestData.notes
-        });
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      toast.success("Stock request created successfully");
-      queryClient.invalidateQueries({ queryKey: ['stock-requests'] });
-      // Reset form
-      setRequestingStoreId("");
-      setFulfillingStoreId("");
-      setProductId("");
-      setRequestedQuantity("");
-      setNotes("");
-    },
-    onError: (error) => {
-      console.error('Error creating stock request:', error);
-      toast.error("Failed to create stock request");
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!requestingStoreId || !fulfillingStoreId || !productId || !requestedQuantity) {
-      toast.error("Please fill in all required fields");
+    if (!user) {
+      toast.error('You must be logged in to create requests');
       return;
     }
 
-    createRequestMutation.mutate({
-      requesting_store_id: requestingStoreId,
-      fulfilling_store_id: fulfillingStoreId,
-      requesting_hr_store_id: requestingStoreId,
-      fulfilling_hr_store_id: fulfillingStoreId,
-      product_id: productId,
-      requested_quantity: parseInt(requestedQuantity),
-      notes: notes
-    });
+    if (!formData.requesting_hr_store_id || !formData.fulfilling_hr_store_id || 
+        !formData.product_id || !formData.requested_quantity) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (formData.requesting_hr_store_id === formData.fulfilling_hr_store_id) {
+      toast.error('Requesting and fulfilling stores must be different');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await supabase
+        .from('stock_requests')
+        .insert({
+          user_id: user.id,
+          requesting_store_id: formData.requesting_hr_store_id,
+          fulfilling_store_id: formData.fulfilling_hr_store_id,
+          requesting_hr_store_id: formData.requesting_hr_store_id,
+          fulfilling_hr_store_id: formData.fulfilling_hr_store_id,
+          product_id: formData.product_id,
+          requested_quantity: parseInt(formData.requested_quantity),
+          notes: formData.notes || null,
+          request_date: new Date().toISOString(),
+          status: 'pending'
+        });
+
+      if (error) throw error;
+
+      toast.success('Stock request created successfully');
+      
+      // Reset form
+      setFormData({
+        requesting_hr_store_id: "",
+        fulfilling_hr_store_id: "",
+        product_id: "",
+        requested_quantity: "",
+        notes: ""
+      });
+
+      onRequestCreated();
+    } catch (error) {
+      console.error('Error creating stock request:', error);
+      toast.error('Failed to create stock request');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Create Stock Request</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="requesting-store">Requesting Store</Label>
-              <Select value={requestingStoreId} onValueChange={setRequestingStoreId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select requesting store" />
-                </SelectTrigger>
-                <SelectContent>
-                  {stores?.map((store) => (
-                    <SelectItem key={store.id} value={store.id}>
-                      {store.store_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="fulfilling-store">Fulfilling Store</Label>
-              <Select value={fulfillingStoreId} onValueChange={setFulfillingStoreId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select fulfilling store" />
-                </SelectTrigger>
-                <SelectContent>
-                  {stores?.map((store) => (
-                    <SelectItem key={store.id} value={store.id}>
-                      {store.store_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="product">Product</Label>
-            <Select value={productId} onValueChange={setProductId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select product" />
-              </SelectTrigger>
-              <SelectContent>
-                {products?.map((product) => (
-                  <SelectItem key={product.id} value={product.id}>
-                    {product.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="quantity">Requested Quantity</Label>
-            <Input
-              id="quantity"
-              type="number"
-              value={requestedQuantity}
-              onChange={(e) => setRequestedQuantity(e.target.value)}
-              placeholder="Enter quantity"
-              min="1"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="notes">Notes (Optional)</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Additional notes or comments"
-            />
-          </div>
-
-          <Button 
-            type="submit" 
-            className="w-full"
-            disabled={createRequestMutation.isPending}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="requesting_store">Requesting Store *</Label>
+          <Select
+            value={formData.requesting_hr_store_id}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, requesting_hr_store_id: value }))}
           >
-            {createRequestMutation.isPending ? "Creating..." : "Create Request"}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+            <SelectTrigger>
+              <SelectValue placeholder="Select requesting store" />
+            </SelectTrigger>
+            <SelectContent>
+              {stores?.map(store => (
+                <SelectItem key={store.id} value={store.id}>
+                  {store.store_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="fulfilling_store">Fulfilling Store *</Label>
+          <Select
+            value={formData.fulfilling_hr_store_id}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, fulfilling_hr_store_id: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select fulfilling store" />
+            </SelectTrigger>
+            <SelectContent>
+              {stores?.map(store => (
+                <SelectItem key={store.id} value={store.id}>
+                  {store.store_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="product">Product *</Label>
+        <Select
+          value={formData.product_id}
+          onValueChange={(value) => setFormData(prev => ({ ...prev, product_id: value }))}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select product" />
+          </SelectTrigger>
+          <SelectContent>
+            {products?.map(product => (
+              <SelectItem key={product.id} value={product.id}>
+                {product.name} ({product.category})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="requested_quantity">Requested Quantity *</Label>
+        <Input
+          id="requested_quantity"
+          type="number"
+          min="1"
+          value={formData.requested_quantity}
+          onChange={(e) => setFormData(prev => ({ ...prev, requested_quantity: e.target.value }))}
+          placeholder="Enter quantity needed"
+          required
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="notes">Notes (Optional)</Label>
+        <Textarea
+          id="notes"
+          value={formData.notes}
+          onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+          placeholder="Additional notes about this request..."
+          rows={3}
+        />
+      </div>
+
+      <Button 
+        type="submit" 
+        disabled={isSubmitting}
+        className="w-full"
+      >
+        {isSubmitting ? 'Creating Request...' : 'Create Stock Request'}
+      </Button>
+    </form>
   );
-}
+};
