@@ -72,3 +72,64 @@ export const adjustStockForBill = async (
     }
   }
 };
+
+export const updateProductStock = async (
+  productId: string,
+  shopId: string,
+  quantityToAdd: number,
+  userId: string
+) => {
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Get current stock record using hr_shop_id
+  const { data: currentStock, error: fetchError } = await supabase
+    .from('stocks')
+    .select('*')
+    .eq('product_id', productId)
+    .eq('hr_shop_id', shopId)
+    .eq('user_id', userId)
+    .eq('stock_date', today)
+    .maybeSingle();
+  
+  if (fetchError) {
+    console.error('Error fetching current stock:', fetchError);
+    throw fetchError;
+  }
+  
+  if (currentStock) {
+    // Update existing stock record
+    const { error: updateError } = await supabase
+      .from('stocks')
+      .update({
+        actual_stock: currentStock.actual_stock + quantityToAdd,
+        closing_stock: currentStock.closing_stock + quantityToAdd,
+        stock_added: (currentStock.stock_added || 0) + quantityToAdd
+      })
+      .eq('id', currentStock.id);
+    
+    if (updateError) {
+      console.error('Error updating stock:', updateError);
+      throw updateError;
+    }
+  } else {
+    // Create new stock record if none exists for today
+    const { error: insertError } = await supabase
+      .from('stocks')
+      .insert({
+        product_id: productId,
+        shop_id: shopId, // Keep for backward compatibility
+        hr_shop_id: shopId, // Use hr_shop_id as primary field
+        stock_date: today,
+        opening_stock: quantityToAdd,
+        closing_stock: quantityToAdd,
+        actual_stock: quantityToAdd,
+        stock_added: quantityToAdd,
+        user_id: userId
+      });
+    
+    if (insertError) {
+      console.error('Error creating stock record:', insertError);
+      throw insertError;
+    }
+  }
+};
