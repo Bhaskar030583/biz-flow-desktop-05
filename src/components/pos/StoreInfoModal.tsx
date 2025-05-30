@@ -62,7 +62,11 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
       
       return data;
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false
   });
 
   // Query for hr_stores - get stores from HRMS
@@ -85,7 +89,11 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
       console.log('✅ [StoreInfoModal] Successfully fetched HR stores:', data);
       return data || [];
     },
-    enabled: !!user?.id && isOpen
+    enabled: !!user?.id && isOpen,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false
   });
 
   // Query for shifts from hr_shifts table based on selected store
@@ -113,32 +121,30 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
       console.log('✅ [StoreInfoModal] Fetched HR shifts:', data);
       return data || [];
     },
-    enabled: !!selectedStoreId
+    enabled: !!selectedStoreId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false
   });
 
-  // Set salesperson name when user profile is loaded
+  // Set salesperson name when user profile is loaded - only run once
   useEffect(() => {
-    if (userProfile?.full_name) {
+    if (userProfile?.full_name && !salespersonName) {
       setSalespersonName(userProfile.full_name);
-    } else if (user?.email) {
+    } else if (user?.email && !salespersonName && !userProfile?.full_name) {
       // Fallback to email if full name is not available
       setSalespersonName(user.email.split('@')[0]);
     }
-  }, [userProfile, user]);
+  }, [userProfile, user, salespersonName]);
 
-  // Debug logging
+  // Reset form when modal closes
   useEffect(() => {
-    console.log('🔄 [StoreInfoModal] Component State:', {
-      isOpen,
-      selectedStoreId,
-      selectedShiftId,
-      salespersonName,
-      hrStoresCount: hrStores?.length || 0,
-      hrShiftsCount: hrShifts?.length || 0,
-      storesLoading,
-      shiftsLoading
-    });
-  }, [isOpen, selectedStoreId, selectedShiftId, salespersonName, hrStores, hrShifts, storesLoading, shiftsLoading]);
+    if (!isOpen) {
+      setSelectedStoreId("");
+      setSelectedShiftId("");
+    }
+  }, [isOpen]);
 
   const handleSubmit = () => {
     console.log('📝 [StoreInfoModal] Submit button clicked');
