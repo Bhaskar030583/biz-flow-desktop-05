@@ -11,9 +11,10 @@ import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { Package, Store } from "lucide-react";
 
-interface Shop {
+interface HRStore {
   id: string;
-  name: string;
+  store_name: string;
+  store_code?: string;
 }
 
 interface Product {
@@ -28,7 +29,7 @@ interface StockRequestFormProps {
 
 export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) => {
   const { user } = useAuth();
-  const [shops, setShops] = useState<Shop[]>([]);
+  const [stores, setStores] = useState<HRStore[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedRequestingStore, setSelectedRequestingStore] = useState("");
   const [selectedFulfillingStore, setSelectedFulfillingStore] = useState("");
@@ -39,24 +40,23 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
 
   useEffect(() => {
     if (user) {
-      fetchShops();
+      fetchStores();
       fetchProducts();
     }
   }, [user]);
 
-  const fetchShops = async () => {
+  const fetchStores = async () => {
     try {
       const { data, error } = await supabase
-        .from('shops')
-        .select('id, name')
-        .eq('user_id', user?.id)
-        .order('name');
+        .from('hr_stores')
+        .select('id, store_name, store_code')
+        .order('store_name');
       
       if (error) throw error;
-      setShops(data || []);
+      setStores(data || []);
     } catch (error) {
-      console.error('Error fetching shops:', error);
-      toast.error('Failed to fetch shops');
+      console.error('Error fetching HR stores:', error);
+      toast.error('Failed to fetch stores');
     }
   };
 
@@ -102,8 +102,8 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
         .from('stock_requests')
         .insert({
           user_id: user?.id,
-          requesting_store_id: selectedRequestingStore,
-          fulfilling_store_id: selectedFulfillingStore,
+          requesting_hr_store_id: selectedRequestingStore,
+          fulfilling_hr_store_id: selectedFulfillingStore,
           product_id: selectedProduct,
           requested_quantity: quantity,
           notes: notes.trim() || null
@@ -141,11 +141,11 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
                   <SelectValue placeholder="Select requesting store" />
                 </SelectTrigger>
                 <SelectContent>
-                  {shops.map(shop => (
-                    <SelectItem key={shop.id} value={shop.id}>
+                  {stores.map(store => (
+                    <SelectItem key={store.id} value={store.id}>
                       <div className="flex items-center gap-2">
                         <Store className="h-4 w-4" />
-                        {shop.name}
+                        {store.store_name} {store.store_code && `(${store.store_code})`}
                       </div>
                     </SelectItem>
                   ))}
@@ -160,11 +160,11 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
                   <SelectValue placeholder="Select fulfilling store" />
                 </SelectTrigger>
                 <SelectContent>
-                  {shops.map(shop => (
-                    <SelectItem key={shop.id} value={shop.id}>
+                  {stores.map(store => (
+                    <SelectItem key={store.id} value={store.id}>
                       <div className="flex items-center gap-2">
                         <Store className="h-4 w-4" />
-                        {shop.name}
+                        {store.store_name} {store.store_code && `(${store.store_code})`}
                       </div>
                     </SelectItem>
                   ))}

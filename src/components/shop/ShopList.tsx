@@ -8,33 +8,32 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Trash2, Store } from "lucide-react";
 
-interface Shop {
+interface HRStore {
   id: string;
-  name: string;
+  store_name: string;
   store_code: string | null;
   address: string | null;
-  phone: string | null;
   created_at: string;
 }
 
 export function ShopList() {
   const { user } = useAuth();
-  const [shops, setShops] = useState<Shop[]>([]);
+  const [stores, setStores] = useState<HRStore[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
     
-    async function fetchShops() {
+    async function fetchStores() {
       try {
         const { data, error } = await supabase
-          .from("shops")
+          .from("hr_stores")
           .select("*")
           .order("created_at", { ascending: false });
         
         if (error) throw error;
         
-        setShops(data || []);
+        setStores(data || []);
       } catch (error: any) {
         toast({
           variant: "destructive",
@@ -46,16 +45,16 @@ export function ShopList() {
       }
     }
     
-    fetchShops();
+    fetchStores();
   }, [user]);
 
-  async function checkRelatedData(shopId: string, shopName: string) {
+  async function checkRelatedData(storeId: string, storeName: string) {
     try {
       // Check for credits
       const { data: credits, error: creditsError } = await supabase
         .from("credits")
         .select("id")
-        .eq("shop_id", shopId)
+        .eq("hr_shop_id", storeId)
         .limit(1);
 
       if (creditsError) throw creditsError;
@@ -64,7 +63,7 @@ export function ShopList() {
       const { data: expenses, error: expensesError } = await supabase
         .from("expenses")
         .select("id")
-        .eq("shop_id", shopId)
+        .eq("hr_shop_id", storeId)
         .limit(1);
 
       if (expensesError) throw expensesError;
@@ -73,7 +72,7 @@ export function ShopList() {
       const { data: stocks, error: stocksError } = await supabase
         .from("stocks")
         .select("id")
-        .eq("shop_id", shopId)
+        .eq("hr_shop_id", storeId)
         .limit(1);
 
       if (stocksError) throw stocksError;
@@ -90,25 +89,25 @@ export function ShopList() {
     }
   }
 
-  async function handleDelete(id: string, shopName: string) {
+  async function handleDelete(id: string, storeName: string) {
     try {
-      console.log(`Attempting to delete shop: ${shopName} (${id})`);
+      console.log(`Attempting to delete store: ${storeName} (${id})`);
       
       // First check what related data exists
-      const relatedItems = await checkRelatedData(id, shopName);
+      const relatedItems = await checkRelatedData(id, storeName);
       
       if (relatedItems.length > 0) {
         const itemsList = relatedItems.join(", ");
         toast({
           variant: "destructive",
           title: "Cannot Delete Store",
-          description: `The store "${shopName}" cannot be deleted because it has ${relatedItems.length} type(s) of related data: ${itemsList}. Please remove all ${itemsList} for this store first, then try deleting again.`,
+          description: `The store "${storeName}" cannot be deleted because it has ${relatedItems.length} type(s) of related data: ${itemsList}. Please remove all ${itemsList} for this store first, then try deleting again.`,
         });
         return;
       }
       
       const { error } = await supabase
-        .from("shops")
+        .from("hr_stores")
         .delete()
         .eq("id", id);
       
@@ -120,7 +119,7 @@ export function ShopList() {
           toast({
             variant: "destructive",
             title: "Cannot Delete Store",
-            description: `The store "${shopName}" cannot be deleted because it has related data. This could include credits, expenses, sales, or stock entries. Please remove all related records first and try again.`,
+            description: `The store "${storeName}" cannot be deleted because it has related data. This could include credits, expenses, sales, or stock entries. Please remove all related records first and try again.`,
           });
           return;
         }
@@ -130,7 +129,7 @@ export function ShopList() {
           toast({
             variant: "destructive",
             title: "Permission Denied",
-            description: `You don't have permission to delete the store "${shopName}". Please contact your administrator.`,
+            description: `You don't have permission to delete the store "${storeName}". Please contact your administrator.`,
           });
           return;
         }
@@ -138,19 +137,19 @@ export function ShopList() {
         throw error;
       }
       
-      console.log("Shop deleted successfully");
-      setShops(shops.filter(shop => shop.id !== id));
+      console.log("Store deleted successfully");
+      setStores(stores.filter(store => store.id !== id));
       
       toast({
         title: "Store Deleted Successfully",
-        description: `The store "${shopName}" has been permanently deleted from your account.`,
+        description: `The store "${storeName}" has been permanently deleted.`,
       });
     } catch (error: any) {
       console.error("Error deleting store:", error);
       toast({
         variant: "destructive",
         title: "Failed to Delete Store",
-        description: `Unable to delete "${shopName}". Error: ${error.message || "An unexpected error occurred. Please try again or contact support."}`,
+        description: `Unable to delete "${storeName}". Error: ${error.message || "An unexpected error occurred. Please try again or contact support."}`,
       });
     }
   }
@@ -159,7 +158,7 @@ export function ShopList() {
     return <div className="text-center py-4">Loading stores...</div>;
   }
 
-  if (shops.length === 0) {
+  if (stores.length === 0) {
     return (
       <Card>
         <CardContent className="pt-6">
@@ -174,7 +173,7 @@ export function ShopList() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Your Stores</CardTitle>
+        <CardTitle>HR Stores</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
@@ -184,27 +183,25 @@ export function ShopList() {
                 <TableHead>Store Name</TableHead>
                 <TableHead>Store Code</TableHead>
                 <TableHead>Address</TableHead>
-                <TableHead>Phone</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {shops.map((shop) => (
-                <TableRow key={shop.id}>
+              {stores.map((store) => (
+                <TableRow key={store.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center">
                       <Store className="mr-2 h-4 w-4" />
-                      {shop.name}
+                      {store.store_name}
                     </div>
                   </TableCell>
-                  <TableCell>{shop.store_code || "—"}</TableCell>
-                  <TableCell>{shop.address || "—"}</TableCell>
-                  <TableCell>{shop.phone || "—"}</TableCell>
+                  <TableCell>{store.store_code || "—"}</TableCell>
+                  <TableCell>{store.address || "—"}</TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDelete(shop.id, shop.name)}
+                      onClick={() => handleDelete(store.id, store.store_name)}
                     >
                       <Trash2 className="h-4 w-4" />
                       <span className="sr-only">Delete</span>

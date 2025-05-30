@@ -190,13 +190,6 @@ export type Database = {
             referencedRelation: "hr_stores"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "credits_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
-            referencedColumns: ["id"]
-          },
         ]
       }
       customers: {
@@ -278,13 +271,6 @@ export type Database = {
             columns: ["hr_shop_id"]
             isOneToOne: false
             referencedRelation: "hr_stores"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "expenses_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
         ]
@@ -1050,7 +1036,7 @@ export type Database = {
       losses: {
         Row: {
           created_at: string
-          hr_shop_id: string | null
+          hr_shop_id: string
           id: string
           loss_date: string
           loss_type: Database["public"]["Enums"]["loss_type"]
@@ -1059,12 +1045,11 @@ export type Database = {
           quantity_lost: number
           reason: string | null
           shift_id: string | null
-          shop_id: string
           user_id: string
         }
         Insert: {
           created_at?: string
-          hr_shop_id?: string | null
+          hr_shop_id: string
           id?: string
           loss_date?: string
           loss_type: Database["public"]["Enums"]["loss_type"]
@@ -1073,12 +1058,11 @@ export type Database = {
           quantity_lost: number
           reason?: string | null
           shift_id?: string | null
-          shop_id: string
           user_id: string
         }
         Update: {
           created_at?: string
-          hr_shop_id?: string | null
+          hr_shop_id?: string
           id?: string
           loss_date?: string
           loss_type?: Database["public"]["Enums"]["loss_type"]
@@ -1087,7 +1071,6 @@ export type Database = {
           quantity_lost?: number
           reason?: string | null
           shift_id?: string | null
-          shop_id?: string
           user_id?: string
         }
         Relationships: [
@@ -1103,13 +1086,6 @@ export type Database = {
             columns: ["shift_id"]
             isOneToOne: false
             referencedRelation: "hr_shifts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_losses_shop"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
           {
@@ -1170,13 +1146,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_low_stock_alerts_shop"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "low_stock_alerts_hr_shop_id_fkey"
             columns: ["hr_shop_id"]
             isOneToOne: false
@@ -1223,13 +1192,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_shops_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
         ]
@@ -1349,13 +1311,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_reorder_points_shop"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "reorder_points_hr_shop_id_fkey"
             columns: ["hr_shop_id"]
             isOneToOne: false
@@ -1411,13 +1366,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sales_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
         ]
@@ -1488,39 +1436,6 @@ export type Database = {
           },
         ]
       }
-      shops: {
-        Row: {
-          address: string | null
-          created_at: string
-          id: string
-          name: string
-          phone: string | null
-          store_code: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          address?: string | null
-          created_at?: string
-          id?: string
-          name: string
-          phone?: string | null
-          store_code?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          address?: string | null
-          created_at?: string
-          id?: string
-          name?: string
-          phone?: string | null
-          store_code?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       stock_movements: {
         Row: {
           approved_by: string | null
@@ -1578,24 +1493,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_stock_movements_from_shop"
-            columns: ["from_shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fk_stock_movements_product"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_stock_movements_to_shop"
-            columns: ["to_shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
           {
@@ -1719,13 +1620,6 @@ export type Database = {
             referencedRelation: "hr_stores"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "stock_templates_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
-            referencedColumns: ["id"]
-          },
         ]
       }
       stocks: {
@@ -1795,13 +1689,6 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "stocks_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
-            referencedColumns: ["id"]
-          },
         ]
       }
       store_denominations: {
@@ -1844,13 +1731,6 @@ export type Database = {
             columns: ["hr_shop_id"]
             isOneToOne: false
             referencedRelation: "hr_stores"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "store_denominations_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
         ]

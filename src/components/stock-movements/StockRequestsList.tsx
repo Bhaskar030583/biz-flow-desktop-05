@@ -11,16 +11,16 @@ import { Package, Store, Calendar, Hash, X } from "lucide-react";
 
 interface StockRequest {
   id: string;
-  requesting_store_id: string;
-  fulfilling_store_id: string;
+  requesting_hr_store_id: string;
+  fulfilling_hr_store_id: string;
   product_id: string;
   requested_quantity: number;
   status: string;
   request_date: string;
   response_date?: string;
   notes?: string;
-  requesting_store: { name: string };
-  fulfilling_store: { name: string };
+  requesting_store: { store_name: string };
+  fulfilling_store: { store_name: string };
   product: { name: string; category: string };
 }
 
@@ -45,8 +45,8 @@ export const StockRequestsList = ({ onRequestUpdated }: StockRequestsListProps) 
         .from('stock_requests')
         .select(`
           *,
-          requesting_store:shops!stock_requests_requesting_store_id_fkey(name),
-          fulfilling_store:shops!stock_requests_fulfilling_store_id_fkey(name),
+          requesting_store:hr_stores!stock_requests_requesting_hr_store_id_fkey(store_name),
+          fulfilling_store:hr_stores!stock_requests_fulfilling_hr_store_id_fkey(store_name),
           product:products(name, category)
         `)
         .eq('user_id', user?.id)
@@ -59,10 +59,10 @@ export const StockRequestsList = ({ onRequestUpdated }: StockRequestsListProps) 
         ...item,
         requesting_store: Array.isArray(item.requesting_store) 
           ? item.requesting_store[0] 
-          : item.requesting_store || { name: 'Unknown Store' },
+          : item.requesting_store || { store_name: 'Unknown Store' },
         fulfilling_store: Array.isArray(item.fulfilling_store) 
           ? item.fulfilling_store[0] 
-          : item.fulfilling_store || { name: 'Unknown Store' },
+          : item.fulfilling_store || { store_name: 'Unknown Store' },
         product: Array.isArray(item.product) 
           ? item.product[0] 
           : item.product || { name: 'Unknown Product', category: 'Unknown' }
@@ -156,12 +156,12 @@ export const StockRequestsList = ({ onRequestUpdated }: StockRequestsListProps) 
                 <div className="flex items-center gap-2 text-sm">
                   <Store className="h-4 w-4 text-blue-600" />
                   <span className="text-gray-600">From:</span>
-                  <span className="font-medium">{request.requesting_store.name}</span>
+                  <span className="font-medium">{request.requesting_store.store_name}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Store className="h-4 w-4 text-green-600" />
                   <span className="text-gray-600">To:</span>
-                  <span className="font-medium">{request.fulfilling_store.name}</span>
+                  <span className="font-medium">{request.fulfilling_store.store_name}</span>
                 </div>
               </div>
 
