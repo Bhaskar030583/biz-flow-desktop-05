@@ -28,7 +28,7 @@ interface Credit {
   credit_type: string;
   amount: number;
   description: string | null;
-  shop_id: string;
+  hr_shop_id: string;
   shop_name?: string;
 }
 
@@ -47,13 +47,13 @@ const CreditDetails = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      // Fetch credits with shop details
+      // Fetch credits with HR store details
       const { data: creditsData, error } = await supabase
         .from("credits")
         .select(`
           *,
-          shops:shop_id (
-            name
+          hr_stores:hr_shop_id (
+            store_name
           )
         `)
         .eq("user_id", user.id)
@@ -69,7 +69,7 @@ const CreditDetails = () => {
       // Transform data to include shop_name
       return creditsData.map((credit: any) => ({
         ...credit,
-        shop_name: credit.shops?.name
+        shop_name: credit.hr_stores?.store_name
       }));
     },
     enabled: !!user && activeTab === "credit"
@@ -86,8 +86,8 @@ const CreditDetails = () => {
         .from("credits")
         .select(`
           credit_date,
-          shop_id,
-          shops:shop_id (name),
+          hr_shop_id,
+          hr_stores:hr_shop_id (store_name),
           credit_type,
           amount
         `)
@@ -104,11 +104,11 @@ const CreditDetails = () => {
       // Group by date and shop
       const groupedData = financialEntries.reduce((acc: any[], entry: any) => {
         const dateKey = entry.credit_date;
-        const shopKey = entry.shop_id;
+        const shopKey = entry.hr_shop_id;
         
         // Find if we already have an entry for this date and shop
         const existingIndex = acc.findIndex(item => 
-          item.credit_date === dateKey && item.shop_id === shopKey
+          item.credit_date === dateKey && item.hr_shop_id === shopKey
         );
         
         if (existingIndex >= 0) {
@@ -119,8 +119,8 @@ const CreditDetails = () => {
           // Create new entry
           const newEntry = {
             credit_date: dateKey,
-            shop_id: shopKey,
-            shop_name: entry.shops?.name,
+            hr_shop_id: shopKey,
+            shop_name: entry.hr_stores?.store_name,
             cash_amount: 0,
             card_amount: 0,
             online_amount: 0,
@@ -188,7 +188,7 @@ const CreditDetails = () => {
         .from("credits")
         .delete()
         .eq("credit_date", date)
-        .eq("shop_id", shopId)
+        .eq("hr_shop_id", shopId)
         .eq("user_id", user.id)
         .in('credit_type', ['cash', 'card', 'online', 'discount']);
 
@@ -391,36 +391,32 @@ const CreditDetails = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Date</TableHead>
-                      <TableHead>Shop</TableHead>
-                      <TableHead className="text-right">Cash Amount</TableHead>
-                      <TableHead className="text-right">Card Amount</TableHead>
-                      <TableHead className="text-right">Online Amount</TableHead>
-                      <TableHead className="text-right">Discount Amount</TableHead>
-                      <TableHead className="text-right">Total Amount</TableHead>
+                      <TableHead>Store</TableHead>
+                      <TableHead>Cash</TableHead>
+                      <TableHead>Card</TableHead>
+                      <TableHead>UPI</TableHead>
+                      <TableHead>Discount</TableHead>
+                      <TableHead>Total</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {financialData.map((entry: any, index: number) => {
-                      const totalAmount = 
-                        (Number(entry.cash_amount) || 0) + 
-                        (Number(entry.card_amount) || 0) + 
-                        (Number(entry.online_amount) || 0);
-                        
+                      const total = entry.cash_amount + entry.card_amount + entry.online_amount;
                       return (
-                        <TableRow key={`${entry.credit_date}_${entry.shop_id}_${index}`}>
+                        <TableRow key={index}>
                           <TableCell>{new Date(entry.credit_date).toLocaleDateString()}</TableCell>
                           <TableCell>{entry.shop_name}</TableCell>
-                          <TableCell className="text-right">₹{Number(entry.cash_amount || 0).toFixed(2)}</TableCell>
-                          <TableCell className="text-right">₹{Number(entry.card_amount || 0).toFixed(2)}</TableCell>
-                          <TableCell className="text-right">₹{Number(entry.online_amount || 0).toFixed(2)}</TableCell>
-                          <TableCell className="text-right">₹{Number(entry.discount_amount || 0).toFixed(2)}</TableCell>
-                          <TableCell className="text-right">₹{totalAmount.toFixed(2)}</TableCell>
+                          <TableCell>₹{entry.cash_amount.toFixed(2)}</TableCell>
+                          <TableCell>₹{entry.card_amount.toFixed(2)}</TableCell>
+                          <TableCell>₹{entry.online_amount.toFixed(2)}</TableCell>
+                          <TableCell>₹{entry.discount_amount.toFixed(2)}</TableCell>
+                          <TableCell className="font-medium">₹{total.toFixed(2)}</TableCell>
                           <TableCell className="text-right">
                             <Button 
                               variant="destructive" 
                               size="sm"
-                              onClick={() => handleDeleteFinancialEntry(entry.credit_date, entry.shop_id)}
+                              onClick={() => handleDeleteFinancialEntry(entry.credit_date, entry.hr_shop_id)}
                             >
                               Delete
                             </Button>

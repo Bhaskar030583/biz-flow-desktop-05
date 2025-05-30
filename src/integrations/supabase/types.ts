@@ -157,7 +157,6 @@ export type Database = {
           description: string | null
           hr_shop_id: string | null
           id: string
-          shop_id: string
           user_id: string
         }
         Insert: {
@@ -168,7 +167,6 @@ export type Database = {
           description?: string | null
           hr_shop_id?: string | null
           id?: string
-          shop_id: string
           user_id: string
         }
         Update: {
@@ -179,7 +177,6 @@ export type Database = {
           description?: string | null
           hr_shop_id?: string | null
           id?: string
-          shop_id?: string
           user_id?: string
         }
         Relationships: [
@@ -1518,14 +1515,14 @@ export type Database = {
       stock_requests: {
         Row: {
           created_at: string
+          fulfilling_hr_store_id: string | null
           fulfilling_store_id: string
-          hr_fulfilling_store_id: string | null
-          hr_requesting_store_id: string | null
           id: string
           notes: string | null
           product_id: string
           request_date: string
           requested_quantity: number
+          requesting_hr_store_id: string | null
           requesting_store_id: string
           response_date: string | null
           status: string
@@ -1534,14 +1531,14 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          fulfilling_hr_store_id?: string | null
           fulfilling_store_id: string
-          hr_fulfilling_store_id?: string | null
-          hr_requesting_store_id?: string | null
           id?: string
           notes?: string | null
           product_id: string
           request_date?: string
           requested_quantity: number
+          requesting_hr_store_id?: string | null
           requesting_store_id: string
           response_date?: string | null
           status?: string
@@ -1550,14 +1547,14 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          fulfilling_hr_store_id?: string | null
           fulfilling_store_id?: string
-          hr_fulfilling_store_id?: string | null
-          hr_requesting_store_id?: string | null
           id?: string
           notes?: string | null
           product_id?: string
           request_date?: string
           requested_quantity?: number
+          requesting_hr_store_id?: string | null
           requesting_store_id?: string
           response_date?: string | null
           status?: string
@@ -1567,14 +1564,14 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "stock_requests_hr_fulfilling_store_id_fkey"
-            columns: ["hr_fulfilling_store_id"]
+            columns: ["fulfilling_hr_store_id"]
             isOneToOne: false
             referencedRelation: "hr_stores"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "stock_requests_hr_requesting_store_id_fkey"
-            columns: ["hr_requesting_store_id"]
+            columns: ["requesting_hr_store_id"]
             isOneToOne: false
             referencedRelation: "hr_stores"
             referencedColumns: ["id"]
@@ -1698,7 +1695,6 @@ export type Database = {
           denominations: Json
           hr_shop_id: string | null
           id: string
-          shop_id: string
           total_amount: number
           updated_at: string
           user_id: string
@@ -1709,7 +1705,6 @@ export type Database = {
           denominations?: Json
           hr_shop_id?: string | null
           id?: string
-          shop_id: string
           total_amount?: number
           updated_at?: string
           user_id: string
@@ -1720,7 +1715,6 @@ export type Database = {
           denominations?: Json
           hr_shop_id?: string | null
           id?: string
-          shop_id?: string
           total_amount?: number
           updated_at?: string
           user_id?: string

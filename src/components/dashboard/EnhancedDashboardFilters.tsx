@@ -67,7 +67,7 @@ export function EnhancedDashboardFilters({
   setMaxAmount
 }: EnhancedDashboardFiltersProps) {
   const { user } = useAuth();
-  const [shops, setShops] = useState<any[]>([]);
+  const [hrStores, setHrStores] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
@@ -78,14 +78,13 @@ export function EnhancedDashboardFilters({
     
     const fetchFilterData = async () => {
       try {
-        // Fetch shops
-        const { data: shopsData } = await supabase
-          .from("shops")
-          .select("id, name")
-          .eq("user_id", user.id)
-          .order("name");
+        // Fetch HR stores
+        const { data: hrStoresData } = await supabase
+          .from("hr_stores")
+          .select("id, store_name")
+          .order("store_name");
         
-        setShops(shopsData || []);
+        setHrStores(hrStoresData || []);
         
         // Fetch categories and products
         const { data: productsData } = await supabase
@@ -319,9 +318,9 @@ export function EnhancedDashboardFilters({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all_stores">All Stores</SelectItem>
-                {shops.map((shop) => (
-                  <SelectItem key={shop.id} value={shop.id}>
-                    {shop.name}
+                {hrStores.map((store) => (
+                  <SelectItem key={store.id} value={store.id}>
+                    {store.store_name}
                   </SelectItem>
                 ))}
               </SelectContent>
