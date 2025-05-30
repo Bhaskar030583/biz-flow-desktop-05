@@ -120,7 +120,7 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
 
     setProcessing(true);
     try {
-      await generateBill({
+      const bill = await generateBill({
         totalAmount,
         paymentMethod: 'cash',
         cartItems,
@@ -128,23 +128,22 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
         salespersonName: storeInfo?.salespersonName
       });
 
-      let toastMessage = "Cash payment completed!";
-      
-      if (useDenominations) {
-        // Create denomination summary for toast
-        const denominationSummary = denominationValues
-          .filter(value => denominations[value] > 0)
-          .map(value => `₹${value} x ${denominations[value]}`)
-          .join(', ');
-        toastMessage += ` Denominations: ${denominationSummary}`;
-      }
+      if (bill) {
+        let toastMessage = "Cash payment completed!";
+        
+        if (useDenominations) {
+          // Create denomination summary for toast
+          const denominationSummary = denominationValues
+            .filter(value => denominations[value] > 0)
+            .map(value => `₹${value} x ${denominations[value]}`)
+            .join(', ');
+          toastMessage += ` Denominations: ${denominationSummary}`;
+        }
 
-      toast.success(toastMessage);
-      onPaymentComplete();
-      setCashReceived("");
-      setDenominations({
-        500: 0, 200: 0, 100: 0, 50: 0, 20: 0, 10: 0, 5: 0, 2: 0, 1: 0
-      });
+        toast.success(toastMessage);
+        onPaymentComplete();
+        handleClose();
+      }
     } catch (error) {
       console.error("Error processing cash payment:", error);
       toast.error("Failed to process cash payment");

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -105,7 +104,6 @@ export const POSSystem: React.FC<POSSystemProps> = ({
         return [...prevCart, { ...product, quantity: 1, total: product.price }];
       }
     });
-    toast.success(`${product.name} added to cart`);
   };
 
   const updateQuantity = (productId: string, newQuantity: number) => {
@@ -174,9 +172,6 @@ export const POSSystem: React.FC<POSSystemProps> = ({
     }
 
     try {
-      const billNumber = await generateBillNumber();
-      const totalAmount = getTotalAmount();
-
       // First, check if we have sufficient stock for all items
       for (const item of cart) {
         const product = products?.find(p => p.id === item.id);
@@ -190,7 +185,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
       const billData = await generateBill({
         customerId,
         customerName,
-        totalAmount,
+        totalAmount: getTotalAmount(),
         paymentMethod: paymentMethod as any,
         cartItems: cart,
         storeName: storeInfo?.storeName,
@@ -225,6 +220,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
     setShowCreditModal(false);
     setShowSplitModal(false);
     setShowBillingModal(false);
+    setShowPendingModal(false);
   };
 
   const handleCashPayment = () => {
@@ -283,6 +279,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
           toast.success(`Pending payment saved for ${customerName}`);
           clearCart();
           setShowBillingModal(false);
+          setShowPendingModal(false);
         }
       } catch (error) {
         console.error('Error creating pending payment:', error);
@@ -716,14 +713,24 @@ export const POSSystem: React.FC<POSSystemProps> = ({
                 </Button>
               </div>
               
-              <Button 
-                variant="outline"
-                className="w-full h-12 font-semibold bg-white hover:bg-amber-50 border-slate-200 text-slate-700 hover:border-amber-300 hover:text-amber-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300" 
-                onClick={handleSplitPayment}
-              >
-                <SplitSquareHorizontal className="h-4 w-4 mr-2" />
-                Split Payment
-              </Button>
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  variant="outline"
+                  className="h-12 font-semibold bg-white hover:bg-amber-50 border-slate-200 text-slate-700 hover:border-amber-300 hover:text-amber-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300" 
+                  onClick={handleSplitPayment}
+                >
+                  <SplitSquareHorizontal className="h-4 w-4 mr-2" />
+                  Split Payment
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="h-12 font-semibold bg-white hover:bg-orange-50 border-slate-200 text-slate-700 hover:border-orange-300 hover:text-orange-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300" 
+                  onClick={() => handlePendingPayment()}
+                >
+                  <Clock className="h-4 w-4 mr-2" />
+                  Pending
+                </Button>
+              </div>
             </div>
           </div>
         )}
