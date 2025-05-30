@@ -201,11 +201,12 @@ const LossTracking = () => {
       return;
     }
     
+    // Now TypeScript knows lossTypeValue is a valid LossType
     const lossData: LossFormData = {
       product_id: formData.get('product_id') as string,
       hr_shop_id: formData.get('hr_shop_id') as string,
       shift_id: formData.get('shift_id') as string,
-      loss_type: lossTypeValue as LossType, // TypeScript now knows this is valid after the check above
+      loss_type: lossTypeValue, // TypeScript now knows this is valid LossType after the validation
       quantity_lost: parseInt(formData.get('quantity_lost') as string),
       reason: formData.get('reason') as string || null,
       operator_name: formData.get('operator_name') as string || null,
