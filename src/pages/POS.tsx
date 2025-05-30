@@ -43,7 +43,7 @@ const POS = () => {
       console.log('🔍 [POS] Fetching products for HRMS store:', selectedStoreId);
       const today = new Date().toISOString().split('T')[0];
       
-      // First, try to get products assigned to this store from product_shops
+      // Get products assigned to this store from product_shops
       const { data: productShops, error: productShopsError } = await supabase
         .from('product_shops')
         .select(`
@@ -59,37 +59,20 @@ const POS = () => {
       
       if (productShopsError) {
         console.error('❌ [POS] Error fetching product_shops:', productShopsError);
+        throw productShopsError;
       }
 
       console.log('📦 [POS] Product shops result:', productShops);
 
-      let allProducts = [];
-
-      // If we have products assigned through product_shops, use those
-      if (productShops && productShops.length > 0) {
-        allProducts = productShops
-          .map(item => item.products)
-          .filter(product => product !== null);
-      } else {
-        // If no specific assignments, get all products for this user as fallback
-        console.log('⚠️ [POS] No product assignments found, fetching all user products as fallback');
-        const { data: allUserProducts, error: allProductsError } = await supabase
-          .from('products')
-          .select('id, name, price, category')
-          .eq('user_id', user?.id);
-        
-        if (allProductsError) {
-          console.error('❌ [POS] Error fetching all products:', allProductsError);
-          throw allProductsError;
-        }
-
-        allProducts = allUserProducts || [];
-      }
+      // Only show assigned products - no fallback to all products
+      const allProducts = productShops
+        ?.map(item => item.products)
+        .filter(product => product !== null) || [];
 
       console.log('📦 [POS] Products to process:', allProducts);
 
       if (allProducts.length === 0) {
-        console.log('⚠️ [POS] No products found');
+        console.log('⚠️ [POS] No products assigned to this store');
         return [];
       }
 

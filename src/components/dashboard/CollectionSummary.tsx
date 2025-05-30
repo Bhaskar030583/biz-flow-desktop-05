@@ -1,166 +1,92 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { Banknote, CreditCard, TrendingUp, TrendingDown } from "lucide-react";
 
 interface CollectionSummaryProps {
+  selectedShops: string[];
   startDate: Date | null;
   endDate: Date | null;
-  shopIds: string[];
 }
 
-const CollectionSummary = ({ startDate, endDate, shopIds }: CollectionSummaryProps) => {
-  const [paymentData, setPaymentData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
+export function CollectionSummary({ selectedShops, startDate, endDate }: CollectionSummaryProps) {
+  const { data: creditsData, isLoading } = useQuery({
+    queryKey: ['collection-summary', selectedShops, startDate, endDate],
+    queryFn: async () => {
+      let query = supabase
+        .from('credits')
+        .select('credit_type, amount, hr_shop_id');
 
-  useEffect(() => {
-    fetchCollectionData();
-  }, [startDate, endDate, shopIds]);
+      if (selectedShops.length > 0) {
+        query = query.in('hr_shop_id', selectedShops);
+      }
 
-  const fetchCollectionData = async () => {
-    try {
-      setLoading(true);
-      
-      let query = supabase.from("credits").select(`
-        credit_type,
-        amount,
-        credit_date,
-        shop_id
-      `)
-      .in('credit_type', ['cash', 'card', 'online']);
-      
-      // Apply filters
       if (startDate) {
-        const formattedStartDate = startDate.toISOString().split('T')[0];
-        query = query.gte("credit_date", formattedStartDate);
+        query = query.gte('credit_date', startDate.toISOString().split('T')[0]);
       }
-      
+
       if (endDate) {
-        const formattedEndDate = endDate.toISOString().split('T')[0];
-        query = query.lte("credit_date", formattedEndDate);
+        query = query.lte('credit_date', endDate.toISOString().split('T')[0]);
       }
-      
-      if (shopIds && shopIds.length > 0) {
-        query = query.in("shop_id", shopIds);
-      }
-      
+
       const { data, error } = await query;
-      
       if (error) throw error;
-      
-      // Calculate payment mode totals
-      let cashTotal = 0;
-      let cardTotal = 0;
-      let onlineTotal = 0;
-      
-      data?.forEach(item => {
-        if (item.credit_type === 'cash') {
-          cashTotal += Number(item.amount) || 0;
-        } else if (item.credit_type === 'card') {
-          cardTotal += Number(item.amount) || 0;
-        } else if (item.credit_type === 'online') {
-          onlineTotal += Number(item.amount) || 0;
-        }
-      });
-      
-      const totalAmount = cashTotal + cardTotal + onlineTotal;
-      setTotal(totalAmount);
-      
-      // Create data for pie chart
-      const chartData = [
-        { name: "Cash", value: cashTotal },
-        { name: "Card", value: cardTotal },
-        { name: "Online", value: onlineTotal }
-      ].filter(item => item.value > 0);
-      
-      setPaymentData(chartData);
-    } catch (error: any) {
-      console.error("Error fetching collection data:", error);
-    } finally {
-      setLoading(false);
+      return data;
+    },
+  });
+
+  if (isLoading) {
+    return <div>Loading collection summary...</div>;
+  }
+
+  const summary = creditsData?.reduce((acc, credit) => {
+    if (credit.credit_type === 'given') {
+      acc.creditGiven += Number(credit.amount);
+    } else if (credit.credit_type === 'received') {
+      acc.creditReceived += Number(credit.amount);
+    } else if (credit.credit_type === 'cash_collection') {
+      acc.cashCollection += Number(credit.amount);
     }
-  };
-
-  const COLORS = ["#4f46e5", "#22c55e", "#f97316", "#ef4444"];
-  
-  const formatIndianRupee = (value: number) => {
-    return `₹${value.toFixed(2)}`;
-  };
-
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Collection Summary</CardTitle>
-        </CardHeader>
-        <CardContent className="h-80 flex items-center justify-center">
-          <p>Loading collection data...</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (paymentData.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Collection Summary</CardTitle>
-        </CardHeader>
-        <CardContent className="h-80 flex items-center justify-center">
-          <p className="text-muted-foreground">No collection data available for the selected filters.</p>
-        </CardContent>
-      </Card>
-    );
-  }
+    return acc;
+  }, {
+    creditGiven: 0,
+    creditReceived: 0,
+    cashCollection: 0
+  }) || { creditGiven: 0, creditReceived: 0, cashCollection: 0 };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Collection Summary</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={paymentData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {paymentData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => formatIndianRupee(Number(value))} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="grid grid-cols-3 gap-4 mt-4">
-          {paymentData.map((item, index) => (
-            <div key={index} className="text-center">
-              <div
-                className="w-3 h-3 rounded-full mx-auto mb-1"
-                style={{ backgroundColor: COLORS[index % COLORS.length] }}
-              />
-              <p className="text-sm font-medium">{item.name}</p>
-              <p className="text-lg font-bold">{formatIndianRupee(item.value)}</p>
-              <p className="text-xs text-muted-foreground">
-                {((item.value / total) * 100).toFixed(1)}%
-              </p>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Cash Collection</CardTitle>
+          <Banknote className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">₹{summary.cashCollection.toFixed(2)}</div>
+        </CardContent>
+      </Card>
 
-export default CollectionSummary;
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Credit Given</CardTitle>
+          <TrendingUp className="h-4 w-4 text-red-500" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-red-600">₹{summary.creditGiven.toFixed(2)}</div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Credit Received</CardTitle>
+          <TrendingDown className="h-4 w-4 text-green-500" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-green-600">₹{summary.creditReceived.toFixed(2)}</div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
