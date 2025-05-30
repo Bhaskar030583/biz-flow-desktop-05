@@ -36,7 +36,7 @@ const LossTracking = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [filterShop, setFilterShop] = useState<string>("");
   const [filterProduct, setFilterProduct] = useState<string>("");
-  const [filterLossType, setFilterLossType] = useState<string>("");
+  const [filterLossType, setFilterLossType] = useState<LossType | "">("");
 
   // Fetch HR stores
   const { data: stores } = useQuery({
@@ -302,7 +302,7 @@ const LossTracking = () => {
 
             <div>
               <Label>Loss Type</Label>
-              <Select value={filterLossType} onValueChange={setFilterLossType}>
+              <Select value={filterLossType} onValueChange={(value: LossType | "") => setFilterLossType(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
