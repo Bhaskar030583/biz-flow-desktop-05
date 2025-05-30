@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -11,28 +11,6 @@ interface POSMainViewProps {
 
 export const POSMainView: React.FC<POSMainViewProps> = ({ onStockAdded }) => {
   const navigate = useNavigate();
-  const [popupOpened, setPopupOpened] = useState(false);
-
-  useEffect(() => {
-    // Check if popup was already opened in this session
-    const hasOpenedPopup = sessionStorage.getItem('pos-popup-opened');
-    if (hasOpenedPopup) {
-      setPopupOpened(true);
-    }
-
-    // Listen for popup opening
-    const handlePopupOpen = () => {
-      setPopupOpened(true);
-      sessionStorage.setItem('pos-popup-opened', 'true');
-    };
-
-    // Set up a timer to check if popup opened
-    const timer = setTimeout(handlePopupOpen, 1000);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, []);
 
   const handleOpenPOSAgain = () => {
     const popupUrl = window.location.href;
@@ -42,17 +20,18 @@ export const POSMainView: React.FC<POSMainViewProps> = ({ onStockAdded }) => {
     
     if (popup) {
       popup.focus();
-      setPopupOpened(true);
-      sessionStorage.setItem('pos-popup-opened', 'true');
     } else {
       alert('Please allow popups for this site to use the POS system in a separate window');
     }
   };
 
   const handleRefresh = () => {
-    sessionStorage.removeItem('pos-popup-opened');
+    sessionStorage.removeItem('pos-popup-attempted');
     window.location.reload();
   };
+
+  // Check if popup was attempted
+  const hasAttemptedPopup = sessionStorage.getItem('pos-popup-attempted');
 
   return (
     <div className="container mx-auto px-4 py-6 h-full">
@@ -73,7 +52,7 @@ export const POSMainView: React.FC<POSMainViewProps> = ({ onStockAdded }) => {
       
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center max-w-md">
-          {popupOpened ? (
+          {hasAttemptedPopup ? (
             <>
               <div className="mb-6">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -81,7 +60,7 @@ export const POSMainView: React.FC<POSMainViewProps> = ({ onStockAdded }) => {
                 </div>
                 <h2 className="text-xl font-semibold mb-2 text-green-700">POS Window Opened</h2>
                 <p className="text-gray-600 mb-4">
-                  The POS system is now running in a separate window for better usability. 
+                  The POS system should now be running in a separate window. 
                   Please check your browser for the POS window.
                 </p>
               </div>
@@ -102,7 +81,7 @@ export const POSMainView: React.FC<POSMainViewProps> = ({ onStockAdded }) => {
                   variant="ghost"
                 >
                   <RefreshCw className="h-4 w-4" />
-                  Refresh Page
+                  Reset and Try Again
                 </Button>
               </div>
             </>
