@@ -205,7 +205,7 @@ const LossTracking = () => {
       product_id: formData.get('product_id') as string,
       hr_shop_id: formData.get('hr_shop_id') as string,
       shift_id: formData.get('shift_id') as string,
-      loss_type: lossTypeValue as LossType, // Explicit cast after validation
+      loss_type: lossTypeValue as LossType, // TypeScript now knows this is valid after the check above
       quantity_lost: parseInt(formData.get('quantity_lost') as string),
       reason: formData.get('reason') as string || null,
       operator_name: formData.get('operator_name') as string || null,
