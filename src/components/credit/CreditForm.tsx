@@ -36,7 +36,7 @@ interface CreditFormProps {
     credit_type: string;
     amount: number;
     description: string;
-    shop_id: string;
+    hr_shop_id: string;
   } | null;
 }
 
@@ -47,7 +47,7 @@ const formSchema = z.object({
     message: "Amount must be a positive number",
   }),
   description: z.string().optional(),
-  shop_id: z.string().min(1, "Shop is required"),
+  hr_shop_id: z.string().min(1, "Store is required"),
 });
 
 const CreditForm: React.FC<CreditFormProps> = ({ onSuccess, onCancel, creditToEdit }) => {
@@ -60,24 +60,23 @@ const CreditForm: React.FC<CreditFormProps> = ({ onSuccess, onCancel, creditToEd
       credit_type: creditToEdit?.credit_type || "received",
       amount: creditToEdit ? Number(creditToEdit.amount).toFixed(2) : "",
       description: creditToEdit?.description || "",
-      shop_id: creditToEdit?.shop_id || "",
+      hr_shop_id: creditToEdit?.hr_shop_id || "",
     },
   });
 
-  // Fetch shops for dropdown
-  const { data: shops = [] } = useQuery({
-    queryKey: ["shops"],
+  // Fetch HR stores for dropdown
+  const { data: hrStores = [] } = useQuery({
+    queryKey: ["hr_stores"],
     queryFn: async () => {
       if (!user) return [];
       
       const { data, error } = await supabase
-        .from("shops")
-        .select("id, name")
-        .eq("user_id", user.id)
-        .order("name");
+        .from("hr_stores")
+        .select("id, store_name")
+        .order("store_name");
       
       if (error) {
-        console.error("Error fetching shops:", error);
+        console.error("Error fetching HR stores:", error);
         return [];
       }
       
@@ -93,7 +92,7 @@ const CreditForm: React.FC<CreditFormProps> = ({ onSuccess, onCancel, creditToEd
         credit_type: creditToEdit.credit_type,
         amount: Number(creditToEdit.amount).toFixed(2),
         description: creditToEdit.description || "",
-        shop_id: creditToEdit.shop_id,
+        hr_shop_id: creditToEdit.hr_shop_id,
       });
     }
   }, [creditToEdit, form]);
@@ -107,7 +106,7 @@ const CreditForm: React.FC<CreditFormProps> = ({ onSuccess, onCancel, creditToEd
         credit_type: values.credit_type,
         amount: Number(values.amount),
         description: values.description,
-        shop_id: values.shop_id,
+        hr_shop_id: values.hr_shop_id,
         user_id: user.id,
       };
 
@@ -208,23 +207,23 @@ const CreditForm: React.FC<CreditFormProps> = ({ onSuccess, onCancel, creditToEd
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="shop_id"
+            name="hr_shop_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Shop</FormLabel>
+                <FormLabel>Store</FormLabel>
                 <Select 
                   onValueChange={field.onChange} 
                   defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select shop" />
+                      <SelectValue placeholder="Select store" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {shops.map((shop: any) => (
-                      <SelectItem key={shop.id} value={shop.id}>
-                        {shop.name}
+                    {hrStores.map((store: any) => (
+                      <SelectItem key={store.id} value={store.id}>
+                        {store.store_name}
                       </SelectItem>
                     ))}
                   </SelectContent>

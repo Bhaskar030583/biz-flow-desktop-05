@@ -33,7 +33,7 @@ interface DailyFinancialFormProps {
 
 const formSchema = z.object({
   credit_date: z.string().min(1, "Date is required"),
-  shop_id: z.string().min(1, "Shop is required"),
+  hr_shop_id: z.string().min(1, "Store is required"),
   cash_amount: z.string().optional(),
   card_amount: z.string().optional(),
   online_amount: z.string().optional(),
@@ -48,7 +48,7 @@ const DailyFinancialForm: React.FC<DailyFinancialFormProps> = ({ onSuccess, onCa
     resolver: zodResolver(formSchema),
     defaultValues: {
       credit_date: format(new Date(), "yyyy-MM-dd"),
-      shop_id: "",
+      hr_shop_id: "",
       cash_amount: "0",
       card_amount: "0",
       online_amount: "0",
@@ -56,20 +56,19 @@ const DailyFinancialForm: React.FC<DailyFinancialFormProps> = ({ onSuccess, onCa
     },
   });
 
-  // Fetch shops for dropdown
-  const { data: shops = [] } = useQuery({
-    queryKey: ["shops"],
+  // Fetch HR stores for dropdown
+  const { data: hrStores = [] } = useQuery({
+    queryKey: ["hr_stores"],
     queryFn: async () => {
       if (!user) return [];
       
       const { data, error } = await supabase
-        .from("shops")
-        .select("id, name")
-        .eq("user_id", user.id)
-        .order("name");
+        .from("hr_stores")
+        .select("id, store_name")
+        .order("store_name");
       
       if (error) {
-        console.error("Error fetching shops:", error);
+        console.error("Error fetching HR stores:", error);
         return [];
       }
       
@@ -84,13 +83,13 @@ const DailyFinancialForm: React.FC<DailyFinancialFormProps> = ({ onSuccess, onCa
     try {
       setIsSubmitting(true);
       
-      // First check if entries already exist for this date and shop
+      // First check if entries already exist for this date and store
       const { data: existingEntries, error: checkError } = await supabase
         .from("credits")
         .select("id, credit_type")
         .eq("user_id", user.id)
         .eq("credit_date", values.credit_date)
-        .eq("shop_id", values.shop_id)
+        .eq("hr_shop_id", values.hr_shop_id)
         .in("credit_type", ["cash", "card", "online", "discount"]);
       
       if (checkError) {
@@ -105,7 +104,7 @@ const DailyFinancialForm: React.FC<DailyFinancialFormProps> = ({ onSuccess, onCa
           .delete()
           .eq("user_id", user.id)
           .eq("credit_date", values.credit_date)
-          .eq("shop_id", values.shop_id)
+          .eq("hr_shop_id", values.hr_shop_id)
           .in("credit_type", ["cash", "card", "online", "discount"]);
         
         if (deleteError) {
@@ -121,7 +120,7 @@ const DailyFinancialForm: React.FC<DailyFinancialFormProps> = ({ onSuccess, onCa
       if (parseFloat(values.cash_amount || "0") > 0) {
         financialEntries.push({
           user_id: user.id,
-          shop_id: values.shop_id,
+          hr_shop_id: values.hr_shop_id,
           credit_date: values.credit_date,
           credit_type: "cash",
           amount: parseFloat(values.cash_amount || "0"),
@@ -132,7 +131,7 @@ const DailyFinancialForm: React.FC<DailyFinancialFormProps> = ({ onSuccess, onCa
       if (parseFloat(values.card_amount || "0") > 0) {
         financialEntries.push({
           user_id: user.id,
-          shop_id: values.shop_id,
+          hr_shop_id: values.hr_shop_id,
           credit_date: values.credit_date,
           credit_type: "card",
           amount: parseFloat(values.card_amount || "0"),
@@ -143,7 +142,7 @@ const DailyFinancialForm: React.FC<DailyFinancialFormProps> = ({ onSuccess, onCa
       if (parseFloat(values.online_amount || "0") > 0) {
         financialEntries.push({
           user_id: user.id,
-          shop_id: values.shop_id,
+          hr_shop_id: values.hr_shop_id,
           credit_date: values.credit_date,
           credit_type: "online",
           amount: parseFloat(values.online_amount || "0"),
@@ -154,7 +153,7 @@ const DailyFinancialForm: React.FC<DailyFinancialFormProps> = ({ onSuccess, onCa
       if (parseFloat(values.discount_amount || "0") > 0) {
         financialEntries.push({
           user_id: user.id,
-          shop_id: values.shop_id,
+          hr_shop_id: values.hr_shop_id,
           credit_date: values.credit_date,
           credit_type: "discount",
           amount: parseFloat(values.discount_amount || "0"),
@@ -231,10 +230,10 @@ const DailyFinancialForm: React.FC<DailyFinancialFormProps> = ({ onSuccess, onCa
 
           <FormField
             control={form.control}
-            name="shop_id"
+            name="hr_shop_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Shop</FormLabel>
+                <FormLabel>Store</FormLabel>
                 <Select 
                   onValueChange={field.onChange} 
                   defaultValue={field.value}
@@ -242,13 +241,13 @@ const DailyFinancialForm: React.FC<DailyFinancialFormProps> = ({ onSuccess, onCa
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select shop" />
+                      <SelectValue placeholder="Select store" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {shops.map((shop: any) => (
-                      <SelectItem key={shop.id} value={shop.id}>
-                        {shop.name}
+                    {hrStores.map((store: any) => (
+                      <SelectItem key={store.id} value={store.id}>
+                        {store.store_name}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -14,15 +14,15 @@ interface Denominations {
   [key: number]: number;
 }
 
-interface Shop {
+interface HRStore {
   id: string;
-  name: string;
+  store_name: string;
 }
 
 export const DenominationManagement: React.FC = () => {
   const { user } = useAuth();
-  const [selectedShop, setSelectedShop] = useState<string>("");
-  const [shops, setShops] = useState<Shop[]>([]);
+  const [selectedHRStore, setSelectedHRStore] = useState<string>("");
+  const [hrStores, setHRStores] = useState<HRStore[]>([]);
   const [denominations, setDenominations] = useState<Denominations>({
     500: 0,
     200: 0,
@@ -40,29 +40,28 @@ export const DenominationManagement: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      fetchShops();
+      fetchHRStores();
     }
   }, [user]);
 
   useEffect(() => {
-    if (selectedShop) {
+    if (selectedHRStore) {
       fetchStoreDenominations();
     }
-  }, [selectedShop]);
+  }, [selectedHRStore]);
 
-  const fetchShops = async () => {
+  const fetchHRStores = async () => {
     try {
       const { data, error } = await supabase
-        .from("shops")
-        .select("id, name")
-        .eq("user_id", user?.id)
-        .order("name");
+        .from("hr_stores")
+        .select("id, store_name")
+        .order("store_name");
 
       if (error) throw error;
-      setShops(data || []);
+      setHRStores(data || []);
     } catch (error) {
-      console.error("Error fetching shops:", error);
-      toast.error("Failed to fetch shops");
+      console.error("Error fetching HR stores:", error);
+      toast.error("Failed to fetch stores");
     }
   };
 
@@ -73,7 +72,7 @@ export const DenominationManagement: React.FC = () => {
       const { data, error } = await supabase
         .from("store_denominations")
         .select("denominations")
-        .eq("shop_id", selectedShop)
+        .eq("hr_shop_id", selectedHRStore)
         .eq("date", today)
         .eq("user_id", user?.id)
         .maybeSingle();
@@ -116,8 +115,8 @@ export const DenominationManagement: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!selectedShop) {
-      toast.error("Please select a shop");
+    if (!selectedHRStore) {
+      toast.error("Please select a store");
       return;
     }
 
@@ -128,13 +127,13 @@ export const DenominationManagement: React.FC = () => {
       const { error } = await supabase
         .from("store_denominations")
         .upsert({
-          shop_id: selectedShop,
+          hr_shop_id: selectedHRStore,
           date: today,
           denominations: denominations as any, // Cast to any to satisfy Json type
           total_amount: calculateTotal(),
           user_id: user?.id
         }, {
-          onConflict: 'shop_id,date,user_id'
+          onConflict: 'hr_shop_id,date,user_id'
         });
 
       if (error) throw error;
@@ -160,22 +159,22 @@ export const DenominationManagement: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="shop-select">Select Shop</Label>
-          <Select value={selectedShop} onValueChange={setSelectedShop}>
+          <Label htmlFor="hr-store-select">Select Store</Label>
+          <Select value={selectedHRStore} onValueChange={setSelectedHRStore}>
             <SelectTrigger>
-              <SelectValue placeholder="Choose a shop" />
+              <SelectValue placeholder="Choose a store" />
             </SelectTrigger>
             <SelectContent>
-              {shops.map((shop) => (
-                <SelectItem key={shop.id} value={shop.id}>
-                  {shop.name}
+              {hrStores.map((store) => (
+                <SelectItem key={store.id} value={store.id}>
+                  {store.store_name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        {selectedShop && (
+        {selectedHRStore && (
           <>
             <div className="grid grid-cols-3 gap-3">
               {denominationValues.map(value => (

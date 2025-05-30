@@ -30,37 +30,36 @@ const CollectionForm: React.FC<CollectionFormProps> = ({ onSuccess, initialData 
   const [amount, setAmount] = useState(initialData?.amount?.toString() || '');
   const [paymentType, setPaymentType] = useState(initialData?.credit_type || 'cash');
   const [description, setDescription] = useState(initialData?.description || '');
-  const [shops, setShops] = useState<any[]>([]);
-  const [selectedShop, setSelectedShop] = useState(initialData?.shop_id || '');
+  const [hrStores, setHrStores] = useState<any[]>([]);
+  const [selectedHrStore, setSelectedHrStore] = useState(initialData?.hr_shop_id || '');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchShops();
+    fetchHrStores();
   }, [user]);
 
-  const fetchShops = async () => {
+  const fetchHrStores = async () => {
     if (!user) return;
     
     try {
       const { data, error } = await supabase
-        .from('shops')
-        .select('id, name')
-        .eq('user_id', user.id)
-        .order('name');
+        .from('hr_stores')
+        .select('id, store_name')
+        .order('store_name');
 
       if (error) throw error;
-      setShops(data || []);
+      setHrStores(data || []);
     } catch (error) {
-      console.error('Error fetching shops:', error);
-      toast.error('Failed to fetch shops');
+      console.error('Error fetching HR stores:', error);
+      toast.error('Failed to fetch stores');
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedShop) {
-      toast.error('Please select a shop');
+    if (!selectedHrStore) {
+      toast.error('Please select a store');
       return;
     }
     
@@ -76,7 +75,7 @@ const CollectionForm: React.FC<CollectionFormProps> = ({ onSuccess, initialData 
         .upsert({
           id: initialData?.id || undefined,
           user_id: user?.id,
-          shop_id: selectedShop,
+          hr_shop_id: selectedHrStore,
           credit_date: format(date, 'yyyy-MM-dd'),
           amount: parseFloat(amount),
           credit_type: paymentType,
@@ -93,7 +92,7 @@ const CollectionForm: React.FC<CollectionFormProps> = ({ onSuccess, initialData 
         setAmount('');
         setDescription('');
         setDate(new Date());
-        setSelectedShop('');
+        setSelectedHrStore('');
         setPaymentType('cash');
       }
     } catch (error) {
@@ -175,20 +174,20 @@ const CollectionForm: React.FC<CollectionFormProps> = ({ onSuccess, initialData 
             </div>
 
             <div>
-              <Label htmlFor="shop">Shop</Label>
-              <Select value={selectedShop} onValueChange={setSelectedShop}>
+              <Label htmlFor="hrStore">Store</Label>
+              <Select value={selectedHrStore} onValueChange={setSelectedHrStore}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select shop" />
+                  <SelectValue placeholder="Select store" />
                 </SelectTrigger>
                 <SelectContent className="bg-white">
-                  {shops.map((shop) => (
-                    <SelectItem key={shop.id} value={shop.id}>
-                      {shop.name}
+                  {hrStores.map((store) => (
+                    <SelectItem key={store.id} value={store.id}>
+                      {store.store_name}
                     </SelectItem>
                   ))}
-                  {shops.length === 0 && (
+                  {hrStores.length === 0 && (
                     <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                      No shops available
+                      No stores available
                     </div>
                   )}
                 </SelectContent>

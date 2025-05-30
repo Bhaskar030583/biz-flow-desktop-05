@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -43,30 +44,29 @@ const CollectionList = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [collectionToDelete, setCollectionToDelete] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [shopFilter, setShopFilter] = useState('');
-  const [shops, setShops] = useState<any[]>([]);
+  const [storeFilter, setStoreFilter] = useState('');
+  const [hrStores, setHrStores] = useState<any[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) return;
     fetchCollections();
-    fetchShops();
+    fetchHrStores();
   }, [user]);
 
   const fetchCollections = async () => {
     try {
       setIsLoading(true);
       
-      // Change from "collections" to "credits"
       let query = supabase
-        .from('credits')  // Use 'credits' not 'collections'
+        .from('credits')
         .select(`
           id,
-          credit_date,  // Use credit_date instead of collection_date
+          credit_date,
           amount,
-          credit_type,  // Use credit_type instead of payment_type
-          shop_id,
-          shops (name)
+          credit_type,
+          hr_shop_id,
+          hr_stores (store_name)
         `)
         .eq('user_id', user.id)
         .order('credit_date', { ascending: false });
@@ -75,8 +75,8 @@ const CollectionList = () => {
         query = query.ilike('description', `%${searchTerm}%`);
       }
 
-      if (shopFilter) {
-        query = query.eq('shop_id', shopFilter);
+      if (storeFilter) {
+        query = query.eq('hr_shop_id', storeFilter);
       }
       
       const { data, error } = await query;
@@ -90,25 +90,23 @@ const CollectionList = () => {
     }
   };
 
-  const fetchShops = async () => {
+  const fetchHrStores = async () => {
     try {
       const { data, error } = await supabase
-        .from('shops')
-        .select('id, name')
-        .eq('user_id', user.id);
+        .from('hr_stores')
+        .select('id, store_name');
 
       if (error) throw error;
-      setShops(data || []);
+      setHrStores(data || []);
     } catch (error) {
-      console.error('Error fetching shops:', error);
+      console.error('Error fetching HR stores:', error);
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      // Change from "collections" to "credits"
       const { error } = await supabase
-        .from('credits')  // Use 'credits' not 'collections'
+        .from('credits')
         .delete()
         .eq('id', id);
       
@@ -144,8 +142,8 @@ const CollectionList = () => {
     fetchCollections();
   };
 
-  const handleShopFilterChange = (value: string) => {
-    setShopFilter(value);
+  const handleStoreFilterChange = (value: string) => {
+    setStoreFilter(value);
     fetchCollections();
   };
 
@@ -166,16 +164,16 @@ const CollectionList = () => {
 
           <div className="flex flex-1 gap-2">
             <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Label htmlFor="shop">Shop</Label>
-              <Select value={shopFilter} onValueChange={handleShopFilterChange}>
+              <Label htmlFor="store">Store</Label>
+              <Select value={storeFilter} onValueChange={handleStoreFilterChange}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="All Shops" />
+                  <SelectValue placeholder="All Stores" />
                 </SelectTrigger>
                 <SelectContent className="bg-white">
-                  <SelectItem value="">All Shops</SelectItem>
-                  {shops.map((shop) => (
-                    <SelectItem key={shop.id} value={shop.id}>
-                      {shop.name}
+                  <SelectItem value="">All Stores</SelectItem>
+                  {hrStores.map((store) => (
+                    <SelectItem key={store.id} value={store.id}>
+                      {store.store_name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -192,7 +190,7 @@ const CollectionList = () => {
             <TableHead className="w-[100px]">Date</TableHead>
             <TableHead>Amount</TableHead>
             <TableHead>Payment Mode</TableHead>
-            <TableHead>Shop</TableHead>
+            <TableHead>Store</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -211,7 +209,7 @@ const CollectionList = () => {
                 <TableCell>{format(new Date(collection.credit_date), 'PPP')}</TableCell>
                 <TableCell>${collection.amount}</TableCell>
                 <TableCell>{collection.credit_type}</TableCell>
-                <TableCell>{collection.shops?.name}</TableCell>
+                <TableCell>{collection.hr_stores?.store_name}</TableCell>
                 <TableCell className="text-right font-medium">
                   <div className="flex justify-end gap-2">
                     <Button size="icon" variant="outline" onClick={() => copyToClipboard(JSON.stringify(collection))}>
