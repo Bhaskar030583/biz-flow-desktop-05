@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { format } from "date-fns";
 import { Save, Plus, Store, Calendar } from "lucide-react";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Product {
   id: string;
@@ -146,7 +146,7 @@ const StockCreationForm: React.FC<StockCreationFormProps> = ({ onSuccess, onCanc
       const stockData = stockEntries.map(entry => ({
         stock_date: stockDate,
         product_id: entry.productId,
-        shop_id: selectedShop,
+        hr_shop_id: selectedShop,
         opening_stock: entry.openingStock,
         closing_stock: entry.openingStock + entry.stockAdded,
         actual_stock: entry.actualStock,
@@ -157,7 +157,7 @@ const StockCreationForm: React.FC<StockCreationFormProps> = ({ onSuccess, onCanc
       const { error } = await supabase
         .from('stocks')
         .upsert(stockData, {
-          onConflict: 'stock_date,product_id,shop_id',
+          onConflict: 'stock_date,product_id,hr_shop_id',
           ignoreDuplicates: false
         });
 
