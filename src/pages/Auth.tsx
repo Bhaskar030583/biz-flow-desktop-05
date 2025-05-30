@@ -113,11 +113,8 @@ const Auth = () => {
                 className="h-20 w-auto rounded-lg shadow-lg"
               />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-              ABC Cafe
-            </CardTitle>
             <CardDescription className="text-center text-gray-600 dark:text-gray-400">
-              {activeTab === "login" ? "Welcome back to your dashboard" : "Create your business account"}
+              {activeTab === "login" ? "Welcome back" : "Create your business account"}
             </CardDescription>
           </CardHeader>
           <CardContent>
