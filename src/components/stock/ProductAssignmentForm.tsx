@@ -72,22 +72,24 @@ const ProductAssignmentForm = ({
     try {
       const today = new Date().toISOString().split('T')[0];
 
-      // Assign product to HR store
+      // Assign product to HR store - provide both shop_id and hr_shop_id for backward compatibility
       const { error: assignError } = await supabase
         .from('product_shops')
         .insert({
           product_id: selectedProductToAssign,
+          shop_id: selectedShop, // Use selectedShop as shop_id for now
           hr_shop_id: selectedShop,
           user_id: user?.id
         });
 
       if (assignError) throw assignError;
 
-      // Create initial stock entry using hr_shop_id
+      // Create initial stock entry - provide both shop_id and hr_shop_id for backward compatibility
       const { error: stockError } = await supabase
         .from('stocks')
         .insert({
           product_id: selectedProductToAssign,
+          shop_id: selectedShop, // Use selectedShop as shop_id for now
           hr_shop_id: selectedShop,
           stock_date: today,
           opening_stock: Number(initialStockQuantity),
