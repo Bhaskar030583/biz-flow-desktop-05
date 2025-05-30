@@ -114,8 +114,10 @@ const POS = () => {
       return productsWithStock;
     },
     enabled: !!selectedStoreId && !!user?.id,
-    refetchInterval: 30000, // Auto-refetch every 30 seconds for real-time updates
-    staleTime: 10000 // Consider data stale after 10 seconds
+    refetchInterval: 10000, // Reduced from 30s to 10s for more frequent updates
+    staleTime: 5000, // Reduced from 10s to 5s - consider data stale faster
+    refetchOnWindowFocus: true, // Refetch when window gains focus
+    refetchOnMount: true // Always refetch on mount
   });
 
   // Check if this is a popup window and open popup if not
@@ -148,6 +150,37 @@ const POS = () => {
     }
   }, []);
 
+  // Set up real-time listener for stock changes
+  useEffect(() => {
+    if (!selectedStoreId || !user?.id) return;
+
+    console.log('📡 [POS] Setting up real-time stock listener for store:', selectedStoreId);
+    
+    const channel = supabase
+      .channel('stock-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'stocks',
+          filter: `hr_shop_id=eq.${selectedStoreId}`
+        },
+        (payload) => {
+          console.log('📡 [POS] Real-time stock change detected:', payload);
+          // Invalidate and refetch products to get updated stock
+          queryClient.invalidateQueries({ queryKey: ['pos-products', selectedStoreId] });
+          refetchProducts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('📡 [POS] Cleaning up real-time stock listener');
+      supabase.removeChannel(channel);
+    };
+  }, [selectedStoreId, user?.id, queryClient, refetchProducts]);
+
   const handleStoreInfoComplete = (info: StoreInfo, shiftId: string, storeId: string) => {
     console.log('✅ [POS] Store info completed:', { info, shiftId, storeId });
     setStoreInfo(info);
@@ -163,6 +196,7 @@ const POS = () => {
   };
 
   const handleStockAdded = () => {
+    console.log('🔄 [POS] Stock updated, refreshing product data');
     // Invalidate and refresh all relevant queries
     queryClient.invalidateQueries({ queryKey: ['pos-products'] });
     queryClient.invalidateQueries({ queryKey: ['product-stock-management'] });
