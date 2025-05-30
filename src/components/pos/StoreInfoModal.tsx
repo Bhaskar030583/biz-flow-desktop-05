@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +43,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
   const [selectedShiftId, setSelectedShiftId] = useState("");
   const [salespersonName, setSalespersonName] = useState("");
 
-  // Query for user profile to get the full name
+  // Query for user profile to get the full name - only when modal is open
   const { data: userProfile } = useQuery({
     queryKey: ['user-profile', user?.id],
     queryFn: async () => {
@@ -62,14 +62,15 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
       
       return data;
     },
-    enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    enabled: !!user?.id && isOpen,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
-    refetchOnMount: false
+    refetchOnMount: false,
+    refetchOnReconnect: false
   });
 
-  // Query for hr_stores - get stores from HRMS
+  // Query for hr_stores - only when modal is open
   const { data: hrStores, isLoading: storesLoading, error: storesError } = useQuery({
     queryKey: ['hrms-stores-modal'],
     queryFn: async () => {
@@ -90,13 +91,14 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
       return data || [];
     },
     enabled: !!user?.id && isOpen,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
-    refetchOnMount: false
+    refetchOnMount: false,
+    refetchOnReconnect: false
   });
 
-  // Query for shifts from hr_shifts table based on selected store
+  // Query for shifts from hr_shifts table based on selected store - only when store is selected
   const { data: hrShifts, isLoading: shiftsLoading } = useQuery({
     queryKey: ['hrms-shifts', selectedStoreId],
     queryFn: async () => {
@@ -121,32 +123,56 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
       console.log('✅ [StoreInfoModal] Fetched HR shifts:', data);
       return data || [];
     },
-    enabled: !!selectedStoreId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    enabled: !!selectedStoreId && isOpen,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
-    refetchOnMount: false
+    refetchOnMount: false,
+    refetchOnReconnect: false
   });
 
-  // Set salesperson name when user profile is loaded - only run once
-  useEffect(() => {
-    if (userProfile?.full_name && !salespersonName) {
-      setSalespersonName(userProfile.full_name);
-    } else if (user?.email && !salespersonName && !userProfile?.full_name) {
-      // Fallback to email if full name is not available
-      setSalespersonName(user.email.split('@')[0]);
+  // Set salesperson name when user profile is loaded - memoized to prevent re-renders
+  const initializeSalespersonName = useCallback(() => {
+    if (!salespersonName) {
+      if (userProfile?.full_name) {
+        setSalespersonName(userProfile.full_name);
+      } else if (user?.email) {
+        setSalespersonName(user.email.split('@')[0]);
+      }
     }
-  }, [userProfile, user, salespersonName]);
+  }, [userProfile?.full_name, user?.email, salespersonName]);
 
-  // Reset form when modal closes
   useEffect(() => {
+    if (isOpen) {
+      initializeSalespersonName();
+    }
+  }, [isOpen, initializeSalespersonName]);
+
+  // Reset form when modal closes - memoized to prevent unnecessary re-renders
+  const resetForm = useCallback(() => {
     if (!isOpen) {
       setSelectedStoreId("");
       setSelectedShiftId("");
+      // Don't reset salesperson name as it should persist
     }
   }, [isOpen]);
 
-  const handleSubmit = () => {
+  useEffect(() => {
+    resetForm();
+  }, [resetForm]);
+
+  // Handle store selection with callback to prevent re-renders
+  const handleStoreChange = useCallback((value: string) => {
+    setSelectedStoreId(value);
+    setSelectedShiftId(""); // Reset shift when store changes
+  }, []);
+
+  // Handle shift selection with callback
+  const handleShiftChange = useCallback((value: string) => {
+    setSelectedShiftId(value);
+  }, []);
+
+  const handleSubmit = useCallback(() => {
     console.log('📝 [StoreInfoModal] Submit button clicked');
     
     if (!selectedStoreId) {
@@ -190,7 +216,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
       selectedShiftId,
       selectedStoreId
     );
-  };
+  }, [selectedStoreId, selectedShiftId, salespersonName, hrStores, hrShifts, onComplete]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -200,7 +226,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
             <img 
               src="/lovable-uploads/7e552f66-f5e2-416f-af98-1a5f74c1bfed.png" 
               alt="ABC Cafe Logo" 
-              className="h-20 w-auto object-contain rounded-lg shadow-lg"
+              className="h-32 w-auto object-contain rounded-lg shadow-lg"
             />
           </div>
         </DialogHeader>
@@ -230,10 +256,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
               </div>
             ) : (
               <div className="space-y-2">
-                <Select value={selectedStoreId} onValueChange={(value) => {
-                  setSelectedStoreId(value);
-                  setSelectedShiftId("");
-                }}>
+                <Select value={selectedStoreId} onValueChange={handleStoreChange}>
                   <SelectTrigger className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500">
                     <SelectValue placeholder="Choose store location" />
                   </SelectTrigger>
@@ -282,7 +305,7 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
               </div>
             ) : (
               <div className="space-y-2">
-                <Select value={selectedShiftId} onValueChange={setSelectedShiftId} disabled={!selectedStoreId}>
+                <Select value={selectedShiftId} onValueChange={handleShiftChange} disabled={!selectedStoreId}>
                   <SelectTrigger className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500 disabled:opacity-50">
                     <SelectValue placeholder="Choose work shift" />
                   </SelectTrigger>
