@@ -77,9 +77,9 @@ export const useDashboardData = (
           collectionQuery = collectionQuery.lte("credit_date", formattedEndDate);
         }
         
-        // Apply shop filter to collections
+        // Apply HR store filter to collections
         if (selectedShops && selectedShops.length > 0) {
-          collectionQuery = collectionQuery.in("shop_id", selectedShops);
+          collectionQuery = collectionQuery.in("hr_shop_id", selectedShops);
         }
 
         // Apply amount range filters
@@ -138,9 +138,9 @@ export const useDashboardData = (
           salesQuery = salesQuery.lte("sale_date", formattedEndDate);
         }
         
-        // Apply shop filter to sales
+        // Apply HR store filter to sales
         if (selectedShops && selectedShops.length > 0) {
-          salesQuery = salesQuery.in("shop_id", selectedShops);
+          salesQuery = salesQuery.in("hr_shop_id", selectedShops);
         }
         
         // Apply product filter
@@ -241,7 +241,7 @@ export const useDashboardData = (
             actual_stock,
             operator_name,
             products (id, name, price, cost_price),
-            shops (id, name)
+            hr_stores!stocks_hr_shop_id_fkey (id, store_name)
           `);
         
         // Apply date filters
@@ -255,9 +255,9 @@ export const useDashboardData = (
           query = query.lte("stock_date", formattedEndDate);
         }
         
-        // Apply shop filter
+        // Apply HR store filter
         if (selectedShops && selectedShops.length > 0) {
-          query = query.in("shop_id", selectedShops);
+          query = query.in("hr_shop_id", selectedShops);
         }
         
         // Apply product filter

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { CalendarIcon, Filter, X } from "lucide-react";
 import { format } from "date-fns";
@@ -74,21 +73,27 @@ export function DashboardFilters({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch shops, categories, and products on component mount
+  // Fetch HR stores, categories, and products on component mount
   useEffect(() => {
     if (!user) return;
     
     const fetchFilterData = async () => {
       setIsLoading(true);
       try {
-        // Fetch shops
+        // Fetch HR stores instead of shops
         const { data: shopsData } = await supabase
-          .from("shops")
-          .select("id, name")
-          .eq("user_id", user.id)
-          .order("name");
+          .from("hr_stores")
+          .select("id, store_name, store_code")
+          .order("store_name");
         
-        setShops(shopsData || []);
+        // Transform HR stores data to match expected interface
+        const transformedShops = shopsData?.map(store => ({
+          id: store.id,
+          name: store.store_name,
+          store_code: store.store_code
+        })) || [];
+        
+        setShops(transformedShops);
         
         // Fetch categories
         const { data: productsData } = await supabase
@@ -309,9 +314,9 @@ export function DashboardFilters({
             </div>
           </div>
 
-          {/* Store Selection */}
+          {/* Store Selection - Now using HR Stores */}
           <div>
-            <Label className="text-sm font-medium">Store</Label>
+            <Label className="text-sm font-medium">HR Store</Label>
             <Select
               value={selectedShops.length === 1 ? selectedShops[0] : "all_stores"}
               onValueChange={(value) => {
@@ -323,13 +328,13 @@ export function DashboardFilters({
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="All Stores" />
+                <SelectValue placeholder="All HR Stores" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all_stores">All Stores</SelectItem>
+                <SelectItem value="all_stores">All HR Stores</SelectItem>
                 {shops.map((shop) => (
                   <SelectItem key={shop.id} value={shop.id}>
-                    {shop.name}
+                    {shop.name} {shop.store_code && `(${shop.store_code})`}
                   </SelectItem>
                 ))}
               </SelectContent>
