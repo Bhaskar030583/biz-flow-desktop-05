@@ -23,7 +23,7 @@ export const exportStockData = async (
         operator_name,
         cash_received,
         online_received,
-        shops (id, name),
+        hr_stores!stocks_hr_shop_id_fkey (id, store_name),
         products (id, name, price, cost_price)
       `)
       .order("stock_date", { ascending: false });
@@ -46,8 +46,8 @@ export const exportStockData = async (
 
     const exportData = data.map(entry => ({
       Date: entry.stock_date,
-      Shop: entry.shops?.name,
-      Product: entry.products?.name,
+      Shop: entry.hr_stores?.store_name || "Unknown Store",
+      Product: entry.products?.name || "Unknown Product",
       "Opening Stock": entry.opening_stock,
       "Closing Stock": entry.closing_stock,
       "Actual Stock": entry.actual_stock,

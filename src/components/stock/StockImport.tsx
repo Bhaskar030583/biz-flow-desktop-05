@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { read, utils } from "xlsx";
@@ -101,9 +100,17 @@ const StockImport = ({ onComplete }: StockImportProps) => {
 
   const processImportData = async (data: any[]) => {
     try {
-      // Get shops and products for mapping
-      const { data: shops } = await supabase.from("shops").select("id, name");
-      const { data: products } = await supabase.from("products").select("id, name");
+      // Get hr_stores and products for mapping
+      const { data: hrStores, error: storesError } = await supabase
+        .from("hr_stores")
+        .select("id, store_name");
+      
+      const { data: products, error: productsError } = await supabase
+        .from("products")
+        .select("id, name");
+      
+      if (storesError) throw storesError;
+      if (productsError) throw productsError;
       
       // Get user ID
       const { data: { user } } = await supabase.auth.getUser();
@@ -112,7 +119,7 @@ const StockImport = ({ onComplete }: StockImportProps) => {
         throw new Error("User not authenticated");
       }
       
-      const shopMap = new Map(shops?.map(shop => [shop.name.toLowerCase(), shop.id]) || []);
+      const shopMap = new Map(hrStores?.map(store => [store.store_name.toLowerCase(), store.id]) || []);
       const productMap = new Map(products?.map(product => [product.name.toLowerCase(), product.id]) || []);
       
       // Process data

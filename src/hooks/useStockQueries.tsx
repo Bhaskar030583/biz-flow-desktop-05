@@ -12,7 +12,7 @@ export interface StockEntry {
   actual_stock: number;
   stock_added?: number;
   operator_name?: string;
-  shops?: { id: string; name: string };
+  hr_stores?: { id: string; store_name: string };
   products?: { id: string; name: string; price: number; cost_price: number | null };
 }
 
@@ -61,7 +61,7 @@ export const useStockQueries = ({
           actual_stock,
           stock_added,
           operator_name,
-          shops (id, name),
+          hr_stores!stocks_hr_shop_id_fkey (id, store_name),
           products (id, name, price, cost_price)
         `)
         .gte('stock_date', fromDate)
@@ -108,7 +108,7 @@ export const useStockQueries = ({
       if (storesError) throw storesError;
 
       // Transform to match expected format
-      const stores = hrStores?.map(store => ({
+      const shops = hrStores?.map(store => ({
         id: store.id,
         name: store.store_name
       })) || [];
@@ -121,7 +121,7 @@ export const useStockQueries = ({
       
       if (productsError) throw productsError;
 
-      return { shops: stores, products: products || [] };
+      return { shops, products: products || [] };
     },
     staleTime: 1000 * 60 * 15, // 15 minutes
   });
@@ -132,11 +132,11 @@ export const useStockQueries = ({
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = !searchTerm || 
       entry.products?.name?.toLowerCase().includes(searchLower) ||
-      entry.shops?.name?.toLowerCase().includes(searchLower) ||
+      entry.hr_stores?.store_name?.toLowerCase().includes(searchLower) ||
       entry.operator_name?.toLowerCase().includes(searchLower);
       
     // Shop filter - handle both empty string and "_all" as "show all"
-    const matchesShop = !shopFilter || shopFilter === "_all" || entry.shops?.id === shopFilter;
+    const matchesShop = !shopFilter || shopFilter === "_all" || entry.hr_stores?.id === shopFilter;
     
     // Product filter - handle both empty string and "_all" as "show all"
     const matchesProduct = !productFilter || productFilter === "_all" || entry.products?.id === productFilter;

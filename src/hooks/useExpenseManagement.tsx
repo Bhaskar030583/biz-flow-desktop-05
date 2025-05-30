@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,22 +48,25 @@ export const useExpenseManagement = () => {
 
   // Fetch shops for the current user
   const { data: shops = [] } = useQuery({
-    queryKey: ['shops'],
+    queryKey: ['hr-stores'],
     queryFn: async () => {
       if (!user) return [];
       
       const { data, error } = await supabase
-        .from('shops')
-        .select('id, name')
-        .eq('user_id', user.id);
+        .from('hr_stores')
+        .select('id, store_name')
+        .order('store_name');
       
       if (error) {
-        console.error('Error fetching shops:', error);
-        toast.error('Failed to load shops');
+        console.error('Error fetching stores:', error);
+        toast.error('Failed to load stores');
         return [];
       }
       
-      return data;
+      return data?.map(store => ({
+        id: store.id,
+        name: store.store_name
+      })) || [];
     },
     enabled: !!user
   });
@@ -77,7 +81,7 @@ export const useExpenseManagement = () => {
         .from('expenses')
         .select(`
           *,
-          shops!inner(name)
+          hr_stores!expenses_hr_shop_id_fkey(store_name)
         `)
         .eq('user_id', user.id)
         .order('expense_date', { ascending: false });
@@ -91,7 +95,7 @@ export const useExpenseManagement = () => {
       // Transform the data to include shop_name
       return data.map(expense => ({
         ...expense,
-        shop_name: expense.shops.name
+        shop_name: expense.hr_stores?.store_name || 'Unknown Store'
       })) as Expense[];
     },
     enabled: !!user
@@ -102,7 +106,10 @@ export const useExpenseManagement = () => {
     mutationFn: async (expenseData: Omit<Expense, 'id' | 'created_at' | 'shop_name'>) => {
       const { data, error } = await supabase
         .from('expenses')
-        .insert([expenseData])
+        .insert([{
+          ...expenseData,
+          hr_shop_id: expenseData.shop_id
+        }])
         .select()
         .single();
 
@@ -168,6 +175,7 @@ export const useExpenseManagement = () => {
           expense_date: expense.expense_date,
           payment_method: expense.payment_method,
           shop_id: expense.shop_id,
+          hr_shop_id: expense.shop_id,
         })
         .eq('id', expense.id)
         .select()

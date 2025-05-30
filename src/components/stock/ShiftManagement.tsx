@@ -31,14 +31,18 @@ const ShiftManagement = () => {
   });
 
   const { data: stores } = useQuery({
-    queryKey: ['stores'],
+    queryKey: ['hr-stores'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('shops')
-        .select('id, name')
-        .eq('user_id', user?.id);
+        .from('hr_stores')
+        .select('id, store_name')
+        .order('store_name');
       if (error) throw error;
-      return data || [];
+      
+      return data?.map(store => ({
+        id: store.id,
+        name: store.store_name
+      })) || [];
     },
     enabled: !!user?.id
   });

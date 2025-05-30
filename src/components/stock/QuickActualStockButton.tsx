@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -63,17 +62,22 @@ const QuickActualStockButton = ({ onStockAdded }: QuickActualStockButtonProps) =
           .eq('user_id', user?.id)
           .order('name'),
         supabase
-          .from('shops')
-          .select('id, name')
-          .eq('user_id', user?.id)
-          .order('name')
+          .from('hr_stores')
+          .select('id, store_name')
+          .order('store_name')
       ]);
 
       if (productsResult.error) throw productsResult.error;
       if (shopsResult.error) throw shopsResult.error;
 
       setProducts(productsResult.data || []);
-      setShops(shopsResult.data || []);
+      
+      const transformedShops = shopsResult.data?.map(store => ({
+        id: store.id,
+        name: store.store_name
+      })) || [];
+      
+      setShops(transformedShops);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load products and shops');
