@@ -78,8 +78,11 @@ const POS = () => {
       // Get product IDs
       const productIds = allProducts.map(product => product.id);
 
-      // Get stock data for these products at the selected HR store using hr_shop_id
-      const { data: stockData, error: stockError } = await supabase
+      // Try to get stock data using both hr_shop_id and shop_id to handle different storage methods
+      console.log('📊 [POS] Attempting to fetch stock data for store:', selectedStoreId);
+      
+      // First try with hr_shop_id
+      let { data: stockData, error: stockError } = await supabase
         .from('stocks')
         .select('product_id, opening_stock, stock_added, actual_stock, closing_stock')
         .eq('hr_shop_id', selectedStoreId)
@@ -87,12 +90,29 @@ const POS = () => {
         .eq('stock_date', today)
         .in('product_id', productIds);
       
-      if (stockError) {
+      // If no data found with hr_shop_id, try with shop_id
+      if (stockError || !stockData || stockData.length === 0) {
+        console.log('📊 [POS] No stock found with hr_shop_id, trying shop_id...');
+        const shopIdResult = await supabase
+          .from('stocks')
+          .select('product_id, opening_stock, stock_added, actual_stock, closing_stock')
+          .eq('shop_id', selectedStoreId)
+          .eq('user_id', user?.id)
+          .eq('stock_date', today)
+          .in('product_id', productIds);
+        
+        if (!shopIdResult.error) {
+          stockData = shopIdResult.data;
+          console.log('📊 [POS] Found stock data using shop_id:', stockData);
+        }
+      }
+      
+      if (stockError && !stockData) {
         console.error('❌ [POS] Error fetching stock data:', stockError);
         // Don't throw error, just log it and continue with zero stock
       }
 
-      console.log('📊 [POS] Stock data:', stockData);
+      console.log('📊 [POS] Final stock data:', stockData);
 
       // Get today's sales data to calculate real-time available stock
       const { data: salesData, error: salesError } = await supabase
@@ -111,7 +131,7 @@ const POS = () => {
         console.error('❌ [POS] Error fetching sales data:', salesError);
       }
 
-      console.log('💰 [POS] Sales data:', salesData);
+      console.log('💰 [POS] Sales data for today:', salesData);
 
       // Create maps for quick lookup
       const stockMap = new Map();
@@ -139,17 +159,19 @@ const POS = () => {
         let availableQuantity = 0;
         
         if (stockInfo) {
-          // If actual_stock is available (counted), use it
+          // Use actual_stock if available (manually counted)
           if (stockInfo.actual !== null && stockInfo.actual !== undefined) {
             availableQuantity = Math.max(0, stockInfo.actual - soldToday);
+            console.log(`📊 [POS] Product ${product.name}: Using actual stock ${stockInfo.actual} - sold ${soldToday} = ${availableQuantity}`);
           } else {
-            // Otherwise calculate expected closing: opening + added - sold
-            const expectedClosing = stockInfo.opening + stockInfo.added - soldToday;
-            availableQuantity = Math.max(0, expectedClosing);
+            // Calculate expected available: (opening + added) - sold today
+            const expectedAvailable = (stockInfo.opening + stockInfo.added) - soldToday;
+            availableQuantity = Math.max(0, expectedAvailable);
+            console.log(`📊 [POS] Product ${product.name}: Calculated available (${stockInfo.opening} + ${stockInfo.added}) - ${soldToday} = ${availableQuantity}`);
           }
+        } else {
+          console.log(`⚠️ [POS] No stock info found for product ${product.name} (ID: ${product.id})`);
         }
-
-        console.log(`📊 [POS] Product ${product.name}: Opening=${stockInfo?.opening || 0}, Added=${stockInfo?.added || 0}, Sold=${soldToday}, Available=${availableQuantity}`);
 
         return {
           id: product.id,
@@ -164,10 +186,10 @@ const POS = () => {
       return productsWithStock;
     },
     enabled: !!selectedStoreId && !!user?.id,
-    refetchInterval: 10000, // Reduced from 30s to 10s for more frequent updates
-    staleTime: 5000, // Reduced from 10s to 5s - consider data stale faster
-    refetchOnWindowFocus: true, // Refetch when window gains focus
-    refetchOnMount: true // Always refetch on mount
+    refetchInterval: 5000, // Check every 5 seconds for stock updates
+    staleTime: 2000, // Consider data stale after 2 seconds
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   });
 
   // Check if this is a popup window and open popup if not
@@ -218,6 +240,21 @@ const POS = () => {
         },
         (payload) => {
           console.log('📡 [POS] Real-time stock change detected:', payload);
+          // Invalidate and refetch products to get updated stock
+          queryClient.invalidateQueries({ queryKey: ['pos-products', selectedStoreId] });
+          refetchProducts();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'stocks',
+          filter: `shop_id=eq.${selectedStoreId}`
+        },
+        (payload) => {
+          console.log('📡 [POS] Real-time stock change detected (shop_id):', payload);
           // Invalidate and refetch products to get updated stock
           queryClient.invalidateQueries({ queryKey: ['pos-products', selectedStoreId] });
           refetchProducts();
