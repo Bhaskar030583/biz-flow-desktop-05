@@ -182,6 +182,12 @@ const LossTracking = () => {
     };
   }, [losses, products, stores]);
 
+  // Helper function to validate loss type
+  const isValidLossType = (value: string): value is LossType => {
+    const validLossTypes: LossType[] = ["theft", "damage", "expiry", "spillage", "breakage", "other"];
+    return validLossTypes.includes(value as LossType);
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -189,8 +195,7 @@ const LossTracking = () => {
     const lossTypeValue = formData.get('loss_type') as string;
     
     // Validate that the loss type is one of the allowed values
-    const validLossTypes: LossType[] = ["theft", "damage", "expiry", "spillage", "breakage", "other"];
-    if (!validLossTypes.includes(lossTypeValue as LossType)) {
+    if (!isValidLossType(lossTypeValue)) {
       toast.error("Invalid loss type selected");
       return;
     }
@@ -199,7 +204,7 @@ const LossTracking = () => {
       product_id: formData.get('product_id') as string,
       hr_shop_id: formData.get('hr_shop_id') as string,
       shift_id: formData.get('shift_id') as string,
-      loss_type: lossTypeValue as LossType,
+      loss_type: lossTypeValue, // Now TypeScript knows this is LossType
       quantity_lost: parseInt(formData.get('quantity_lost') as string),
       reason: formData.get('reason') as string || null,
       operator_name: formData.get('operator_name') as string || null,
