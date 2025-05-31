@@ -51,18 +51,6 @@ const ProductStockTable = ({
     return "text-gray-600";
   };
 
-  // Debug log the products being rendered
-  React.useEffect(() => {
-    if (filteredProducts.length > 0) {
-      console.log('🏪 [ProductStockTable] Rendering products:', filteredProducts.map(p => ({
-        name: p.name,
-        actualStock: p.actual_stock,
-        actualStockType: typeof p.actual_stock,
-        actualStockValue: JSON.stringify(p.actual_stock)
-      })));
-    }
-  }, [filteredProducts]);
-
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -83,13 +71,6 @@ const ProductStockTable = ({
         </TableHeader>
         <TableBody>
           {filteredProducts.map((product) => {
-            // Debug log for each product being rendered
-            console.log(`🔍 [ProductStockTable] Rendering product ${product.name}:`, {
-              actual_stock: product.actual_stock,
-              type: typeof product.actual_stock,
-              stringified: JSON.stringify(product.actual_stock)
-            });
-
             return (
               <TableRow key={`${product.assignment_id}-${product.shop_id}`}>
                 <TableCell>
@@ -110,9 +91,6 @@ const ProductStockTable = ({
                   <span className="font-medium text-blue-600">
                     {product.actual_stock !== null && product.actual_stock !== undefined ? product.actual_stock : 0}
                   </span>
-                  <div className="text-xs text-gray-500">
-                    (Type: {typeof product.actual_stock}, Value: {JSON.stringify(product.actual_stock)})
-                  </div>
                 </TableCell>
                 <TableCell className={`text-right ${getVarianceColor(product.variance || 0)}`}>
                   {product.variance !== undefined ? (product.variance > 0 ? `+${product.variance}` : product.variance) : '0'}

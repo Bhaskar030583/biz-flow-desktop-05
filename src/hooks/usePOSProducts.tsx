@@ -11,6 +11,10 @@ interface Product {
   category: string;
   quantity?: number;
   expectedClosing?: number;
+  actualStock?: number;
+  openingStock?: number;
+  stockAdded?: number;
+  soldToday?: number;
 }
 
 export const usePOSProducts = (selectedStoreId: string) => {
@@ -150,15 +154,20 @@ export const usePOSProducts = (selectedStoreId: string) => {
         // Expected closing = Opening Stock + Stock Added - Sold
         const expectedClosing = Math.max(0, openingStock + stockAdded - soldToday);
         
-        // Available quantity for POS = Expected Closing (what should be available to sell)
-        const availableQuantity = expectedClosing;
+        // Actual stock = from database if available, otherwise equals expected closing
+        let actualStock = expectedClosing; // Default to expected closing
+        
+        if (todayStock?.actual !== null && todayStock?.actual !== undefined) {
+          actualStock = todayStock.actual;
+        }
 
         console.log(`📊 [POS] Product ${product.name}:`, {
           openingStock,
           stockAdded,
           soldToday,
           expectedClosing,
-          availableQuantity,
+          actualStock,
+          actualStockFromDB: todayStock?.actual,
           calculation: `${openingStock} + ${stockAdded} - ${soldToday} = ${expectedClosing}`
         });
 
@@ -167,8 +176,12 @@ export const usePOSProducts = (selectedStoreId: string) => {
           name: product.name,
           price: product.price,
           category: product.category,
-          quantity: availableQuantity,
-          expectedClosing: expectedClosing
+          quantity: expectedClosing, // For POS display (Expected Closing)
+          expectedClosing: expectedClosing,
+          actualStock: actualStock,
+          openingStock: openingStock,
+          stockAdded: stockAdded,
+          soldToday: soldToday
         };
       });
 
