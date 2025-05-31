@@ -75,6 +75,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           id,
           product_id,
           hr_shop_id,
+          shop_id,
           products (
             id,
             name,
@@ -83,8 +84,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
             cost_price
           )
         `)
-        .eq('user_id', user?.id)
-        .not('hr_shop_id', 'is', null);
+        .eq('user_id', user?.id);
       
       if (productShopsError) {
         console.error('❌ [useAssignedProducts] Error fetching product assignments:', productShopsError);
@@ -104,6 +104,8 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString().split('T')[0];
 
+      console.log('📅 [useAssignedProducts] Date range:', { today, yesterday: yesterdayStr });
+
       // For each assignment, get the current stock data and calculate values
       const assignedProducts: AssignedProduct[] = [];
 
@@ -115,32 +117,47 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
 
         const product = assignment.products;
         
-        // Get current stock data for today using hr_shop_id
-        const { data: stockData, error: stockError } = await supabase
+        // Try to get stock data using hr_shop_id first, then fallback to shop_id
+        let currentStock = null;
+        let yesterdayStock = null;
+        
+        const shopIdToUse = assignment.hr_shop_id || assignment.shop_id;
+        const shopIdField = assignment.hr_shop_id ? 'hr_shop_id' : 'shop_id';
+        
+        console.log(`📊 [useAssignedProducts] Fetching stock for product ${product.name} using ${shopIdField}:`, shopIdToUse);
+        
+        // Get current stock data for today
+        const { data: todayStockData, error: stockError } = await supabase
           .from('stocks')
           .select('*')
           .eq('product_id', product.id)
-          .eq('hr_shop_id', assignment.hr_shop_id)
+          .eq(shopIdField, shopIdToUse)
           .eq('stock_date', today)
           .eq('user_id', user?.id)
           .maybeSingle();
 
         if (stockError) {
-          console.error('❌ [useAssignedProducts] Error fetching stock for product:', product.name, stockError);
+          console.error('❌ [useAssignedProducts] Error fetching current stock for product:', product.name, stockError);
+        } else {
+          currentStock = todayStockData;
+          console.log(`📊 [useAssignedProducts] Today's stock for ${product.name}:`, currentStock);
         }
 
         // Get yesterday's actual stock for opening stock calculation
-        const { data: yesterdayStock, error: yesterdayError } = await supabase
+        const { data: yesterdayStockData, error: yesterdayError } = await supabase
           .from('stocks')
-          .select('actual_stock')
+          .select('actual_stock, closing_stock')
           .eq('product_id', product.id)
-          .eq('hr_shop_id', assignment.hr_shop_id)
+          .eq(shopIdField, shopIdToUse)
           .eq('stock_date', yesterdayStr)
           .eq('user_id', user?.id)
           .maybeSingle();
 
         if (yesterdayError) {
           console.error('❌ [useAssignedProducts] Error fetching yesterday stock for product:', product.name, yesterdayError);
+        } else {
+          yesterdayStock = yesterdayStockData;
+          console.log(`📊 [useAssignedProducts] Yesterday's stock for ${product.name}:`, yesterdayStock);
         }
 
         // Get sales data for today to calculate sold quantity
@@ -159,18 +176,27 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           console.error('❌ [useAssignedProducts] Error fetching sales for product:', product.name, salesError);
         }
 
-        // Calculate values
-        const openingStock = yesterdayStock?.actual_stock || stockData?.opening_stock || 0;
-        const stockAdded = stockData?.stock_added || 0;
-        const soldQuantity = salesData?.reduce((total, sale) => total + sale.quantity, 0) || 0;
-        const expectedClosing = openingStock + stockAdded - soldQuantity;
-        const actualStock = stockData?.actual_stock !== null && stockData?.actual_stock !== undefined 
-          ? stockData.actual_stock 
-          : expectedClosing;
+        // Calculate values with improved logic
+        // Opening stock should be yesterday's actual stock (preferred) or closing stock
+        const openingStock = yesterdayStock?.actual_stock ?? yesterdayStock?.closing_stock ?? currentStock?.opening_stock ?? 0;
+        const stockAdded = currentStock?.stock_added ?? 0;
+        const soldQuantity = salesData?.reduce((total, sale) => total + sale.quantity, 0) ?? 0;
+        const expectedClosing = Math.max(0, openingStock + stockAdded - soldQuantity);
+        const actualStock = currentStock?.actual_stock ?? expectedClosing;
         const variance = actualStock - expectedClosing;
 
+        console.log(`📊 [useAssignedProducts] Calculated values for ${product.name}:`, {
+          openingStock,
+          stockAdded,
+          soldQuantity,
+          expectedClosing,
+          actualStock,
+          variance
+        });
+
         // Find the corresponding HR store name
-        const hrStore = storesData?.find(store => store.id === assignment.hr_shop_id);
+        const hrStore = storesData?.find(store => store.id === shopIdToUse);
+        const shopName = hrStore?.store_name || 'Unknown Store';
 
         const assignedProduct: AssignedProduct = {
           assignment_id: assignment.id,
@@ -185,9 +211,9 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           expected_closing: expectedClosing,
           actual_stock: actualStock,
           variance: variance,
-          last_stock_date: stockData?.stock_date || null,
-          shop_id: assignment.hr_shop_id,
-          shop_name: hrStore?.store_name || 'Unknown Store'
+          last_stock_date: currentStock?.stock_date ?? null,
+          shop_id: shopIdToUse,
+          shop_name: shopName
         };
 
         assignedProducts.push(assignedProduct);

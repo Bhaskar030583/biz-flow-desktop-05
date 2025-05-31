@@ -26,6 +26,9 @@ export const usePOSProducts = (selectedStoreId: string) => {
       
       console.log('🔍 [POS] Fetching products for HRMS store:', selectedStoreId);
       const today = new Date().toISOString().split('T')[0];
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
       
       // Get products assigned to this HR store from product_shops using hr_shop_id
       const { data: productShops, error: productShopsError } = await supabase
@@ -36,9 +39,11 @@ export const usePOSProducts = (selectedStoreId: string) => {
             name,
             price,
             category
-          )
+          ),
+          hr_shop_id,
+          shop_id
         `)
-        .eq('hr_shop_id', selectedStoreId)
+        .or(`hr_shop_id.eq.${selectedStoreId},shop_id.eq.${selectedStoreId}`)
         .eq('user_id', user?.id);
       
       if (productShopsError) {
@@ -63,41 +68,34 @@ export const usePOSProducts = (selectedStoreId: string) => {
       // Get product IDs
       const productIds = allProducts.map(product => product.id);
 
-      // Try to get stock data using both hr_shop_id and shop_id to handle different storage methods
-      console.log('📊 [POS] Attempting to fetch stock data for store:', selectedStoreId);
-      
-      // First try with hr_shop_id
-      let { data: stockData, error: stockError } = await supabase
+      // Get today's stock data
+      const { data: todayStockData, error: todayStockError } = await supabase
         .from('stocks')
-        .select('product_id, opening_stock, stock_added')
-        .eq('hr_shop_id', selectedStoreId)
+        .select('product_id, opening_stock, stock_added, actual_stock')
+        .or(`hr_shop_id.eq.${selectedStoreId},shop_id.eq.${selectedStoreId}`)
         .eq('user_id', user?.id)
         .eq('stock_date', today)
         .in('product_id', productIds);
       
-      // If no data found with hr_shop_id, try with shop_id
-      if (stockError || !stockData || stockData.length === 0) {
-        console.log('📊 [POS] No stock found with hr_shop_id, trying shop_id...');
-        const shopIdResult = await supabase
-          .from('stocks')
-          .select('product_id, opening_stock, stock_added')
-          .eq('shop_id', selectedStoreId)
-          .eq('user_id', user?.id)
-          .eq('stock_date', today)
-          .in('product_id', productIds);
-        
-        if (!shopIdResult.error) {
-          stockData = shopIdResult.data;
-          console.log('📊 [POS] Found stock data using shop_id:', stockData);
-        }
-      }
-      
-      if (stockError && !stockData) {
-        console.error('❌ [POS] Error fetching stock data:', stockError);
-        // Don't throw error, just log it and continue with zero stock
+      if (todayStockError) {
+        console.error('❌ [POS] Error fetching today stock data:', todayStockError);
       }
 
-      console.log('📊 [POS] Final stock data:', stockData);
+      // Get yesterday's stock data for opening stock calculation
+      const { data: yesterdayStockData, error: yesterdayStockError } = await supabase
+        .from('stocks')
+        .select('product_id, actual_stock, closing_stock')
+        .or(`hr_shop_id.eq.${selectedStoreId},shop_id.eq.${selectedStoreId}`)
+        .eq('user_id', user?.id)
+        .eq('stock_date', yesterdayStr)
+        .in('product_id', productIds);
+      
+      if (yesterdayStockError) {
+        console.error('❌ [POS] Error fetching yesterday stock data:', yesterdayStockError);
+      }
+
+      console.log('📊 [POS] Today stock data:', todayStockData);
+      console.log('📊 [POS] Yesterday stock data:', yesterdayStockData);
 
       // Get today's sales data to calculate sold quantity
       const { data: salesData, error: salesError } = await supabase
@@ -119,11 +117,20 @@ export const usePOSProducts = (selectedStoreId: string) => {
       console.log('💰 [POS] Sales data for today:', salesData);
 
       // Create maps for quick lookup
-      const stockMap = new Map();
-      stockData?.forEach(stock => {
-        stockMap.set(stock.product_id, {
+      const todayStockMap = new Map();
+      todayStockData?.forEach(stock => {
+        todayStockMap.set(stock.product_id, {
           opening: stock.opening_stock || 0,
-          added: stock.stock_added || 0
+          added: stock.stock_added || 0,
+          actual: stock.actual_stock
+        });
+      });
+
+      const yesterdayStockMap = new Map();
+      yesterdayStockData?.forEach(stock => {
+        yesterdayStockMap.set(stock.product_id, {
+          actual: stock.actual_stock,
+          closing: stock.closing_stock
         });
       });
 
@@ -136,34 +143,45 @@ export const usePOSProducts = (selectedStoreId: string) => {
 
       // Combine product data with calculated Expected Closing stock
       const productsWithStock = allProducts.map(product => {
-        const stockInfo = stockMap.get(product.id);
+        const todayStock = todayStockMap.get(product.id);
+        const yesterdayStock = yesterdayStockMap.get(product.id);
         const soldToday = salesMap.get(product.id) || 0;
         
-        let expectedClosing = 0;
+        let availableQuantity = 0;
         
-        if (stockInfo) {
-          // Calculate Expected Closing: Opening Stock + Stock Added - Sold
-          expectedClosing = Math.max(0, (stockInfo.opening + stockInfo.added) - soldToday);
-          console.log(`📊 [POS] Product ${product.name}: Expected Closing = (${stockInfo.opening} + ${stockInfo.added}) - ${soldToday} = ${expectedClosing}`);
-        } else {
-          console.log(`⚠️ [POS] No stock info found for product ${product.name} (ID: ${product.id})`);
+        // Calculate available stock with improved logic
+        if (todayStock) {
+          // If we have today's stock record, use actual stock if available, otherwise calculate
+          if (todayStock.actual !== null && todayStock.actual !== undefined) {
+            availableQuantity = Math.max(0, todayStock.actual);
+          } else {
+            // Calculate: Opening + Added - Sold
+            const openingStock = todayStock.opening || yesterdayStock?.actual || yesterdayStock?.closing || 0;
+            availableQuantity = Math.max(0, openingStock + todayStock.added - soldToday);
+          }
+        } else if (yesterdayStock) {
+          // If no today's record but yesterday exists, use yesterday's stock minus today's sales
+          const yesterdayActual = yesterdayStock.actual ?? yesterdayStock.closing ?? 0;
+          availableQuantity = Math.max(0, yesterdayActual - soldToday);
         }
+
+        console.log(`📊 [POS] Product ${product.name}: Available = ${availableQuantity} (Today: ${JSON.stringify(todayStock)}, Yesterday: ${JSON.stringify(yesterdayStock)}, Sold: ${soldToday})`);
 
         return {
           id: product.id,
           name: product.name,
           price: product.price,
           category: product.category,
-          quantity: expectedClosing // Use Expected Closing as available quantity
+          quantity: availableQuantity
         };
       });
 
-      console.log('✅ [POS] Final products with Expected Closing stock:', productsWithStock);
+      console.log('✅ [POS] Final products with calculated stock:', productsWithStock);
       return productsWithStock;
     },
     enabled: !!selectedStoreId && !!user?.id,
-    refetchInterval: 5000, // Check every 5 seconds for stock updates
-    staleTime: 2000, // Consider data stale after 2 seconds
+    refetchInterval: 5000,
+    staleTime: 2000,
     refetchOnWindowFocus: true,
     refetchOnMount: true
   });
@@ -236,13 +254,11 @@ export const usePOSProducts = (selectedStoreId: string) => {
 
   const handleStockAdded = () => {
     console.log('🔄 [POS] Stock updated, refreshing product data');
-    // Invalidate and refresh all relevant queries
     queryClient.invalidateQueries({ queryKey: ['pos-products'] });
     queryClient.invalidateQueries({ queryKey: ['product-stock-management'] });
     queryClient.invalidateQueries({ queryKey: ['stocks'] });
     queryClient.invalidateQueries({ queryKey: ['assigned-products'] });
     
-    // Also directly refetch this specific query
     refetchProducts();
   };
 
