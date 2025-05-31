@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { POSPopupManager } from "@/components/pos/POSPopupManager";
 import { POSPopupInterface } from "@/components/pos/POSPopupInterface";
-import { POSMainView } from "@/components/pos/POSMainView";
+import { POSSystem } from "@/components/pos/POSSystem";
 import { usePOSProducts } from "@/hooks/usePOSProducts";
 
 interface StoreInfo {
@@ -12,12 +12,16 @@ interface StoreInfo {
 }
 
 const POS = () => {
-  const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(null);
-  const [showStoreModal, setShowStoreModal] = useState(true);
+  const [storeInfo, setStoreInfo] = useState<StoreInfo | null>({
+    storeName: "ABC Cafe",
+    salespersonName: "John Doe",
+    shiftName: "Morning Shift"
+  });
+  const [showStoreModal, setShowStoreModal] = useState(false);
   const [isPopupWindow, setIsPopupWindow] = useState(false);
-  const [storeInfoCompleted, setStoreInfoCompleted] = useState(false);
-  const [selectedShiftId, setSelectedShiftId] = useState<string>("");
-  const [selectedStoreId, setSelectedStoreId] = useState<string>("");
+  const [storeInfoCompleted, setStoreInfoCompleted] = useState(true);
+  const [selectedShiftId, setSelectedShiftId] = useState<string>("1");
+  const [selectedStoreId, setSelectedStoreId] = useState<string>("1");
   const [showSearch, setShowSearch] = useState(false);
 
   const { products, productsLoading, handleStockAdded } = usePOSProducts(selectedStoreId);
@@ -75,10 +79,12 @@ const POS = () => {
           toggleSearch={toggleSearch}
         />
       ) : (
-        <POSMainView 
-          onStockAdded={handleStockAdded} 
-          showSearch={showSearch}
-          toggleSearch={toggleSearch}
+        <POSSystem 
+          products={products || []}
+          storeInfo={storeInfo}
+          selectedShopId={selectedStoreId}
+          selectedShiftId={selectedShiftId}
+          onStockUpdated={handleStockAdded}
         />
       )}
     </>
