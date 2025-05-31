@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { ProductForm } from "@/components/product/ProductForm";
 import { ProductList } from "@/components/product/ProductList";
 import ProductCleanup from "@/components/product/ProductCleanup";
+import ProductCleanupTool from "@/components/product/ProductCleanupTool";
 import { useAuth } from "@/context/AuthContext";
 import { useDataSync } from "@/context/DataSyncContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,9 +26,10 @@ const Products = () => {
       <h1 className="text-2xl font-bold mb-6">Manage Products</h1>
       
       <Tabs defaultValue="manage" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="manage">Manage Products</TabsTrigger>
           <TabsTrigger value="cleanup">Cleanup Tool</TabsTrigger>
+          <TabsTrigger value="delete">Delete Tool</TabsTrigger>
           <TabsTrigger value="add">Add Product</TabsTrigger>
         </TabsList>
         
@@ -37,6 +39,10 @@ const Products = () => {
         
         <TabsContent value="cleanup" className="space-y-6">
           <ProductCleanup />
+        </TabsContent>
+        
+        <TabsContent value="delete" className="space-y-6">
+          <ProductCleanupTool />
         </TabsContent>
         
         <TabsContent value="add" className="space-y-6">
