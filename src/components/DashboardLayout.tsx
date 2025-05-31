@@ -15,6 +15,7 @@ import {
   Building2,
   Settings,
   LogOut,
+  Banknote,
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,6 +43,7 @@ const sidebarItems = [
   { name: "Bills", href: "/bills", icon: Receipt },
   { name: "Expenses", href: "/expenses", icon: CreditCard },
   { name: "Credits", href: "/credits", icon: DollarSign },
+  { name: "Auto Debit", href: "/auto-debit", icon: Banknote },
   { name: "Shops", href: "/shops", icon: Store },
   { name: "Stock Movements", href: "/stock-movements", icon: ArrowRightLeft },
   { name: "HRMS", href: "/hrms", icon: Building2 },

@@ -9,6 +9,84 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      auto_debit_configs: {
+        Row: {
+          created_at: string
+          customer_id: string
+          debit_amount: number
+          id: string
+          is_enabled: boolean | null
+          payment_method_id: string
+          trigger_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          debit_amount?: number
+          id?: string
+          is_enabled?: boolean | null
+          payment_method_id: string
+          trigger_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          debit_amount?: number
+          id?: string
+          is_enabled?: boolean | null
+          payment_method_id?: string
+          trigger_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      auto_debit_transactions: {
+        Row: {
+          amount: number
+          config_id: string
+          created_at: string
+          customer_id: string
+          error_message: string | null
+          id: string
+          razorpay_payment_id: string | null
+          status: string
+          trigger_balance: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          config_id: string
+          created_at?: string
+          customer_id: string
+          error_message?: string | null
+          id?: string
+          razorpay_payment_id?: string | null
+          status?: string
+          trigger_balance: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          config_id?: string
+          created_at?: string
+          customer_id?: string
+          error_message?: string | null
+          id?: string
+          razorpay_payment_id?: string | null
+          status?: string
+          trigger_balance?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bill_items: {
         Row: {
           bill_id: string
@@ -188,6 +266,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      customer_payment_methods: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          is_active: boolean | null
+          is_primary: boolean | null
+          method_type: string
+          razorpay_token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          method_type: string
+          razorpay_token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          method_type?: string
+          razorpay_token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       customers: {
         Row: {
@@ -1764,6 +1878,10 @@ export type Database = {
       }
       can_make_credit_purchase: {
         Args: { customer_id_param: string; purchase_amount: number }
+        Returns: boolean
+      }
+      check_auto_debit_trigger: {
+        Args: { customer_id_param: string }
         Returns: boolean
       }
       generate_bill_number: {
