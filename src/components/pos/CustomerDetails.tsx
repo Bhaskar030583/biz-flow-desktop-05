@@ -1,9 +1,12 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   ArrowLeft, 
   Edit, 
@@ -64,6 +67,13 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({ customerId, on
   const [totalSales, setTotalSales] = useState(0);
   const [totalCredit, setTotalCredit] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Credit modal states
+  const [showAddCreditModal, setShowAddCreditModal] = useState(false);
+  const [showReceiveCreditModal, setShowReceiveCreditModal] = useState(false);
+  const [creditAmount, setCreditAmount] = useState('');
+  const [creditDescription, setCreditDescription] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     if (customerId && user) {
@@ -123,6 +133,84 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({ customerId, on
       toast.error("Failed to load customer details");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAddCredit = async () => {
+    if (!creditAmount || Number(creditAmount) <= 0) {
+      toast.error("Please enter a valid credit amount");
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const { error } = await supabase
+        .from('credit_transactions')
+        .insert({
+          user_id: user!.id,
+          customer_id: customerId,
+          amount: Number(creditAmount),
+          description: creditDescription || `Credit given to ${customer?.name}`,
+          status: 'pending',
+          transaction_date: new Date().toISOString().split('T')[0]
+        });
+
+      if (error) throw error;
+
+      toast.success("Credit added successfully");
+      setShowAddCreditModal(false);
+      setCreditAmount('');
+      setCreditDescription('');
+      fetchCustomerDetails(); // Refresh data
+    } catch (error) {
+      console.error("Error adding credit:", error);
+      toast.error("Failed to add credit");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleReceiveCredit = async () => {
+    if (!creditAmount || Number(creditAmount) <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      // Find a pending credit transaction to mark as paid
+      const pendingTransactions = creditTransactions.filter(t => t.status === 'pending');
+      
+      if (pendingTransactions.length === 0) {
+        toast.error("No pending credit to receive");
+        setIsProcessing(false);
+        return;
+      }
+
+      // For now, mark the first pending transaction as paid
+      // In a real app, you might want to let user select which transaction to mark as paid
+      const transactionToUpdate = pendingTransactions[0];
+      
+      const { error } = await supabase
+        .from('credit_transactions')
+        .update({
+          status: 'paid',
+          description: (transactionToUpdate.description || '') + ` - Payment received: ₹${creditAmount}`
+        })
+        .eq('id', transactionToUpdate.id);
+
+      if (error) throw error;
+
+      toast.success("Credit payment received successfully");
+      setShowReceiveCreditModal(false);
+      setCreditAmount('');
+      setCreditDescription('');
+      fetchCustomerDetails(); // Refresh data
+    } catch (error) {
+      console.error("Error receiving credit payment:", error);
+      toast.error("Failed to record credit payment");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -228,11 +316,19 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({ customerId, on
 
       {/* Action Buttons */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Button variant="outline" className="h-12 text-blue-600 border-blue-600 hover:bg-blue-50">
+        <Button 
+          variant="outline" 
+          className="h-12 text-blue-600 border-blue-600 hover:bg-blue-50"
+          onClick={() => setShowAddCreditModal(true)}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Credit
         </Button>
-        <Button variant="outline" className="h-12 text-green-600 border-green-600 hover:bg-green-50">
+        <Button 
+          variant="outline" 
+          className="h-12 text-green-600 border-green-600 hover:bg-green-50"
+          onClick={() => setShowReceiveCreditModal(true)}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Receive Credit
         </Button>
@@ -352,6 +448,94 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({ customerId, on
           </CardContent>
         </Card>
       )}
+
+      {/* Add Credit Modal */}
+      <Dialog open={showAddCreditModal} onOpenChange={setShowAddCreditModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Credit for {customer.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="amount">Credit Amount</Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder="Enter amount"
+                value={creditAmount}
+                onChange={(e) => setCreditAmount(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Textarea
+                id="description"
+                placeholder="Enter description"
+                value={creditDescription}
+                onChange={(e) => setCreditDescription(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowAddCreditModal(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleAddCredit}
+                disabled={isProcessing}
+                className="flex-1"
+              >
+                {isProcessing ? "Adding..." : "Add Credit"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Receive Credit Modal */}
+      <Dialog open={showReceiveCreditModal} onOpenChange={setShowReceiveCreditModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Receive Credit Payment from {customer.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-3 bg-blue-50 rounded">
+              <p className="text-sm text-blue-800">
+                Outstanding Credit: ₹{totalCredit.toFixed(2)}
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="receive-amount">Payment Amount</Label>
+              <Input
+                id="receive-amount"
+                type="number"
+                placeholder="Enter payment amount"
+                value={creditAmount}
+                onChange={(e) => setCreditAmount(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowReceiveCreditModal(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleReceiveCredit}
+                disabled={isProcessing || totalCredit === 0}
+                className="flex-1"
+              >
+                {isProcessing ? "Processing..." : "Record Payment"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
