@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -176,22 +175,26 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           console.error('❌ [useAssignedProducts] Error fetching sales for product:', product.name, salesError);
         }
 
-        // Calculate values with improved logic
+        // Calculate values with corrected logic - actual stock should be user input only
         // Opening stock should be yesterday's actual stock (preferred) or closing stock
         const openingStock = yesterdayStock?.actual_stock ?? yesterdayStock?.closing_stock ?? currentStock?.opening_stock ?? 0;
         const stockAdded = currentStock?.stock_added ?? 0;
         const soldQuantity = salesData?.reduce((total, sale) => total + sale.quantity, 0) ?? 0;
         const expectedClosing = Math.max(0, openingStock + stockAdded - soldQuantity);
-        const actualStock = currentStock?.actual_stock ?? expectedClosing;
-        const variance = actualStock - expectedClosing;
+        
+        // Actual stock should only be set if user has entered it (not auto-calculated)
+        const actualStock = currentStock?.actual_stock ?? null;
+        
+        // Variance only exists when actual stock is entered by user
+        const variance = actualStock !== null ? actualStock - expectedClosing : null;
 
         console.log(`📊 [useAssignedProducts] Calculated values for ${product.name}:`, {
           openingStock,
           stockAdded,
           soldQuantity,
           expectedClosing,
-          actualStock,
-          variance
+          actualStock: actualStock ?? 'Not entered',
+          variance: variance ?? 'N/A'
         });
 
         // Find the corresponding HR store name

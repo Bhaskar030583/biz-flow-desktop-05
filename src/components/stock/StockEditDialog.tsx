@@ -64,7 +64,7 @@ const StockEditDialog = ({
               <div className="text-sm text-muted-foreground">Store: {editingProduct.shop_name}</div>
               <div className="text-sm text-muted-foreground">Category: {editingProduct.category}</div>
               <div className="text-sm text-muted-foreground">Sold Today: {editingProduct.sold_quantity || 0}</div>
-              <div className="text-sm text-muted-foreground">Expected Closing: {editingProduct.expected_closing || 0}</div>
+              <div className="text-sm font-medium text-blue-600">Expected Closing: {editingProduct.expected_closing || 0}</div>
             </div>
             
             <div className="grid gap-4">
@@ -98,19 +98,39 @@ const StockEditDialog = ({
               </div>
               
               <div className="grid gap-2">
-                <Label className="text-sm font-medium">Actual Stock (Physical Count)</Label>
+                <Label className="text-sm font-medium text-orange-600">Actual Stock (Physical Count)</Label>
                 <Input 
                   type="number" 
                   min="0" 
-                  value={editStockValues.actual_stock} 
+                  value={editStockValues.actual_stock || ''} 
                   onChange={(e) => setEditStockValues({
                     ...editStockValues,
-                    actual_stock: Number(e.target.value)
+                    actual_stock: Number(e.target.value) || 0
                   })}
+                  placeholder={`Expected: ${editingProduct.expected_closing || 0}`}
                 />
                 <div className="text-xs text-muted-foreground">
-                  Enter the physical count. If no difference, it equals expected closing.
+                  <strong>Only enter if different from expected closing.</strong> Leave empty if physical count matches expected closing ({editingProduct.expected_closing || 0}).
                 </div>
+                {editStockValues.actual_stock && editingProduct.expected_closing && (
+                  <div className="text-xs">
+                    {editStockValues.actual_stock < editingProduct.expected_closing && (
+                      <span className="text-red-600 font-medium">
+                        Shortage: {editingProduct.expected_closing - editStockValues.actual_stock} units
+                      </span>
+                    )}
+                    {editStockValues.actual_stock > editingProduct.expected_closing && (
+                      <span className="text-orange-600 font-medium">
+                        Excess: {editStockValues.actual_stock - editingProduct.expected_closing} units
+                      </span>
+                    )}
+                    {editStockValues.actual_stock === editingProduct.expected_closing && (
+                      <span className="text-green-600 font-medium">
+                        ✓ Matches expected closing
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

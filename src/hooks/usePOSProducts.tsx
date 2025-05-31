@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -141,7 +140,7 @@ export const usePOSProducts = (selectedStoreId: string) => {
         salesMap.set(sale.product_id, currentSales + sale.quantity);
       });
 
-      // Combine product data with calculated Expected Closing stock
+      // Combine product data with calculated available stock for POS
       const productsWithStock = allProducts.map(product => {
         const todayStock = todayStockMap.get(product.id);
         const yesterdayStock = yesterdayStockMap.get(product.id);
@@ -149,13 +148,13 @@ export const usePOSProducts = (selectedStoreId: string) => {
         
         let availableQuantity = 0;
         
-        // Calculate available stock with improved logic
+        // Calculate available stock for POS - use actual stock if entered, otherwise use expected closing
         if (todayStock) {
-          // If we have today's stock record, use actual stock if available, otherwise calculate
           if (todayStock.actual !== null && todayStock.actual !== undefined) {
+            // User has entered actual stock - use it for POS availability
             availableQuantity = Math.max(0, todayStock.actual);
           } else {
-            // Calculate: Opening + Added - Sold
+            // No actual stock entered - calculate expected closing for POS availability
             const openingStock = todayStock.opening || yesterdayStock?.actual || yesterdayStock?.closing || 0;
             availableQuantity = Math.max(0, openingStock + todayStock.added - soldToday);
           }
