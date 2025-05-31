@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -52,6 +51,53 @@ export const useDashboardData = (
       try {
         setIsLoading(true);
         
+        console.log('🔍 [Dashboard] Starting data fetch with filters:', {
+          startDate,
+          endDate,
+          selectedShops,
+          selectedCategory,
+          selectedProduct,
+          paymentMethod,
+          employee,
+          minAmount,
+          maxAmount
+        });
+
+        // Fetch bills data for sales metrics
+        let billsQuery = supabase.from("bills").select(`
+          id,
+          total_amount,
+          bill_date,
+          payment_method,
+          bill_items!inner(
+            quantity,
+            unit_price,
+            product_name,
+            product_id,
+            products(id, name, price, cost_price, category)
+          )
+        `);
+        
+        // Apply date filters to bills
+        if (startDate) {
+          const formattedStartDate = startDate.toISOString().split('T')[0];
+          billsQuery = billsQuery.gte("bill_date", formattedStartDate);
+        }
+        
+        if (endDate) {
+          const formattedEndDate = endDate.toISOString().split('T')[0];
+          billsQuery = billsQuery.lte("bill_date", formattedEndDate);
+        }
+        
+        const { data: billsData, error: billsError } = await billsQuery;
+        
+        if (billsError) {
+          console.error('❌ [Dashboard] Error fetching bills:', billsError);
+          throw billsError;
+        }
+
+        console.log('📊 [Dashboard] Bills data fetched:', billsData?.length || 0, 'bills');
+        
         // Fetch collection data for payment methods
         let collectionQuery = supabase.from("credits").select(`
           credit_type,
@@ -92,7 +138,12 @@ export const useDashboardData = (
         
         const { data: collectionData, error: collectionError } = await collectionQuery;
         
-        if (collectionError) throw collectionError;
+        if (collectionError) {
+          console.error('❌ [Dashboard] Error fetching credits:', collectionError);
+          throw collectionError;
+        }
+
+        console.log('💰 [Dashboard] Credits data fetched:', collectionData?.length || 0, 'records');
         
         // Calculate totals for payment methods
         let cashAmount = 0;
@@ -117,91 +168,53 @@ export const useDashboardData = (
 
         const creditBalance = creditReceived - creditGiven;
         
-        // Fetch sales data with cost_price for profit calculation
-        let salesQuery = supabase
-          .from("sales")
-          .select(`
-            quantity,
-            price,
-            sale_date,
-            products(id, name, price, cost_price, category)
-          `);
-        
-        // Apply date filters to sales
-        if (startDate) {
-          const formattedStartDate = startDate.toISOString().split('T')[0];
-          salesQuery = salesQuery.gte("sale_date", formattedStartDate);
-        }
-        
-        if (endDate) {
-          const formattedEndDate = endDate.toISOString().split('T')[0];
-          salesQuery = salesQuery.lte("sale_date", formattedEndDate);
-        }
-        
-        // Apply HR store filter to sales
-        if (selectedShops && selectedShops.length > 0) {
-          salesQuery = salesQuery.in("hr_shop_id", selectedShops);
-        }
-        
-        // Apply product filter
-        if (selectedProduct) {
-          salesQuery = salesQuery.eq("product_id", selectedProduct);
-        }
-
-        // Apply amount range filters to sales
-        if (minAmount !== null || maxAmount !== null) {
-          // Calculate total amount for each sale (price * quantity) in the filter
-          // This is a bit complex with Supabase, so we'll filter after fetching
-        }
-        
-        const { data: salesData, error: salesError } = await salesQuery;
-        
-        if (salesError) throw salesError;
-        
-        // Filter by category if needed
-        let filteredSales = selectedCategory
-          ? salesData?.filter((sale) => sale.products?.category === selectedCategory)
-          : salesData;
-
-        // Apply amount range filters to sales (post-fetch filtering)
-        if (minAmount !== null || maxAmount !== null) {
-          filteredSales = filteredSales?.filter((sale) => {
-            const saleTotal = (Number(sale.price) || 0) * (Number(sale.quantity) || 0);
-            const meetsMin = minAmount === null || saleTotal >= minAmount;
-            const meetsMax = maxAmount === null || saleTotal <= maxAmount;
-            return meetsMin && meetsMax;
-          });
-        }
-        
-        // Calculate sales metrics and profit/loss
+        // Calculate sales metrics and profit/loss from bills
         let totalSales = 0;
         let totalProducts = 0;
         let totalRevenue = 0;
         let grossProfit = 0;
         let totalLoss = 0;
         
-        filteredSales?.forEach((sale) => {
+        billsData?.forEach((bill) => {
           totalSales++;
-          const quantity = Number(sale.quantity) || 0;
-          const sellingPrice = Number(sale.price) || 0;
-          const costPrice = Number(sale.products?.cost_price) || 0;
           
-          totalProducts += quantity;
-          totalRevenue += (sellingPrice * quantity);
-          
-          // Calculate gross profit (selling price - cost price) * quantity
-          const profitPerUnit = sellingPrice - costPrice;
-          const totalProfitForSale = profitPerUnit * quantity;
-          
-          if (totalProfitForSale > 0) {
-            grossProfit += totalProfitForSale;
-          } else {
-            totalLoss += Math.abs(totalProfitForSale);
-          }
+          bill.bill_items?.forEach((item: any) => {
+            const quantity = Number(item.quantity) || 0;
+            const sellingPrice = Number(item.unit_price) || 0;
+            const costPrice = Number(item.products?.cost_price) || 0;
+            
+            totalProducts += quantity;
+            totalRevenue += (sellingPrice * quantity);
+            
+            // Calculate gross profit (selling price - cost price) * quantity
+            const profitPerUnit = sellingPrice - costPrice;
+            const totalProfitForSale = profitPerUnit * quantity;
+            
+            if (totalProfitForSale > 0) {
+              grossProfit += totalProfitForSale;
+            } else {
+              totalLoss += Math.abs(totalProfitForSale);
+            }
+          });
         });
 
         // Calculate net profit (gross profit - credit given + credit received)
         const netProfit = grossProfit - creditGiven + creditReceived;
+        
+        console.log('📈 [Dashboard] Calculated metrics:', {
+          totalSales,
+          totalProducts,
+          totalRevenue,
+          grossProfit,
+          netProfit,
+          totalLoss,
+          creditGiven,
+          creditReceived,
+          creditBalance,
+          cashAmount,
+          cardAmount,
+          onlineAmount
+        });
         
         // Update state with all data
         setData({
@@ -220,7 +233,7 @@ export const useDashboardData = (
           totalLoss
         });
       } catch (error) {
-        console.error("Error fetching summary data:", error);
+        console.error("❌ [Dashboard] Error fetching summary data:", error);
       } finally {
         setIsLoading(false);
       }
