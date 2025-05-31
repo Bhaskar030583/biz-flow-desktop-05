@@ -18,6 +18,7 @@ const POS = () => {
   const [storeInfoCompleted, setStoreInfoCompleted] = useState(false);
   const [selectedShiftId, setSelectedShiftId] = useState<string>("");
   const [selectedStoreId, setSelectedStoreId] = useState<string>("");
+  const [showSearch, setShowSearch] = useState(false);
 
   const { products, productsLoading, handleStockAdded } = usePOSProducts(selectedStoreId);
 
@@ -46,6 +47,10 @@ const POS = () => {
     window.close();
   };
 
+  const toggleSearch = () => {
+    setShowSearch(prev => !prev);
+  };
+
   // Only show store modal if store info hasn't been completed yet
   const shouldShowStoreModal = showStoreModal && !storeInfoCompleted;
 
@@ -66,9 +71,15 @@ const POS = () => {
           onStoreModalClose={handleStoreModalClose}
           onClosePopup={handleClosePopup}
           onStockUpdated={handleStockAdded}
+          showSearch={showSearch}
+          toggleSearch={toggleSearch}
         />
       ) : (
-        <POSMainView onStockAdded={handleStockAdded} />
+        <POSMainView 
+          onStockAdded={handleStockAdded} 
+          showSearch={showSearch}
+          toggleSearch={toggleSearch}
+        />
       )}
     </>
   );

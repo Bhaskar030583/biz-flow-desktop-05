@@ -19,6 +19,8 @@ interface POSHeaderProps {
   onQuickStock: () => void;
   onCustomerManagement: () => void;
   onBillHistory: () => void;
+  showSearch: boolean;
+  toggleSearch: () => void;
 }
 
 export const POSHeader: React.FC<POSHeaderProps> = ({
@@ -30,6 +32,8 @@ export const POSHeader: React.FC<POSHeaderProps> = ({
   onQuickStock,
   onCustomerManagement,
   onBillHistory,
+  showSearch,
+  toggleSearch,
 }) => {
   return (
     <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm">
@@ -94,8 +98,10 @@ export const POSHeader: React.FC<POSHeaderProps> = ({
             <Button
               variant="outline"
               size="icon"
-              onClick={() => setSearchTerm(searchTerm ? "" : "search")}
-              className="h-10 w-10 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+              onClick={toggleSearch}
+              className={`h-10 w-10 border-gray-200 dark:border-gray-600 ${
+                showSearch ? "bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400" : "hover:bg-gray-50 dark:hover:bg-gray-800"
+              }`}
               title="Search Products"
             >
               <Search className="h-5 w-5" />

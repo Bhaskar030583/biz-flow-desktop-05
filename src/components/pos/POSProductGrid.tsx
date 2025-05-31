@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Package, Plus, ShoppingCart } from "lucide-react";
+import { Search, Package, Plus, Minus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Product {
@@ -25,6 +25,7 @@ interface POSProductGridProps {
   filteredProducts: Product[];
   selectedShopId: string;
   onAddToCart: (product: Product) => void;
+  showSearch?: boolean;
 }
 
 export const POSProductGrid: React.FC<POSProductGridProps> = ({
@@ -35,7 +36,8 @@ export const POSProductGrid: React.FC<POSProductGridProps> = ({
   categories,
   filteredProducts,
   selectedShopId,
-  onAddToCart
+  onAddToCart,
+  showSearch = false
 }) => {
   const getStockStatus = (quantity?: number) => {
     if (quantity === undefined || quantity === 0) return { status: "out", color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300" };
@@ -44,26 +46,28 @@ export const POSProductGrid: React.FC<POSProductGridProps> = ({
   };
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col bg-white dark:bg-gray-800 p-6">
+    <div className="flex-1 overflow-hidden flex flex-col bg-white dark:bg-gray-800 p-4">
       {/* Search and Filters */}
-      <div className="mb-6 space-y-4">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-4 w-4" />
-          <Input
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
-          />
-        </div>
+      <div className="mb-4 space-y-3">
+        {showSearch && (
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-4 w-4" />
+            <Input
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
+            />
+          </div>
+        )}
 
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-          <TabsList className="grid w-full grid-cols-auto overflow-x-auto bg-gray-100 dark:bg-gray-700">
+          <TabsList className="grid w-full auto-cols-fr grid-flow-col overflow-x-auto bg-gray-100 dark:bg-gray-700">
             {categories.map((category) => (
               <TabsTrigger
                 key={category}
                 value={category}
-                className="px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-blue-600 dark:data-[state=active]:bg-gray-800 dark:data-[state=active]:text-blue-400"
+                className="px-3 py-1.5 text-xs font-medium transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white dark:data-[state=active]:bg-blue-700"
               >
                 {category === "all" ? "All Products" : category}
               </TabsTrigger>
@@ -88,7 +92,7 @@ export const POSProductGrid: React.FC<POSProductGridProps> = ({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2">
             {filteredProducts.map((product) => {
               const stockStatus = getStockStatus(product.quantity);
               const isOutOfStock = product.quantity === 0;
@@ -96,53 +100,39 @@ export const POSProductGrid: React.FC<POSProductGridProps> = ({
               return (
                 <Card
                   key={product.id}
-                  className={`group cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 border-2 ${
+                  className={`group cursor-pointer transition-all duration-200 hover:shadow-md border ${
                     isOutOfStock 
                       ? 'border-red-200 dark:border-red-800 bg-gray-50 dark:bg-gray-900' 
                       : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600'
                   }`}
                   onClick={() => !isOutOfStock && onAddToCart(product)}
                 >
-                  <CardContent className="p-3">
-                    <div className="space-y-2">
+                  <CardContent className="p-2">
+                    <div className="space-y-1.5">
                       {/* Product Name */}
-                      <div className="flex items-start justify-between">
-                        <h3 className={`font-semibold text-xs leading-tight ${
-                          isOutOfStock ? 'text-gray-400 dark:text-gray-600' : 'text-gray-900 dark:text-gray-100'
-                        }`}>
-                          {product.name}
-                        </h3>
-                        {!isOutOfStock && (
-                          <Button
-                            size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-6 w-6 p-0 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white border-0 shadow-md"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onAddToCart(product);
-                            }}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
+                      <h3 className={`font-semibold text-xs leading-tight ${
+                        isOutOfStock ? 'text-gray-400 dark:text-gray-600' : 'text-gray-900 dark:text-gray-100'
+                      }`}>
+                        {product.name}
+                      </h3>
 
                       {/* Price */}
                       <div className="text-sm font-bold text-blue-600 dark:text-blue-400">
                         ₹{Number(product.price).toFixed(2)}
                       </div>
 
-                      {/* Stock Information */}
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-600 dark:text-gray-400">Available:</span>
+                      {/* Stock Information - Side by side layout */}
+                      <div className="grid grid-cols-2 gap-1 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">Avail:</span>
                           <Badge className={`text-xs px-1 py-0 ${stockStatus.color}`}>
                             {product.quantity ?? 0}
                           </Badge>
                         </div>
                         
                         {product.expectedClosing !== undefined && (
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-600 dark:text-gray-400">Expected:</span>
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">Exp:</span>
                             <span className="font-medium text-gray-700 dark:text-gray-300 text-xs">
                               {product.expectedClosing}
                             </span>
@@ -155,23 +145,9 @@ export const POSProductGrid: React.FC<POSProductGridProps> = ({
                         {product.category}
                       </Badge>
 
-                      {/* Add to Cart Button */}
-                      {!isOutOfStock && (
-                        <Button 
-                          className="w-full mt-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-md transition-all duration-200 font-semibold border-0 h-8 text-xs"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onAddToCart(product);
-                          }}
-                        >
-                          <ShoppingCart className="h-3 w-3 mr-1" />
-                          Add to Cart
-                        </Button>
-                      )}
-
+                      {/* Out of stock indicator */}
                       {isOutOfStock && (
-                        <div className="w-full mt-2 py-1 text-center text-xs text-red-500 dark:text-red-400 font-medium bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
+                        <div className="w-full py-1 text-center text-xs text-red-500 dark:text-red-400 font-medium bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
                           Out of Stock
                         </div>
                       )}
