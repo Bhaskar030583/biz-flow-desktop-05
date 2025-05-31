@@ -417,67 +417,58 @@ export const POSSystem: React.FC<POSSystemProps> = ({
     );
   }
 
-  // Enhanced Desktop View with professional styling and consistent typography
+  // Enhanced Desktop View with updated header
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 to-blue-50 overflow-hidden font-inter">
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Professional Header */}
+        {/* Updated Header with only icons */}
         <div className="bg-white/90 backdrop-blur-sm border-b border-slate-200 shadow-sm px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-                  <img 
-                    src="/lovable-uploads/c1c145c9-7010-4fbf-9b2d-d46663dadb23.png" 
-                    alt="Logo" 
-                    className="h-7 w-7"
-                  />
+              {storeInfo && (
+                <div className="flex items-center space-x-3 text-body-sm text-slate-600">
+                  <span className="font-medium">{storeInfo.storeName}</span>
+                  <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                  <span>{storeInfo.salespersonName}</span>
+                  <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                  <span className="text-blue-600 font-medium">{storeInfo.shiftName}</span>
                 </div>
-                <div>
-                  <h1 className="text-heading-h2 bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                    ABC CAFE POS
-                  </h1>
-                  {storeInfo && (
-                    <div className="flex items-center space-x-3 text-body-sm text-slate-600">
-                      <span className="font-medium">{storeInfo.storeName}</span>
-                      <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
-                      <span>{storeInfo.salespersonName}</span>
-                      <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
-                      <span className="text-blue-600 font-medium">{storeInfo.shiftName}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+              )}
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center justify-center space-x-4">
               <Button
                 variant="outline"
-                size="sm"
+                size="lg"
                 onClick={handleQuickStock}
-                className="bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm text-button-sm"
+                className="bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm h-14 w-14 p-0 rounded-xl"
               >
-                <Package className="h-4 w-4 mr-2" />
-                Quick Stock
+                <Package className="h-7 w-7" />
               </Button>
               <Button
                 variant="outline"
-                size="sm"
+                size="lg"
                 onClick={() => setShowCustomerManagement(true)}
-                className="bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm text-button-sm"
+                className="bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm h-14 w-14 p-0 rounded-xl"
               >
-                <User className="h-4 w-4 mr-2" />
-                Customers
+                <User className="h-7 w-7" />
               </Button>
               <Button
                 variant="outline"
-                size="sm"
+                size="lg"
                 onClick={() => setShowBillHistory(true)}
-                className="bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm text-button-sm"
+                className="bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm h-14 w-14 p-0 rounded-xl"
               >
-                <History className="h-4 w-4 mr-2" />
-                History
+                <History className="h-7 w-7" />
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setSearchTerm(searchTerm ? "" : "search")}
+                className="bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm h-14 w-14 p-0 rounded-xl"
+              >
+                <Search className="h-7 w-7" />
               </Button>
             </div>
           </div>
@@ -502,18 +493,21 @@ export const POSSystem: React.FC<POSSystemProps> = ({
           </div>
         </div>
 
-        {/* Professional Search Bar */}
-        <div className="bg-white/70 backdrop-blur-sm px-6 py-4 border-b border-slate-200">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
-            <Input
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-11 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 bg-white/90 backdrop-blur-sm shadow-sm text-body-md"
-            />
+        {/* Search Input - only show when searchTerm is active */}
+        {searchTerm && (
+          <div className="bg-white/70 backdrop-blur-sm px-6 py-4 border-b border-slate-200">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
+              <Input
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-11 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 bg-white/90 backdrop-blur-sm shadow-sm text-body-md"
+                autoFocus
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Products Grid */}
         <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-slate-50/50 to-blue-50/50">
