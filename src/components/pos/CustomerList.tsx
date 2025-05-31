@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -252,33 +253,35 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
                       </div>
                     </div>
 
-                    <div className="flex gap-1 ml-4">
+                    <div className="flex gap-2 ml-4">
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 w-8 p-0"
                         onClick={() => handleViewDetails(customer.id)}
-                        title="View details"
+                        className="flex items-center gap-1 text-blue-600 hover:bg-blue-50"
                       >
                         <Eye className="h-4 w-4" />
+                        <span className="hidden sm:inline">View</span>
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 w-8 p-0"
+                        className="flex items-center gap-1 text-green-600 hover:bg-green-50"
                         title="Edit customer"
                       >
                         <Edit className="h-4 w-4" />
+                        <span className="hidden sm:inline">Edit</span>
                       </Button>
                       {userRole === "admin" && (
                         <Button
                           size="sm"
-                          variant="destructive"
-                          className="h-8 w-8 p-0"
+                          variant="outline"
                           onClick={() => handleDeleteCustomer(customer.id)}
+                          className="flex items-center gap-1 text-red-600 hover:bg-red-50"
                           title="Delete customer"
                         >
                           <Trash2 className="h-4 w-4" />
+                          <span className="hidden sm:inline">Delete</span>
                         </Button>
                       )}
                     </div>
