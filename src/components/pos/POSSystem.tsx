@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart } from "lucide-react";
@@ -66,19 +67,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({
   const [showOrderSummary, setShowOrderSummary] = useState(true);
   const [showSearch, setShowSearch] = useState(false);
 
-  // Use sample products data instead of fetching from database
-  const sampleProducts: Product[] = [
-    { id: "1", name: "Coffee", price: 120, category: "beverages", quantity: 50 },
-    { id: "2", name: "Tea", price: 80, category: "beverages", quantity: 60 },
-    { id: "3", name: "Sandwich", price: 150, category: "food", quantity: 20 },
-    { id: "4", name: "Pasta", price: 220, category: "food", quantity: 15 },
-    { id: "5", name: "Juice", price: 100, category: "beverages", quantity: 30 },
-    { id: "6", name: "Cake", price: 180, category: "pastry", quantity: 10, expectedClosing: 8 },
-    { id: "7", name: "Cookie", price: 50, category: "pastry", quantity: 40, expectedClosing: 35 },
-    { id: "8", name: "Burger", price: 200, category: "food", quantity: 0 },
-  ];
-
-  const products = propProducts && propProducts.length > 0 ? propProducts : sampleProducts;
+  // Use the products passed from props (fetched by usePOSProducts hook)
+  const products = propProducts || [];
 
   // Create payment actions
   const paymentActions = createPaymentActions({
