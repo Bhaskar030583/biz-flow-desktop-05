@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,21 +57,52 @@ const AssignedProductsList: React.FC<AssignedProductsListProps> = ({
     setDeassigning(prev => ({ ...prev, [productId]: true }));
 
     try {
-      // Remove the product assignment from product_shops table
-      const { error } = await supabase
+      console.log('🗑️ Deassigning product:', { productId, selectedShop, userId: user.id });
+
+      // First, try to delete using hr_shop_id
+      let { data: deletedRows, error } = await supabase
         .from('product_shops')
         .delete()
         .eq('product_id', productId)
-        .eq('shop_id', selectedShop)
-        .eq('user_id', user.id);
+        .eq('hr_shop_id', selectedShop)
+        .eq('user_id', user.id)
+        .select();
 
-      if (error) throw error;
+      // If no rows were deleted with hr_shop_id, try with shop_id
+      if (!error && (!deletedRows || deletedRows.length === 0)) {
+        console.log('🔄 No rows found with hr_shop_id, trying with shop_id...');
+        const { data: fallbackDeleted, error: fallbackError } = await supabase
+          .from('product_shops')
+          .delete()
+          .eq('product_id', productId)
+          .eq('shop_id', selectedShop)
+          .eq('user_id', user.id)
+          .select();
 
+        if (fallbackError) {
+          throw fallbackError;
+        }
+        
+        deletedRows = fallbackDeleted;
+      }
+
+      if (error) {
+        throw error;
+      }
+
+      if (!deletedRows || deletedRows.length === 0) {
+        toast.error(`Product assignment not found. The product might already be deassigned.`);
+        // Still call onProductDeassigned to refresh the list
+        onProductDeassigned();
+        return;
+      }
+
+      console.log('✅ Successfully deassigned product:', deletedRows);
       toast.success(`${productName} has been de-assigned from the store`);
       onProductDeassigned();
     } catch (error) {
-      console.error('Error de-assigning product:', error);
-      toast.error('Failed to de-assign product');
+      console.error('❌ Error de-assigning product:', error);
+      toast.error('Failed to de-assign product. Please try again.');
     } finally {
       setDeassigning(prev => ({ ...prev, [productId]: false }));
     }
