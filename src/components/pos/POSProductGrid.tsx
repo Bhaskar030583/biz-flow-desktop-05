@@ -115,7 +115,7 @@ export const POSProductGrid: React.FC<POSProductGridProps> = ({
                         {!isOutOfStock && (
                           <Button
                             size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-8 w-8 p-0 bg-blue-600 hover:bg-blue-700"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-8 w-8 p-0 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-0 shadow-md"
                             onClick={(e) => {
                               e.stopPropagation();
                               onAddToCart(product);
@@ -158,7 +158,7 @@ export const POSProductGrid: React.FC<POSProductGridProps> = ({
                       {/* Add to Cart Button */}
                       {!isOutOfStock && (
                         <Button 
-                          className="w-full mt-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md transition-all duration-200"
+                          className="w-full mt-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md transition-all duration-200 font-semibold border-0"
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -171,7 +171,7 @@ export const POSProductGrid: React.FC<POSProductGridProps> = ({
                       )}
 
                       {isOutOfStock && (
-                        <div className="w-full mt-3 py-2 text-center text-xs text-red-500 dark:text-red-400 font-medium">
+                        <div className="w-full mt-3 py-2 text-center text-xs text-red-500 dark:text-red-400 font-medium bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
                           Out of Stock
                         </div>
                       )}
