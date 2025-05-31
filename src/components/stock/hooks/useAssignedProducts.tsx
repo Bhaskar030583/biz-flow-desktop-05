@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -56,7 +57,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
     name: store.store_name
   })) || [];
 
-  // Fetch assigned products with current stock data using both hr_shop_id and shop_id
+  // Fetch assigned products with current stock data
   const { data: assignedProductsData, isLoading: productsLoading } = useQuery({
     queryKey: ['assigned-products-with-stock', refreshTrigger],
     queryFn: async () => {
@@ -67,7 +68,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
       
       console.log('📦 [useAssignedProducts] Fetching assigned products with stock data for user:', user.id);
       
-      // Get all product assignments from product_shops table using both hr_shop_id and shop_id
+      // Get all product assignments from product_shops table
       const { data: productShops, error: productShopsError } = await supabase
         .from('product_shops')
         .select(`
@@ -137,7 +138,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           usingShopId: shopIdToUse
         });
         
-        // Get current stock data for today - check both hr_shop_id and shop_id
+        // Get current stock data for today
         let currentStock = null;
         
         // First try with hr_shop_id if available
@@ -177,13 +178,6 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
             console.log(`📊 [useAssignedProducts] Found shop stock for ${product.name}:`, currentStock);
           }
         }
-
-        console.log(`🔍 [useAssignedProducts] Final current stock for ${product.name}:`, {
-          found: !!currentStock,
-          data: currentStock,
-          actualStockValue: currentStock?.actual_stock,
-          actualStockType: typeof currentStock?.actual_stock
-        });
 
         // Get yesterday's actual stock for opening stock calculation
         let yesterdayStock = null;
@@ -240,30 +234,33 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           console.error('❌ [useAssignedProducts] Error fetching sales for product:', product.name, salesError);
         }
 
-        // Calculate values properly
-        const openingStock = yesterdayStock?.actual_stock ?? yesterdayStock?.closing_stock ?? currentStock?.opening_stock ?? 0;
+        // Calculate values based on the new requirements
+        // Opening stock = yesterday's actual stock OR current stock's opening stock (for new assignments)
+        const openingStock = yesterdayStock?.actual_stock ?? currentStock?.opening_stock ?? 0;
+        
+        // Stock added from current record
         const stockAdded = currentStock?.stock_added ?? 0;
+        
+        // Total sold quantity for today
         const soldQuantity = salesData?.reduce((total, sale) => total + sale.quantity, 0) ?? 0;
+        
+        // Expected closing = Opening Stock + Stock Added - Sold
         const expectedClosing = Math.max(0, openingStock + stockAdded - soldQuantity);
         
-        // FIXED: Directly use actual_stock from database, don't override it
-        let actualStock = 0;
+        // Actual stock - use the value from database if manually updated, otherwise use expected closing
+        let actualStock = expectedClosing; // Default to expected closing
+        
         if (currentStock && currentStock.actual_stock !== null && currentStock.actual_stock !== undefined) {
-          // Use the actual stock value from database as-is
+          // If actual stock was manually updated, use that value
           actualStock = currentStock.actual_stock;
-          console.log(`✅ [useAssignedProducts] Using actual_stock from DB for ${product.name}: ${actualStock}`);
-        } else if (currentStock) {
-          // If we have a stock record but no actual_stock value, use expected closing
-          actualStock = expectedClosing;
-          console.log(`⚠️ [useAssignedProducts] No actual_stock in DB for ${product.name}, using expected: ${actualStock}`);
+          console.log(`✅ [useAssignedProducts] Using manually updated actual_stock for ${product.name}: ${actualStock}`);
         } else {
-          // No stock record at all
-          actualStock = 0;
-          console.log(`❌ [useAssignedProducts] No stock record for ${product.name}, using 0`);
+          // If not manually updated, actual stock equals expected closing
+          console.log(`📊 [useAssignedProducts] Using calculated actual_stock for ${product.name}: ${actualStock}`);
         }
         
-        // Variance calculation - only meaningful when we have a stock record
-        const variance = currentStock ? (actualStock - expectedClosing) : 0;
+        // Variance = Actual Stock - Expected Closing
+        const variance = actualStock - expectedClosing;
 
         console.log(`📊 [useAssignedProducts] Final calculated values for ${product.name}:`, {
           openingStock,
@@ -274,18 +271,12 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           actualStockFromDB: currentStock?.actual_stock,
           variance,
           hasStockRecord: !!currentStock,
-          currentStockData: currentStock
+          calculation: `${openingStock} + ${stockAdded} - ${soldQuantity} = ${expectedClosing}`
         });
 
         // Find the corresponding HR store name
         const hrStore = storesData?.find(store => store.id === shopIdToUse);
         const shopName = hrStore?.store_name || 'Unknown Store';
-
-        console.log(`🏪 [useAssignedProducts] Store mapping for ${product.name}:`, {
-          shopIdToUse,
-          foundStore: hrStore?.store_name,
-          finalShopName: shopName
-        });
 
         const assignedProduct: AssignedProduct = {
           assignment_id: assignment.id,
@@ -308,7 +299,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
         assignedProducts.push(assignedProduct);
       }
 
-      console.log('✅ [useAssignedProducts] Final assigned products with stock:', {
+      console.log('✅ [useAssignedProducts] Final assigned products with calculated stock:', {
         count: assignedProducts.length,
         productsByStore: assignedProducts.reduce((acc, product) => {
           if (!acc[product.shop_name]) {
@@ -316,8 +307,12 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           }
           acc[product.shop_name].push({
             name: product.name,
+            openingStock: product.opening_stock,
+            stockAdded: product.stock_added,
+            soldQuantity: product.sold_quantity,
+            expectedClosing: product.expected_closing,
             actualStock: product.actual_stock,
-            stockAdded: product.stock_added
+            variance: product.variance
           });
           return acc;
         }, {} as Record<string, any[]>)

@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -10,6 +9,7 @@ interface Product {
   price: number;
   category: string;
   quantity?: number;
+  expectedClosing?: number;
 }
 
 export const usePOSProducts = (selectedStoreId: string) => {
@@ -30,7 +30,7 @@ export const usePOSProducts = (selectedStoreId: string) => {
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString().split('T')[0];
       
-      // Get products assigned to this HR store from product_shops using hr_shop_id
+      // Get products assigned to this HR store from product_shops
       const { data: productShops, error: productShopsError } = await supabase
         .from('product_shops')
         .select(`
@@ -53,7 +53,6 @@ export const usePOSProducts = (selectedStoreId: string) => {
 
       console.log('📦 [POS] Product shops result:', productShops);
 
-      // Only show assigned products - no fallback to all products
       const allProducts = productShops
         ?.map(item => item.products)
         .filter(product => product !== null) || [];
@@ -94,9 +93,6 @@ export const usePOSProducts = (selectedStoreId: string) => {
         console.error('❌ [POS] Error fetching yesterday stock data:', yesterdayStockError);
       }
 
-      console.log('📊 [POS] Today stock data:', todayStockData);
-      console.log('📊 [POS] Yesterday stock data:', yesterdayStockData);
-
       // Get today's sales data to calculate sold quantity
       const { data: salesData, error: salesError } = await supabase
         .from('bill_items')
@@ -113,8 +109,6 @@ export const usePOSProducts = (selectedStoreId: string) => {
       if (salesError) {
         console.error('❌ [POS] Error fetching sales data:', salesError);
       }
-
-      console.log('💰 [POS] Sales data for today:', salesData);
 
       // Create maps for quick lookup
       const todayStockMap = new Map();
@@ -147,32 +141,33 @@ export const usePOSProducts = (selectedStoreId: string) => {
         const yesterdayStock = yesterdayStockMap.get(product.id);
         const soldToday = salesMap.get(product.id) || 0;
         
-        let availableQuantity = 0;
+        // Calculate based on new requirements
+        // Opening stock = yesterday's actual stock OR current stock's opening stock
+        const openingStock = yesterdayStock?.actual_stock ?? todayStock?.opening || 0;
+        const stockAdded = todayStock?.added || 0;
         
-        // Calculate available stock for POS
-        if (todayStock) {
-          // If actual stock is manually entered, use it; otherwise calculate expected closing
-          if (todayStock.actual !== null && todayStock.actual !== undefined) {
-            availableQuantity = Math.max(0, todayStock.actual);
-          } else {
-            // Calculate expected closing stock
-            const openingStock = todayStock.opening || yesterdayStock?.actual || yesterdayStock?.closing || 0;
-            availableQuantity = Math.max(0, openingStock + todayStock.added - soldToday);
-          }
-        } else if (yesterdayStock) {
-          // If no today's record but yesterday exists, use yesterday's stock minus today's sales
-          const yesterdayActual = yesterdayStock.actual ?? yesterdayStock.closing ?? 0;
-          availableQuantity = Math.max(0, yesterdayActual - soldToday);
-        }
+        // Expected closing = Opening Stock + Stock Added - Sold
+        const expectedClosing = Math.max(0, openingStock + stockAdded - soldToday);
+        
+        // Available quantity for POS = Expected Closing (what should be available to sell)
+        const availableQuantity = expectedClosing;
 
-        console.log(`📊 [POS] Product ${product.name}: Available = ${availableQuantity} (Today: ${JSON.stringify(todayStock)}, Yesterday: ${JSON.stringify(yesterdayStock)}, Sold: ${soldToday})`);
+        console.log(`📊 [POS] Product ${product.name}:`, {
+          openingStock,
+          stockAdded,
+          soldToday,
+          expectedClosing,
+          availableQuantity,
+          calculation: `${openingStock} + ${stockAdded} - ${soldToday} = ${expectedClosing}`
+        });
 
         return {
           id: product.id,
           name: product.name,
           price: product.price,
           category: product.category,
-          quantity: availableQuantity
+          quantity: availableQuantity,
+          expectedClosing: expectedClosing
         };
       });
 
@@ -204,7 +199,6 @@ export const usePOSProducts = (selectedStoreId: string) => {
         },
         (payload) => {
           console.log('📡 [POS] Real-time stock change detected:', payload);
-          // Invalidate and refetch products to get updated stock
           queryClient.invalidateQueries({ queryKey: ['pos-products', selectedStoreId] });
           refetchProducts();
         }
@@ -219,14 +213,12 @@ export const usePOSProducts = (selectedStoreId: string) => {
         },
         (payload) => {
           console.log('📡 [POS] Real-time stock change detected (shop_id):', payload);
-          // Invalidate and refetch products to get updated stock
           queryClient.invalidateQueries({ queryKey: ['pos-products', selectedStoreId] });
           refetchProducts();
         }
       )
       .subscribe();
 
-    // Also listen for bill changes (sales) to update stock in real-time
     const billChannel = supabase
       .channel('bill-changes')
       .on(
@@ -238,7 +230,6 @@ export const usePOSProducts = (selectedStoreId: string) => {
         },
         (payload) => {
           console.log('📡 [POS] Real-time sale detected:', payload);
-          // Refetch products to reflect new sales
           queryClient.invalidateQueries({ queryKey: ['pos-products', selectedStoreId] });
           refetchProducts();
         }
