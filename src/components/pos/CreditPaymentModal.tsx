@@ -10,7 +10,6 @@ import { UserCheck, User, Phone, Mail, CreditCard, AlertTriangle, DollarSign } f
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { generateBill } from "@/services/billService";
 
 interface Customer {
   id: string;
@@ -35,7 +34,7 @@ interface CreditPaymentModalProps {
   onClose: () => void;
   totalAmount: number;
   cartItems: CartItem[];
-  onPaymentComplete: () => void;
+  onPaymentComplete: (customerId: string, customerName?: string) => Promise<boolean>;
 }
 
 export const CreditPaymentModal: React.FC<CreditPaymentModalProps> = ({
@@ -115,14 +114,11 @@ export const CreditPaymentModal: React.FC<CreditPaymentModalProps> = ({
     if (!selectedCustomerId || !user) return;
 
     try {
-      const { data, error } = await supabase.rpc('can_make_credit_purchase', {
-        customer_id_param: selectedCustomerId,
-        purchase_amount: totalAmount
-      });
-
-      if (error) throw error;
-      
-      setCreditLimitExceeded(!data);
+      const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+      if (selectedCustomer) {
+        const wouldExceed = totalAmount > selectedCustomer.available_credit;
+        setCreditLimitExceeded(wouldExceed);
+      }
     } catch (error) {
       console.error("Error checking credit limit:", error);
       setCreditLimitExceeded(false);
@@ -140,36 +136,13 @@ export const CreditPaymentModal: React.FC<CreditPaymentModalProps> = ({
       return;
     }
 
-    if (!user) return;
-
     setIsProcessing(true);
     try {
-      // Generate bill using the bill service
-      const bill = await generateBill({
-        customerId: selectedCustomerId,
-        totalAmount,
-        paymentMethod: 'credit',
-        cartItems
-      });
-
-      if (bill) {
-        // Create the credit transaction
-        const { error } = await supabase
-          .from('credit_transactions')
-          .insert({
-            user_id: user.id,
-            customer_id: selectedCustomerId,
-            amount: totalAmount,
-            description: `Credit sale - Bill #${bill.bill_number} - ${cartItems.length} items`,
-            status: 'pending'
-          });
-
-        if (error) throw error;
-
-        const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
-        
-        toast.success(`Credit sale of ₹${totalAmount.toFixed(2)} recorded for ${selectedCustomer?.name}!`);
-        onPaymentComplete();
+      const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+      const success = await onPaymentComplete(selectedCustomerId, selectedCustomer?.name);
+      
+      if (success) {
+        onClose();
       }
     } catch (error) {
       console.error("Error processing credit payment:", error);

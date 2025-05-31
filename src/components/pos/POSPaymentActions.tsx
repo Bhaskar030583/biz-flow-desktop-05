@@ -2,6 +2,7 @@
 import { toast } from "sonner";
 import { generateBill } from "@/services/billService";
 import { adjustStockForBill } from "@/services/stockService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
   id: string;
@@ -71,6 +72,24 @@ export const createPaymentActions = ({
         salespersonName: storeInfo?.salespersonName
       });
 
+      // If it's a credit payment and we have a customer, create credit transaction
+      if (paymentMethod === 'credit' && customerId) {
+        const { error: creditError } = await supabase
+          .from('credit_transactions')
+          .insert({
+            user_id: userId,
+            customer_id: customerId,
+            amount: cart.reduce((sum, item) => sum + item.total, 0),
+            description: `Credit sale - Bill #${billData.bill_number}`,
+            status: 'pending'
+          });
+
+        if (creditError) {
+          console.error('Error creating credit transaction:', creditError);
+          toast.error("Bill created but credit transaction failed");
+        }
+      }
+
       // Update stock levels - decrease for sale
       try {
         await adjustStockForBill(cart, selectedShopId, userId, 'sale');
@@ -111,8 +130,33 @@ export const createPaymentActions = ({
     return false;
   };
 
+  const handleCreditPayment = async (customerId: string, customerName?: string) => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty");
+      return false;
+    }
+
+    if (!customerId) {
+      toast.error("Please select a customer for credit payment");
+      return false;
+    }
+    
+    try {
+      const bill = await createBill('credit', 'pending', customerId, customerName);
+      if (bill) {
+        toast.success("Credit payment recorded successfully!");
+        return true;
+      }
+    } catch (error) {
+      console.error('Error processing credit payment:', error);
+      toast.error("Failed to process credit payment");
+    }
+    return false;
+  };
+
   return {
     createBill,
-    handleUPIPayment
+    handleUPIPayment,
+    handleCreditPayment
   };
 };

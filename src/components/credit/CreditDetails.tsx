@@ -47,6 +47,8 @@ const CreditDetails = () => {
     queryFn: async () => {
       if (!user) return [];
 
+      console.log("Fetching credits for user:", user.id);
+
       // Fetch credits with HR store details
       const { data: creditsData, error } = await supabase
         .from("credits")
@@ -66,10 +68,12 @@ const CreditDetails = () => {
         return [];
       }
 
+      console.log("Credits fetched:", creditsData);
+
       // Transform data to include shop_name
       return creditsData.map((credit: any) => ({
         ...credit,
-        shop_name: credit.hr_stores?.store_name
+        shop_name: credit.hr_stores?.store_name || 'Unknown Store'
       }));
     },
     enabled: !!user && activeTab === "credit"
@@ -120,7 +124,7 @@ const CreditDetails = () => {
           const newEntry = {
             credit_date: dateKey,
             hr_shop_id: shopKey,
-            shop_name: entry.hr_stores?.store_name,
+            shop_name: entry.hr_stores?.store_name || 'Unknown Store',
             cash_amount: 0,
             card_amount: 0,
             online_amount: 0,
@@ -164,18 +168,23 @@ const CreditDetails = () => {
     if (!user) return;
 
     if (confirm("Are you sure you want to delete this credit entry?")) {
-      const { error } = await supabase
-        .from("credits")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", user.id);
+      try {
+        const { error } = await supabase
+          .from("credits")
+          .delete()
+          .eq("id", id)
+          .eq("user_id", user.id);
 
-      if (error) {
+        if (error) {
+          console.error("Error deleting credit:", error);
+          toast.error("Failed to delete credit entry");
+        } else {
+          refetch();
+          toast.success("Credit entry deleted successfully");
+        }
+      } catch (error) {
         console.error("Error deleting credit:", error);
         toast.error("Failed to delete credit entry");
-      } else {
-        refetch();
-        toast.success("Credit entry deleted successfully");
       }
     }
   };
@@ -184,20 +193,25 @@ const CreditDetails = () => {
     if (!user) return;
 
     if (confirm("Are you sure you want to delete this financial entry?")) {
-      const { error } = await supabase
-        .from("credits")
-        .delete()
-        .eq("credit_date", date)
-        .eq("hr_shop_id", shopId)
-        .eq("user_id", user.id)
-        .in('credit_type', ['cash', 'card', 'online', 'discount']);
+      try {
+        const { error } = await supabase
+          .from("credits")
+          .delete()
+          .eq("credit_date", date)
+          .eq("hr_shop_id", shopId)
+          .eq("user_id", user.id)
+          .in('credit_type', ['cash', 'card', 'online', 'discount']);
 
-      if (error) {
+        if (error) {
+          console.error("Error deleting financial entry:", error);
+          toast.error("Failed to delete financial entry");
+        } else {
+          refetchFinancial();
+          toast.success("Financial entry deleted successfully");
+        }
+      } catch (error) {
         console.error("Error deleting financial entry:", error);
         toast.error("Failed to delete financial entry");
-      } else {
-        refetchFinancial();
-        toast.success("Financial entry deleted successfully");
       }
     }
   };
