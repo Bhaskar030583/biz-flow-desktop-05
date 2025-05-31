@@ -42,7 +42,7 @@ export const POSCartSidebar: React.FC<POSCartSidebarProps> = ({
       {/* Cart Header */}
       <div className="p-6 border-b border-slate-200 bg-white/90 backdrop-blur-sm">
         <div className="flex justify-between items-center">
-          <h2 className="text-heading-h3 text-slate-800">Order Summary</h2>
+          <h2 className="text-heading-h3 text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text font-bold">Order Summary</h2>
           {cart.length > 0 && (
             <Button
               variant="outline"
