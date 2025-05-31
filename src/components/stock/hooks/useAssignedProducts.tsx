@@ -234,21 +234,25 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           console.error('❌ [useAssignedProducts] Error fetching sales for product:', product.name, salesError);
         }
 
-        // Calculate values - actual stock should default to expected closing when not entered
-        // Opening stock should be yesterday's actual stock (preferred) or closing stock
+        // Calculate values properly
         const openingStock = yesterdayStock?.actual_stock ?? yesterdayStock?.closing_stock ?? currentStock?.opening_stock ?? 0;
         const stockAdded = currentStock?.stock_added ?? 0;
         const soldQuantity = salesData?.reduce((total, sale) => total + sale.quantity, 0) ?? 0;
         const expectedClosing = Math.max(0, openingStock + stockAdded - soldQuantity);
         
-        // Actual stock should default to expected closing if not manually entered
-        // Only show as different if user has explicitly entered a different value
-        const actualStock = currentStock?.actual_stock ?? expectedClosing;
+        // Actual stock should show the real value from database, not default to expected closing
+        // Only use expected closing as fallback if no stock record exists at all
+        let actualStock = 0;
+        if (currentStock) {
+          // If we have a stock record, use the actual_stock value (could be 0 if manually set)
+          actualStock = currentStock.actual_stock ?? expectedClosing;
+        } else {
+          // If no stock record exists, actual stock is 0
+          actualStock = 0;
+        }
         
-        // Variance only exists when actual stock is manually entered and different from expected
-        const variance = (currentStock?.actual_stock !== null && currentStock?.actual_stock !== undefined) 
-          ? currentStock.actual_stock - expectedClosing 
-          : 0;
+        // Variance calculation - only meaningful when we have a stock record
+        const variance = currentStock ? (actualStock - expectedClosing) : 0;
 
         console.log(`📊 [useAssignedProducts] Calculated values for ${product.name}:`, {
           openingStock,
@@ -257,7 +261,8 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           expectedClosing,
           actualStock,
           variance,
-          hasManualActualStock: currentStock?.actual_stock !== null && currentStock?.actual_stock !== undefined
+          hasStockRecord: !!currentStock,
+          currentStockData: currentStock
         });
 
         // Find the corresponding HR store name
@@ -297,9 +302,13 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           if (!acc[product.shop_name]) {
             acc[product.shop_name] = [];
           }
-          acc[product.shop_name].push(product.name);
+          acc[product.shop_name].push({
+            name: product.name,
+            actualStock: product.actual_stock,
+            stockAdded: product.stock_added
+          });
           return acc;
-        }, {} as Record<string, string[]>)
+        }, {} as Record<string, any[]>)
       });
       
       return assignedProducts;
