@@ -91,18 +91,18 @@ export const POSCartSidebar: React.FC<POSCartSidebarProps> = ({
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-9 w-9 p-0 border-blue-300 hover:border-blue-500 hover:bg-blue-100 text-blue-600 hover:text-blue-700 font-bold"
+                      className="h-9 w-9 p-0 border-orange-300 hover:border-orange-500 hover:bg-orange-100 text-orange-600 hover:text-orange-700 font-bold"
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
-                    <span className="text-body-lg font-bold min-w-[40px] text-center bg-blue-50 px-3 py-1 rounded-lg border-2 border-blue-200 text-blue-800">
+                    <span className="text-body-lg font-bold min-w-[40px] text-center bg-orange-50 px-3 py-1 rounded-lg border-2 border-orange-200 text-orange-800">
                       {item.quantity}
                     </span>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-9 w-9 p-0 border-blue-300 hover:border-blue-500 hover:bg-blue-100 text-blue-600 hover:text-blue-700 font-bold"
+                      className="h-9 w-9 p-0 border-orange-300 hover:border-orange-500 hover:bg-orange-100 text-orange-600 hover:text-orange-700 font-bold"
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
                     >
                       <Plus className="h-4 w-4" />
@@ -140,7 +140,7 @@ export const POSCartSidebar: React.FC<POSCartSidebarProps> = ({
           
           <div className="space-y-3">
             <Button 
-              className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-button-lg py-4 h-14 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-bold border-2 border-green-500" 
+              className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white text-button-lg py-4 h-14 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-bold border-2 border-emerald-500" 
               onClick={onCashPayment}
             >
               <Banknote className="h-5 w-5 mr-3" />
@@ -150,7 +150,7 @@ export const POSCartSidebar: React.FC<POSCartSidebarProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <Button 
                 variant="outline"
-                className="h-12 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 border-purple-400 text-white hover:text-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 text-button-md font-semibold" 
+                className="h-12 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 border-indigo-400 text-white hover:text-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 text-button-md font-semibold" 
                 onClick={onUPIPayment}
               >
                 <Smartphone className="h-4 w-4 mr-2" />
@@ -158,7 +158,7 @@ export const POSCartSidebar: React.FC<POSCartSidebarProps> = ({
               </Button>
               <Button 
                 variant="outline"
-                className="h-12 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-blue-400 text-white hover:text-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 text-button-md font-semibold" 
+                className="h-12 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 border-cyan-400 text-white hover:text-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 text-button-md font-semibold" 
                 onClick={onCreditPayment}
               >
                 <CreditCard className="h-4 w-4 mr-2" />
@@ -169,7 +169,7 @@ export const POSCartSidebar: React.FC<POSCartSidebarProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <Button 
                 variant="outline"
-                className="h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-orange-400 text-white hover:text-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 text-button-md font-semibold" 
+                className="h-12 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 border-teal-400 text-white hover:text-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 text-button-md font-semibold" 
                 onClick={onSplitPayment}
               >
                 <SplitSquareHorizontal className="h-4 w-4 mr-2" />
@@ -177,7 +177,7 @@ export const POSCartSidebar: React.FC<POSCartSidebarProps> = ({
               </Button>
               <Button 
                 variant="outline"
-                className="h-12 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 border-yellow-400 text-white hover:text-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 text-button-md font-semibold" 
+                className="h-12 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 border-amber-400 text-white hover:text-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 text-button-md font-semibold" 
                 onClick={onPendingPayment}
               >
                 <Clock className="h-4 w-4 mr-2" />

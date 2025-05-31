@@ -88,7 +88,7 @@ export const POSProductGrid: React.FC<POSProductGridProps> = ({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
             {filteredProducts.map((product) => {
               const stockStatus = getStockStatus(product.quantity);
               const isOutOfStock = product.quantity === 0;
@@ -103,11 +103,11 @@ export const POSProductGrid: React.FC<POSProductGridProps> = ({
                   }`}
                   onClick={() => !isOutOfStock && onAddToCart(product)}
                 >
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
+                  <CardContent className="p-3">
+                    <div className="space-y-2">
                       {/* Product Name */}
                       <div className="flex items-start justify-between">
-                        <h3 className={`font-semibold text-sm leading-tight ${
+                        <h3 className={`font-semibold text-xs leading-tight ${
                           isOutOfStock ? 'text-gray-400 dark:text-gray-600' : 'text-gray-900 dark:text-gray-100'
                         }`}>
                           {product.name}
@@ -115,63 +115,63 @@ export const POSProductGrid: React.FC<POSProductGridProps> = ({
                         {!isOutOfStock && (
                           <Button
                             size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-8 w-8 p-0 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-0 shadow-md"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-6 w-6 p-0 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white border-0 shadow-md"
                             onClick={(e) => {
                               e.stopPropagation();
                               onAddToCart(product);
                             }}
                           >
-                            <Plus className="h-4 w-4" />
+                            <Plus className="h-3 w-3" />
                           </Button>
                         )}
                       </div>
 
                       {/* Price */}
-                      <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                      <div className="text-sm font-bold text-blue-600 dark:text-blue-400">
                         ₹{Number(product.price).toFixed(2)}
                       </div>
 
                       {/* Stock Information */}
-                      <div className="space-y-2">
+                      <div className="space-y-1">
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-gray-600 dark:text-gray-400">Available:</span>
-                          <Badge className={`text-xs px-2 py-1 ${stockStatus.color}`}>
-                            {product.quantity ?? 0} units
+                          <Badge className={`text-xs px-1 py-0 ${stockStatus.color}`}>
+                            {product.quantity ?? 0}
                           </Badge>
                         </div>
                         
                         {product.expectedClosing !== undefined && (
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-gray-600 dark:text-gray-400">Expected:</span>
-                            <span className="font-medium text-gray-700 dark:text-gray-300">
-                              {product.expectedClosing} units
+                            <span className="font-medium text-gray-700 dark:text-gray-300 text-xs">
+                              {product.expectedClosing}
                             </span>
                           </div>
                         )}
                       </div>
 
                       {/* Category */}
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="text-xs px-1 py-0">
                         {product.category}
                       </Badge>
 
                       {/* Add to Cart Button */}
                       {!isOutOfStock && (
                         <Button 
-                          className="w-full mt-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md transition-all duration-200 font-semibold border-0"
+                          className="w-full mt-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-md transition-all duration-200 font-semibold border-0 h-8 text-xs"
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
                             onAddToCart(product);
                           }}
                         >
-                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          <ShoppingCart className="h-3 w-3 mr-1" />
                           Add to Cart
                         </Button>
                       )}
 
                       {isOutOfStock && (
-                        <div className="w-full mt-3 py-2 text-center text-xs text-red-500 dark:text-red-400 font-medium bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
+                        <div className="w-full mt-2 py-1 text-center text-xs text-red-500 dark:text-red-400 font-medium bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
                           Out of Stock
                         </div>
                       )}
