@@ -179,6 +179,13 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           }
         }
 
+        console.log(`🔍 [useAssignedProducts] Final current stock for ${product.name}:`, {
+          found: !!currentStock,
+          data: currentStock,
+          actualStockValue: currentStock?.actual_stock,
+          actualStockType: typeof currentStock?.actual_stock
+        });
+
         // Get yesterday's actual stock for opening stock calculation
         let yesterdayStock = null;
         
@@ -240,15 +247,13 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
         const soldQuantity = salesData?.reduce((total, sale) => total + sale.quantity, 0) ?? 0;
         const expectedClosing = Math.max(0, openingStock + stockAdded - soldQuantity);
         
-        // Actual stock should show the real value from database, not default to expected closing
-        // Only use expected closing as fallback if no stock record exists at all
+        // FIXED: Use the actual_stock directly from the database if it exists
         let actualStock = 0;
         if (currentStock) {
-          // If we have a stock record, use the actual_stock value (could be 0 if manually set)
-          actualStock = currentStock.actual_stock ?? expectedClosing;
-        } else {
-          // If no stock record exists, actual stock is 0
-          actualStock = 0;
+          // Use the actual_stock value from database, even if it's 0
+          actualStock = currentStock.actual_stock !== null && currentStock.actual_stock !== undefined 
+            ? currentStock.actual_stock 
+            : expectedClosing;
         }
         
         // Variance calculation - only meaningful when we have a stock record
@@ -260,6 +265,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           soldQuantity,
           expectedClosing,
           actualStock,
+          actualStockFromDB: currentStock?.actual_stock,
           variance,
           hasStockRecord: !!currentStock,
           currentStockData: currentStock
