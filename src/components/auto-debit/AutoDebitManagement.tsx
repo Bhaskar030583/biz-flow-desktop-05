@@ -4,13 +4,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AutoDebitConfigs } from "./AutoDebitConfigs";
 import { AutoDebitTransactions } from "./AutoDebitTransactions";
 import { PaymentMethodsManagement } from "./PaymentMethodsManagement";
-import { Settings, CreditCard, History } from "lucide-react";
+import { ApiKeyManagement } from "./ApiKeyManagement";
+import { Settings, CreditCard, History, Key } from "lucide-react";
 
 export const AutoDebitManagement: React.FC = () => {
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="configs" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="api-config" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="api-config" className="flex items-center gap-2">
+            <Key className="h-4 w-4" />
+            API Configuration
+          </TabsTrigger>
           <TabsTrigger value="configs" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Auto Debit Configs
@@ -24,6 +29,10 @@ export const AutoDebitManagement: React.FC = () => {
             Transaction History
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="api-config" className="mt-6">
+          <ApiKeyManagement />
+        </TabsContent>
 
         <TabsContent value="configs" className="mt-6">
           <AutoDebitConfigs />
