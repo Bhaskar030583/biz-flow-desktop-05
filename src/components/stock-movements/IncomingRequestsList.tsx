@@ -46,7 +46,8 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
       
       console.log('📨 [IncomingRequestsList] Fetching incoming requests...');
 
-      // Get requests where the current user is NOT the requester
+      // Show ALL requests for now - this will show all requests in the system
+      // In a production environment, you'd want to filter based on store management or other criteria
       const { data, error } = await supabase
         .from('stock_requests')
         .select(`
@@ -55,7 +56,6 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
           fulfilling_store:hr_stores!fk_stock_requests_fulfilling_hr_store(store_name),
           product:products!fk_stock_requests_product(name, category)
         `)
-        .neq('user_id', user?.id) // Show requests from other users
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -192,7 +192,7 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
       <div className="text-center py-8">
         <Package className="h-12 w-12 mx-auto mb-4 text-gray-400" />
         <p className="text-gray-600">No incoming requests found</p>
-        <p className="text-sm text-gray-500">Requests from other users will appear here</p>
+        <p className="text-sm text-gray-500">All stock requests will appear here</p>
       </div>
     );
   }
