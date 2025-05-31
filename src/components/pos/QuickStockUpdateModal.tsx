@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { updateProductStock } from "@/services/stockService";
 import { useAuth } from "@/context/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -39,6 +39,13 @@ export const QuickStockUpdateModal: React.FC<QuickStockUpdateModalProps> = ({
   const queryClient = useQueryClient();
   const [stockUpdates, setStockUpdates] = useState<Record<string, number>>({});
   const [isUpdating, setIsUpdating] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter products based on search term
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.category.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleStockChange = (productId: string, value: string) => {
     const quantity = parseInt(value) || 0;
@@ -126,35 +133,56 @@ export const QuickStockUpdateModal: React.FC<QuickStockUpdateModalProps> = ({
     }
   };
 
+  const handleClose = () => {
+    onClose();
+    setSearchTerm("");
+    setStockUpdates({});
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Quick Stock Update</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
             Add stock quantities for products below. This will increase the current stock levels.
+          </div>
+
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-4 w-4" />
+            <Input
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600"
+            />
           </div>
           
           {products.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               No products available for this store
             </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              No products match your search
+            </div>
           ) : (
-            <div className="space-y-3">
-              {products.map((product) => (
-                <Card key={product.id} className="border border-gray-200">
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {filteredProducts.map((product) => (
+                <Card key={product.id} className="border border-gray-200 dark:border-gray-600">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">{product.name}</h4>
+                        <h4 className="font-medium text-gray-900 dark:text-gray-100">{product.name}</h4>
                         <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400">
                             {product.category}
                           </Badge>
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
                             ₹{Number(product.price).toFixed(2)}
                           </span>
                           {product.quantity !== undefined && (
@@ -162,10 +190,10 @@ export const QuickStockUpdateModal: React.FC<QuickStockUpdateModalProps> = ({
                               variant="outline" 
                               className={`text-xs ${
                                 product.quantity > 10 
-                                  ? 'bg-green-50 text-green-700 border-green-200' 
+                                  ? 'bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700' 
                                   : product.quantity > 0 
-                                    ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                    : 'bg-red-50 text-red-700 border-red-200'
+                                    ? 'bg-yellow-50 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700'
+                                    : 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700'
                               }`}
                             >
                               Current: {product.quantity}
@@ -186,7 +214,7 @@ export const QuickStockUpdateModal: React.FC<QuickStockUpdateModalProps> = ({
                             placeholder="0"
                             value={stockUpdates[product.id] || ''}
                             onChange={(e) => handleStockChange(product.id, e.target.value)}
-                            className="text-center"
+                            className="text-center bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600"
                           />
                         </div>
                         <Button
@@ -205,8 +233,8 @@ export const QuickStockUpdateModal: React.FC<QuickStockUpdateModalProps> = ({
             </div>
           )}
           
-          <div className="flex justify-between items-center pt-4 border-t">
-            <Button variant="outline" onClick={onClose}>
+          <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-600">
+            <Button variant="outline" onClick={handleClose}>
               Cancel
             </Button>
             <Button 
