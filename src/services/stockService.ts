@@ -79,17 +79,26 @@ export const updateProductStock = async (
   quantityToAdd: number,
   userId: string
 ) => {
+  console.log('📦 [StockService] Updating stock:', {
+    productId,
+    shopId,
+    quantityToAdd,
+    userId
+  });
+
   const today = new Date().toISOString().split('T')[0];
   
-  // Get current stock record using hr_shop_id
+  // Get current stock record using hr_shop_id (trying both shop_id and hr_shop_id for compatibility)
   const { data: currentStock, error: fetchError } = await supabase
     .from('stocks')
     .select('*')
     .eq('product_id', productId)
-    .eq('hr_shop_id', shopId)
+    .or(`hr_shop_id.eq.${shopId},shop_id.eq.${shopId}`)
     .eq('user_id', userId)
     .eq('stock_date', today)
     .maybeSingle();
+  
+  console.log('📦 [StockService] Current stock found:', currentStock);
   
   if (fetchError) {
     console.error('Error fetching current stock:', fetchError);
@@ -98,12 +107,25 @@ export const updateProductStock = async (
   
   if (currentStock) {
     // Update existing stock record
+    const newActualStock = currentStock.actual_stock + quantityToAdd;
+    const newClosingStock = currentStock.closing_stock + quantityToAdd;
+    const newStockAdded = (currentStock.stock_added || 0) + quantityToAdd;
+
+    console.log('📦 [StockService] Updating existing stock:', {
+      oldActual: currentStock.actual_stock,
+      newActual: newActualStock,
+      oldClosing: currentStock.closing_stock,
+      newClosing: newClosingStock,
+      oldStockAdded: currentStock.stock_added,
+      newStockAdded: newStockAdded
+    });
+
     const { error: updateError } = await supabase
       .from('stocks')
       .update({
-        actual_stock: currentStock.actual_stock + quantityToAdd,
-        closing_stock: currentStock.closing_stock + quantityToAdd,
-        stock_added: (currentStock.stock_added || 0) + quantityToAdd
+        actual_stock: newActualStock,
+        closing_stock: newClosingStock,
+        stock_added: newStockAdded
       })
       .eq('id', currentStock.id);
     
@@ -111,8 +133,12 @@ export const updateProductStock = async (
       console.error('Error updating stock:', updateError);
       throw updateError;
     }
+
+    console.log('✅ [StockService] Stock updated successfully');
   } else {
     // Create new stock record if none exists for today
+    console.log('📦 [StockService] Creating new stock record');
+
     const { error: insertError } = await supabase
       .from('stocks')
       .insert({
@@ -120,7 +146,7 @@ export const updateProductStock = async (
         shop_id: shopId, // Keep for backward compatibility
         hr_shop_id: shopId, // Use hr_shop_id as primary field
         stock_date: today,
-        opening_stock: quantityToAdd,
+        opening_stock: 0, // Start with 0 if no previous record
         closing_stock: quantityToAdd,
         actual_stock: quantityToAdd,
         stock_added: quantityToAdd,
@@ -131,5 +157,7 @@ export const updateProductStock = async (
       console.error('Error creating stock record:', insertError);
       throw insertError;
     }
+
+    console.log('✅ [StockService] New stock record created successfully');
   }
 };
