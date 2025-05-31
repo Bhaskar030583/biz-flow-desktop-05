@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
 import { CustomerSelector } from "@/components/shared/CustomerSelector";
-import { CustomerActions } from "@/components/shared/CustomerActions";
 
 interface Customer {
   id: string;
