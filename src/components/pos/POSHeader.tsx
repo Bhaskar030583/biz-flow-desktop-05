@@ -33,7 +33,7 @@ export const POSHeader: React.FC<POSHeaderProps> = ({
   return (
     <div className="bg-white/90 backdrop-blur-sm border-b border-slate-200 shadow-sm px-6 py-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 flex-1">
           {storeInfo && (
             <div className="flex items-center space-x-3 text-body-sm text-slate-600">
               <span className="font-medium">{storeInfo.storeName}</span>
@@ -44,8 +44,17 @@ export const POSHeader: React.FC<POSHeaderProps> = ({
             </div>
           )}
         </div>
+
+        {/* Logo in the center */}
+        <div className="flex-1 flex justify-center">
+          <img 
+            src="/lovable-uploads/31fce476-e564-4413-90e1-e9d9fd78516f.png" 
+            alt="ABC Cafe Logo" 
+            className="h-12 w-auto object-contain"
+          />
+        </div>
         
-        <div className="flex items-center justify-center space-x-4">
+        <div className="flex items-center justify-end space-x-4 flex-1">
           <Button
             variant="outline"
             size="lg"
