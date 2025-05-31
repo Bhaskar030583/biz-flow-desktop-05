@@ -57,7 +57,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
     name: store.store_name
   })) || [];
 
-  // Fetch assigned products with current stock data using hr_shop_id
+  // Fetch assigned products with current stock data using both hr_shop_id and shop_id
   const { data: assignedProductsData, isLoading: productsLoading } = useQuery({
     queryKey: ['assigned-products-with-stock', refreshTrigger],
     queryFn: async () => {
@@ -68,7 +68,7 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
       
       console.log('📦 [useAssignedProducts] Fetching assigned products with stock data for user:', user.id);
       
-      // Get all product assignments from product_shops table using hr_shop_id
+      // Get all product assignments from product_shops table using both hr_shop_id and shop_id
       const { data: productShops, error: productShopsError } = await supabase
         .from('product_shops')
         .select(`
@@ -127,54 +127,95 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
 
         const product = assignment.products;
         
-        // Try to get stock data using hr_shop_id first, then fallback to shop_id
-        let currentStock = null;
-        let yesterdayStock = null;
-        
+        // Use both hr_shop_id and shop_id to find stock data
         const shopIdToUse = assignment.hr_shop_id || assignment.shop_id;
-        const shopIdField = assignment.hr_shop_id ? 'hr_shop_id' : 'shop_id';
         
         console.log(`📊 [useAssignedProducts] Processing assignment for product "${product.name}":`, {
           assignmentId: assignment.id,
           productId: product.id,
           hrShopId: assignment.hr_shop_id,
           shopId: assignment.shop_id,
-          usingField: shopIdField,
-          usingValue: shopIdToUse
+          usingShopId: shopIdToUse
         });
         
-        // Get current stock data for today
-        const { data: todayStockData, error: stockError } = await supabase
-          .from('stocks')
-          .select('*')
-          .eq('product_id', product.id)
-          .eq(shopIdField, shopIdToUse)
-          .eq('stock_date', today)
-          .eq('user_id', user?.id)
-          .maybeSingle();
+        // Get current stock data for today - check both hr_shop_id and shop_id
+        let currentStock = null;
+        
+        // First try with hr_shop_id if available
+        if (assignment.hr_shop_id) {
+          const { data: hrStockData, error: hrStockError } = await supabase
+            .from('stocks')
+            .select('*')
+            .eq('product_id', product.id)
+            .eq('hr_shop_id', assignment.hr_shop_id)
+            .eq('stock_date', today)
+            .eq('user_id', user?.id)
+            .maybeSingle();
 
-        if (stockError) {
-          console.error('❌ [useAssignedProducts] Error fetching current stock for product:', product.name, stockError);
-        } else {
-          currentStock = todayStockData;
-          console.log(`📊 [useAssignedProducts] Today's stock for ${product.name}:`, currentStock);
+          if (hrStockError) {
+            console.error('❌ [useAssignedProducts] Error fetching HR stock for product:', product.name, hrStockError);
+          } else if (hrStockData) {
+            currentStock = hrStockData;
+            console.log(`📊 [useAssignedProducts] Found HR stock for ${product.name}:`, currentStock);
+          }
+        }
+        
+        // If no HR stock found, try with shop_id
+        if (!currentStock && assignment.shop_id) {
+          const { data: shopStockData, error: shopStockError } = await supabase
+            .from('stocks')
+            .select('*')
+            .eq('product_id', product.id)
+            .eq('shop_id', assignment.shop_id)
+            .eq('stock_date', today)
+            .eq('user_id', user?.id)
+            .maybeSingle();
+
+          if (shopStockError) {
+            console.error('❌ [useAssignedProducts] Error fetching shop stock for product:', product.name, shopStockError);
+          } else if (shopStockData) {
+            currentStock = shopStockData;
+            console.log(`📊 [useAssignedProducts] Found shop stock for ${product.name}:`, currentStock);
+          }
         }
 
         // Get yesterday's actual stock for opening stock calculation
-        const { data: yesterdayStockData, error: yesterdayError } = await supabase
-          .from('stocks')
-          .select('actual_stock, closing_stock')
-          .eq('product_id', product.id)
-          .eq(shopIdField, shopIdToUse)
-          .eq('stock_date', yesterdayStr)
-          .eq('user_id', user?.id)
-          .maybeSingle();
+        let yesterdayStock = null;
+        
+        // First try with hr_shop_id if available
+        if (assignment.hr_shop_id) {
+          const { data: hrYesterdayData, error: hrYesterdayError } = await supabase
+            .from('stocks')
+            .select('actual_stock, closing_stock')
+            .eq('product_id', product.id)
+            .eq('hr_shop_id', assignment.hr_shop_id)
+            .eq('stock_date', yesterdayStr)
+            .eq('user_id', user?.id)
+            .maybeSingle();
 
-        if (yesterdayError) {
-          console.error('❌ [useAssignedProducts] Error fetching yesterday stock for product:', product.name, yesterdayError);
-        } else {
-          yesterdayStock = yesterdayStockData;
-          console.log(`📊 [useAssignedProducts] Yesterday's stock for ${product.name}:`, yesterdayStock);
+          if (hrYesterdayError) {
+            console.error('❌ [useAssignedProducts] Error fetching HR yesterday stock for product:', product.name, hrYesterdayError);
+          } else if (hrYesterdayData) {
+            yesterdayStock = hrYesterdayData;
+          }
+        }
+        
+        // If no HR yesterday stock found, try with shop_id
+        if (!yesterdayStock && assignment.shop_id) {
+          const { data: shopYesterdayData, error: shopYesterdayError } = await supabase
+            .from('stocks')
+            .select('actual_stock, closing_stock')
+            .eq('product_id', product.id)
+            .eq('shop_id', assignment.shop_id)
+            .eq('stock_date', yesterdayStr)
+            .eq('user_id', user?.id)
+            .maybeSingle();
+
+          if (shopYesterdayError) {
+            console.error('❌ [useAssignedProducts] Error fetching shop yesterday stock for product:', product.name, shopYesterdayError);
+          } else if (shopYesterdayData) {
+            yesterdayStock = shopYesterdayData;
+          }
         }
 
         // Get sales data for today to calculate sold quantity

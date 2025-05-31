@@ -144,11 +144,14 @@ const StockCreationForm: React.FC<StockCreationFormProps> = ({ onSuccess, onCanc
 
     setLoading(true);
     try {
+      console.log('📝 [StockCreationForm] Saving stock entries for shop:', selectedShop);
+      console.log('📝 [StockCreationForm] Stock entries to save:', stockEntries);
+      
       const stockData = stockEntries.map(entry => ({
         stock_date: stockDate,
         product_id: entry.productId,
-        shop_id: selectedShop, // Required field
-        hr_shop_id: selectedShop, // Optional field for HR integration
+        shop_id: selectedShop, // Required field for compatibility
+        hr_shop_id: selectedShop, // HR store ID for new system
         opening_stock: entry.openingStock,
         closing_stock: entry.openingStock + entry.stockAdded,
         actual_stock: entry.actualStock,
@@ -156,20 +159,28 @@ const StockCreationForm: React.FC<StockCreationFormProps> = ({ onSuccess, onCanc
         user_id: user?.id
       }));
 
+      console.log('📝 [StockCreationForm] Final stock data to insert:', stockData);
+
       const { error } = await supabase
         .from('stocks')
         .upsert(stockData, {
-          onConflict: 'stock_date,product_id,shop_id',
+          onConflict: 'stock_date,product_id,shop_id,user_id',
           ignoreDuplicates: false
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [StockCreationForm] Error saving stock entries:', error);
+        throw error;
+      }
+
+      console.log('✅ [StockCreationForm] Stock entries saved successfully');
 
       // Invalidate all relevant queries to refresh data across the app
       queryClient.invalidateQueries({ queryKey: ['pos-products'] });
       queryClient.invalidateQueries({ queryKey: ['product-stock-management'] });
       queryClient.invalidateQueries({ queryKey: ['stocks'] });
       queryClient.invalidateQueries({ queryKey: ['assigned-products'] });
+      queryClient.invalidateQueries({ queryKey: ['assigned-products-with-stock'] });
 
       toast.success('Stock entries created successfully');
       onSuccess();
