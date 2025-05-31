@@ -172,6 +172,7 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
           .from('stocks')
           .insert({
             product_id: request.product_id,
+            shop_id: request.requesting_hr_store_id, // Add required shop_id field
             hr_shop_id: request.requesting_hr_store_id,
             stock_date: today,
             opening_stock: request.requested_quantity,
