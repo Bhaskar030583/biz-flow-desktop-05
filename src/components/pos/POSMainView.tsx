@@ -75,6 +75,15 @@ export const POSMainView: React.FC<POSMainViewProps> = ({
     return matchesTerm && matchesCategory;
   });
 
+  console.log("POSMainView render - Current state:", {
+    showCustomerManagement,
+    showBillHistory,
+    showOrderSummary,
+    productsCount: products.length,
+    filteredProductsCount: filteredProducts.length,
+    cartItemsCount: cart.length
+  });
+
   // Add product to cart
   const addToCart = (product: Product) => {
     if (product.quantity && product.quantity <= 0) return;
@@ -165,6 +174,7 @@ export const POSMainView: React.FC<POSMainViewProps> = ({
 
   // If showing customer management, render only that component
   if (showCustomerManagement) {
+    console.log("Rendering Customer Management view");
     return (
       <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
         <POSHeader
@@ -188,6 +198,7 @@ export const POSMainView: React.FC<POSMainViewProps> = ({
 
   // If showing bill history, render only that component
   if (showBillHistory) {
+    console.log("Rendering Bill History view");
     return (
       <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
         <POSHeader
@@ -209,6 +220,8 @@ export const POSMainView: React.FC<POSMainViewProps> = ({
     );
   }
 
+  console.log("Rendering main POS view");
+  
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       <POSHeader
@@ -232,7 +245,7 @@ export const POSMainView: React.FC<POSMainViewProps> = ({
           setSelectedCategory={setSelectedCategory}
           categories={categories}
           filteredProducts={filteredProducts}
-          selectedShopId="1" // Replace with actual shop ID from your state
+          selectedShopId="1"
           onAddToCart={addToCart}
           showSearch={showSearch}
         />
