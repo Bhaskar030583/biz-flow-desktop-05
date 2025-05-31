@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { CustomerDetails } from "./CustomerDetails";
+import { CustomerDetailsSheet } from "./CustomerDetailsSheet";
 
 interface Customer {
   id: string;
@@ -44,7 +43,6 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
 
   const fetchCustomers = async () => {
     if (!user) return;
@@ -130,14 +128,6 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
     }
   };
 
-  const handleViewDetails = (customerId: string) => {
-    setSelectedCustomerId(customerId);
-  };
-
-  const handleBackToList = () => {
-    setSelectedCustomerId(null);
-  };
-
   const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.phone.includes(searchTerm) ||
@@ -151,16 +141,6 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
           <div className="text-center">Loading customers...</div>
         </CardContent>
       </Card>
-    );
-  }
-
-  // If a customer is selected, show their details
-  if (selectedCustomerId) {
-    return (
-      <CustomerDetails 
-        customerId={selectedCustomerId} 
-        onBack={handleBackToList}
-      />
     );
   }
 
@@ -254,15 +234,10 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
                     </div>
 
                     <div className="flex gap-2 ml-4">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleViewDetails(customer.id)}
-                        className="flex items-center gap-1 text-blue-600 hover:bg-blue-50"
-                      >
-                        <Eye className="h-4 w-4" />
-                        <span className="hidden sm:inline">View</span>
-                      </Button>
+                      <CustomerDetailsSheet 
+                        customerId={customer.id}
+                        customerName={customer.name}
+                      />
                       <Button
                         size="sm"
                         variant="outline"
