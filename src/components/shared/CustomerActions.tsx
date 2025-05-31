@@ -1,11 +1,12 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Eye } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CustomerDetailsSheet } from "./CustomerDetailsSheet";
+import { CustomerEditDialog } from "./CustomerEditDialog";
 
 interface Customer {
   id: string;
@@ -13,6 +14,7 @@ interface Customer {
   phone: string;
   email: string | null;
   address: string | null;
+  credit_limit: number;
 }
 
 interface CustomerActionsProps {
@@ -68,15 +70,11 @@ export const CustomerActions: React.FC<CustomerActionsProps> = ({
       )}
       
       {showEdit && (
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex items-center gap-1 text-green-600 hover:bg-green-50"
-          title="Edit customer"
-        >
-          <Edit className="h-4 w-4" />
-          {!compact && <span className="hidden sm:inline">Edit</span>}
-        </Button>
+        <CustomerEditDialog
+          customer={customer}
+          onRefresh={onRefresh}
+          compact={compact}
+        />
       )}
       
       {showDelete && userRole === "admin" && (
