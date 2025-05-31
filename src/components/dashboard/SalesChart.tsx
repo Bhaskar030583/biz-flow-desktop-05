@@ -39,13 +39,36 @@ interface SaleData {
 export function SalesChart({ startDate, endDate, shopIds, categoryId, productId }: SalesChartProps) {
   const [salesData, setSalesData] = useState<SalesDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [debugInfo, setDebugInfo] = useState<string>("");
 
   useEffect(() => {
     async function fetchSalesData() {
       try {
         setLoading(true);
+        setDebugInfo("");
         
-        // Build the query
+        console.log('🔍 [SalesChart] Fetching sales data with filters:', {
+          startDate,
+          endDate,
+          shopIds,
+          categoryId,
+          productId
+        });
+        
+        // First, let's check if we have any sales data at all
+        const { data: totalSalesCount, error: countError } = await supabase
+          .from("sales")
+          .select("id", { count: 'exact' });
+        
+        if (countError) {
+          console.error('❌ [SalesChart] Error counting sales:', countError);
+          setDebugInfo(`Error counting sales: ${countError.message}`);
+        } else {
+          console.log('📊 [SalesChart] Total sales in database:', totalSalesCount?.length || 0);
+          setDebugInfo(`Total sales in database: ${totalSalesCount?.length || 0}`);
+        }
+        
+        // Build the query with simplified approach
         let query = supabase
           .from("sales")
           .select(`
@@ -58,27 +81,50 @@ export function SalesChart({ startDate, endDate, shopIds, categoryId, productId 
         
         // Add filters
         if (startDate) {
-          query = query.gte("sale_date", format(startDate, "yyyy-MM-dd"));
+          const formattedStartDate = format(startDate, "yyyy-MM-dd");
+          query = query.gte("sale_date", formattedStartDate);
+          console.log('📅 [SalesChart] Start date filter:', formattedStartDate);
         }
         if (endDate) {
-          query = query.lte("sale_date", format(endDate, "yyyy-MM-dd"));
+          const formattedEndDate = format(endDate, "yyyy-MM-dd");
+          query = query.lte("sale_date", formattedEndDate);
+          console.log('📅 [SalesChart] End date filter:', formattedEndDate);
         }
         if (shopIds && shopIds.length > 0) {
           query = query.in("shop_id", shopIds);
+          console.log('🏪 [SalesChart] Shop filter:', shopIds);
         }
         if (productId) {
           query = query.eq("product_id", productId);
+          console.log('📦 [SalesChart] Product filter:', productId);
         }
         
         const { data, error } = await query;
         
-        if (error) throw error;
+        if (error) {
+          console.error('❌ [SalesChart] Error fetching sales:', error);
+          setDebugInfo(prev => prev + ` | Query error: ${error.message}`);
+          setSalesData([]);
+          return;
+        }
+        
+        console.log('📊 [SalesChart] Raw sales data:', data?.length || 0, 'records');
+        setDebugInfo(prev => prev + ` | Filtered results: ${data?.length || 0}`);
+        
+        if (!data || data.length === 0) {
+          console.log('⚠️ [SalesChart] No sales data found');
+          setSalesData([]);
+          return;
+        }
         
         // Process data
         const processedData: Record<string, SalesDataPoint> = {};
         
         data?.forEach((sale: SaleData) => {
-          if (!sale.products) return;
+          if (!sale.products) {
+            console.warn('⚠️ [SalesChart] Sale without product data:', sale);
+            return;
+          }
           
           // Apply category filter
           if (categoryId && sale.products.category !== categoryId) {
@@ -96,12 +142,14 @@ export function SalesChart({ startDate, endDate, shopIds, categoryId, productId 
           }
           
           const totalSale = Number(sale.price) * sale.quantity;
-          // Default cost price to 0 if not available
+          // Use cost_price from products table, default to 0 if not available
           const costPrice = Number(sale.products.cost_price || 0) * sale.quantity;
           const profit = totalSale - costPrice;
           
           processedData[date].sales += totalSale;
           processedData[date].profit += profit;
+          
+          console.log(`📈 [SalesChart] Processing ${date}: sale=${totalSale}, profit=${profit}`);
         });
         
         // Convert to array and sort
@@ -109,9 +157,11 @@ export function SalesChart({ startDate, endDate, shopIds, categoryId, productId 
           new Date(a.date).getTime() - new Date(b.date).getTime()
         );
         
+        console.log('📊 [SalesChart] Final processed data:', sortedData.length, 'data points');
         setSalesData(sortedData);
       } catch (error: any) {
-        console.error("Error fetching sales data:", error.message);
+        console.error("❌ [SalesChart] Unexpected error:", error);
+        setDebugInfo(prev => prev + ` | Unexpected error: ${error.message}`);
       } finally {
         setLoading(false);
       }
@@ -139,8 +189,13 @@ export function SalesChart({ startDate, endDate, shopIds, categoryId, productId 
         <CardHeader>
           <CardTitle>Sales and Profit Analysis</CardTitle>
         </CardHeader>
-        <CardContent className="h-80 flex items-center justify-center">
-          <p className="text-muted-foreground">No sales data available for the selected filters.</p>
+        <CardContent className="h-80 flex flex-col items-center justify-center">
+          <p className="text-muted-foreground mb-2">No sales data available for the selected filters.</p>
+          <p className="text-xs text-muted-foreground">{debugInfo}</p>
+          <div className="mt-4 text-xs text-muted-foreground">
+            <p>This chart shows data from the "sales" table.</p>
+            <p>Try adjusting your date range or removing filters to see data.</p>
+          </div>
         </CardContent>
       </Card>
     );
@@ -150,6 +205,7 @@ export function SalesChart({ startDate, endDate, shopIds, categoryId, productId 
     <Card>
       <CardHeader>
         <CardTitle>Sales and Profit Analysis</CardTitle>
+        <p className="text-xs text-muted-foreground">{debugInfo}</p>
       </CardHeader>
       <CardContent>
         <div className="h-80">
