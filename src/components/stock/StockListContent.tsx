@@ -35,6 +35,28 @@ const StockListContent = ({
   shops,
   products
 }: StockListContentProps) => {
+  // Debug logging for product assignments
+  React.useEffect(() => {
+    if (assignedProducts.length > 0) {
+      console.log('📊 [StockListContent] Product assignments debug:', {
+        totalProducts: assignedProducts.length,
+        productsByStore: assignedProducts.reduce((acc, product) => {
+          const storeName = product.shop_name || 'Unknown Store';
+          if (!acc[storeName]) {
+            acc[storeName] = [];
+          }
+          acc[storeName].push({
+            name: product.name,
+            productId: product.id,
+            assignmentId: product.assignment_id,
+            shopId: product.shop_id
+          });
+          return acc;
+        }, {} as Record<string, any[]>)
+      });
+    }
+  }, [assignedProducts]);
+
   return (
     <Card className="transition-all duration-200 hover:shadow-md">
       <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 pb-4">
@@ -69,6 +91,23 @@ const StockListContent = ({
           </div>
         ) : (
           <>
+            {/* Debug Information Panel */}
+            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                📊 Assignment Debug Info
+              </h4>
+              <div className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+                <div>Total Products Found: {assignedProducts.length}</div>
+                <div>Stores with Products: {[...new Set(assignedProducts.map(p => p.shop_name))].join(', ')}</div>
+                {shopFilter !== "_all" && (
+                  <div>Filtered by Store: {shops.find(s => s.id === shopFilter)?.name || shopFilter}</div>
+                )}
+                {productFilter !== "_all" && (
+                  <div>Filtered by Product: {products.find(p => p.id === productFilter)?.name || productFilter}</div>
+                )}
+              </div>
+            </div>
+
             <ProductStockTable 
               filteredProducts={filteredProducts}
               isAdmin={false}

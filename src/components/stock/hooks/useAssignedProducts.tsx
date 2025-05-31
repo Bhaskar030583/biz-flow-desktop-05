@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -95,6 +96,16 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
         return [];
       }
 
+      console.log('🔍 [useAssignedProducts] Raw product assignments found:', {
+        count: productShops.length,
+        assignments: productShops.map(ps => ({
+          assignmentId: ps.id,
+          productName: ps.products?.name,
+          hrShopId: ps.hr_shop_id,
+          shopId: ps.shop_id
+        }))
+      });
+
       // Get today's date for stock queries
       const today = new Date().toISOString().split('T')[0];
       
@@ -123,7 +134,14 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
         const shopIdToUse = assignment.hr_shop_id || assignment.shop_id;
         const shopIdField = assignment.hr_shop_id ? 'hr_shop_id' : 'shop_id';
         
-        console.log(`📊 [useAssignedProducts] Fetching stock for product ${product.name} using ${shopIdField}:`, shopIdToUse);
+        console.log(`📊 [useAssignedProducts] Processing assignment for product "${product.name}":`, {
+          assignmentId: assignment.id,
+          productId: product.id,
+          hrShopId: assignment.hr_shop_id,
+          shopId: assignment.shop_id,
+          usingField: shopIdField,
+          usingValue: shopIdToUse
+        });
         
         // Get current stock data for today
         const { data: todayStockData, error: stockError } = await supabase
@@ -201,6 +219,12 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
         const hrStore = storesData?.find(store => store.id === shopIdToUse);
         const shopName = hrStore?.store_name || 'Unknown Store';
 
+        console.log(`🏪 [useAssignedProducts] Store mapping for ${product.name}:`, {
+          shopIdToUse,
+          foundStore: hrStore?.store_name,
+          finalShopName: shopName
+        });
+
         const assignedProduct: AssignedProduct = {
           assignment_id: assignment.id,
           id: product.id,
@@ -222,7 +246,17 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
         assignedProducts.push(assignedProduct);
       }
 
-      console.log('✅ [useAssignedProducts] Final assigned products with stock:', assignedProducts.length);
+      console.log('✅ [useAssignedProducts] Final assigned products with stock:', {
+        count: assignedProducts.length,
+        productsByStore: assignedProducts.reduce((acc, product) => {
+          if (!acc[product.shop_name]) {
+            acc[product.shop_name] = [];
+          }
+          acc[product.shop_name].push(product.name);
+          return acc;
+        }, {} as Record<string, string[]>)
+      });
+      
       return assignedProducts;
     },
     enabled: !!user?.id && !!storesData
