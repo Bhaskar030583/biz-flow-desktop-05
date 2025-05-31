@@ -51,8 +51,8 @@ export const StockRequestsList = ({ onRequestUpdated }: StockRequestsListProps) 
         .from('stock_requests')
         .select(`
           *,
-          requesting_store:hr_stores!stock_requests_requesting_hr_store_id_fkey(store_name),
-          fulfilling_store:hr_stores!stock_requests_fulfilling_hr_store_id_fkey(store_name),
+          requesting_store:hr_stores!requesting_hr_store_id(store_name),
+          fulfilling_store:hr_stores!fulfilling_hr_store_id(store_name),
           product:products(name, category)
         `)
         .eq('user_id', user?.id)

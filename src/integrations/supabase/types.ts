@@ -1566,6 +1566,27 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_stock_requests_fulfilling_hr_store"
+            columns: ["fulfilling_hr_store_id"]
+            isOneToOne: false
+            referencedRelation: "hr_stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_stock_requests_product"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_stock_requests_requesting_hr_store"
+            columns: ["requesting_hr_store_id"]
+            isOneToOne: false
+            referencedRelation: "hr_stores"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "stock_requests_hr_fulfilling_store_id_fkey"
             columns: ["fulfilling_hr_store_id"]
             isOneToOne: false

@@ -47,38 +47,16 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
       
       console.log('📨 [IncomingRequestsList] Fetching incoming requests...');
 
-      // Get all HR stores - for incoming requests, we need to find requests 
-      // where the fulfilling store could be any store (since we're showing all incoming)
-      const { data: allStores, error: storesError } = await supabase
-        .from('hr_stores')
-        .select('id');
-
-      if (storesError) {
-        console.error('❌ [IncomingRequestsList] Error fetching stores:', storesError);
-        throw storesError;
-      }
-
-      const storeIds = allStores?.map(store => store.id) || [];
-
-      if (storeIds.length === 0) {
-        console.log('⚠️ [IncomingRequestsList] No HR stores found');
-        setRequests([]);
-        setLoading(false);
-        return;
-      }
-
-      // Get requests where the current user could potentially fulfill them
-      // This shows all requests to HR stores (the user can decide which ones they can fulfill)
+      // Get requests where the current user is NOT the requester
       const { data, error } = await supabase
         .from('stock_requests')
         .select(`
           *,
-          requesting_store:hr_stores!stock_requests_requesting_hr_store_id_fkey(store_name),
-          fulfilling_store:hr_stores!stock_requests_fulfilling_hr_store_id_fkey(store_name),
+          requesting_store:hr_stores!requesting_hr_store_id(store_name),
+          fulfilling_store:hr_stores!fulfilling_hr_store_id(store_name),
           product:products(name, category)
         `)
-        .in('fulfilling_hr_store_id', storeIds)
-        .neq('user_id', user?.id) // Don't show user's own requests
+        .neq('user_id', user?.id) // Show requests from other users
         .order('created_at', { ascending: false });
 
       if (error) {
