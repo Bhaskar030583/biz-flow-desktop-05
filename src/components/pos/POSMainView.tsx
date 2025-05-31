@@ -1,3 +1,4 @@
+
 // Note: Creating this file since it was mentioned but not provided in the allowed files
 import React, { useState, useEffect } from "react";
 import { POSHeader } from "./POSHeader";
@@ -162,6 +163,52 @@ export const POSMainView: React.FC<POSMainViewProps> = ({
     setShowQuickStock(true);
   };
 
+  // If showing customer management, render only that component
+  if (showCustomerManagement) {
+    return (
+      <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+        <POSHeader
+          storeInfo={storeInfo}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          showOrderSummary={showOrderSummary}
+          setShowOrderSummary={setShowOrderSummary}
+          onQuickStock={handleQuickStock}
+          onCustomerManagement={() => setShowCustomerManagement(false)}
+          onBillHistory={() => setShowBillHistory(true)}
+          showSearch={showSearch}
+          toggleSearch={toggleSearch}
+        />
+        <div className="flex-1 p-6">
+          <CustomerManagement />
+        </div>
+      </div>
+    );
+  }
+
+  // If showing bill history, render only that component
+  if (showBillHistory) {
+    return (
+      <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+        <POSHeader
+          storeInfo={storeInfo}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          showOrderSummary={showOrderSummary}
+          setShowOrderSummary={setShowOrderSummary}
+          onQuickStock={handleQuickStock}
+          onCustomerManagement={() => setShowCustomerManagement(true)}
+          onBillHistory={() => setShowBillHistory(false)}
+          showSearch={showSearch}
+          toggleSearch={toggleSearch}
+        />
+        <div className="flex-1 p-6">
+          <BillHistory />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       <POSHeader
@@ -213,20 +260,6 @@ export const POSMainView: React.FC<POSMainViewProps> = ({
           products={products}
           selectedShopId="1"
           onStockUpdated={onStockAdded}
-        />
-      )}
-      
-      {showCustomerManagement && (
-        <CustomerManagement 
-          open={showCustomerManagement} 
-          onClose={() => setShowCustomerManagement(false)} 
-        />
-      )}
-      
-      {showBillHistory && (
-        <BillHistory 
-          open={showBillHistory} 
-          onClose={() => setShowBillHistory(false)} 
         />
       )}
     </div>
