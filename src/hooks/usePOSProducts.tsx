@@ -1,3 +1,4 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -143,7 +144,7 @@ export const usePOSProducts = (selectedStoreId: string) => {
         
         // Calculate based on new requirements
         // Opening stock = yesterday's actual stock OR current stock's opening stock
-        const openingStock = yesterdayStock?.actual_stock ?? todayStock?.opening || 0;
+        const openingStock = (yesterdayStock?.actual_stock ?? todayStock?.opening) || 0;
         const stockAdded = todayStock?.added || 0;
         
         // Expected closing = Opening Stock + Stock Added - Sold
