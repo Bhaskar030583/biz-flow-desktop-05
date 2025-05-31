@@ -35,10 +35,10 @@ export const StockRequestsList = ({ onRequestUpdated }: StockRequestsListProps) 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       fetchRequests();
     }
-  }, [user]);
+  }, [user?.id]);
 
   const fetchRequests = async () => {
     try {
@@ -95,7 +95,10 @@ export const StockRequestsList = ({ onRequestUpdated }: StockRequestsListProps) 
 
       const { error } = await supabase
         .from('stock_requests')
-        .update({ status: 'rejected' })
+        .update({ 
+          status: 'rejected',
+          response_date: new Date().toISOString()
+        })
         .eq('id', requestId)
         .eq('user_id', user?.id);
 

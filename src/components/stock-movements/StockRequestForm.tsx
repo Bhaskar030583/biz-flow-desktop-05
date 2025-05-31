@@ -25,7 +25,7 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
     notes: ""
   });
 
-  // Fetch HR stores with better error handling
+  // Fetch HR stores
   const { data: stores, isLoading: storesLoading, error: storesError } = useQuery({
     queryKey: ['hr-stores'],
     queryFn: async () => {
@@ -42,20 +42,22 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
       }
       
       console.log('✅ [StockRequestForm] Stores fetched:', data?.length || 0);
-      return data;
+      return data || [];
     },
   });
 
-  // Fetch products with better error handling
+  // Fetch products
   const { data: products, isLoading: productsLoading, error: productsError } = useQuery({
-    queryKey: ['products'],
+    queryKey: ['products', user?.id],
     queryFn: async () => {
+      if (!user?.id) return [];
+      
       console.log('📦 [StockRequestForm] Fetching products...');
       
       const { data, error } = await supabase
         .from('products')
         .select('id, name, category')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('name');
       
       if (error) {
@@ -64,7 +66,7 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
       }
       
       console.log('✅ [StockRequestForm] Products fetched:', data?.length || 0);
-      return data;
+      return data || [];
     },
     enabled: !!user?.id,
   });
@@ -72,7 +74,7 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) {
+    if (!user?.id) {
       toast.error('You must be logged in to create requests');
       return;
     }
@@ -88,25 +90,33 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
       return;
     }
 
+    const quantity = parseInt(formData.requested_quantity);
+    if (quantity <= 0) {
+      toast.error('Requested quantity must be greater than 0');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      console.log('📝 [StockRequestForm] Creating stock request:', formData);
+      console.log('📝 [StockRequestForm] Creating stock request...');
+
+      const requestData = {
+        user_id: user.id,
+        requesting_store_id: formData.requesting_hr_store_id,
+        fulfilling_store_id: formData.fulfilling_hr_store_id,
+        requesting_hr_store_id: formData.requesting_hr_store_id,
+        fulfilling_hr_store_id: formData.fulfilling_hr_store_id,
+        product_id: formData.product_id,
+        requested_quantity: quantity,
+        notes: formData.notes || null,
+        request_date: new Date().toISOString(),
+        status: 'pending'
+      };
 
       const { error } = await supabase
         .from('stock_requests')
-        .insert({
-          user_id: user.id,
-          requesting_store_id: formData.requesting_hr_store_id,
-          fulfilling_store_id: formData.fulfilling_hr_store_id,
-          requesting_hr_store_id: formData.requesting_hr_store_id,
-          fulfilling_hr_store_id: formData.fulfilling_hr_store_id,
-          product_id: formData.product_id,
-          requested_quantity: parseInt(formData.requested_quantity),
-          notes: formData.notes || null,
-          request_date: new Date().toISOString(),
-          status: 'pending'
-        });
+        .insert(requestData);
 
       if (error) {
         console.error('❌ [StockRequestForm] Error creating request:', error);
@@ -134,16 +144,29 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
     }
   };
 
-  if (storesError || productsError) {
+  if (storesError) {
     return (
       <div className="p-4 border border-red-200 rounded-lg bg-red-50">
-        <h3 className="text-red-800 font-medium mb-2">Error Loading Data</h3>
+        <h3 className="text-red-800 font-medium mb-2">Error Loading Stores</h3>
         <p className="text-red-600 text-sm mb-4">
-          {storesError ? `Stores: ${storesError.message}` : ''}
-          {productsError ? `Products: ${productsError.message}` : ''}
+          {storesError.message}
         </p>
         <p className="text-red-600 text-sm">
-          Please check that you have the necessary permissions and that HR stores and products are set up correctly.
+          Please check that HR stores are set up correctly and you have the necessary permissions.
+        </p>
+      </div>
+    );
+  }
+
+  if (productsError) {
+    return (
+      <div className="p-4 border border-red-200 rounded-lg bg-red-50">
+        <h3 className="text-red-800 font-medium mb-2">Error Loading Products</h3>
+        <p className="text-red-600 text-sm mb-4">
+          {productsError.message}
+        </p>
+        <p className="text-red-600 text-sm">
+          Please check that you have products created in your account.
         </p>
       </div>
     );
@@ -196,8 +219,13 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
             </SelectTrigger>
             <SelectContent>
               {stores?.map(store => (
-                <SelectItem key={store.id} value={store.id}>
+                <SelectItem 
+                  key={store.id} 
+                  value={store.id}
+                  disabled={store.id === formData.requesting_hr_store_id}
+                >
                   {store.store_name}
+                  {store.id === formData.requesting_hr_store_id && " (Same as requesting)"}
                 </SelectItem>
               ))}
               {(!stores || stores.length === 0) && (
@@ -227,7 +255,7 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
             ))}
             {(!products || products.length === 0) && (
               <SelectItem value="no-products" disabled>
-                No products available
+                No products available - Please create products first
               </SelectItem>
             )}
           </SelectContent>
@@ -268,7 +296,8 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
       
       {(!stores?.length || !products?.length) && (
         <p className="text-sm text-amber-600 text-center">
-          Please ensure you have HR stores and products set up before creating requests.
+          {!stores?.length && "Please set up HR stores first. "}
+          {!products?.length && "Please create products first."}
         </p>
       )}
     </form>
