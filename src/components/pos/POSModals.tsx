@@ -83,11 +83,16 @@ export const POSModals: React.FC<POSModalsProps> = ({
   });
 
   const handleCreditPaymentComplete = async (customerId: string, customerName?: string): Promise<boolean> => {
-    const success = await paymentActions.handleCreditPayment(customerId, customerName);
-    if (success) {
-      onPaymentComplete();
+    try {
+      const success = await paymentActions.handleCreditPayment(customerId, customerName);
+      if (success) {
+        onPaymentComplete();
+      }
+      return success;
+    } catch (error) {
+      console.error('Error in credit payment completion:', error);
+      return false;
     }
-    return success;
   };
 
   return (

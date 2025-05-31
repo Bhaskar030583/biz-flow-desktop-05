@@ -111,10 +111,10 @@ export const createPaymentActions = ({
     }
   };
 
-  const handleUPIPayment = async () => {
+  const handleUPIPayment = async (): Promise<boolean> => {
     if (cart.length === 0) {
       toast.error("Cart is empty");
-      return;
+      return false;
     }
     
     try {
@@ -130,7 +130,7 @@ export const createPaymentActions = ({
     return false;
   };
 
-  const handleCreditPayment = async (customerId: string, customerName?: string) => {
+  const handleCreditPayment = async (customerId: string, customerName?: string): Promise<boolean> => {
     if (cart.length === 0) {
       toast.error("Cart is empty");
       return false;
