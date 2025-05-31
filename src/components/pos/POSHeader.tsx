@@ -32,73 +32,83 @@ export const POSHeader: React.FC<POSHeaderProps> = ({
   onBillHistory,
 }) => {
   return (
-    <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-slate-200 dark:border-gray-700 shadow-sm px-6 py-4">
-      <div className="flex flex-col items-center space-y-4">
-        {/* Logo at the top */}
-        <div className="flex justify-center">
-          <img 
-            src="/lovable-uploads/31fce476-e564-4413-90e1-e9d9fd78516f.png" 
-            alt="ABC Cafe Logo" 
-            className="h-16 w-auto object-contain"
-          />
-        </div>
-
-        {/* Store info and controls below */}
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center space-x-4 flex-1">
+    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+      <div className="px-6 py-4">
+        <div className="flex items-center justify-between">
+          {/* Left section - Logo and Store Info */}
+          <div className="flex items-center space-x-6">
+            <div className="flex items-center">
+              <img 
+                src="/lovable-uploads/31fce476-e564-4413-90e1-e9d9fd78516f.png" 
+                alt="ABC Cafe Logo" 
+                className="h-12 w-auto object-contain"
+              />
+            </div>
+            
             {storeInfo && (
-              <div className="flex items-center space-x-3 text-body-sm text-slate-600 dark:text-gray-300">
-                <span className="font-medium">{storeInfo.storeName}</span>
-                <span className="w-1 h-1 bg-slate-400 dark:bg-gray-500 rounded-full"></span>
-                <span>{storeInfo.salespersonName}</span>
-                <span className="w-1 h-1 bg-slate-400 dark:bg-gray-500 rounded-full"></span>
-                <span className="text-blue-600 dark:text-blue-400 font-medium">{storeInfo.shiftName}</span>
+              <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-300 border-l border-gray-200 dark:border-gray-700 pl-6">
+                <div className="font-semibold text-gray-900 dark:text-gray-100">{storeInfo.storeName}</div>
+                <div className="flex items-center space-x-2">
+                  <span>{storeInfo.salespersonName}</span>
+                  <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                  <span className="text-blue-600 dark:text-blue-400 font-medium">{storeInfo.shiftName}</span>
+                </div>
               </div>
             )}
           </div>
           
-          <div className="flex items-center justify-end space-x-4 flex-1">
+          {/* Right section - Actions */}
+          <div className="flex items-center space-x-3">
             <ThemeSwitcher />
+            
             <Button
               variant="outline"
-              size="lg"
+              size="icon"
               onClick={onQuickStock}
-              className="bg-white dark:bg-gray-800 hover:bg-slate-50 dark:hover:bg-gray-700 border-slate-200 dark:border-gray-600 text-slate-700 dark:text-gray-300 shadow-sm h-14 w-14 p-0 rounded-xl"
+              className="h-10 w-10 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+              title="Quick Stock"
             >
-              <Package className="h-7 w-7" />
+              <Package className="h-5 w-5" />
             </Button>
+            
             <Button
               variant="outline"
-              size="lg"
+              size="icon"
               onClick={onCustomerManagement}
-              className="bg-white dark:bg-gray-800 hover:bg-slate-50 dark:hover:bg-gray-700 border-slate-200 dark:border-gray-600 text-slate-700 dark:text-gray-300 shadow-sm h-14 w-14 p-0 rounded-xl"
+              className="h-10 w-10 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+              title="Customer Management"
             >
-              <User className="h-7 w-7" />
+              <User className="h-5 w-5" />
             </Button>
+            
             <Button
               variant="outline"
-              size="lg"
+              size="icon"
               onClick={onBillHistory}
-              className="bg-white dark:bg-gray-800 hover:bg-slate-50 dark:hover:bg-gray-700 border-slate-200 dark:border-gray-600 text-slate-700 dark:text-gray-300 shadow-sm h-14 w-14 p-0 rounded-xl"
+              className="h-10 w-10 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+              title="Bill History"
             >
-              <History className="h-7 w-7" />
+              <History className="h-5 w-5" />
             </Button>
+            
             <Button
               variant="outline"
-              size="lg"
+              size="icon"
               onClick={() => setSearchTerm(searchTerm ? "" : "search")}
-              className="bg-white dark:bg-gray-800 hover:bg-slate-50 dark:hover:bg-gray-700 border-slate-200 dark:border-gray-600 text-slate-700 dark:text-gray-300 shadow-sm h-14 w-14 p-0 rounded-xl"
+              className="h-10 w-10 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+              title="Search Products"
             >
-              <Search className="h-7 w-7" />
+              <Search className="h-5 w-5" />
             </Button>
+            
             <Button
               variant="outline"
-              size="lg"
+              size="icon"
               onClick={() => setShowOrderSummary(!showOrderSummary)}
-              className="bg-white dark:bg-gray-800 hover:bg-slate-50 dark:hover:bg-gray-700 border-slate-200 dark:border-gray-600 text-slate-700 dark:text-gray-300 shadow-sm h-14 w-14 p-0 rounded-xl"
+              className="h-10 w-10 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
               title={showOrderSummary ? "Hide Order Summary" : "Show Order Summary"}
             >
-              {showOrderSummary ? <PanelRightClose className="h-7 w-7" /> : <PanelRightOpen className="h-7 w-7" />}
+              {showOrderSummary ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
             </Button>
           </div>
         </div>
