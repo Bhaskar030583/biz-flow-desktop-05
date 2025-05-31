@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { CustomerActions } from "./CustomerActions";
 
 interface Customer {
   id: string;
@@ -27,6 +27,8 @@ interface CustomerSelectorProps {
   showTitle?: boolean;
   compact?: boolean;
   refreshTrigger?: number;
+  showActions?: boolean;
+  onRefresh?: () => void;
 }
 
 export const CustomerSelector: React.FC<CustomerSelectorProps> = ({
@@ -34,7 +36,9 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({
   selectedCustomerId,
   showTitle = true,
   compact = false,
-  refreshTrigger = 0
+  refreshTrigger = 0,
+  showActions = false,
+  onRefresh
 }) => {
   const { user } = useAuth();
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -105,6 +109,11 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({
     (customer.email && customer.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const handleRefreshList = () => {
+    fetchCustomers();
+    onRefresh?.();
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -151,35 +160,44 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({
               {filteredCustomers.map(customer => (
                 <div
                   key={customer.id}
-                  onClick={() => onCustomerSelect(customer)}
-                  className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                  className={`border rounded-lg p-4 transition-all ${
                     selectedCustomerId === customer.id 
                       ? "border-blue-500 bg-blue-50 shadow-md" 
                       : "hover:shadow-md hover:border-gray-300"
-                  }`}
+                  } ${!showActions ? "cursor-pointer" : ""}`}
+                  onClick={!showActions ? () => onCustomerSelect(customer) : undefined}
                 >
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-medium text-lg">{customer.name}</h3>
-                      {!compact && (
-                        <>
-                          <Badge variant="outline" className="text-xs">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            {format(new Date(customer.created_at), 'MMM dd')}
-                          </Badge>
-                          {customer.total_credit && customer.total_credit > 0 && (
-                            <Badge variant="destructive" className="text-xs">
-                              <CreditCard className="h-3 w-3 mr-1" />
-                              ₹{customer.total_credit.toFixed(2)} Credit
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-medium text-lg">{customer.name}</h3>
+                        {!compact && (
+                          <>
+                            <Badge variant="outline" className="text-xs">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              {format(new Date(customer.created_at), 'MMM dd')}
                             </Badge>
-                          )}
-                          {customer.credit_limit && customer.credit_limit > 0 && (
-                            <Badge variant="secondary" className="text-xs">
-                              <DollarSign className="h-3 w-3 mr-1" />
-                              Limit: ₹{customer.credit_limit.toFixed(2)}
-                            </Badge>
-                          )}
-                        </>
+                            {customer.total_credit && customer.total_credit > 0 && (
+                              <Badge variant="destructive" className="text-xs">
+                                <CreditCard className="h-3 w-3 mr-1" />
+                                ₹{customer.total_credit.toFixed(2)} Credit
+                              </Badge>
+                            )}
+                            {customer.credit_limit && customer.credit_limit > 0 && (
+                              <Badge variant="secondary" className="text-xs">
+                                <DollarSign className="h-3 w-3 mr-1" />
+                                Limit: ₹{customer.credit_limit.toFixed(2)}
+                              </Badge>
+                            )}
+                          </>
+                        )}
+                      </div>
+                      {showActions && (
+                        <CustomerActions 
+                          customer={customer} 
+                          onRefresh={handleRefreshList}
+                          compact={compact}
+                        />
                       )}
                     </div>
 

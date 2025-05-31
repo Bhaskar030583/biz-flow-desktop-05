@@ -39,6 +39,8 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
         showTitle={true}
         compact={false}
         refreshTrigger={refreshTrigger + refreshKey}
+        showActions={true}
+        onRefresh={handleRefresh}
       />
     </div>
   );
