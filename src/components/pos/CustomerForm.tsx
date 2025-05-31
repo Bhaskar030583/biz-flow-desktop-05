@@ -132,20 +132,24 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ onCustomerAdded }) =
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="creditLimit" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              Credit Limit (Optional)
+          <div className="space-y-2 border-t pt-4">
+            <Label htmlFor="creditLimit" className="flex items-center gap-2 text-base font-semibold">
+              <CreditCard className="h-5 w-5 text-blue-600" />
+              Credit Limit (₹)
             </Label>
             <Input
               id="creditLimit"
               type="number"
-              placeholder="Enter credit limit"
+              placeholder="Enter credit limit in rupees (e.g., 5000)"
               value={formData.creditLimit}
               onChange={(e) => handleInputChange("creditLimit", e.target.value)}
               min="0"
               step="0.01"
+              className="text-lg"
             />
+            <p className="text-sm text-gray-600">
+              Set the maximum credit amount this customer can have. Leave empty or 0 for no limit.
+            </p>
           </div>
 
           <Button 
