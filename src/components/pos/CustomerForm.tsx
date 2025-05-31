@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserPlus, Phone, Mail, MapPin, User } from "lucide-react";
+import { UserPlus, Phone, Mail, MapPin, User, CreditCard } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -19,7 +19,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ onCustomerAdded }) =
     name: "",
     phone: "",
     email: "",
-    address: ""
+    address: "",
+    creditLimit: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -42,13 +43,14 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ onCustomerAdded }) =
           name: formData.name.trim(),
           phone: formData.phone.trim(),
           email: formData.email.trim() || null,
-          address: formData.address.trim() || null
+          address: formData.address.trim() || null,
+          credit_limit: parseFloat(formData.creditLimit) || 0
         });
 
       if (error) throw error;
 
       toast.success("Customer added successfully");
-      setFormData({ name: "", phone: "", email: "", address: "" });
+      setFormData({ name: "", phone: "", email: "", address: "", creditLimit: "" });
       onCustomerAdded();
     } catch (error) {
       console.error("Error adding customer:", error);
@@ -127,6 +129,22 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ onCustomerAdded }) =
               placeholder="Enter address"
               value={formData.address}
               onChange={(e) => handleInputChange("address", e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="creditLimit" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Credit Limit (Optional)
+            </Label>
+            <Input
+              id="creditLimit"
+              type="number"
+              placeholder="Enter credit limit"
+              value={formData.creditLimit}
+              onChange={(e) => handleInputChange("creditLimit", e.target.value)}
+              min="0"
+              step="0.01"
             />
           </div>
 

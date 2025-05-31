@@ -193,6 +193,7 @@ export type Database = {
         Row: {
           address: string | null
           created_at: string
+          credit_limit: number | null
           email: string | null
           id: string
           name: string
@@ -203,6 +204,7 @@ export type Database = {
         Insert: {
           address?: string | null
           created_at?: string
+          credit_limit?: number | null
           email?: string | null
           id?: string
           name: string
@@ -213,6 +215,7 @@ export type Database = {
         Update: {
           address?: string | null
           created_at?: string
+          credit_limit?: number | null
           email?: string | null
           id?: string
           name?: string
@@ -1738,9 +1741,17 @@ export type Database = {
         Args: { check_in: string; check_out: string; break_minutes?: number }
         Returns: number
       }
+      can_make_credit_purchase: {
+        Args: { customer_id_param: string; purchase_amount: number }
+        Returns: boolean
+      }
       generate_bill_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_customer_credit_balance: {
+        Args: { customer_id_param: string }
+        Returns: number
       }
       get_employee_current_shift: {
         Args: { emp_id: string; shift_date?: string }

@@ -13,7 +13,8 @@ import {
   Edit, 
   Trash2,
   Calendar,
-  CreditCard
+  CreditCard,
+  DollarSign
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,7 +28,9 @@ interface Customer {
   email: string | null;
   address: string | null;
   created_at: string;
+  credit_limit: number;
   total_credit?: number;
+  available_credit?: number;
 }
 
 interface CustomerListProps {
@@ -64,7 +67,11 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
 
           if (creditError) {
             console.error("Error fetching credit data:", creditError);
-            return { ...customer, total_credit: 0 };
+            return { 
+              ...customer, 
+              total_credit: 0,
+              available_credit: customer.credit_limit || 0
+            };
           }
 
           // Calculate total pending credit amount
@@ -72,7 +79,14 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
             ?.filter(transaction => transaction.status === 'pending')
             ?.reduce((sum, transaction) => sum + Number(transaction.amount), 0) || 0;
 
-          return { ...customer, total_credit: totalCredit };
+          // Calculate available credit
+          const availableCredit = Math.max(0, (customer.credit_limit || 0) - totalCredit);
+
+          return { 
+            ...customer, 
+            total_credit: totalCredit,
+            available_credit: availableCredit
+          };
         })
       );
 
@@ -178,6 +192,20 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
                           <Badge variant="destructive" className="text-xs">
                             <CreditCard className="h-3 w-3 mr-1" />
                             ₹{customer.total_credit.toFixed(2)} Credit
+                          </Badge>
+                        )}
+                        {customer.credit_limit && customer.credit_limit > 0 && (
+                          <Badge variant="secondary" className="text-xs">
+                            <DollarSign className="h-3 w-3 mr-1" />
+                            Limit: ₹{customer.credit_limit.toFixed(2)}
+                          </Badge>
+                        )}
+                        {customer.credit_limit && customer.credit_limit > 0 && (
+                          <Badge 
+                            variant={customer.available_credit && customer.available_credit > 0 ? "default" : "outline"} 
+                            className="text-xs"
+                          >
+                            Available: ₹{customer.available_credit?.toFixed(2) || '0.00'}
                           </Badge>
                         )}
                       </div>

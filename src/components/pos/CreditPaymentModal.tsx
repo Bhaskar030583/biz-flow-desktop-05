@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { UserCheck, User, Phone, Mail } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { UserCheck, User, Phone, Mail, CreditCard, AlertTriangle, DollarSign } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -16,6 +17,9 @@ interface Customer {
   name: string;
   phone: string;
   email: string | null;
+  credit_limit: number;
+  current_credit: number;
+  available_credit: number;
 }
 
 interface CartItem {
@@ -46,27 +50,59 @@ export const CreditPaymentModal: React.FC<CreditPaymentModalProps> = ({
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [creditLimitExceeded, setCreditLimitExceeded] = useState(false);
 
   useEffect(() => {
     if (isOpen && user) {
       fetchCustomers();
       setSelectedCustomerId("");
+      setCreditLimitExceeded(false);
     }
   }, [isOpen, user]);
+
+  useEffect(() => {
+    if (selectedCustomerId && totalAmount) {
+      checkCreditLimit();
+    }
+  }, [selectedCustomerId, totalAmount]);
 
   const fetchCustomers = async () => {
     if (!user) return;
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data: customersData, error } = await supabase
         .from('customers')
-        .select('id, name, phone, email')
+        .select('id, name, phone, email, credit_limit')
         .eq('user_id', user.id)
         .order('name');
 
       if (error) throw error;
-      setCustomers(data || []);
+
+      // Fetch current credit balances for each customer
+      const customersWithCredit = await Promise.all(
+        (customersData || []).map(async (customer) => {
+          const { data: creditData, error: creditError } = await supabase
+            .from('credit_transactions')
+            .select('amount')
+            .eq('customer_id', customer.id)
+            .eq('user_id', user.id)
+            .eq('status', 'pending');
+
+          const currentCredit = creditError ? 0 : 
+            (creditData?.reduce((sum, transaction) => sum + Number(transaction.amount), 0) || 0);
+
+          const availableCredit = Math.max(0, (customer.credit_limit || 0) - currentCredit);
+
+          return {
+            ...customer,
+            current_credit: currentCredit,
+            available_credit: availableCredit
+          };
+        })
+      );
+
+      setCustomers(customersWithCredit);
     } catch (error) {
       console.error("Error fetching customers:", error);
       toast.error("Failed to load customers");
@@ -75,9 +111,32 @@ export const CreditPaymentModal: React.FC<CreditPaymentModalProps> = ({
     }
   };
 
+  const checkCreditLimit = async () => {
+    if (!selectedCustomerId || !user) return;
+
+    try {
+      const { data, error } = await supabase.rpc('can_make_credit_purchase', {
+        customer_id_param: selectedCustomerId,
+        purchase_amount: totalAmount
+      });
+
+      if (error) throw error;
+      
+      setCreditLimitExceeded(!data);
+    } catch (error) {
+      console.error("Error checking credit limit:", error);
+      setCreditLimitExceeded(false);
+    }
+  };
+
   const handleCreditPayment = async () => {
     if (!selectedCustomerId) {
       toast.error("Please select a customer");
+      return;
+    }
+
+    if (creditLimitExceeded) {
+      toast.error("Transaction would exceed customer's credit limit");
       return;
     }
 
@@ -152,7 +211,9 @@ export const CreditPaymentModal: React.FC<CreditPaymentModalProps> = ({
                         <User className="h-4 w-4" />
                         <div>
                           <div className="font-medium">{customer.name}</div>
-                          <div className="text-xs text-gray-500">{customer.phone}</div>
+                          <div className="text-xs text-gray-500">
+                            {customer.phone} • Available: ₹{customer.available_credit.toFixed(2)}
+                          </div>
                         </div>
                       </div>
                     </SelectItem>
@@ -161,6 +222,19 @@ export const CreditPaymentModal: React.FC<CreditPaymentModalProps> = ({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Credit Limit Warning */}
+          {creditLimitExceeded && selectedCustomer && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                This transaction (₹{totalAmount.toFixed(2)}) would exceed the customer's available credit limit 
+                of ₹{selectedCustomer.available_credit.toFixed(2)}. 
+                Customer currently owes ₹{selectedCustomer.current_credit.toFixed(2)} 
+                with a total limit of ₹{selectedCustomer.credit_limit.toFixed(2)}.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Selected Customer Details */}
           {selectedCustomer && (
@@ -182,6 +256,24 @@ export const CreditPaymentModal: React.FC<CreditPaymentModalProps> = ({
                     <Mail className="h-3 w-3" />
                     <span>{selectedCustomer.email}</span>
                   </div>
+                )}
+                {selectedCustomer.credit_limit > 0 && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="h-3 w-3" />
+                      <span>Credit Limit: ₹{selectedCustomer.credit_limit.toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-3 w-3" />
+                      <span>Current Balance: ₹{selectedCustomer.current_credit.toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-3 w-3" />
+                      <span className="font-medium text-green-600">
+                        Available Credit: ₹{selectedCustomer.available_credit.toFixed(2)}
+                      </span>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
@@ -214,7 +306,7 @@ export const CreditPaymentModal: React.FC<CreditPaymentModalProps> = ({
             </Button>
             <Button 
               onClick={handleCreditPayment}
-              disabled={!selectedCustomerId || isProcessing}
+              disabled={!selectedCustomerId || isProcessing || creditLimitExceeded}
               className="flex-1 bg-blue-600 hover:bg-blue-700"
             >
               {isProcessing ? "Processing..." : "Record Credit Sale"}
