@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -155,12 +154,7 @@ const ProductAssignmentForm = ({
               <SelectContent>
                 {availableProducts?.map((product) => (
                   <SelectItem key={product.id} value={product.id}>
-                    <div className="flex flex-col items-start">
-                      <div className="font-medium">{product.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {product.category} • SKU: {product.sku || 'N/A'} • ₹{product.price}
-                      </div>
-                    </div>
+                    {product.name} - {product.category} - {product.sku || 'N/A'}
                   </SelectItem>
                 ))}
               </SelectContent>
