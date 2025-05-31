@@ -25,33 +25,48 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
     notes: ""
   });
 
-  // Fetch HR stores
-  const { data: stores } = useQuery({
+  // Fetch HR stores with better error handling
+  const { data: stores, isLoading: storesLoading, error: storesError } = useQuery({
     queryKey: ['hr-stores'],
     queryFn: async () => {
+      console.log('🏪 [StockRequestForm] Fetching HR stores...');
+      
       const { data, error } = await supabase
         .from('hr_stores')
         .select('id, store_name')
         .order('store_name');
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [StockRequestForm] Error fetching stores:', error);
+        throw error;
+      }
+      
+      console.log('✅ [StockRequestForm] Stores fetched:', data?.length || 0);
       return data;
     },
   });
 
-  // Fetch products
-  const { data: products } = useQuery({
+  // Fetch products with better error handling
+  const { data: products, isLoading: productsLoading, error: productsError } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
+      console.log('📦 [StockRequestForm] Fetching products...');
+      
       const { data, error } = await supabase
         .from('products')
         .select('id, name, category')
         .eq('user_id', user?.id)
         .order('name');
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [StockRequestForm] Error fetching products:', error);
+        throw error;
+      }
+      
+      console.log('✅ [StockRequestForm] Products fetched:', data?.length || 0);
       return data;
     },
+    enabled: !!user?.id,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,6 +91,8 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
     setIsSubmitting(true);
 
     try {
+      console.log('📝 [StockRequestForm] Creating stock request:', formData);
+
       const { error } = await supabase
         .from('stock_requests')
         .insert({
@@ -91,8 +108,12 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
           status: 'pending'
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [StockRequestForm] Error creating request:', error);
+        throw error;
+      }
 
+      console.log('✅ [StockRequestForm] Stock request created successfully');
       toast.success('Stock request created successfully');
       
       // Reset form
@@ -106,12 +127,36 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
 
       onRequestCreated();
     } catch (error) {
-      console.error('Error creating stock request:', error);
-      toast.error('Failed to create stock request');
+      console.error('❌ [StockRequestForm] Error creating stock request:', error);
+      toast.error(`Failed to create stock request: ${(error as Error).message}`);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (storesError || productsError) {
+    return (
+      <div className="p-4 border border-red-200 rounded-lg bg-red-50">
+        <h3 className="text-red-800 font-medium mb-2">Error Loading Data</h3>
+        <p className="text-red-600 text-sm mb-4">
+          {storesError ? `Stores: ${storesError.message}` : ''}
+          {productsError ? `Products: ${productsError.message}` : ''}
+        </p>
+        <p className="text-red-600 text-sm">
+          Please check that you have the necessary permissions and that HR stores and products are set up correctly.
+        </p>
+      </div>
+    );
+  }
+
+  if (storesLoading || productsLoading) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-2 text-gray-600">Loading stores and products...</p>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -131,6 +176,11 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
                   {store.store_name}
                 </SelectItem>
               ))}
+              {(!stores || stores.length === 0) && (
+                <SelectItem value="no-stores" disabled>
+                  No stores available
+                </SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -150,6 +200,11 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
                   {store.store_name}
                 </SelectItem>
               ))}
+              {(!stores || stores.length === 0) && (
+                <SelectItem value="no-stores" disabled>
+                  No stores available
+                </SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -170,6 +225,11 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
                 {product.name} ({product.category})
               </SelectItem>
             ))}
+            {(!products || products.length === 0) && (
+              <SelectItem value="no-products" disabled>
+                No products available
+              </SelectItem>
+            )}
           </SelectContent>
         </Select>
       </div>
@@ -200,11 +260,17 @@ export const StockRequestForm = ({ onRequestCreated }: StockRequestFormProps) =>
 
       <Button 
         type="submit" 
-        disabled={isSubmitting}
+        disabled={isSubmitting || !stores?.length || !products?.length}
         className="w-full"
       >
         {isSubmitting ? 'Creating Request...' : 'Create Stock Request'}
       </Button>
+      
+      {(!stores?.length || !products?.length) && (
+        <p className="text-sm text-amber-600 text-center">
+          Please ensure you have HR stores and products set up before creating requests.
+        </p>
+      )}
     </form>
   );
 };

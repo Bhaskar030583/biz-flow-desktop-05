@@ -32,6 +32,7 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
   const { user } = useAuth();
   const [requests, setRequests] = useState<StockRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -41,16 +42,27 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
 
   const fetchIncomingRequests = async () => {
     try {
-      // Get user's HR stores first
+      setLoading(true);
+      setError(null);
+      
+      console.log('📨 [IncomingRequestsList] Fetching incoming requests...');
+
+      // First try to get user's HR stores - if none exist, user can't receive requests
       const { data: userStores, error: storesError } = await supabase
         .from('hr_stores')
         .select('id');
 
-      if (storesError) throw storesError;
+      if (storesError) {
+        console.error('❌ [IncomingRequestsList] Error fetching user stores:', storesError);
+        throw storesError;
+      }
+
+      console.log('🏪 [IncomingRequestsList] User stores found:', userStores?.length || 0);
 
       const storeIds = userStores?.map(store => store.id) || [];
 
       if (storeIds.length === 0) {
+        console.log('⚠️ [IncomingRequestsList] No HR stores found for user');
         setRequests([]);
         setLoading(false);
         return;
@@ -68,9 +80,14 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
         .in('fulfilling_hr_store_id', storeIds)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [IncomingRequestsList] Error fetching requests:', error);
+        throw error;
+      }
       
-      // Transform the data to match our interface
+      console.log('✅ [IncomingRequestsList] Incoming requests fetched:', data?.length || 0);
+      
+      // Transform the data to handle potential array responses from joins
       const transformedData = (data || []).map(item => ({
         ...item,
         requesting_store: Array.isArray(item.requesting_store) 
@@ -86,7 +103,8 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
       
       setRequests(transformedData);
     } catch (error) {
-      console.error('Error fetching incoming requests:', error);
+      console.error('❌ [IncomingRequestsList] Error fetching incoming requests:', error);
+      setError((error as Error).message);
       toast.error('Failed to fetch incoming requests');
     } finally {
       setLoading(false);
@@ -95,24 +113,32 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
 
   const handleApproveRequest = async (requestId: string) => {
     try {
+      console.log('✅ [IncomingRequestsList] Approving request:', requestId);
+
       const { error } = await supabase.rpc('handle_stock_movement', {
         request_id: requestId,
         approving_user_id: user?.id
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [IncomingRequestsList] Error approving request:', error);
+        throw error;
+      }
 
+      console.log('✅ [IncomingRequestsList] Request approved successfully');
       toast.success('Request approved and stock transferred successfully');
       fetchIncomingRequests();
       onRequestUpdated();
     } catch (error) {
-      console.error('Error approving request:', error);
+      console.error('❌ [IncomingRequestsList] Error approving request:', error);
       toast.error('Failed to approve request: ' + (error as Error).message);
     }
   };
 
   const handleRejectRequest = async (requestId: string) => {
     try {
+      console.log('❌ [IncomingRequestsList] Rejecting request:', requestId);
+
       const { error } = await supabase
         .from('stock_requests')
         .update({ 
@@ -121,13 +147,17 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
         })
         .eq('id', requestId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [IncomingRequestsList] Error rejecting request:', error);
+        throw error;
+      }
 
+      console.log('✅ [IncomingRequestsList] Request rejected successfully');
       toast.success('Request rejected');
       fetchIncomingRequests();
       onRequestUpdated();
     } catch (error) {
-      console.error('Error rejecting request:', error);
+      console.error('❌ [IncomingRequestsList] Error rejecting request:', error);
       toast.error('Failed to reject request');
     }
   };
@@ -147,6 +177,18 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
       <div className="text-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
         <p className="mt-2 text-gray-600">Loading incoming requests...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 border border-red-200 rounded-lg bg-red-50">
+        <h3 className="text-red-800 font-medium mb-2">Error Loading Incoming Requests</h3>
+        <p className="text-red-600 text-sm mb-4">{error}</p>
+        <Button onClick={fetchIncomingRequests} variant="outline" size="sm">
+          Try Again
+        </Button>
       </div>
     );
   }

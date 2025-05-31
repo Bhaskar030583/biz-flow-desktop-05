@@ -32,6 +32,7 @@ export const StockRequestsList = ({ onRequestUpdated }: StockRequestsListProps) 
   const { user } = useAuth();
   const [requests, setRequests] = useState<StockRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -41,6 +42,11 @@ export const StockRequestsList = ({ onRequestUpdated }: StockRequestsListProps) 
 
   const fetchRequests = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('📋 [StockRequestsList] Fetching user requests...');
+
       const { data, error } = await supabase
         .from('stock_requests')
         .select(`
@@ -52,9 +58,14 @@ export const StockRequestsList = ({ onRequestUpdated }: StockRequestsListProps) 
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [StockRequestsList] Error fetching requests:', error);
+        throw error;
+      }
       
-      // Transform the data to match our interface
+      console.log('✅ [StockRequestsList] Requests fetched:', data?.length || 0);
+      
+      // Transform the data to handle potential array responses from joins
       const transformedData = (data || []).map(item => ({
         ...item,
         requesting_store: Array.isArray(item.requesting_store) 
@@ -70,7 +81,8 @@ export const StockRequestsList = ({ onRequestUpdated }: StockRequestsListProps) 
       
       setRequests(transformedData);
     } catch (error) {
-      console.error('Error fetching stock requests:', error);
+      console.error('❌ [StockRequestsList] Error fetching stock requests:', error);
+      setError((error as Error).message);
       toast.error('Failed to fetch stock requests');
     } finally {
       setLoading(false);
@@ -79,19 +91,25 @@ export const StockRequestsList = ({ onRequestUpdated }: StockRequestsListProps) 
 
   const handleCancelRequest = async (requestId: string) => {
     try {
+      console.log('❌ [StockRequestsList] Cancelling request:', requestId);
+
       const { error } = await supabase
         .from('stock_requests')
         .update({ status: 'rejected' })
         .eq('id', requestId)
         .eq('user_id', user?.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [StockRequestsList] Error cancelling request:', error);
+        throw error;
+      }
 
+      console.log('✅ [StockRequestsList] Request cancelled successfully');
       toast.success('Request cancelled successfully');
       fetchRequests();
       onRequestUpdated();
     } catch (error) {
-      console.error('Error cancelling request:', error);
+      console.error('❌ [StockRequestsList] Error cancelling request:', error);
       toast.error('Failed to cancel request');
     }
   };
@@ -111,6 +129,18 @@ export const StockRequestsList = ({ onRequestUpdated }: StockRequestsListProps) 
       <div className="text-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
         <p className="mt-2 text-gray-600">Loading requests...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 border border-red-200 rounded-lg bg-red-50">
+        <h3 className="text-red-800 font-medium mb-2">Error Loading Requests</h3>
+        <p className="text-red-600 text-sm mb-4">{error}</p>
+        <Button onClick={fetchRequests} variant="outline" size="sm">
+          Try Again
+        </Button>
       </div>
     );
   }
