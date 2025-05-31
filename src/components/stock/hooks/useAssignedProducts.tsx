@@ -193,26 +193,30 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
           console.error('❌ [useAssignedProducts] Error fetching sales for product:', product.name, salesError);
         }
 
-        // Calculate values with corrected logic - actual stock should be user input only
+        // Calculate values - actual stock should default to expected closing when not entered
         // Opening stock should be yesterday's actual stock (preferred) or closing stock
         const openingStock = yesterdayStock?.actual_stock ?? yesterdayStock?.closing_stock ?? currentStock?.opening_stock ?? 0;
         const stockAdded = currentStock?.stock_added ?? 0;
         const soldQuantity = salesData?.reduce((total, sale) => total + sale.quantity, 0) ?? 0;
         const expectedClosing = Math.max(0, openingStock + stockAdded - soldQuantity);
         
-        // Actual stock should only be set if user has entered it (not auto-calculated)
-        const actualStock = currentStock?.actual_stock ?? null;
+        // Actual stock should default to expected closing if not manually entered
+        // Only show as different if user has explicitly entered a different value
+        const actualStock = currentStock?.actual_stock ?? expectedClosing;
         
-        // Variance only exists when actual stock is entered by user
-        const variance = actualStock !== null ? actualStock - expectedClosing : null;
+        // Variance only exists when actual stock is manually entered and different from expected
+        const variance = (currentStock?.actual_stock !== null && currentStock?.actual_stock !== undefined) 
+          ? currentStock.actual_stock - expectedClosing 
+          : 0;
 
         console.log(`📊 [useAssignedProducts] Calculated values for ${product.name}:`, {
           openingStock,
           stockAdded,
           soldQuantity,
           expectedClosing,
-          actualStock: actualStock ?? 'Not entered',
-          variance: variance ?? 'N/A'
+          actualStock,
+          variance,
+          hasManualActualStock: currentStock?.actual_stock !== null && currentStock?.actual_stock !== undefined
         });
 
         // Find the corresponding HR store name

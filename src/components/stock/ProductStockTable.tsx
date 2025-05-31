@@ -87,9 +87,7 @@ const ProductStockTable = ({
               <TableCell className="text-right">{product.sold_quantity || 0}</TableCell>
               <TableCell className="text-right">{product.expected_closing || 0}</TableCell>
               <TableCell className="text-right">
-                {product.actual_stock !== null && product.actual_stock !== undefined 
-                  ? product.actual_stock 
-                  : product.expected_closing || 0}
+                {product.actual_stock || 0}
               </TableCell>
               <TableCell className={`text-right ${getVarianceColor(product.variance || 0)}`}>
                 {product.variance !== undefined ? (product.variance > 0 ? `+${product.variance}` : product.variance) : '0'}
