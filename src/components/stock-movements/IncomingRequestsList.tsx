@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,9 +51,9 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
         .from('stock_requests')
         .select(`
           *,
-          requesting_store:hr_stores!requesting_hr_store_id(store_name),
-          fulfilling_store:hr_stores!fulfilling_hr_store_id(store_name),
-          product:products(name, category)
+          requesting_store:hr_stores!fk_stock_requests_requesting_hr_store(store_name),
+          fulfilling_store:hr_stores!fk_stock_requests_fulfilling_hr_store(store_name),
+          product:products!fk_stock_requests_product(name, category)
         `)
         .neq('user_id', user?.id) // Show requests from other users
         .order('created_at', { ascending: false });
