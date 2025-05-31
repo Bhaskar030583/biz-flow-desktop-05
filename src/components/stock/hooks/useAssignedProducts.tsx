@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -247,19 +246,26 @@ export const useAssignedProducts = (refreshTrigger: number, selectedShopId?: str
         const soldQuantity = salesData?.reduce((total, sale) => total + sale.quantity, 0) ?? 0;
         const expectedClosing = Math.max(0, openingStock + stockAdded - soldQuantity);
         
-        // FIXED: Use the actual_stock directly from the database if it exists
+        // FIXED: Directly use actual_stock from database, don't override it
         let actualStock = 0;
-        if (currentStock) {
-          // Use the actual_stock value from database, even if it's 0
-          actualStock = currentStock.actual_stock !== null && currentStock.actual_stock !== undefined 
-            ? currentStock.actual_stock 
-            : expectedClosing;
+        if (currentStock && currentStock.actual_stock !== null && currentStock.actual_stock !== undefined) {
+          // Use the actual stock value from database as-is
+          actualStock = currentStock.actual_stock;
+          console.log(`✅ [useAssignedProducts] Using actual_stock from DB for ${product.name}: ${actualStock}`);
+        } else if (currentStock) {
+          // If we have a stock record but no actual_stock value, use expected closing
+          actualStock = expectedClosing;
+          console.log(`⚠️ [useAssignedProducts] No actual_stock in DB for ${product.name}, using expected: ${actualStock}`);
+        } else {
+          // No stock record at all
+          actualStock = 0;
+          console.log(`❌ [useAssignedProducts] No stock record for ${product.name}, using 0`);
         }
         
         // Variance calculation - only meaningful when we have a stock record
         const variance = currentStock ? (actualStock - expectedClosing) : 0;
 
-        console.log(`📊 [useAssignedProducts] Calculated values for ${product.name}:`, {
+        console.log(`📊 [useAssignedProducts] Final calculated values for ${product.name}:`, {
           openingStock,
           stockAdded,
           soldQuantity,
