@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,12 +13,14 @@ import {
   Trash2,
   Calendar,
   CreditCard,
-  DollarSign
+  DollarSign,
+  Eye
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { CustomerDetails } from "./CustomerDetails";
 
 interface Customer {
   id: string;
@@ -42,6 +43,7 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
 
   const fetchCustomers = async () => {
     if (!user) return;
@@ -127,6 +129,14 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
     }
   };
 
+  const handleViewDetails = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+  };
+
+  const handleBackToList = () => {
+    setSelectedCustomerId(null);
+  };
+
   const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.phone.includes(searchTerm) ||
@@ -140,6 +150,16 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
           <div className="text-center">Loading customers...</div>
         </CardContent>
       </Card>
+    );
+  }
+
+  // If a customer is selected, show their details
+  if (selectedCustomerId) {
+    return (
+      <CustomerDetails 
+        customerId={selectedCustomerId} 
+        onBack={handleBackToList}
+      />
     );
   }
 
@@ -233,6 +253,15 @@ export const CustomerList: React.FC<CustomerListProps> = ({ refreshTrigger }) =>
                     </div>
 
                     <div className="flex gap-1 ml-4">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleViewDetails(customer.id)}
+                        title="View details"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
