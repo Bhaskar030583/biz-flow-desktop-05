@@ -5,6 +5,8 @@ import { CreditPaymentModal } from "./CreditPaymentModal";
 import { SplitPaymentModal } from "./SplitPaymentModal";
 import { PendingPaymentModal } from "./PendingPaymentModal";
 import { QuickStockUpdateModal } from "./QuickStockUpdateModal";
+import { createPaymentActions } from "./POSPaymentActions";
+import { useAuth } from "@/context/AuthContext";
 
 interface CartItem {
   id: string;
@@ -67,6 +69,26 @@ export const POSModals: React.FC<POSModalsProps> = ({
   onPaymentComplete,
   onStockUpdated,
 }) => {
+  const { user } = useAuth();
+
+  // Create payment actions
+  const paymentActions = createPaymentActions({
+    cart,
+    products: products || [],
+    selectedShopId,
+    storeInfo,
+    userId: user?.id || '',
+    onStockUpdated
+  });
+
+  const handleCreditPaymentComplete = async (customerId: string, customerName?: string): Promise<boolean> => {
+    const success = await paymentActions.handleCreditPayment(customerId, customerName);
+    if (success) {
+      onPaymentComplete();
+    }
+    return success;
+  };
+
   return (
     <>
       <CashPaymentModal
@@ -83,7 +105,7 @@ export const POSModals: React.FC<POSModalsProps> = ({
         onClose={onCloseCredit}
         totalAmount={totalAmount}
         cartItems={cart}
-        onPaymentComplete={onPaymentComplete}
+        onPaymentComplete={handleCreditPaymentComplete}
       />
 
       <SplitPaymentModal
