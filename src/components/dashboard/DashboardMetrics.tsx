@@ -9,7 +9,9 @@ import {
   CreditCard,
   Receipt,
   TrendingDown,
-  DollarSign
+  DollarSign,
+  Banknote,
+  Smartphone
 } from "lucide-react";
 
 interface MetricsProps {
@@ -23,6 +25,8 @@ interface MetricsProps {
   grossProfit: number;
   netProfit: number;
   totalLoss: number;
+  cashAmount?: number;
+  onlineAmount?: number;
   gridColumns?: number;
 }
 
@@ -37,6 +41,8 @@ export const DashboardMetrics: React.FC<MetricsProps> = ({
   grossProfit,
   netProfit,
   totalLoss,
+  cashAmount = 0,
+  onlineAmount = 0,
   gridColumns = 5
 }) => {
   const formatIndianRupee = (value: number) => {
@@ -66,6 +72,9 @@ export const DashboardMetrics: React.FC<MetricsProps> = ({
     }
   };
 
+  // Calculate total amount (cash + UPI + credit received - credit given)
+  const totalAmount = cashAmount + onlineAmount + creditReceived - creditGiven;
+
   return (
     <div className={`grid gap-3 ${getGridClass()} mb-6`}>
       <Card className="shadow-sm hover:shadow-md transition-shadow">
@@ -81,6 +90,57 @@ export const DashboardMetrics: React.FC<MetricsProps> = ({
             </div>
             <div className="p-2 bg-primary/10 rounded-full ml-2">
               <TrendingUp className="h-3 w-3 text-primary" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card className="shadow-sm hover:shadow-md transition-shadow">
+        <CardContent className="p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-muted-foreground mb-1 truncate">Cash Amount</p>
+              <div className="text-base font-bold text-green-600 truncate">{formatIndianRupee(cashAmount)}</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                <span>Cash sales</span>
+              </div>
+            </div>
+            <div className="p-2 bg-green-100 rounded-full ml-2">
+              <Banknote className="h-3 w-3 text-green-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card className="shadow-sm hover:shadow-md transition-shadow">
+        <CardContent className="p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-muted-foreground mb-1 truncate">UPI Amount</p>
+              <div className="text-base font-bold text-blue-600 truncate">{formatIndianRupee(onlineAmount)}</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                <span>Digital payments</span>
+              </div>
+            </div>
+            <div className="p-2 bg-blue-100 rounded-full ml-2">
+              <Smartphone className="h-3 w-3 text-blue-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm hover:shadow-md transition-shadow">
+        <CardContent className="p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-muted-foreground mb-1 truncate">Total Amount</p>
+              <div className="text-base font-bold text-purple-600 truncate">{formatIndianRupee(totalAmount)}</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                <span>All payments</span>
+              </div>
+            </div>
+            <div className="p-2 bg-purple-100 rounded-full ml-2">
+              <DollarSign className="h-3 w-3 text-purple-600" />
             </div>
           </div>
         </CardContent>

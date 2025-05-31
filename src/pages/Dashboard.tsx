@@ -83,6 +83,8 @@ const Dashboard = () => {
                 grossProfit={data.grossProfit}
                 netProfit={data.netProfit}
                 totalLoss={data.totalLoss}
+                cashAmount={data.cashAmount}
+                onlineAmount={data.onlineAmount}
               />
               <ChartsOverview
                 startDate={startDate}

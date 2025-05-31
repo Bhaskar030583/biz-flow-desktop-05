@@ -83,6 +83,11 @@ export const useDashboardData = (
           billsQuery = billsQuery.lte("bill_date", formattedEndDate);
         }
         
+        // Apply payment method filter
+        if (paymentMethod && paymentMethod !== 'all') {
+          billsQuery = billsQuery.eq("payment_method", paymentMethod);
+        }
+        
         const { data: billsData, error: billsError } = await billsQuery;
         
         if (billsError) {
@@ -158,25 +163,34 @@ export const useDashboardData = (
 
         console.log('💰 [Dashboard] Credits data fetched:', creditsData?.length || 0, 'records');
         
-        // Calculate totals for payment methods
+        // Calculate payment method totals from bills data
         let cashAmount = 0;
         let cardAmount = 0;
         let onlineAmount = 0;
-        let creditGiven = 0;
-        let creditReceived = 0;
         
-        creditsData?.forEach((item) => {
-          const amount = Number(item.amount) || 0;
-          switch (item.credit_type) {
+        billsData?.forEach((bill) => {
+          const amount = Number(bill.total_amount) || 0;
+          switch (bill.payment_method?.toLowerCase()) {
             case 'cash':
               cashAmount += amount;
               break;
             case 'card':
               cardAmount += amount;
               break;
+            case 'upi':
             case 'online':
               onlineAmount += amount;
               break;
+          }
+        });
+        
+        // Calculate credit amounts from credits data
+        let creditGiven = 0;
+        let creditReceived = 0;
+        
+        creditsData?.forEach((item) => {
+          const amount = Number(item.amount) || 0;
+          switch (item.credit_type) {
             case 'given':
               creditGiven += amount;
               break;
