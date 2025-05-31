@@ -93,34 +93,117 @@ export const IncomingRequestsList = ({ onRequestUpdated }: IncomingRequestsListP
     try {
       console.log('✅ [IncomingRequestsList] Approving request:', requestId);
 
-      // First check if handle_stock_movement function exists, if not, just update status
-      const { error } = await supabase.rpc('handle_stock_movement', {
-        request_id: requestId,
-        approving_user_id: user?.id
-      });
-
-      if (error) {
-        // If function doesn't exist, just update the status
-        console.log('⚠️ [IncomingRequestsList] Stock movement function not available, updating status only');
-        
-        const { error: updateError } = await supabase
-          .from('stock_requests')
-          .update({ 
-            status: 'approved',
-            response_date: new Date().toISOString()
-          })
-          .eq('id', requestId);
-
-        if (updateError) {
-          throw updateError;
-        }
-
-        toast.success('Request approved (manual stock transfer required)');
-      } else {
-        toast.success('Request approved and stock transferred successfully');
+      // Get the request details first
+      const request = requests.find(r => r.id === requestId);
+      if (!request) {
+        throw new Error('Request not found');
       }
 
-      console.log('✅ [IncomingRequestsList] Request approved successfully');
+      const today = new Date().toISOString().split('T')[0];
+
+      // Check if fulfilling store has enough stock
+      const { data: fulfillingStock, error: fulfillingStockError } = await supabase
+        .from('stocks')
+        .select('*')
+        .eq('product_id', request.product_id)
+        .eq('hr_shop_id', request.fulfilling_hr_store_id)
+        .eq('stock_date', today)
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      if (fulfillingStockError) {
+        throw new Error(`Error checking fulfilling store stock: ${fulfillingStockError.message}`);
+      }
+
+      if (!fulfillingStock || fulfillingStock.actual_stock < request.requested_quantity) {
+        throw new Error(`Insufficient stock in fulfilling store. Available: ${fulfillingStock?.actual_stock || 0}, Requested: ${request.requested_quantity}`);
+      }
+
+      console.log('📊 [IncomingRequestsList] Current fulfilling stock:', fulfillingStock.actual_stock);
+
+      // Update fulfilling store stock (decrease)
+      const { error: updateFulfillingError } = await supabase
+        .from('stocks')
+        .update({
+          actual_stock: fulfillingStock.actual_stock - request.requested_quantity,
+          closing_stock: fulfillingStock.closing_stock - request.requested_quantity
+        })
+        .eq('id', fulfillingStock.id);
+
+      if (updateFulfillingError) {
+        throw new Error(`Error updating fulfilling store stock: ${updateFulfillingError.message}`);
+      }
+
+      console.log('✅ [IncomingRequestsList] Reduced stock in fulfilling store by:', request.requested_quantity);
+
+      // Check if requesting store already has stock record for today
+      const { data: requestingStock, error: requestingStockError } = await supabase
+        .from('stocks')
+        .select('*')
+        .eq('product_id', request.product_id)
+        .eq('hr_shop_id', request.requesting_hr_store_id)
+        .eq('stock_date', today)
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      if (requestingStockError) {
+        throw new Error(`Error checking requesting store stock: ${requestingStockError.message}`);
+      }
+
+      if (requestingStock) {
+        // Update existing stock record (increase)
+        const { error: updateRequestingError } = await supabase
+          .from('stocks')
+          .update({
+            actual_stock: requestingStock.actual_stock + request.requested_quantity,
+            closing_stock: requestingStock.closing_stock + request.requested_quantity,
+            stock_added: (requestingStock.stock_added || 0) + request.requested_quantity
+          })
+          .eq('id', requestingStock.id);
+
+        if (updateRequestingError) {
+          throw new Error(`Error updating requesting store stock: ${updateRequestingError.message}`);
+        }
+
+        console.log('✅ [IncomingRequestsList] Increased existing stock in requesting store by:', request.requested_quantity);
+      } else {
+        // Create new stock record for requesting store
+        const { error: createRequestingError } = await supabase
+          .from('stocks')
+          .insert({
+            product_id: request.product_id,
+            hr_shop_id: request.requesting_hr_store_id,
+            stock_date: today,
+            opening_stock: request.requested_quantity,
+            closing_stock: request.requested_quantity,
+            actual_stock: request.requested_quantity,
+            stock_added: request.requested_quantity,
+            user_id: user?.id
+          });
+
+        if (createRequestingError) {
+          throw new Error(`Error creating requesting store stock: ${createRequestingError.message}`);
+        }
+
+        console.log('✅ [IncomingRequestsList] Created new stock record in requesting store with quantity:', request.requested_quantity);
+      }
+
+      // Update request status to approved
+      const { error: updateRequestError } = await supabase
+        .from('stock_requests')
+        .update({ 
+          status: 'approved',
+          response_date: new Date().toISOString()
+        })
+        .eq('id', requestId);
+
+      if (updateRequestError) {
+        throw new Error(`Error updating request status: ${updateRequestError.message}`);
+      }
+
+      console.log('✅ [IncomingRequestsList] Request approved and stock transferred successfully');
+      toast.success('Request approved and stock transferred successfully');
+      
       fetchIncomingRequests();
       onRequestUpdated();
     } catch (error) {
