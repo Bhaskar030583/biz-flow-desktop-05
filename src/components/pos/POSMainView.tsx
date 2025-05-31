@@ -6,7 +6,6 @@ import { POSCartSidebar } from "./POSCartSidebar";
 import { BillHistory } from "./BillHistory";
 import { CustomerManagement } from "./CustomerManagement";
 import { QuickStockUpdateModal } from "./QuickStockUpdateModal";
-import { usePOSProducts } from "@/hooks/usePOSProducts";
 import { toast } from "sonner";
 
 interface POSMainViewProps {
@@ -44,12 +43,6 @@ export const POSMainView: React.FC<POSMainViewProps> = ({
     shiftName: "Morning Shift"
   });
   
-  // Use a default store ID - in a real app this would come from user selection
-  const [selectedStoreId] = useState("1"); // You can change this to match your actual store ID
-  
-  // Get real products from the database
-  const { products, productsLoading, handleStockAdded } = usePOSProducts(selectedStoreId);
-  
   // States for the POS system
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -59,25 +52,35 @@ export const POSMainView: React.FC<POSMainViewProps> = ({
   const [showCustomerManagement, setShowCustomerManagement] = useState(false);
   const [showBillHistory, setShowBillHistory] = useState(false);
   
-  // Get unique categories from real products
-  const categories = ["all", ...new Set(products?.map(product => product.category) || [])];
+  // Sample products data
+  const [products, setProducts] = useState<Product[]>([
+    { id: "1", name: "Coffee", price: 120, category: "beverages", quantity: 50 },
+    { id: "2", name: "Tea", price: 80, category: "beverages", quantity: 60 },
+    { id: "3", name: "Sandwich", price: 150, category: "food", quantity: 20 },
+    { id: "4", name: "Pasta", price: 220, category: "food", quantity: 15 },
+    { id: "5", name: "Juice", price: 100, category: "beverages", quantity: 30 },
+    { id: "6", name: "Cake", price: 180, category: "pastry", quantity: 10, expectedClosing: 8 },
+    { id: "7", name: "Cookie", price: 50, category: "pastry", quantity: 40, expectedClosing: 35 },
+    { id: "8", name: "Burger", price: 200, category: "food", quantity: 0 },
+  ]);
+  
+  // Get unique categories
+  const categories = ["all", ...new Set(products.map(product => product.category))];
   
   // Filter products based on search term and category
-  const filteredProducts = products?.filter(product => {
+  const filteredProducts = products.filter(product => {
     const matchesTerm = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
     return matchesTerm && matchesCategory;
-  }) || [];
+  });
 
   console.log("POSMainView render - Current state:", {
     showCustomerManagement,
     showBillHistory,
     showOrderSummary,
-    selectedStoreId,
-    productsCount: products?.length || 0,
+    productsCount: products.length,
     filteredProductsCount: filteredProducts.length,
-    cartItemsCount: cart.length,
-    productsLoading
+    cartItemsCount: cart.length
   });
 
   // Add product to cart
@@ -168,12 +171,6 @@ export const POSMainView: React.FC<POSMainViewProps> = ({
     setShowQuickStock(true);
   };
 
-  // Call the parent's onStockAdded when stock is updated
-  const handleStockUpdated = () => {
-    handleStockAdded();
-    onStockAdded();
-  };
-
   // If showing customer management, render only that component
   if (showCustomerManagement) {
     console.log("Rendering Customer Management view");
@@ -247,7 +244,7 @@ export const POSMainView: React.FC<POSMainViewProps> = ({
           setSelectedCategory={setSelectedCategory}
           categories={categories}
           filteredProducts={filteredProducts}
-          selectedShopId={selectedStoreId}
+          selectedShopId="1"
           onAddToCart={addToCart}
           showSearch={showSearch}
         />
@@ -272,9 +269,9 @@ export const POSMainView: React.FC<POSMainViewProps> = ({
         <QuickStockUpdateModal
           isOpen={showQuickStock}
           onClose={() => setShowQuickStock(false)}
-          products={products || []}
-          selectedShopId={selectedStoreId}
-          onStockUpdated={handleStockUpdated}
+          products={products}
+          selectedShopId="1"
+          onStockUpdated={onStockAdded}
         />
       )}
     </div>
