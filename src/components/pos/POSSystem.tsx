@@ -282,7 +282,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
 
   // Desktop View
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 to-blue-50 overflow-hidden font-inter">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-blue-900 overflow-hidden font-inter">
       <div className="flex-1 flex flex-col min-w-0">
         <POSHeader
           storeInfo={storeInfo}
