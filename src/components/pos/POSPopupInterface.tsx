@@ -59,7 +59,7 @@ export const POSPopupInterface: React.FC<POSPopupInterfaceProps> = ({
       <div className="flex-1 bg-gray-100 rounded-lg p-6">
         {shouldShowStoreModal && (
           <StoreInfoModal
-            open={shouldShowStoreModal}
+            isOpen={shouldShowStoreModal}
             onComplete={onStoreInfoComplete}
             onClose={onStoreModalClose}
           />

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart } from "lucide-react";
@@ -64,6 +63,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
   const [showQuickStockModal, setShowQuickStockModal] = useState(false);
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [showOrderSummary, setShowOrderSummary] = useState(true);
+  const [showSearch, setShowSearch] = useState(false);
 
   // Create payment actions
   const paymentActions = createPaymentActions({
@@ -74,6 +74,10 @@ export const POSSystem: React.FC<POSSystemProps> = ({
     userId: user?.id || '',
     onStockUpdated
   });
+
+  const toggleSearch = () => {
+    setShowSearch(prev => !prev);
+  };
 
   const addToCart = (product: Product) => {
     if (product.quantity !== undefined && product.quantity <= 0) {
@@ -293,6 +297,8 @@ export const POSSystem: React.FC<POSSystemProps> = ({
           onQuickStock={handleQuickStock}
           onCustomerManagement={() => setShowCustomerManagement(true)}
           onBillHistory={() => setShowBillHistory(true)}
+          showSearch={showSearch}
+          toggleSearch={toggleSearch}
         />
 
         <POSProductGrid
@@ -304,6 +310,7 @@ export const POSSystem: React.FC<POSSystemProps> = ({
           filteredProducts={filteredProducts}
           selectedShopId={selectedShopId}
           onAddToCart={addToCart}
+          showSearch={showSearch}
         />
       </div>
 

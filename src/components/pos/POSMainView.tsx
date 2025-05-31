@@ -1,4 +1,3 @@
-
 // Note: Creating this file since it was mentioned but not provided in the allowed files
 import React, { useState, useEffect } from "react";
 import { POSHeader } from "./POSHeader";
@@ -209,8 +208,10 @@ export const POSMainView: React.FC<POSMainViewProps> = ({
       
       {showQuickStock && (
         <QuickStockUpdateModal
-          open={showQuickStock}
+          isOpen={showQuickStock}
           onClose={() => setShowQuickStock(false)}
+          products={products}
+          selectedShopId="1"
           onStockUpdated={onStockAdded}
         />
       )}
