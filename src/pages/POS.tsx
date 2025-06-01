@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { POSPopupManager } from "@/components/pos/POSPopupManager";
 import { POSPopupInterface } from "@/components/pos/POSPopupInterface";
 import { POSSystem } from "@/components/pos/POSSystem";
+import { StoreInfoModal } from "@/components/pos/StoreInfoModal";
 import { usePOSProducts } from "@/hooks/usePOSProducts";
 
 interface StoreInfo {
@@ -78,33 +79,12 @@ const POS = () => {
         />
       ) : (
         <>
-          {shouldShowStoreModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                <h2 className="text-xl font-bold mb-4">Select Store Location</h2>
-                <p className="text-gray-600 mb-4">Please select a store location to continue with POS operations.</p>
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => {
-                      // For demo purposes, set a default store
-                      handleStoreInfoComplete(
-                        {
-                          storeName: "Demo Store",
-                          salespersonName: "Demo User",
-                          shiftName: "Day Shift"
-                        },
-                        "demo-shift-id",
-                        "checkpost" // Use actual store identifier
-                      );
-                    }}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                  >
-                    Select Demo Store
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Always show the proper StoreInfoModal */}
+          <StoreInfoModal
+            isOpen={shouldShowStoreModal}
+            onComplete={handleStoreInfoComplete}
+            onClose={handleStoreModalClose}
+          />
           
           {storeInfoCompleted && (
             <POSSystem 
