@@ -24,8 +24,8 @@ export const usePOSProducts = (selectedStoreId: string) => {
   const { data: products, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
     queryKey: ['pos-products', selectedStoreId],
     queryFn: async (): Promise<Product[]> => {
-      if (!selectedStoreId) {
-        console.log('🔍 [POS] No store selected for product query');
+      if (!selectedStoreId || !user?.id) {
+        console.log('🔍 [POS] No store selected or user not authenticated');
         return [];
       }
       
@@ -35,20 +35,15 @@ export const usePOSProducts = (selectedStoreId: string) => {
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString().split('T')[0];
       
-      // First, let's check if we have any HR stores
-      const { data: hrStores, error: hrStoresError } = await supabase
-        .from('hr_stores')
-        .select('id, store_name')
-        .eq('id', selectedStoreId);
-      
-      console.log('🏪 [POS] HR Stores check:', { hrStores, selectedStoreId });
+      // Check if selectedStoreId is a UUID or a string identifier
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedStoreId);
       
       let productShops;
       let productShopsError;
       
-      if (hrStores && hrStores.length > 0) {
-        // If it's a valid HR store ID, use hr_shop_id
-        console.log('🔍 [POS] Querying with hr_shop_id:', selectedStoreId);
+      if (isUUID) {
+        // Try hr_shop_id first for UUID
+        console.log('🔍 [POS] Querying with UUID hr_shop_id:', selectedStoreId);
         const result = await supabase
           .from('product_shops')
           .select(`
@@ -62,30 +57,83 @@ export const usePOSProducts = (selectedStoreId: string) => {
             shop_id
           `)
           .eq('hr_shop_id', selectedStoreId)
-          .eq('user_id', user?.id);
+          .eq('user_id', user.id);
         
         productShops = result.data;
         productShopsError = result.error;
+        
+        // If no results with hr_shop_id, try shop_id
+        if (!productShopsError && (!productShops || productShops.length === 0)) {
+          console.log('🔍 [POS] No results with hr_shop_id, trying shop_id');
+          const fallbackResult = await supabase
+            .from('product_shops')
+            .select(`
+              products (
+                id,
+                name,
+                price,
+                category
+              ),
+              hr_shop_id,
+              shop_id
+            `)
+            .eq('shop_id', selectedStoreId)
+            .eq('user_id', user.id);
+          
+          productShops = fallbackResult.data;
+          productShopsError = fallbackResult.error;
+        }
       } else {
-        // If not a valid HR store, try with shop_id (legacy shops table)
-        console.log('🔍 [POS] Querying with shop_id:', selectedStoreId);
-        const result = await supabase
-          .from('product_shops')
-          .select(`
-            products (
-              id,
-              name,
-              price,
-              category
-            ),
-            hr_shop_id,
-            shop_id
-          `)
-          .eq('shop_id', selectedStoreId)
-          .eq('user_id', user?.id);
+        // For string identifiers, try to find in hr_stores first
+        console.log('🔍 [POS] Querying with string identifier:', selectedStoreId);
         
-        productShops = result.data;
-        productShopsError = result.error;
+        // First, try to find the store by name or code in hr_stores
+        const { data: hrStores, error: hrStoresError } = await supabase
+          .from('hr_stores')
+          .select('id, store_name, store_code')
+          .or(`store_name.ilike.%${selectedStoreId}%,store_code.ilike.%${selectedStoreId}%`);
+        
+        if (!hrStoresError && hrStores && hrStores.length > 0) {
+          const storeId = hrStores[0].id;
+          console.log('🔍 [POS] Found HR store:', storeId);
+          
+          const result = await supabase
+            .from('product_shops')
+            .select(`
+              products (
+                id,
+                name,
+                price,
+                category
+              ),
+              hr_shop_id,
+              shop_id
+            `)
+            .eq('hr_shop_id', storeId)
+            .eq('user_id', user.id);
+          
+          productShops = result.data;
+          productShopsError = result.error;
+        } else {
+          // Fallback to legacy shops table
+          console.log('🔍 [POS] Trying legacy shops table with string identifier');
+          const result = await supabase
+            .from('product_shops')
+            .select(`
+              products (
+                id,
+                name,
+                price,
+                category
+              ),
+              hr_shop_id,
+              shop_id
+            `)
+            .eq('user_id', user.id);
+          
+          productShops = result.data;
+          productShopsError = result.error;
+        }
       }
       
       if (productShopsError) {
@@ -109,53 +157,38 @@ export const usePOSProducts = (selectedStoreId: string) => {
       // Get product IDs
       const productIds = allProducts.map(product => product.id);
 
-      // Get today's stock data - try both hr_shop_id and shop_id
-      let todayStockData;
-      if (hrStores && hrStores.length > 0) {
-        const result = await supabase
-          .from('stocks')
-          .select('product_id, opening_stock, stock_added, actual_stock')
-          .eq('hr_shop_id', selectedStoreId)
-          .eq('user_id', user?.id)
-          .eq('stock_date', today)
-          .in('product_id', productIds);
+      // For stock data, use the actual store ID (UUID if available)
+      let actualStoreId = selectedStoreId;
+      if (!isUUID) {
+        // Try to get the actual UUID from hr_stores
+        const { data: hrStores } = await supabase
+          .from('hr_stores')
+          .select('id')
+          .or(`store_name.ilike.%${selectedStoreId}%,store_code.ilike.%${selectedStoreId}%`)
+          .limit(1);
         
-        todayStockData = result.data;
-      } else {
-        const result = await supabase
-          .from('stocks')
-          .select('product_id, opening_stock, stock_added, actual_stock')
-          .eq('shop_id', selectedStoreId)
-          .eq('user_id', user?.id)
-          .eq('stock_date', today)
-          .in('product_id', productIds);
-        
-        todayStockData = result.data;
+        if (hrStores && hrStores.length > 0) {
+          actualStoreId = hrStores[0].id;
+        }
       }
 
+      // Get today's stock data
+      const { data: todayStockData } = await supabase
+        .from('stocks')
+        .select('product_id, opening_stock, stock_added, actual_stock')
+        .eq('hr_shop_id', actualStoreId)
+        .eq('user_id', user.id)
+        .eq('stock_date', today)
+        .in('product_id', productIds);
+
       // Get yesterday's stock data for opening stock calculation
-      let yesterdayStockData;
-      if (hrStores && hrStores.length > 0) {
-        const result = await supabase
-          .from('stocks')
-          .select('product_id, actual_stock, closing_stock')
-          .eq('hr_shop_id', selectedStoreId)
-          .eq('user_id', user?.id)
-          .eq('stock_date', yesterdayStr)
-          .in('product_id', productIds);
-        
-        yesterdayStockData = result.data;
-      } else {
-        const result = await supabase
-          .from('stocks')
-          .select('product_id, actual_stock, closing_stock')
-          .eq('shop_id', selectedStoreId)
-          .eq('user_id', user?.id)
-          .eq('stock_date', yesterdayStr)
-          .in('product_id', productIds);
-        
-        yesterdayStockData = result.data;
-      }
+      const { data: yesterdayStockData } = await supabase
+        .from('stocks')
+        .select('product_id, actual_stock, closing_stock')
+        .eq('hr_shop_id', actualStoreId)
+        .eq('user_id', user.id)
+        .eq('stock_date', yesterdayStr)
+        .in('product_id', productIds);
 
       // Get today's sales data to calculate sold quantity
       const { data: salesData, error: salesError } = await supabase
@@ -165,7 +198,7 @@ export const usePOSProducts = (selectedStoreId: string) => {
           quantity,
           bills!inner(bill_date, user_id)
         `)
-        .eq('bills.user_id', user?.id)
+        .eq('bills.user_id', user.id)
         .gte('bills.bill_date', today)
         .lt('bills.bill_date', new Date(new Date(today).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0])
         .in('product_id', productIds);
@@ -205,8 +238,7 @@ export const usePOSProducts = (selectedStoreId: string) => {
         const yesterdayStock = yesterdayStockMap.get(product.id);
         const soldToday = salesMap.get(product.id) || 0;
         
-        // Calculate based on new requirements
-        // Opening stock = yesterday's actual stock OR current stock's opening stock
+        // Calculate based on requirements
         const openingStock = (yesterdayStock?.actual_stock ?? todayStock?.opening) || 0;
         const stockAdded = todayStock?.added || 0;
         
@@ -214,7 +246,7 @@ export const usePOSProducts = (selectedStoreId: string) => {
         const expectedClosing = Math.max(0, openingStock + stockAdded - soldToday);
         
         // Actual stock = from database if available, otherwise equals expected closing
-        let actualStock = expectedClosing; // Default to expected closing
+        let actualStock = expectedClosing;
         
         if (todayStock?.actual !== null && todayStock?.actual !== undefined) {
           actualStock = todayStock.actual;
@@ -226,7 +258,6 @@ export const usePOSProducts = (selectedStoreId: string) => {
           soldToday,
           expectedClosing,
           actualStock,
-          actualStockFromDB: todayStock?.actual,
           calculation: `${openingStock} + ${stockAdded} - ${soldToday} = ${expectedClosing}`
         });
 
@@ -267,25 +298,10 @@ export const usePOSProducts = (selectedStoreId: string) => {
         {
           event: '*',
           schema: 'public',
-          table: 'stocks',
-          filter: `hr_shop_id=eq.${selectedStoreId}`
+          table: 'stocks'
         },
         (payload) => {
           console.log('📡 [POS] Real-time stock change detected:', payload);
-          queryClient.invalidateQueries({ queryKey: ['pos-products', selectedStoreId] });
-          refetchProducts();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'stocks',
-          filter: `shop_id=eq.${selectedStoreId}`
-        },
-        (payload) => {
-          console.log('📡 [POS] Real-time stock change detected (shop_id):', payload);
           queryClient.invalidateQueries({ queryKey: ['pos-products', selectedStoreId] });
           refetchProducts();
         }
