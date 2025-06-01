@@ -24,7 +24,13 @@ const POS = () => {
   const { products, productsLoading, handleStockAdded } = usePOSProducts(selectedStoreId);
 
   const handlePopupCheck = (isPopup: boolean) => {
+    console.log('🔍 [POS] Popup check result:', isPopup);
     setIsPopupWindow(isPopup);
+    
+    // Don't automatically show store modal for popup windows if already completed
+    if (isPopup && storeInfoCompleted) {
+      setShowStoreModal(false);
+    }
   };
 
   const handleStoreInfoComplete = (info: StoreInfo, shiftId: string, storeId: string) => {
@@ -55,38 +61,48 @@ const POS = () => {
   };
 
   // Show store modal if store info hasn't been completed yet
-  const shouldShowStoreModal = showStoreModal && !storeInfoCompleted;
+  const shouldShowStoreModal = !storeInfoCompleted;
+
+  console.log('🔄 [POS] Current state:', {
+    isPopupWindow,
+    storeInfoCompleted,
+    shouldShowStoreModal,
+    showStoreModal
+  });
 
   return (
     <>
       <POSPopupManager onPopupCheck={handlePopupCheck} />
       
-      {isPopupWindow ? (
-        <POSPopupInterface
-          shouldShowStoreModal={shouldShowStoreModal}
-          storeInfoCompleted={storeInfoCompleted}
-          selectedStoreId={selectedStoreId}
-          productsLoading={productsLoading}
-          products={products || []}
-          storeInfo={storeInfo}
-          selectedShiftId={selectedShiftId}
-          onStoreInfoComplete={handleStoreInfoComplete}
-          onStoreModalClose={handleStoreModalClose}
-          onClosePopup={handleClosePopup}
-          onStockUpdated={handleStockAdded}
-          showSearch={showSearch}
-          toggleSearch={toggleSearch}
+      {/* Always show StoreInfoModal first if store info not completed */}
+      {shouldShowStoreModal && (
+        <StoreInfoModal
+          isOpen={shouldShowStoreModal}
+          onComplete={handleStoreInfoComplete}
+          onClose={handleStoreModalClose}
         />
-      ) : (
+      )}
+      
+      {/* Only show POS interface after store info is completed */}
+      {storeInfoCompleted && (
         <>
-          {/* Always show the proper StoreInfoModal */}
-          <StoreInfoModal
-            isOpen={shouldShowStoreModal}
-            onComplete={handleStoreInfoComplete}
-            onClose={handleStoreModalClose}
-          />
-          
-          {storeInfoCompleted && (
+          {isPopupWindow ? (
+            <POSPopupInterface
+              shouldShowStoreModal={false}
+              storeInfoCompleted={storeInfoCompleted}
+              selectedStoreId={selectedStoreId}
+              productsLoading={productsLoading}
+              products={products || []}
+              storeInfo={storeInfo}
+              selectedShiftId={selectedShiftId}
+              onStoreInfoComplete={handleStoreInfoComplete}
+              onStoreModalClose={handleStoreModalClose}
+              onClosePopup={handleClosePopup}
+              onStockUpdated={handleStockAdded}
+              showSearch={showSearch}
+              toggleSearch={toggleSearch}
+            />
+          ) : (
             <POSSystem 
               products={products || []}
               storeInfo={storeInfo}
