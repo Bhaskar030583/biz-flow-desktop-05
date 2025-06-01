@@ -30,13 +30,19 @@ export const usePOSProducts = (selectedStoreId: string) => {
       }
       
       console.log('🔍 [POS] Fetching products for store:', selectedStoreId);
+      console.log('🔍 [POS] User ID:', user.id);
+      
       const today = new Date().toISOString().split('T')[0];
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString().split('T')[0];
       
+      console.log('🔍 [POS] Today date:', today);
+      console.log('🔍 [POS] Yesterday date:', yesterdayStr);
+      
       // Check if selectedStoreId is a UUID or a string identifier
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedStoreId);
+      console.log('🔍 [POS] Store ID is UUID:', isUUID);
       
       let productShops;
       let productShopsError;
@@ -156,6 +162,7 @@ export const usePOSProducts = (selectedStoreId: string) => {
 
       // Get product IDs
       const productIds = allProducts.map(product => product.id);
+      console.log('🔍 [POS] Product IDs to lookup stock for:', productIds);
 
       // For stock data, use the actual store ID (UUID if available)
       let actualStoreId = selectedStoreId;
@@ -173,6 +180,22 @@ export const usePOSProducts = (selectedStoreId: string) => {
       }
 
       console.log('🔍 [POS] Using actualStoreId for stock lookup:', actualStoreId);
+
+      // Debug: Check if ANY stock records exist for this user
+      const { data: userStockCount } = await supabase
+        .from('stocks')
+        .select('id', { count: 'exact' })
+        .eq('user_id', user.id);
+
+      console.log('🐛 [DEBUG] Total stock records for user:', userStockCount);
+
+      // Debug: Check what stores exist in stocks table for this user
+      const { data: userStoreIds } = await supabase
+        .from('stocks')
+        .select('hr_shop_id, shop_id')
+        .eq('user_id', user.id);
+
+      console.log('🐛 [DEBUG] Stores in stocks table for user:', userStoreIds);
 
       // Debug: Check what stock records exist for this store and user
       const { data: allStockRecords, error: debugStockError } = await supabase
@@ -194,6 +217,28 @@ export const usePOSProducts = (selectedStoreId: string) => {
 
       console.log('🐛 [DEBUG] Stock records for store:', storeStockRecords);
       console.log('🐛 [DEBUG] Store stock error:', storeStockError);
+
+      // Check if we need to create initial stock records
+      if (!allStockRecords || allStockRecords.length === 0) {
+        console.log('⚠️ [POS] No stock records found for today. You may need to:');
+        console.log('   1. Use Quick Stock Update to add stock');
+        console.log('   2. Go to Stock Management to create stock entries');
+        console.log('   3. Import stock data');
+        
+        // Return products with zero stock for now
+        return allProducts.map(product => ({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          category: product.category,
+          quantity: 0,
+          expectedClosing: 0,
+          actualStock: 0,
+          openingStock: 0,
+          stockAdded: 0,
+          soldToday: 0
+        }));
+      }
 
       // Get today's stock data - try both hr_shop_id and shop_id
       const { data: todayStockData, error: stockError } = await supabase
