@@ -172,14 +172,24 @@ export const usePOSProducts = (selectedStoreId: string) => {
         }
       }
 
+      console.log('🔍 [POS] Using actualStoreId for stock lookup:', actualStoreId);
+
       // Get today's stock data
-      const { data: todayStockData } = await supabase
+      const { data: todayStockData, error: stockError } = await supabase
         .from('stocks')
         .select('product_id, opening_stock, stock_added, actual_stock')
         .eq('hr_shop_id', actualStoreId)
         .eq('user_id', user.id)
         .eq('stock_date', today)
         .in('product_id', productIds);
+
+      console.log('📊 [POS] Today stock query result:', { 
+        data: todayStockData, 
+        error: stockError,
+        actualStoreId,
+        today,
+        productIds 
+      });
 
       // Get yesterday's stock data for opening stock calculation
       const { data: yesterdayStockData } = await supabase
@@ -189,6 +199,8 @@ export const usePOSProducts = (selectedStoreId: string) => {
         .eq('user_id', user.id)
         .eq('stock_date', yesterdayStr)
         .in('product_id', productIds);
+
+      console.log('📊 [POS] Yesterday stock data:', yesterdayStockData);
 
       // Get today's sales data to calculate sold quantity
       const { data: salesData, error: salesError } = await supabase
@@ -206,6 +218,8 @@ export const usePOSProducts = (selectedStoreId: string) => {
       if (salesError) {
         console.error('❌ [POS] Error fetching sales data:', salesError);
       }
+
+      console.log('💰 [POS] Sales data for today:', salesData);
 
       // Create maps for quick lookup
       const todayStockMap = new Map();
@@ -238,25 +252,32 @@ export const usePOSProducts = (selectedStoreId: string) => {
         const yesterdayStock = yesterdayStockMap.get(product.id);
         const soldToday = salesMap.get(product.id) || 0;
         
+        console.log(`🔍 [POS] Raw data for ${product.name}:`, {
+          productId: product.id,
+          todayStock,
+          yesterdayStock,
+          soldToday
+        });
+        
         // Calculate based on requirements
-        const openingStock = (yesterdayStock?.actual_stock ?? todayStock?.opening) || 0;
+        const openingStock = (yesterdayStock?.actual ?? todayStock?.opening) || 0;
         const stockAdded = todayStock?.added || 0;
         
         // Expected closing = Opening Stock + Stock Added - Sold
         const expectedClosing = Math.max(0, openingStock + stockAdded - soldToday);
         
-        // For POS, use actual_stock if available, otherwise use expected closing
+        // For POS, use actual_stock if available and greater than 0, otherwise use expected closing
         let availableForSale = expectedClosing;
         
         if (todayStock?.actual !== null && todayStock?.actual !== undefined) {
           // If actual stock was manually updated, use that value for POS
           availableForSale = Math.max(0, todayStock.actual);
-          console.log(`✅ [POS] Using actual_stock for ${product.name}: ${availableForSale}`);
+          console.log(`✅ [POS] Using actual_stock for ${product.name}: ${availableForSale} (raw actual: ${todayStock.actual})`);
         } else {
           console.log(`📊 [POS] Using calculated expected closing for ${product.name}: ${availableForSale}`);
         }
 
-        console.log(`📊 [POS] Product ${product.name}:`, {
+        console.log(`📊 [POS] Final calculation for ${product.name}:`, {
           openingStock,
           stockAdded,
           soldToday,
