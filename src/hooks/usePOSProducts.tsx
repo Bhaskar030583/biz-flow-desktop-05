@@ -174,11 +174,32 @@ export const usePOSProducts = (selectedStoreId: string) => {
 
       console.log('🔍 [POS] Using actualStoreId for stock lookup:', actualStoreId);
 
-      // Get today's stock data
+      // Debug: Check what stock records exist for this store and user
+      const { data: allStockRecords, error: debugStockError } = await supabase
+        .from('stocks')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('stock_date', today);
+
+      console.log('🐛 [DEBUG] All stock records for user today:', allStockRecords);
+      console.log('🐛 [DEBUG] Debug stock error:', debugStockError);
+
+      // Debug: Check what stock records exist for this specific store
+      const { data: storeStockRecords, error: storeStockError } = await supabase
+        .from('stocks')
+        .select('*')
+        .or(`hr_shop_id.eq.${actualStoreId},shop_id.eq.${actualStoreId}`)
+        .eq('user_id', user.id)
+        .eq('stock_date', today);
+
+      console.log('🐛 [DEBUG] Stock records for store:', storeStockRecords);
+      console.log('🐛 [DEBUG] Store stock error:', storeStockError);
+
+      // Get today's stock data - try both hr_shop_id and shop_id
       const { data: todayStockData, error: stockError } = await supabase
         .from('stocks')
-        .select('product_id, opening_stock, stock_added, actual_stock')
-        .eq('hr_shop_id', actualStoreId)
+        .select('product_id, opening_stock, stock_added, actual_stock, hr_shop_id, shop_id')
+        .or(`hr_shop_id.eq.${actualStoreId},shop_id.eq.${actualStoreId}`)
         .eq('user_id', user.id)
         .eq('stock_date', today)
         .in('product_id', productIds);
@@ -195,7 +216,7 @@ export const usePOSProducts = (selectedStoreId: string) => {
       const { data: yesterdayStockData } = await supabase
         .from('stocks')
         .select('product_id, actual_stock, closing_stock')
-        .eq('hr_shop_id', actualStoreId)
+        .or(`hr_shop_id.eq.${actualStoreId},shop_id.eq.${actualStoreId}`)
         .eq('user_id', user.id)
         .eq('stock_date', yesterdayStr)
         .in('product_id', productIds);
