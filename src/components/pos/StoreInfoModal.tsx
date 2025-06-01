@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -142,17 +143,35 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     refetchOnReconnect: false
   });
 
-  // Initialize salesperson name only once when user profile changes
+  // Initialize salesperson name properly
   useEffect(() => {
-    if (!salespersonName && userProfile?.full_name) {
-      console.log('📝 [StoreInfoModal] Setting salesperson name from profile:', userProfile.full_name);
-      setSalespersonName(userProfile.full_name);
-    } else if (!salespersonName && !userProfile?.full_name && user?.email) {
-      const emailName = user.email.split('@')[0];
-      console.log('📝 [StoreInfoModal] Setting salesperson name from email:', emailName);
-      setSalespersonName(emailName);
+    if (!salespersonName && user) {
+      let displayName = "";
+      
+      // First priority: full_name from profile
+      if (userProfile?.full_name) {
+        displayName = userProfile.full_name;
+        console.log('📝 [StoreInfoModal] Setting salesperson name from profile:', displayName);
+      }
+      // Second priority: extract name from email
+      else if (user.email) {
+        // For admin email, set to "Bhaskar" 
+        if (user.email === "gumpubhaskar3000@gmail.com") {
+          displayName = "Bhaskar";
+        } else {
+          // Extract name from email (before @)
+          displayName = user.email.split('@')[0];
+          // Capitalize first letter
+          displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+        }
+        console.log('📝 [StoreInfoModal] Setting salesperson name from email:', displayName);
+      }
+      
+      if (displayName) {
+        setSalespersonName(displayName);
+      }
     }
-  }, [userProfile?.full_name, user?.email, salespersonName]);
+  }, [userProfile?.full_name, user?.email, salespersonName, user]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -208,7 +227,8 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
       storeName,
       shiftName,
       selectedStoreId,
-      selectedShiftId
+      selectedShiftId,
+      salespersonName
     });
 
     onComplete(
@@ -230,7 +250,8 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
     storesLoading,
     shiftsLoading,
     hrStoresCount: hrStores?.length || 0,
-    hrShiftsCount: hrShifts?.length || 0
+    hrShiftsCount: hrShifts?.length || 0,
+    userEmail: user?.email
   });
 
   return (
@@ -373,6 +394,11 @@ export const StoreInfoModal: React.FC<StoreInfoModalProps> = ({
                 <div className="text-base font-bold text-white break-words">
                   {salespersonName || "Loading..."}
                 </div>
+                {user?.email && (
+                  <div className="text-xs text-gray-400 mt-1">
+                    {user.email}
+                  </div>
+                )}
               </div>
             </div>
           </div>
