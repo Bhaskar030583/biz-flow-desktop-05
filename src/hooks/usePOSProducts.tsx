@@ -245,11 +245,15 @@ export const usePOSProducts = (selectedStoreId: string) => {
         // Expected closing = Opening Stock + Stock Added - Sold
         const expectedClosing = Math.max(0, openingStock + stockAdded - soldToday);
         
-        // Actual stock = from database if available, otherwise equals expected closing
-        let actualStock = expectedClosing;
+        // For POS, use actual_stock if available, otherwise use expected closing
+        let availableForSale = expectedClosing;
         
         if (todayStock?.actual !== null && todayStock?.actual !== undefined) {
-          actualStock = todayStock.actual;
+          // If actual stock was manually updated, use that value for POS
+          availableForSale = Math.max(0, todayStock.actual);
+          console.log(`✅ [POS] Using actual_stock for ${product.name}: ${availableForSale}`);
+        } else {
+          console.log(`📊 [POS] Using calculated expected closing for ${product.name}: ${availableForSale}`);
         }
 
         console.log(`📊 [POS] Product ${product.name}:`, {
@@ -257,7 +261,8 @@ export const usePOSProducts = (selectedStoreId: string) => {
           stockAdded,
           soldToday,
           expectedClosing,
-          actualStock,
+          actualStock: todayStock?.actual,
+          availableForSale,
           calculation: `${openingStock} + ${stockAdded} - ${soldToday} = ${expectedClosing}`
         });
 
@@ -266,9 +271,9 @@ export const usePOSProducts = (selectedStoreId: string) => {
           name: product.name,
           price: product.price,
           category: product.category,
-          quantity: expectedClosing, // For POS display (Expected Closing)
+          quantity: availableForSale, // This is what POS uses to determine if product is available
           expectedClosing: expectedClosing,
-          actualStock: actualStock,
+          actualStock: todayStock?.actual ?? expectedClosing,
           openingStock: openingStock,
           stockAdded: stockAdded,
           soldToday: soldToday
